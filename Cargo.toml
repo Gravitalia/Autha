@@ -1,0 +1,21 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+opt-level = 3
+lto = true
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[dependencies]
+tokio = { version = "1.20.1", features = ["full"] }
+warp = "0.3.2"
+
+redis = "0.21.5"
+cassandra-cpp = "1.1.0"
+
+dotenv = "0.15.0"
