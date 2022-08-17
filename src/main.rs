@@ -5,7 +5,7 @@ mod router;
 async fn main() {
     dotenv::dotenv().ok();
 
-    let routes = warp::path!("create").and(warp::post()).map(router::create);
+    let routes = warp::path!("create").and(warp::post()).and(warp::body::json()).map(router::create);
 
     warp::serve(routes)
     .run((

@@ -1,5 +1,6 @@
+mod model;
 
-
-pub fn create() -> String {
+pub fn create(body: model::Create) -> String {
+    println!("{}", body.username);
     "test".to_string()
 }
