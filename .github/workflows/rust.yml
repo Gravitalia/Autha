@@ -15,7 +15,7 @@ jobs:
     name: Build
     strategy:
       matrix:
-        toolchain: [stable, beta]
+        toolchain: [stable]
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
     - uses: actions/checkout@v3
