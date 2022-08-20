@@ -1,5 +1,9 @@
 use argon2::{self, Config, ThreadMode, Variant, Version};
 use regex::Regex;
+use chacha20poly1305::{
+    aead::{Aead, AeadCore, KeyInit, OsRng},
+    ChaCha20Poly1305, Nonce
+};
 
 pub fn random_string() -> String {
     let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".chars().collect();
@@ -16,9 +20,9 @@ pub fn random_string() -> String {
     result
 }
 
-pub fn hash(password: &[u8]) -> String {
+pub fn hash(data: &[u8]) -> String {
     argon2::hash_encoded(
-        password,
+        data,
         random_string().as_bytes(),
         &Config {
             variant: Variant::Argon2id,
@@ -27,11 +31,29 @@ pub fn hash(password: &[u8]) -> String {
             time_cost: 7,
             lanes: 8,
             thread_mode: ThreadMode::Parallel,
-            secret: "QXAwOSjEPui2WxEyH5P38b4icbwFYx4Sd23gbOsDooOZbYTsSYsdsA0Mu_wXQ3LWacGrzs1xX7iXEoh9Z4Z8tVIuwlzo5bIGWJJcY_".as_bytes(),
+            secret: dotenv::var("KEY").expect("Missing env `KEY`").as_bytes(),
             ad: &[],
-            hash_length: 32
+            hash_length: 64
         }
     ).unwrap()
+}
+
+pub fn encrypt(data: String) -> String {
+    let key = ChaCha20Poly1305::generate_key(&mut OsRng);
+
+    match hex::decode(dotenv::var("KEY").expect("Missing env `KEY`")) {
+        Ok(d) => println!("{:?}", d),
+        Err(_) => println!("ok"),
+    }
+
+    println!("{}", hex::encode(key));
+    let nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng);
+    match ChaCha20Poly1305::new(&key).encrypt(&nonce, data.as_bytes().as_ref()) {
+        Ok(v) => println!("{}//{}", hex::encode(nonce), hex::encode(v)),
+        Err(e) => println!("error parsing header: {e:?}"),
+    }
+
+    "test".to_string()
 }
 
 #[test]

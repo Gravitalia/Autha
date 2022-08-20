@@ -8,6 +8,8 @@ async fn main() {
 
     let routes = warp::path!("create").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).map(router::create);
 
+    helpers::encrypt("test".to_string());
+
     warp::serve(routes)
     .run((
         [127, 0, 0, 1],
