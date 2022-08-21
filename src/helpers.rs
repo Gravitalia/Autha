@@ -10,7 +10,7 @@ pub fn random_string() -> String {
     let mut result = String::new();
 
     unsafe {
-        for _ in 0..9 {
+        for _ in 0..16 {
             result.push(
                 *chars.get_unchecked(fastrand::usize(0..62))
             );
@@ -21,13 +21,14 @@ pub fn random_string() -> String {
 }
 
 pub fn hash(data: &[u8]) -> String {
+    println!("{}", dotenv::var("KEY").expect("Missing env `KEY`"));
     argon2::hash_encoded(
         data,
         random_string().as_bytes(),
         &Config {
             variant: Variant::Argon2id,
             version: Version::Version13,
-            mem_cost: 32768,
+            mem_cost: 1048576,
             time_cost: dotenv::var("ROUND").expect("Missing env `ROUND`").parse::<u32>().unwrap(),
             lanes: 8,
             thread_mode: ThreadMode::Parallel,
