@@ -18,7 +18,7 @@ It implements an account creation, connection and authorization delegation syste
 - One-Time Usage OAuth token
 
 #### Argon2
-[Argon2id](https://en.wikipedia.org/wiki/Argon2) is a key-derivative hash function that is resistant to side-channel attacks and optimizes resistance to GPU cracking attacks.<br />
+[Argon2id](https://en.wikipedia.org/wiki/Argon2) is a key-derivative hash function which resists to side-channel attacks and is more reliable against GPU cracking attacks.<br />
 It allows us to manage the amount of memory used (normally `1GB`), the degree of parallelism as well as the number of iterations to do.
 
 #### ChaCha20Poly1305
