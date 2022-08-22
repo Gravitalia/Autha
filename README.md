@@ -26,5 +26,18 @@ It allows us to manage the amount of memory used (normally `1GB`), the degree of
 [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (MAC) allows to verify the integrity of the data as well as their veracity (authenticity).<br />
 [ChaCha20Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305) is an AEAD algorithm standardized by RFC. It allows to verify authenticity and confidentiality.
 
+## Database
+> We try to use high-performance databases to optimize critical response times.
+- Apache Cassandra
+- Redis
+
+#### Casssandra
+Apache [Cassandra](https://en.wikipedia.org/wiki/Apache_Cassandra) is a fast, fault-tolerant and ultra-scalable distributed database optimized for mass writing.<br />
+We use Cassandra to manage user accounts and security; every *significant* action taken by the user is logged.
+
+#### Redis
+[Redis](https://en.wikipedia.org/wiki/Redis) is a key-value database with in-memory capability, extremely fast.
+Used to cache public user data and redistribute it quickly as well as to unclog requests to Cassandra.
+
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FGravitalia%2FAutha.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FGravitalia%2FAutha?ref=badge_large)
