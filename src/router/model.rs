@@ -6,7 +6,7 @@ pub struct Error {
     pub message: String,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Deserialize)]
 pub struct Create {
     pub username: String,
     pub vanity: String,
