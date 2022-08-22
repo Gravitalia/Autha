@@ -1,8 +1,15 @@
 version = 1
 
 [[analyzers]]
+name = "docker"
+enabled = true
+
+  [analyzers.meta]
+  dockerfile_paths = ["Dockerfile"]
+
+[[analyzers]]
 name = "rust"
 enabled = true
 
   [analyzers.meta]
-  msrv = "1.61.0"
+  msrv = "1.63.0"
