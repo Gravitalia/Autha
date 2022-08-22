@@ -1,12 +1,15 @@
 use warp::Filter;
 mod router;
 mod helpers;
+mod database;
 
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
 
-    let routes = warp::path!("create").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).map(router::create);
+    let routes = warp::path!("create").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).map(router::create::create);
+
+    database::cassandra::test().await;
 
     warp::serve(routes)
     .run((
