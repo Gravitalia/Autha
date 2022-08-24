@@ -19,5 +19,4 @@ pub struct Create {
 #[derive(Serialize)]
 pub struct CreateResponse {
     pub token: String,
-    pub vanity: String,
 }
