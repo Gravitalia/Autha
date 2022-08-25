@@ -1,4 +1,4 @@
-mod model;
+pub mod model;
 use warp::reply::{WithStatus, Json};
 pub mod create;
 
