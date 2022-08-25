@@ -1,5 +1,5 @@
 [package]
-name = "api"
+name = "autha"
 version = "0.1.0"
 edition = "2021"
 
@@ -16,7 +16,7 @@ tokio = { version = "1.20.1", features = ["full"] }
 warp = "0.3.2"
 serde = { version = "1.0", features = ["derive"] }
 
-redis = "0.21.5"
+redis = "0.21.6"
 cdrs-tokio = "6.2.0"
 
 dotenv = "0.15.0"
