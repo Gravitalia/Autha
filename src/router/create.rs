@@ -24,7 +24,7 @@ pub async fn create(body: super::model::Create, _finger: String) -> WithStatus<J
         if !Regex::new(r"^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$").unwrap().is_match(body.phone.as_ref().unwrap()) {
             return super::err("Invalid phone".to_string());
         } else {
-            phone = Some(crate::helpers::encrypt(body.phone.unwrap().as_bytes()))
+            phone = Some(crate::helpers::encrypt(body.phone.unwrap().as_bytes()));
         }
     }
     // Birthdate verification
