@@ -17,7 +17,7 @@ pub async fn tables() {
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.bots ( id text, user_id text, client_secret text, ip text, country text, username text, avatar text, bio text, flags int, deleted boolean, PRIMARY KEY (id, username) ) WITH bloom_filter_fp_chance = 0.1 AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'} AND comment = '' AND compaction = {'class': 'org.apache.cassandra.db.compaction.LeveledCompactionStrategy'} AND compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND crc_check_chance = 1.0 AND default_time_to_live = 0 AND gc_grace_seconds = 259200 AND max_index_interval = 2048 AND memtable_flush_period_in_ms = 0 AND min_index_interval = 128 AND speculative_retry = '99PERCENTILE';").await.expect("accounts.bots create error");
 }
 
-pub async fn create_user(vanity: String, email: String, username: String, password: String, phone: Option<String>, birthdate: Option<String>) -> String {
+pub async fn create_user(vanity: String, email: String, username: String, password: String, phone: Option<String>, birthdate: Option<String>) {
     let mut user: Vec<String> = vec![vanity, email, username, "".to_string(), password];
     if phone.is_some() {
         user.push(phone.unwrap());
@@ -31,6 +31,4 @@ pub async fn create_user(vanity: String, email: String, username: String, passwo
     }
 
     SESSION.get().unwrap().query_with_values("INSERT INTO accounts.users (vanity, email, username, ip, password, phone, birthdate) VALUES (?, ?, ?, ?, ?, ?, ?)", user).await.expect("Failed to create user");
-
-    return "ok".to_string();
 }
