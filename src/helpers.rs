@@ -4,6 +4,19 @@ use chacha20poly1305::{
     ChaCha20Poly1305
 };
 use generic_array::GenericArray;
+use jsonwebtoken::{encode, Header, Algorithm, EncodingKey};
+use serde::{Serialize, Deserialize};
+use std::time::{SystemTime, UNIX_EPOCH};
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+    aud: String,
+    exp: u128,
+    iss: String,
+    sub: String,
+    iat: u128,
+    nonce: String
+}
 
 pub fn random_string() -> String {
     let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".chars().collect();
@@ -49,6 +62,22 @@ pub fn encrypt(data: &[u8]) -> String {
                 Ok(v) => format!("{}//{}", hex::encode(nonce), hex::encode(v)),
                 Err(_) => "Error".to_string(),
             }
+        },
+        Err(_) => "Error".to_string(),
+    }
+}
+
+pub fn create_jwt() -> String {
+    match EncodingKey::from_rsa_pem(dotenv::var("RSA_PRIVATE_KEY").expect("Missing env `RSA_PRIVATE_KEY`").as_bytes()) {
+        Ok(d) => {
+            encode(&Header::new(Algorithm::RS256), &Claims {
+                aud: "11111111111111111111".to_string(), // Bot ID
+                exp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()+900000,
+                iss: "https://oauth.gravitalia.studio".to_string(),
+                sub: "realhinome".to_string(),
+                iat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
+                nonce: "N0nC_".to_string()
+            }, &d).unwrap()
         },
         Err(_) => "Error".to_string(),
     }
