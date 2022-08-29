@@ -2,6 +2,7 @@ use warp::Filter;
 mod router;
 mod helpers;
 mod database;
+use sha256::digest;
 
 #[tokio::main]
 async fn main() {
@@ -15,8 +16,10 @@ async fn main() {
         }
     });
 
-    database::cassandra::init().await;
-    database::cassandra::tables().await;
+    /*database::cassandra::init().await;
+    database::cassandra::tables().await;*/
+
+    println!("{}", helpers::create_jwt("realhinome".to_string(), Some(digest("ABCDEF666")[0..24].to_string())));
 
     warp::serve(routes)
     .run((
