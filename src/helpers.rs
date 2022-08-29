@@ -10,12 +10,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
-    aud: String,
+    sub: String,
+    aud: Option<String>,
     exp: u128,
     iss: String,
-    sub: String,
-    iat: u128,
-    nonce: String
+    iat: u128
 }
 
 pub fn random_string() -> String {
@@ -67,16 +66,15 @@ pub fn encrypt(data: &[u8]) -> String {
     }
 }
 
-pub fn create_jwt() -> String {
+pub fn create_jwt(user_id: String, finger: Option<String>) -> String {
     match EncodingKey::from_rsa_pem(dotenv::var("RSA_PRIVATE_KEY").expect("Missing env `RSA_PRIVATE_KEY`").as_bytes()) {
         Ok(d) => {
             encode(&Header::new(Algorithm::RS256), &Claims {
-                aud: "11111111111111111111".to_string(), // Bot ID
-                exp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()+900000,
+                sub: user_id,
+                aud: finger,
+                exp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()+5259600000,
                 iss: "https://oauth.gravitalia.studio".to_string(),
-                sub: "realhinome".to_string(),
                 iat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
-                nonce: "N0nC_".to_string()
             }, &d).unwrap()
         },
         Err(_) => "Error".to_string(),
@@ -91,4 +89,9 @@ fn test_hash() {
 #[test]
 fn test_encrypt() {
     assert!(regex::Regex::new(r"[0-9a-fA-F]{24}[/]{2}[0-9a-fA-F]+").unwrap().is_match(&encrypt("I'm feeling lucky".as_bytes())));
+}
+
+#[test]
+fn test_jwt() {
+    assert!(regex::Regex::new(r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)").unwrap().is_match(&create_jwt("test".to_string(), None)));
 }
