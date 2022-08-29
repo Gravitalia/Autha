@@ -1,7 +1,8 @@
 use regex::Regex;
 use warp::reply::{WithStatus, Json};
+use sha256::digest;
 
-pub async fn create(body: super::model::Create, _finger: String) -> WithStatus<Json> {
+pub async fn create(body: super::model::Create, finger: String) -> WithStatus<Json> {
     // Email verification
     if !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&body.email) {
         return super::err("Invalid email".to_string());
@@ -37,11 +38,11 @@ pub async fn create(body: super::model::Create, _finger: String) -> WithStatus<J
         }
     }
 
-    crate::database::cassandra::create_user(body.vanity, crate::helpers::encrypt(body.email.as_bytes()), body.username, crate::helpers::hash(body.password.as_ref()), phone, birth).await;
+    crate::database::cassandra::create_user(body.vanity.clone(), crate::helpers::encrypt(body.email.as_bytes()), body.username, crate::helpers::hash(body.password.as_ref()), phone, birth).await;
 
     warp::reply::with_status(warp::reply::json(
         &super::model::CreateResponse{
-            token: "unknown".to_string()
+            token: crate::helpers::create_jwt(body.vanity, Some(digest(finger)[0..24].to_string()))
         }
     ),
     warp::http::StatusCode::CREATED)
