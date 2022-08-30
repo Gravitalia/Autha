@@ -15,7 +15,7 @@ struct Claims {
     exp: u128,
     iss: String,
     iat: u128,
-    nonce: String
+    nonce: Option<String>
 }
 
 pub fn random_string() -> String {
@@ -66,33 +66,39 @@ pub fn encrypt(data: &[u8]) -> String {
     }
 }
 
-pub async fn create_jwt(user_id: String, finger: Option<String>) -> String {
+pub async fn create_jwt(user_id: String, finger: Option<String>, nonce: Option<String>) -> String {
     match EncodingKey::from_rsa_pem(dotenv::var("RSA_PRIVATE_KEY").expect("Missing env `RSA_PRIVATE_KEY`").as_bytes()) {
         Ok(d) => {
             encode(&Header::new(Algorithm::RS256), &Claims {
                 sub: user_id.to_lowercase(),
-                aud: finger.clone().unwrap_or_else(|| "".to_string())[0..24].to_string(),
+                aud: finger.unwrap_or_else(|| "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08".to_string())[0..24].to_string(),
                 exp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()+5259600000,
                 iss: "https://oauth.gravitalia.studio".to_string(),
                 iat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
-                nonce: super::database::cassandra::create_security(user_id.to_lowercase(), 0, finger.unwrap_or_else(|| "finger".to_string()), None, None).await
+                nonce
             }, &d).unwrap()
         },
         Err(_) => "Error".to_string(),
     }
 }
 
-#[test]
-fn test_hash() {
-    assert!(regex::Regex::new(r"[$]argon2(i)?(d)?[$]v=[0-9]{1,2}[$]m=[0-9]+,t=[0-9]{1,},p=[0-9]{1,}[$].*").unwrap().is_match(&hash("password".as_bytes())));
-}
 
-#[test]
-fn test_encrypt() {
-    assert!(regex::Regex::new(r"[0-9a-fA-F]{24}[/]{2}[0-9a-fA-F]+").unwrap().is_match(&encrypt("I'm feeling lucky".as_bytes())));
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-/*#[test]
-async fn test_jwt() {
-    assert!(regex::Regex::new(r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)").unwrap().is_match(&create_jwt("test".to_string(), None).await));
-}*/
+    #[test]
+    fn test_hash() {
+        assert!(regex::Regex::new(r"[$]argon2(i)?(d)?[$]v=[0-9]{1,2}[$]m=[0-9]+,t=[0-9]{1,},p=[0-9]{1,}[$].*").unwrap().is_match(&hash("password".as_bytes())));
+    }
+    
+    #[test]
+    fn test_encrypt() {
+        assert!(regex::Regex::new(r"[0-9a-fA-F]{24}[/]{2}[0-9a-fA-F]+").unwrap().is_match(&encrypt("I'm feeling lucky".as_bytes())));
+    }
+    
+    #[tokio::test]
+    async fn test_jwt() {
+        assert!(regex::Regex::new(r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)").unwrap().is_match(&create_jwt("test".to_string(), None, None).await));
+    }
+}
