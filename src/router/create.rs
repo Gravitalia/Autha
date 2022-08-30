@@ -38,11 +38,11 @@ pub async fn create(body: super::model::Create, finger: String) -> WithStatus<Js
         }
     }
 
-    crate::database::cassandra::create_user(body.vanity.clone(), crate::helpers::encrypt(body.email.as_bytes()), body.username, crate::helpers::hash(body.password.as_ref()), phone, birth).await;
+    crate::database::cassandra::create_user(body.vanity.to_lowercase(), digest(body.email), body.username, crate::helpers::hash(body.password.as_ref()), phone, birth).await;
 
     warp::reply::with_status(warp::reply::json(
         &super::model::CreateResponse{
-            token: crate::helpers::create_jwt(body.vanity, Some(digest(finger)[0..24].to_string()))
+            token: crate::helpers::create_jwt(body.vanity, Some(digest(finger))).await
         }
     ),
     warp::http::StatusCode::CREATED)
