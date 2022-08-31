@@ -42,7 +42,7 @@ pub async fn create(body: super::model::Create, finger: String) -> WithStatus<Js
 
     warp::reply::with_status(warp::reply::json(
         &super::model::CreateResponse{
-            token: crate::helpers::create_jwt(body.vanity.to_lowercase(), Some(digest(finger.clone())), Some(crate::database::cassandra::create_security(body.vanity.to_lowercase(), 0, finger, None, None).await)).await
+            token: crate::helpers::create_jwt(body.vanity.to_lowercase(), Some(digest(finger.clone())), Some(crate::database::cassandra::create_security(body.vanity.to_lowercase(), crate::router::model::SecurityCode::Jwt as u8, finger, None, None).await.to_string())).await
         }
     ),
     warp::http::StatusCode::CREATED)
