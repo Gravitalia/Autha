@@ -15,7 +15,7 @@ pub async fn init() {
 pub async fn tables() {
     SESSION.get().unwrap().query("CREATE KEYSPACE IF NOT EXISTS accounts WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };").await.expect("Keyspace create error");
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.users ( vanity text, email text, username text, avatar text, banner text, bio text, verified boolean, flags int, phone text, password text, birthdate text, deleted boolean, mfa_code text, oauth list<text>, PRIMARY KEY (vanity, email) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 864000;").await.expect("accounts.users create error");
-    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.security ( id text, user_id text, fingerprint text, ip text, country text, revoked boolean, type text, created_at timestamp, PRIMARY KEY (id) ) WITH caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'} AND compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 172800 AND default_time_to_live = 15770000;").await.expect("accounts.security create error");
+    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.security ( id text, user_id text, fingerprint text, ip text, country text, revoked boolean, type int, created_at timestamp, PRIMARY KEY (id) ) WITH caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'} AND compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 172800 AND default_time_to_live = 15770000;").await.expect("accounts.security create error");
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.bots ( id text, user_id text, client_secret text, ip text, username text, avatar text, bio text, flags int, deleted boolean, PRIMARY KEY (id, username) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 864000;").await.expect("accounts.bots create error");
 }
 
@@ -27,14 +27,12 @@ pub async fn create_user(vanity: String, email: String, username: String, passwo
     SESSION.get().unwrap().query_with_values(format!("INSERT INTO accounts.users (vanity, email, username, password, phone, birthdate, flags, deleted) VALUES (?, ?, ?, ?, ?, ?, {}, {})", 0, false), user).await.expect("Failed to create user");
 }
 
-// code_type: 0 = JWT, 1 = email verification, 2 = phone verification, 3 = password reset
-pub async fn create_security(vanity: String, code_type: i8, fingerprint: String, ip: Option<String>, country: Option<String>) -> String {
-    let id: String = Uuid::new_v4().to_string();
-    let mut data: Vec<String> = vec![Uuid::new_v4().to_string(), vanity, code_type.to_string(), fingerprint];
+pub async fn create_security(vanity: String, code: u8, fingerprint: String, ip: Option<String>, country: Option<String>) -> uuid::Uuid {
+    let id: uuid::Uuid = Uuid::new_v4();
+    let mut data: Vec<String> = vec![id.to_string(), vanity, fingerprint];
     if ip.is_some() { data.push(ip.unwrap()); } else { data.push("".to_string()); }
     if country.is_some() { data.push(country.unwrap()); } else { data.push("".to_string()); }
 
-    SESSION.get().unwrap().query_with_values(format!("INSERT INTO accounts.security (id, user_id, type, fingerprint, created_at, ip, country, revoked) VALUES (?, ?, ?, ?, {}, ?, ?, {})", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(), false), data).await.expect("Failed to create security token");
-
+    SESSION.get().unwrap().query_with_values(format!("INSERT INTO accounts.security (id, user_id, fingerprint, created_at, ip, country, revoked, type) VALUES (?, ?, ?, {}, ?, ?, {}, {})", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(), false, code), data).await.expect("Failed to create security token");
     id
 }
