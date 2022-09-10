@@ -7,6 +7,12 @@ use generic_array::GenericArray;
 use jsonwebtoken::{encode, Header, Algorithm, EncodingKey};
 use serde::{Serialize, Deserialize};
 use std::time::{SystemTime, UNIX_EPOCH};
+use once_cell::sync::OnceCell;
+static ARGON_SECRET: OnceCell<String> = OnceCell::new();
+static ROUND: OnceCell<u32> = OnceCell::new();
+static HASH_LENGTH: OnceCell<u32> = OnceCell::new();
+static CHA_KEY: OnceCell<String> = OnceCell::new();
+static RSA_PRIVATE_KEY: OnceCell<String> = OnceCell::new();
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -16,6 +22,15 @@ struct Claims {
     iss: String,
     iat: u128,
     nonce: Option<String>
+}
+
+#[allow(unused_must_use)]
+pub fn init() {
+    ARGON_SECRET.set(dotenv::var("KEY").expect("Missing env `KEY`"));
+    ROUND.set(dotenv::var("ROUND").expect("Missing env `ROUND`").parse::<u32>().unwrap());
+    HASH_LENGTH.set(dotenv::var("HASH_LENGTH").expect("Missing env `HASH_LENGTH`").parse::<u32>().unwrap());
+    CHA_KEY.set(dotenv::var("CHA_KEY").expect("Missing env `CHA_KEY`"));
+    RSA_PRIVATE_KEY.set(dotenv::var("RSA_PRIVATE_KEY").expect("Missing env `RSA_PRIVATE_KEY`"));
 }
 
 pub fn random_string() -> String {
@@ -41,18 +56,18 @@ pub fn hash(data: &[u8]) -> String {
             variant: Variant::Argon2id,
             version: Version::Version13,
             mem_cost: 1048576,
-            time_cost: dotenv::var("ROUND").expect("Missing env `ROUND`").parse::<u32>().unwrap(),
+            time_cost: *ROUND.get().unwrap(),
             lanes: 8,
             thread_mode: ThreadMode::Parallel,
-            secret: dotenv::var("KEY").expect("Missing env `KEY`").as_bytes(),
+            secret: ARGON_SECRET.get().unwrap().as_bytes(),
             ad: &[],
-            hash_length: dotenv::var("HASH_LENGTH").expect("Missing env `HASH_LENGTH`").parse::<u32>().unwrap()
+            hash_length: *HASH_LENGTH.get().unwrap()
         }
     ).unwrap()
 }
 
 pub fn encrypt(data: &[u8]) -> String {
-    match hex::decode(dotenv::var("CHA_KEY").expect("Missing env `CHA_KEY`")) {
+    match hex::decode(CHA_KEY.get().unwrap()) {
         Ok(v) => {
             let bytes: generic_array::GenericArray<u8, generic_array::typenum::UInt<generic_array::typenum::UInt<generic_array::typenum::UInt<generic_array::typenum::UInt<generic_array::typenum::UInt<generic_array::typenum::UInt<generic_array::typenum::UTerm, generic_array::typenum::B1>, generic_array::typenum::B0>, generic_array::typenum::B0>, generic_array::typenum::B0>, generic_array::typenum::B0>, generic_array::typenum::B0>> = GenericArray::clone_from_slice(&v);
 
@@ -67,7 +82,7 @@ pub fn encrypt(data: &[u8]) -> String {
 }
 
 pub async fn create_jwt(user_id: String, finger: Option<String>, nonce: Option<String>) -> String {
-    match EncodingKey::from_rsa_pem(dotenv::var("RSA_PRIVATE_KEY").expect("Missing env `RSA_PRIVATE_KEY`").as_bytes()) {
+    match EncodingKey::from_rsa_pem(RSA_PRIVATE_KEY.get().unwrap().as_bytes()) {
         Ok(d) => {
             encode(&Header::new(Algorithm::RS256), &Claims {
                 sub: user_id.to_lowercase(),
