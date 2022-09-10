@@ -20,3 +20,11 @@ pub struct Create {
 pub struct CreateResponse {
     pub token: String,
 }
+
+#[allow(dead_code)]
+pub enum SecurityCode {
+    Jwt,
+    Email,
+    Phone,
+    Password,
+}
