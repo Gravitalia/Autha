@@ -110,11 +110,13 @@ mod tests {
     
     #[test]
     fn test_encrypt() {
+        init();
         assert!(regex::Regex::new(r"[0-9a-fA-F]{24}[/]{2}[0-9a-fA-F]+").unwrap().is_match(&encrypt("I'm feeling lucky".as_bytes())));
     }
     
     #[tokio::test]
     async fn test_jwt() {
+        init();
         assert!(regex::Regex::new(r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)").unwrap().is_match(&create_jwt("test".to_string(), None, None).await));
     }
 }
