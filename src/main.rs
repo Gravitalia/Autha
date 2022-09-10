@@ -17,6 +17,7 @@ async fn main() {
 
     database::cassandra::init().await;
     database::cassandra::tables().await;
+    helpers::init();
 
     warp::serve(routes)
     .run((
