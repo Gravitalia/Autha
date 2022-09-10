@@ -104,6 +104,7 @@ mod tests {
 
     #[test]
     fn test_hash() {
+        init();
         assert!(regex::Regex::new(r"[$]argon2(i)?(d)?[$]v=[0-9]{1,2}[$]m=[0-9]+,t=[0-9]{1,},p=[0-9]{1,}[$].*").unwrap().is_match(&hash("password".as_bytes())));
     }
     
