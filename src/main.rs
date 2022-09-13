@@ -13,7 +13,14 @@ async fn main() {
         } else {
             Err(warp::reject::not_found())
         }
-    });
+    })
+    .or(warp::path!("users" / String).and_then(|id| async {
+        if true {
+            Ok(router::users::get(id).await)
+        } else {
+            Err(warp::reject::not_found())
+        }
+    }));
 
     database::cassandra::init().await;
     database::cassandra::tables().await;
