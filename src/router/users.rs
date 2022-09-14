@@ -1,19 +1,31 @@
 use warp::reply::{WithStatus, Json};
 
+use super::model;
+
 pub async fn get(id: String) -> WithStatus<Json> {
-    if id == "@me".to_string() {
-        warp::reply::with_status(warp::reply::json(
-            &super::model::CreateResponse{
-                token: id
-            }
-        ),
-        warp::http::StatusCode::OK)
+    let user:model::User;
+
+    if id == *"@me" {
+        user = model::User {
+            username: "d".to_string(),
+            vanity: id,
+            avatar: None,
+            bio: None,
+            verified: true,
+            deleted: false,
+            flags: 0,
+        };
     } else {
-        warp::reply::with_status(warp::reply::json(
-            &super::model::CreateResponse{
-                token: id
-            }
-        ),
-        warp::http::StatusCode::OK)
+        user = model::User {
+            username: "xd".to_string(),
+            vanity: id,
+            avatar: Some("avatar".to_string()),
+            bio: None,
+            verified: true,
+            deleted: false,
+            flags: 0,
+        };
     }
+
+    warp::reply::with_status(warp::reply::json(&user), warp::http::StatusCode::OK)
 }
