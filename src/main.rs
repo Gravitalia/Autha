@@ -14,7 +14,7 @@ async fn main() {
             Err(warp::reject::not_found())
         }
     })
-    .or(warp::path!("users" / String).and_then(|id| async {
+    .or(warp::path!("users" / String).and(warp::header("sec")).and_then(|id: String, _finger: String| async {
         if true {
             Ok(router::users::get(id).await)
         } else {
