@@ -4,7 +4,7 @@ use chacha20poly1305::{
     ChaCha20Poly1305
 };
 use generic_array::GenericArray;
-use jsonwebtoken::{encode, Header, Algorithm, EncodingKey};
+use jsonwebtoken::{encode, decode, Header, Algorithm, EncodingKey, Validation, DecodingKey, TokenData};
 use serde::{Serialize, Deserialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 use once_cell::sync::OnceCell;
@@ -13,15 +13,16 @@ static ROUND: OnceCell<u32> = OnceCell::new();
 static HASH_LENGTH: OnceCell<u32> = OnceCell::new();
 static CHA_KEY: OnceCell<String> = OnceCell::new();
 static RSA_PRIVATE_KEY: OnceCell<String> = OnceCell::new();
+static RSA_PUBLIC_KEY: OnceCell<String> = OnceCell::new();
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    sub: String,
-    aud: String,
+pub struct Claims {
+    pub sub: String,
+    pub nonce: Option<String>,
+    aud: Option<String>,
     exp: u128,
     iss: String,
-    iat: u128,
-    nonce: Option<String>
+    iat: u128
 }
 
 #[allow(unused_must_use)]
@@ -31,6 +32,7 @@ pub fn init() {
     HASH_LENGTH.set(dotenv::var("HASH_LENGTH").expect("Missing env `HASH_LENGTH`").parse::<u32>().unwrap());
     CHA_KEY.set(dotenv::var("CHA_KEY").expect("Missing env `CHA_KEY`"));
     RSA_PRIVATE_KEY.set(dotenv::var("RSA_PRIVATE_KEY").expect("Missing env `RSA_PRIVATE_KEY`"));
+    RSA_PUBLIC_KEY.set(dotenv::var("RSA_PUBLIC_KEY").expect("Missing env `RSA_PUBLIC_KEY`"));
 }
 
 pub fn random_string() -> String {
@@ -86,7 +88,7 @@ pub async fn create_jwt(user_id: String, finger: Option<String>, nonce: Option<S
         Ok(d) => {
             encode(&Header::new(Algorithm::RS256), &Claims {
                 sub: user_id.to_lowercase(),
-                aud: finger.unwrap_or_else(|| "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08".to_string())[0..24].to_string(),
+                aud: if finger.is_some() { Some(finger.unwrap()[0..24].to_string()) } else { None },
                 exp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()+5259600000,
                 iss: "https://oauth.gravitalia.studio".to_string(),
                 iat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
@@ -94,6 +96,20 @@ pub async fn create_jwt(user_id: String, finger: Option<String>, nonce: Option<S
             }, &d).unwrap()
         },
         Err(_) => "Error".to_string(),
+    }
+}
+
+pub async fn get_jwt(token: String) -> Result<TokenData<Claims>, String> {
+    match DecodingKey::from_rsa_pem(RSA_PRIVATE_KEY.get().unwrap().as_bytes()) {
+        Ok(d) => {
+            match decode::<Claims>(&token, &d, &Validation::new(Algorithm::RS256)) {
+                Ok(token_data) => {
+                    Ok(token_data)
+                },
+                Err(err) => Err(err.to_string()),
+            }
+        },
+        Err(_) => Err("Error".to_string()),
     }
 }
 
