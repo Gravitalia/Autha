@@ -1,12 +1,19 @@
 use warp::reply::{WithStatus, Json};
-
 use super::model;
+use crate::database::cassandra::query;
 
-pub async fn get(id: String) -> WithStatus<Json> {
+pub async fn get(mut id: String, token: Option<String>) -> WithStatus<Json> {
     let user:model::User = if id == *"@me" {
+        id = match crate::helpers::get_jwt(token.unwrap()).await {
+            Ok(data) => data.claims.sub,
+            Err(_) => "".to_string()
+        };
+
+        println!("{:?}", query("SELECT vanity, username, verified, deleted, flags, avatar FROM accounts.users WHERE vanity = ?", vec![id]).await);
+
         model::User {
             username: "d".to_string(),
-            vanity: id,
+            vanity: "d".to_string(),
             avatar: None,
             bio: None,
             verified: true,
