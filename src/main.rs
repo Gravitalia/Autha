@@ -1,7 +1,26 @@
-use warp::Filter;
+use warp::{Filter, reject::Reject};
 mod router;
 mod helpers;
 mod database;
+
+#[derive(Debug)]
+struct InvalidQuery;
+impl Reject for InvalidQuery {}
+
+async fn middleware(token: Option<String>, fallback: String) -> String {
+    if token.is_some() && fallback == *"@me" {
+        match helpers::get_jwt(token.unwrap()).await {
+            Ok(data) => {
+                data.claims.sub
+            },
+            Err(_) => "Invalid".to_string()
+        }
+    } else if fallback == *"@me" {
+        "Invalid".to_string()
+    } else {
+        fallback
+    }
+}
 
 #[tokio::main]
 async fn main() {
@@ -14,11 +33,12 @@ async fn main() {
             Err(warp::reject::not_found())
         }
     })
-    .or(warp::path!("users" / String).and(warp::header("sec")).and_then(|id: String, _finger: String| async {
-        if true {
-            Ok(router::users::get(id).await)
+    .or(warp::path!("users" / String).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async {
+        let middelware_res: String = middleware(token, id).await;
+        if middelware_res != *"Invalid" {
+            Ok(router::users::get(middelware_res).await)
         } else {
-            Err(warp::reject::not_found())
+            Err(warp::reject::custom(InvalidQuery))
         }
     }));
 
