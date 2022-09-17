@@ -100,7 +100,7 @@ pub async fn create_jwt(user_id: String, finger: Option<String>, nonce: Option<S
 }
 
 pub async fn get_jwt(token: String) -> Result<TokenData<Claims>, String> {
-    match DecodingKey::from_rsa_pem(RSA_PRIVATE_KEY.get().unwrap().as_bytes()) {
+    match DecodingKey::from_rsa_pem(RSA_PUBLIC_KEY.get().unwrap().as_bytes()) {
         Ok(d) => {
             match decode::<Claims>(&token, &d, &Validation::new(Algorithm::RS256)) {
                 Ok(token_data) => {
