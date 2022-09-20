@@ -20,7 +20,7 @@ warp = "0.3.2"
 serde = { version = "1.0", features = ["derive"] }
 
 redis = "0.21.6"
-cdrs-tokio = "6.2.0"
+cdrs-tokio = "7.0.0"
 
 chacha20poly1305 = "0.10.1"
 rust-argon2 = "1.0.0"
