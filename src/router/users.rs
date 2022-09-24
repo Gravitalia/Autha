@@ -7,11 +7,7 @@ fn vec_to_array<T, const N: usize>(v: Vec<T>) -> [T; N] {
 }
 
 fn vec_to_bool(vec: &Vec<u8>) -> bool {
-    if vec[0] == 0 {
-        false
-    } else {
-        true
-    }
+    vec[0] == 0
 }
 
 fn vec_to_opt_string(vec: Option<Vec<u8>>) -> Option<String> {
