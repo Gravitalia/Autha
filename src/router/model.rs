@@ -37,5 +37,5 @@ pub struct User {
     pub bio: Option<String>,
     pub verified: bool,
     pub deleted: bool,
-    pub flags: u16
+    pub flags: u32
 }
