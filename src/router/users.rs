@@ -46,9 +46,9 @@ pub async fn get(id: String) -> WithStatus<Json> {
                 vanity: id,
                 avatar: vec_to_opt_string(query_response.as_cols().unwrap().rows_content[0][1].clone().into_bytes()),
                 bio: vec_to_opt_string(query_response.as_cols().unwrap().rows_content[0][2].clone().into_bytes()),
-                verified: vec_to_bool(&query_response.as_cols().unwrap().rows_content[0][3].clone().into_bytes().unwrap_or(vec![0])),
-                deleted: vec_to_bool(&query_response.as_cols().unwrap().rows_content[0][4].clone().into_bytes().unwrap_or(vec![0])),
-                flags: array_to_u32(&vec_to_array(query_response.as_cols().unwrap().rows_content[0][5].clone().into_bytes().unwrap_or(vec![0, 0, 0, 0]))),
+                verified: vec_to_bool(&query_response.as_cols().unwrap().rows_content[0][3].clone().into_bytes().unwrap_or_else(|| vec![0])),
+                deleted: vec_to_bool(&query_response.as_cols().unwrap().rows_content[0][4].clone().into_bytes().unwrap_or_else(|| vec![0])),
+                flags: array_to_u32(&vec_to_array(query_response.as_cols().unwrap().rows_content[0][5].clone().into_bytes().unwrap_or_else(|| vec![0, 0, 0, 0]))),
             }
         ), warp::http::StatusCode::OK)
     }
