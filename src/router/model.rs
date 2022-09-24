@@ -28,3 +28,14 @@ pub enum SecurityCode {
     Phone,
     Password,
 }
+
+#[derive(Serialize)]
+pub struct User {
+    pub username: String,
+    pub vanity: String,
+    pub avatar: Option<String>,
+    pub bio: Option<String>,
+    pub verified: bool,
+    pub deleted: bool,
+    pub flags: u32
+}

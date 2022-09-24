@@ -8,7 +8,7 @@ static CLIENT: OnceCell<cdrs_tokio::cluster::NodeTcpConfig> = OnceCell::new();
 static SESSION: OnceCell<cdrs_tokio::cluster::session::Session<cdrs_tokio::transport::TransportTcp, cdrs_tokio::cluster::TcpConnectionManager, cdrs_tokio::load_balancing::RoundRobinLoadBalancingStrategy<cdrs_tokio::transport::TransportTcp, cdrs_tokio::cluster::TcpConnectionManager>>> = OnceCell::new();
 
 pub async fn init() {
-    let _db =  CLIENT.set(NodeTcpConfigBuilder::new().with_contact_point("127.0.0.1:9042".into()).build().await.unwrap());
+    let _db = CLIENT.set(NodeTcpConfigBuilder::new().with_contact_point("127.0.0.1:9042".into()).build().await.unwrap());
     let _sess = SESSION.set(TcpSessionBuilder::new(RoundRobinLoadBalancingStrategy::new(), CLIENT.get().cloned().unwrap()).build());
 }
 
@@ -35,4 +35,8 @@ pub async fn create_security(vanity: String, code: u8, fingerprint: String, ip: 
 
     SESSION.get().unwrap().query_with_values(format!("INSERT INTO accounts.security (id, user_id, fingerprint, created_at, ip, country, revoked, type) VALUES (?, ?, ?, {}, ?, ?, {}, {})", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(), false, code), data).await.expect("Failed to create security token");
     id
+}
+
+pub async fn query(query: &'static str, params: Vec<String>) -> cdrs_tokio::frame::Frame {
+    SESSION.get().unwrap().query_with_values(query, params).await.expect("Keyspace create error")
 }
