@@ -6,15 +6,15 @@ fn vec_to_array<T, const N: usize>(v: Vec<T>) -> [T; N] {
     v.try_into().unwrap_or_else(|v: Vec<T>| panic!("Expected a Vec of length {} but it was {}", N, v.len()))
 }
 
-fn vec_to_bool(vec: &Vec<u8>) -> bool {
+fn vec_to_bool(vec: &[u8]) -> bool {
     vec[0] == 0
 }
 
 fn vec_to_opt_string(vec: Option<Vec<u8>>) -> Option<String> {
-    if vec.is_some() {
-        Some(String::from_utf8_lossy(&vec.unwrap()).to_string())
+    if let Some(value) = vec {
+        Some(String::from_utf8_lossy(&value).to_string())
     } else {
-        None
+        Option::None
     }
 }
 
@@ -22,13 +22,13 @@ fn array_to_u32(array: &[u8; 4]) -> u32 {
     ((array[0] as u32) << 24) +
     ((array[1] as u32) << 16) +
     ((array[2] as u32) <<  8) +
-    ((array[3] as u32) <<  0)
+    (array[3] as u32)
 }
 
 pub async fn get(id: String) -> WithStatus<Json> {
     let query_response = &query("SELECT username, avatar, bio, verified, deleted, flags FROM accounts.users WHERE vanity = ?", vec![id.clone()]).await.response_body().unwrap();
 
-    if query_response.as_cols().unwrap().rows_content.len() == 0 {
+    if query_response.as_cols().unwrap().rows_content.is_empty() {
         warp::reply::with_status(warp::reply::json(
             &model::Error {
                 error: true,
