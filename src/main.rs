@@ -36,7 +36,7 @@ async fn main() {
     .or(warp::path!("users" / String).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async {
         let middelware_res: String = middleware(token, id).await;
         if middelware_res != *"Invalid" {
-            Ok(router::users::get(middelware_res).await)
+            Ok(router::users::get(middelware_res.to_lowercase()).await)
         } else {
             Err(warp::reject::custom(InvalidQuery))
         }
