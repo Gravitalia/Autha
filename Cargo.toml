@@ -16,7 +16,7 @@ debug = true
 
 [dependencies]
 tokio = { version = "1.21.0", features = ["full"] }
-warp = "0.3.2"
+warp = "0.3.3"
 serde = { version = "1.0", features = ["derive"] }
 
 redis = "0.21.6"
