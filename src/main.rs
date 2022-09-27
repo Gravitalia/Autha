@@ -34,6 +34,7 @@ async fn main() {
         }
     })
     .or(warp::path!("users" / String).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async {
+        // Lets's check Sec header later
         let middelware_res: String = middleware(token, id).await;
         if middelware_res != *"Invalid" {
             Ok(router::users::get(middelware_res.to_lowercase()).await)
@@ -46,7 +47,7 @@ async fn main() {
     database::cassandra::tables().await;
     helpers::init();
 
-    warp::serve(routes)
+    warp::serve(warp::any().and(warp::options()).map(|| "OK").or(routes))
     .run((
         [127, 0, 0, 1],
         dotenv::var("PORT").expect("Missing env `PORT`").parse::<u16>().unwrap(),
