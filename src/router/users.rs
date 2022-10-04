@@ -14,7 +14,7 @@ fn vec_to_opt_string(vec: Option<Vec<u8>>) -> Option<String> {
     if let Some(value) = vec {
         Some(String::from_utf8_lossy(&value).to_string())
     } else {
-        Option::None
+        None
     }
 }
 
