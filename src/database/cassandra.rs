@@ -20,8 +20,8 @@ pub async fn tables() {
     SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON accounts.users (email);").await.expect("second index (email) create error");
 }
 
-pub async fn create_user(vanity: String, email: String, username: String, password: String, phone: Option<String>, birthdate: Option<String>) {
-    let mut user: Vec<String> = vec![vanity, email, username, password];
+pub async fn create_user(vanity: &String, email: String, username: String, password: String, phone: Option<String>, birthdate: Option<String>) {
+    let mut user: Vec<String> = vec![vanity.to_string(), email, username, password];
     if phone.is_some() { user.push(phone.unwrap()); } else { user.push("".to_string()); }
     if birthdate.is_some() { user.push(birthdate.unwrap()); } else { user.push("".to_string()); }
 
