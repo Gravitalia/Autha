@@ -25,6 +25,7 @@ pub struct CreateResponse {
 pub struct Login {
     pub email: String,
     pub password: String,
+    pub mfa: Option<String>,
 }
 
 #[allow(dead_code)]
