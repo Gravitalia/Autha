@@ -21,6 +21,12 @@ pub struct CreateResponse {
     pub token: String,
 }
 
+#[derive(Deserialize)]
+pub struct Login {
+    pub email: String,
+    pub password: String,
+}
+
 #[allow(dead_code)]
 pub enum SecurityCode {
     Jwt,
@@ -37,5 +43,5 @@ pub struct User {
     pub bio: Option<String>,
     pub verified: bool,
     pub deleted: bool,
-    pub flags: u32
+    pub flags: u32,
 }
