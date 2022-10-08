@@ -1,7 +1,8 @@
 use regex::Regex;
 use warp::reply::{WithStatus, Json};
 use sha256::digest;
-use std::{thread, time};
+use std::{thread, time::{SystemTime, UNIX_EPOCH, Duration}};
+use totp_lite::{totp_custom, Sha1};
 use crate::database::cassandra::query;
 
 fn vec_to_string(vec: &[u8]) -> String {
@@ -19,22 +20,26 @@ pub async fn login(body: super::model::Login, finger: String) -> WithStatus<Json
     }
 
     let user = &query("SELECT vanity, mfa_code, password FROM accounts.users WHERE email = ?", vec![digest(body.email)]).await.response_body().unwrap();
-    let error = user.as_cols().unwrap().rows_content.is_empty() || !crate::helpers::hash_test(&vec_to_string(&user.as_cols().unwrap().rows_content[0][2].clone().into_bytes().unwrap())[..], body.password.as_ref());
-    if error {
-        thread::sleep(time::Duration::from_millis(200));
-        warp::reply::with_status(warp::reply::json(
-            &super::model::Error {
-                error: true,
-                message: "Invalid email or password".to_string()
-            }
-        ), warp::http::StatusCode::NOT_FOUND)
-    } else {
-        let vanity: String = vec_to_string(&user.as_cols().unwrap().rows_content[0][0].clone().into_bytes().unwrap());
-        warp::reply::with_status(warp::reply::json(
-            &super::model::CreateResponse{
-                token: crate::helpers::create_jwt(vanity.to_lowercase(), Some(digest(&finger)), Some(crate::database::cassandra::create_security(vanity.to_lowercase(), crate::router::model::SecurityCode::Jwt as u8, finger, None, None).await.to_string())).await
-            }
-        ),
-        warp::http::StatusCode::OK)
+
+    if user.as_cols().unwrap().rows_content.is_empty() || !crate::helpers::hash_test(&vec_to_string(&user.as_cols().unwrap().rows_content[0][2].clone().into_bytes().unwrap())[..], body.password.as_ref()) {
+        thread::sleep(Duration::from_millis(200));
+        return super::err("Invalid email or password".to_string());
     }
+
+    let mfa_code: Option<String> = user.as_cols().unwrap().rows_content[0][1].clone().into_bytes().map(|value| String::from_utf8_lossy(&value).to_string());
+    if mfa_code.is_some() && body.mfa.is_none() {
+        return super::err("MFA".to_string());
+    } else if mfa_code.is_some() && body.mfa.is_some() {
+        // Save MFA code in clear, not in base32
+        if totp_custom::<Sha1>(30, 6, mfa_code.unwrap().as_ref(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()) != body.mfa.unwrap() {
+            return super::err("MFA".to_string());
+        }
+    }
+
+    let vanity: String = vec_to_string(&user.as_cols().unwrap().rows_content[0][0].clone().into_bytes().unwrap());
+    warp::reply::with_status(warp::reply::json(
+        &super::model::CreateResponse{
+            token: crate::helpers::create_jwt(vanity.to_lowercase(), Some(digest(&finger)), Some(crate::database::cassandra::create_security(vanity.to_lowercase(), crate::router::model::SecurityCode::Jwt as u8, finger, None, None).await.to_string())).await
+        }
+    ), warp::http::StatusCode::OK)
 }
