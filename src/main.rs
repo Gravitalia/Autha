@@ -42,7 +42,7 @@ async fn main() {
             Err(warp::reject::custom(InvalidQuery))
         }
     }))
-    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).and_then(|body: router::model::Create, finger: String| async {
+    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).and_then(|body: router::model::Login, finger: String| async {
         if true {
             Ok(router::login::login(body, finger).await)
         } else {
