@@ -41,6 +41,13 @@ async fn main() {
         } else {
             Err(warp::reject::custom(InvalidQuery))
         }
+    }))
+    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).and_then(|body: router::model::Login, finger: String| async {
+        if true {
+            Ok(router::login::login(body, finger).await)
+        } else {
+            Err(warp::reject::custom(InvalidQuery))
+        }
     }));
 
     database::cassandra::init().await;

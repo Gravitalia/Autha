@@ -68,6 +68,10 @@ pub fn hash(data: &[u8]) -> String {
     ).unwrap()
 }
 
+pub fn hash_test(hash: &str, pwd: &[u8]) -> bool {
+    argon2::verify_encoded_ext(hash, pwd, ARGON_SECRET.get().unwrap().as_bytes(), &[]).unwrap()
+}
+
 pub fn encrypt(data: &[u8]) -> String {
     match hex::decode(CHA_KEY.get().unwrap()) {
         Ok(v) => {
@@ -121,7 +125,9 @@ mod tests {
     #[test]
     fn test_hash() {
         init();
-        assert!(regex::Regex::new(r"[$]argon2(i)?(d)?[$]v=[0-9]{1,2}[$]m=[0-9]+,t=[0-9]{1,},p=[0-9]{1,}[$].*").unwrap().is_match(&hash("password".as_bytes())));
+        let pwd = &hash(b"password");
+        assert!(regex::Regex::new(r"[$]argon2(i)?(d)?[$]v=[0-9]{1,2}[$]m=[0-9]+,t=[0-9]{1,},p=[0-9]{1,}[$].*").unwrap().is_match(pwd));
+        assert!(hash_test(pwd, b"password"));
     }
     
     #[test]

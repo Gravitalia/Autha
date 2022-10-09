@@ -11,11 +11,7 @@ fn vec_to_bool(vec: &[u8]) -> bool {
 }
 
 fn vec_to_opt_string(vec: Option<Vec<u8>>) -> Option<String> {
-    if let Some(value) = vec {
-        Some(String::from_utf8_lossy(&value).to_string())
-    } else {
-        None
-    }
+    vec.map(|value| String::from_utf8_lossy(&value).to_string())
 }
 
 fn array_to_u32(array: &[u8; 4]) -> u32 {
