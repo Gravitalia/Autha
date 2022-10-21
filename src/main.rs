@@ -42,7 +42,7 @@ async fn main() {
             Err(warp::reject::custom(InvalidQuery))
         }
     }))
-    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).and_then(|body: router::model::Login, finger: String| async {
+    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).and(warp::header("X-Forwarded-For")).and_then(|body: router::model::Login, finger: String, _ip: String| async move {
         if true {
             Ok(router::login::login(body, finger).await)
         } else {
@@ -52,6 +52,7 @@ async fn main() {
 
     database::cassandra::init().await;
     database::cassandra::tables().await;
+    database::mem::init();
     helpers::init();
 
     warp::serve(warp::any().and(warp::options()).map(|| "OK").or(routes))
