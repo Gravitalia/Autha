@@ -1,2 +1,2 @@
 pub mod cassandra;
-pub mod redis;
+pub mod mem;
