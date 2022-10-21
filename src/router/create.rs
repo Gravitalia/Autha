@@ -21,7 +21,7 @@ pub async fn create(body: super::model::Create, finger: String) -> WithStatus<Js
 		return super::err("Invalid username".to_string());
 	}
 
-    if !&query("SELECT vanity FROM accounts.users WHERE email = ?", vec![digest(&body.email)]).await.response_body().unwrap().as_cols().unwrap().rows_content.is_empty() {
+    if !&query("SELECT vanity FROM accounts.users WHERE email = ?", vec![digest(&*body.email)]).await.response_body().unwrap().as_cols().unwrap().rows_content.is_empty() {
         warp::reply::with_status(warp::reply::json(
             &super::model::Error{
                 error: true,
@@ -29,7 +29,7 @@ pub async fn create(body: super::model::Create, finger: String) -> WithStatus<Js
             }
         ),
         warp::http::StatusCode::BAD_REQUEST)
-    } else if !&query("SELECT vanity FROM accounts.users WHERE vanity = ?", vec![digest(&body.vanity)]).await.response_body().unwrap().as_cols().unwrap().rows_content.is_empty() {
+    } else if !&query("SELECT vanity FROM accounts.users WHERE vanity = ?", vec![digest(&*body.vanity)]).await.response_body().unwrap().as_cols().unwrap().rows_content.is_empty() {
             warp::reply::with_status(warp::reply::json(
                 &super::model::Error{
                     error: true,
@@ -61,7 +61,7 @@ pub async fn create(body: super::model::Create, finger: String) -> WithStatus<Js
 
         warp::reply::with_status(warp::reply::json(
             &super::model::CreateResponse{
-                token: crate::helpers::create_jwt(body.vanity.to_lowercase(), Some(digest(&finger)), Some(crate::database::cassandra::create_security(body.vanity.to_lowercase(), crate::router::model::SecurityCode::Jwt as u8, finger, None, None).await.to_string())).await
+                token: crate::helpers::create_jwt(body.vanity.to_lowercase(), Some(digest(&*finger)), Some(crate::database::cassandra::create_security(body.vanity.to_lowercase(), crate::router::model::SecurityCode::Jwt as u8, finger, None, None).await.to_string())).await
             }
         ),
         warp::http::StatusCode::CREATED)

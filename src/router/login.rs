@@ -20,7 +20,7 @@ pub async fn login(body: super::model::Login, finger: String) -> WithStatus<Json
         return super::err("Invalid password".to_string());
     }
 
-    let rate_limit = mem::get(digest(&body.email)).unwrap().unwrap_or("0".to_string()).parse::<u16>().unwrap();
+    let rate_limit = mem::get(digest(&*body.email)).unwrap().unwrap_or("0".to_string()).parse::<u16>().unwrap();
     if rate_limit >= 5 {
         return warp::reply::with_status(warp::reply::json(
             &super::model::Error{
@@ -31,7 +31,7 @@ pub async fn login(body: super::model::Login, finger: String) -> WithStatus<Json
         warp::http::StatusCode::TOO_MANY_REQUESTS);
     }
 
-    let user = &query("SELECT vanity, mfa_code, password FROM accounts.users WHERE email = ?", vec![digest(&body.email)]).await.response_body().unwrap();
+    let user = &query("SELECT vanity, mfa_code, password FROM accounts.users WHERE email = ?", vec![digest(&*body.email)]).await.response_body().unwrap();
     if user.as_cols().unwrap().rows_content.is_empty() || !crate::helpers::hash_test(&vec_to_string(&user.as_cols().unwrap().rows_content[0][2].clone().into_bytes().unwrap())[..], body.password.as_ref()) {
         let _ = mem::set(digest(body.email), mem::SetValue::Number(rate_limit+1));
         return super::err("Invalid email or password".to_string());
@@ -50,7 +50,7 @@ pub async fn login(body: super::model::Login, finger: String) -> WithStatus<Json
     let vanity: String = vec_to_string(&user.as_cols().unwrap().rows_content[0][0].clone().into_bytes().unwrap());
     warp::reply::with_status(warp::reply::json(
         &super::model::CreateResponse{
-            token: crate::helpers::create_jwt(vanity.to_lowercase(), Some(digest(&finger)), Some(crate::database::cassandra::create_security(vanity.to_lowercase(), crate::router::model::SecurityCode::Jwt as u8, finger, None, None).await.to_string())).await
+            token: crate::helpers::create_jwt(vanity.to_lowercase(), Some(digest(&*finger)), Some(crate::database::cassandra::create_security(vanity.to_lowercase(), crate::router::model::SecurityCode::Jwt as u8, finger, None, None).await.to_string())).await
         }
     ), warp::http::StatusCode::OK)
 }
