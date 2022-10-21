@@ -22,9 +22,9 @@ pub async fn create(body: super::model::Create, finger: String) -> WithStatus<Js
 	}
 
     if !&query("SELECT vanity FROM accounts.users WHERE email = ?", vec![digest(&*body.email)]).await.response_body().unwrap().as_cols().unwrap().rows_content.is_empty() {
-        return super::err("Invalid email".to_string());
+        super::err("Invalid email".to_string())
     } else if !&query("SELECT vanity FROM accounts.users WHERE vanity = ?", vec![digest(&*body.vanity)]).await.response_body().unwrap().as_cols().unwrap().rows_content.is_empty() {
-        return super::err("Invalid vanity".to_string());
+        super::err("Invalid vanity".to_string())
     } else {
         // Phone verification
         let mut phone: Option<String> = None;

@@ -1,7 +1,7 @@
 use regex::Regex;
 use warp::reply::{WithStatus, Json};
 use sha256::digest;
-use std::{time::{SystemTime, UNIX_EPOCH}};
+use std::time::{SystemTime, UNIX_EPOCH};
 use totp_lite::{totp_custom, Sha1};
 use crate::database::cassandra::query;
 use crate::database::mem;
@@ -20,7 +20,7 @@ pub async fn login(body: super::model::Login, finger: String) -> WithStatus<Json
         return super::err("Invalid password".to_string());
     }
 
-    let rate_limit = mem::get(digest(&*body.email)).unwrap().unwrap_or("0".to_string()).parse::<u16>().unwrap();
+    let rate_limit = mem::get(digest(&*body.email)).unwrap().unwrap_or_else(|| "0".to_string()).parse::<u16>().unwrap();
     if rate_limit >= 5 {
         return warp::reply::with_status(warp::reply::json(
             &super::model::Error{
