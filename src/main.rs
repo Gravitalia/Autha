@@ -26,7 +26,7 @@ async fn middleware(token: Option<String>, fallback: String) -> String {
 async fn main() {
     dotenv::dotenv().ok();
 
-    let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).and_then(|body: router::model::Create, finger: String| async {
+    let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).and(warp::header("cf-turnstile-token")).and_then(|body: router::model::Create, finger: String, _cf_token: String| async {
         if true {
             Ok(router::create::create(body, finger).await)
         } else {
@@ -42,7 +42,7 @@ async fn main() {
             Err(warp::reject::custom(InvalidQuery))
         }
     }))
-    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).and(warp::header("X-Forwarded-For")).and_then(|body: router::model::Login, finger: String, _ip: String| async move {
+    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).and(warp::header("cf-turnstile-token")).and_then(|body: router::model::Login, finger: String, _cf_token: String| async {
         if true {
             Ok(router::login::login(body, finger).await)
         } else {
