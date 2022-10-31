@@ -2,6 +2,7 @@ use regex::Regex;
 use warp::reply::{WithStatus, Json};
 use sha256::digest;
 use crate::database::cassandra::query;
+use crate::database::mem;
 
 pub async fn create(body: super::model::Create, finger: String) -> WithStatus<Json> {
     // Email verification
@@ -20,6 +21,17 @@ pub async fn create(body: super::model::Create, finger: String) -> WithStatus<Js
     if body.username.len() >= 16 {
 		return super::err("Invalid username".to_string());
 	}
+
+    let rate_limit = mem::get(finger).unwrap().unwrap_or_else(|| "0".to_string()).parse::<u8>().unwrap();
+    if rate_limit >= 1 {
+        return warp::reply::with_status(warp::reply::json(
+            &super::model::Error{
+                error: true,
+                message: "You can only create an account in 5 minutes".to_string()
+            }
+        ),
+        warp::http::StatusCode::TOO_MANY_REQUESTS);
+    }
 
     if !&query("SELECT vanity FROM accounts.users WHERE email = ?", vec![digest(&*body.email)]).await.response_body().unwrap().as_cols().unwrap().rows_content.is_empty() {
         super::err("Invalid email".to_string())
