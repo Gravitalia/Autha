@@ -22,7 +22,7 @@ pub async fn create(body: super::model::Create, finger: String) -> WithStatus<Js
 		return super::err("Invalid username".to_string());
 	}
 
-    let rate_limit = mem::get(finger).unwrap().unwrap_or_else(|| "0".to_string()).parse::<u8>().unwrap();
+    let rate_limit = mem::get(finger.clone()).unwrap().unwrap_or_else(|| "0".to_string()).parse::<u8>().unwrap();
     if rate_limit >= 1 {
         return warp::reply::with_status(warp::reply::json(
             &super::model::Error{
