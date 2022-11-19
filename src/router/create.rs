@@ -4,6 +4,18 @@ use sha256::digest;
 use crate::database::cassandra::query;
 use crate::database::mem;
 
+#[doc = "Creates accounts from the data provided"]
+/// Example
+/// ```rust
+/// match router::create::create(router::model::Create { username: "CoolUser".to_string(), vanity: "cooluser".to_string(), email: "test@gravitalia.com".to_string(), password: "notapassword".to_string(), birthdate: None, phone: None } , "0088577f20968a97830a9190541e1a97f73360332d25a9d04232fd737b5cba6a".to_string()).await {
+///      Ok(r) => {
+///          Ok(r)
+///      },
+///      Err(_) => {
+///          Err(warp::reject::custom(UnknownError))
+///      }
+///  }
+/// ```
 pub async fn create(body: super::model::Create, finger: String) -> Result<WithStatus<Json>, memcache::MemcacheError> {
     // Email verification
     if !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&body.email) {
