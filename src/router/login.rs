@@ -6,10 +6,6 @@ use totp_lite::{totp_custom, Sha1};
 use crate::database::cassandra::query;
 use crate::database::mem;
 
-fn vec_to_string(vec: &[u8]) -> String {
-    String::from_utf8_lossy(vec).to_string()
-}
-
 pub async fn login(body: super::model::Login, finger: String) -> Result<WithStatus<Json>, memcache::MemcacheError> {
     // Email verification
     if !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&body.email) {
@@ -34,15 +30,15 @@ pub async fn login(body: super::model::Login, finger: String) -> Result<WithStat
         warp::http::StatusCode::TOO_MANY_REQUESTS));
     }
 
-    let user = &query("SELECT vanity, mfa_code, password FROM accounts.users WHERE email = ?", vec![digest(&*body.email)]).await.response_body().unwrap();
-    if user.as_cols().unwrap().rows_content.is_empty() {
+    let user = query("SELECT vanity, mfa_code, password FROM accounts.users WHERE email = ?", vec![digest(&*body.email)]).await.rows.unwrap();
+    if user.is_empty() {
         return Ok(super::err("Invalid email".to_string()));
-    } else if !crate::helpers::hash_test(&vec_to_string(&user.as_cols().unwrap().rows_content[0][2].clone().into_bytes().unwrap())[..], body.password.as_ref()) {
+    } else if !crate::helpers::hash_test(&user[0].columns[2].as_ref().unwrap().as_text().unwrap().to_string()[..], body.password.as_ref()) {
         let _ = mem::set(digest(body.email), mem::SetValue::Number(rate_limit+1));
         return Ok(super::err("Invalid password".to_string()));
     }
 
-    let mfa_code: Option<String> = user.as_cols().unwrap().rows_content[0][1].clone().into_bytes().map(|value| String::from_utf8_lossy(&value).to_string());
+    let mfa_code: Option<String> = if user[0].columns[1].is_none() { None } else { Some(user[0].columns[1].as_ref().unwrap().as_text().unwrap().to_string()) };
     if mfa_code.is_some() && body.mfa.is_none() {
         return Ok(super::err("MFA".to_string()));
     } else if mfa_code.is_some() && body.mfa.is_some() {
@@ -52,7 +48,7 @@ pub async fn login(body: super::model::Login, finger: String) -> Result<WithStat
         }
     }
 
-    let vanity: String = vec_to_string(&user.as_cols().unwrap().rows_content[0][0].clone().into_bytes().unwrap());
+    let vanity: String = user[0].columns[0].as_ref().unwrap().as_text().unwrap().to_string();
     Ok(warp::reply::with_status(warp::reply::json(
         &super::model::CreateResponse{
             token: crate::helpers::create_jwt(vanity.to_lowercase(), Some(digest(&*finger)), Some(crate::database::cassandra::create_security(vanity.to_lowercase(), crate::router::model::SecurityCode::Jwt as u8, finger, None, None).await.to_string())).await

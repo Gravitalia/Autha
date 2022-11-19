@@ -48,9 +48,9 @@ pub async fn create(body: super::model::Create, finger: String) -> Result<WithSt
         warp::http::StatusCode::TOO_MANY_REQUESTS));
     }
 
-    if !&query("SELECT vanity FROM accounts.users WHERE email = ?", vec![digest(&*body.email)]).await.response_body().unwrap().as_cols().unwrap().rows_content.is_empty() {
+    if !query("SELECT vanity FROM accounts.users WHERE email = ?", vec![digest(&*body.email)]).await.rows.unwrap().is_empty() {
         Ok(super::err("Invalid email".to_string()))
-    } else if !&query("SELECT vanity FROM accounts.users WHERE vanity = ?", vec![digest(&*body.vanity)]).await.response_body().unwrap().as_cols().unwrap().rows_content.is_empty() {
+    } else if !query("SELECT vanity FROM accounts.users WHERE vanity = ?", vec![body.vanity.clone()]).await.rows.unwrap().is_empty() {
         Ok(super::err("Invalid vanity".to_string()))
     } else {
         // Phone verification
@@ -72,7 +72,7 @@ pub async fn create(body: super::model::Create, finger: String) -> Result<WithSt
             }
         }
 
-        let _ = mem::set(digest(&*body.email), mem::SetValue::Number(rate_limit+1));
+        //let _ = mem::set(digest(&*body.email), mem::SetValue::Number(rate_limit+1));
         crate::database::cassandra::create_user(&body.vanity.to_lowercase(), digest(body.email), body.username, crate::helpers::hash(body.password.as_ref()), phone, birth).await;
 
         Ok(warp::reply::with_status(warp::reply::json(
