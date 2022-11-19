@@ -31,10 +31,13 @@ async fn main() {
     dotenv::dotenv().ok();
 
     let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).and(warp::header("cf-turnstile-token")).and_then(|body: router::model::Create, finger: String, _cf_token: String| async {
-        if true {
-            Ok(router::create::create(body, finger).await)
-        } else {
-            Err(warp::reject::not_found())
+        match router::create::create(body, finger).await {
+            Ok(r) => {
+                Ok(r)
+            },
+            Err(_) => {
+                Err(warp::reject::custom(UnknownError))
+            }
         }
     })
     .or(warp::path!("users" / String).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async {
