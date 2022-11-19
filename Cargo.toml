@@ -28,7 +28,7 @@ hex = "0.4"
 sha256 = "1.0.3"
 
 dotenv = "0.15.0"
-uuid = { version = "1.2.1", features = ["v4"] }
+uuid = { version = "1.2.2", features = ["v4"] }
 fastrand = "1.8.0"
 regex = "1.6.0"
 generic-array = "0.14.6"
