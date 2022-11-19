@@ -35,7 +35,7 @@ pub async fn create(body: super::model::Create, finger: String) -> Result<WithSt
 	}
 
     let rate_limit = match mem::get(digest(&*body.email))? {
-        Some(r) => r.parse::<u16>().unwrap_or_else(|_| 0),
+        Some(r) => r.parse::<u16>().unwrap_or(0),
         None => 0,
     };
     if rate_limit >= 1 {
