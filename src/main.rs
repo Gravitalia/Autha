@@ -40,7 +40,7 @@ async fn main() {
             }
         }
     })
-    .or(warp::path!("users" / String).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async {
+    .or(warp::path!("users" / String).and(warp::get()).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async {
         // Lets's check Sec header later
         let middelware_res: String = middleware(token, id).await;
         if middelware_res != *"Invalid" {
@@ -57,6 +57,14 @@ async fn main() {
             Err(_) => {
                 Err(warp::reject::custom(UnknownError))
             }
+        }
+    }))
+    .or(warp::path!("users" / "@me").and(warp::patch()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: router::model::UserPatch, token: String| async {
+        let middelware_res: String = middleware(Some(token), "@me".to_string()).await;
+        if middelware_res != *"Invalid" {
+            Ok(router::users::patch(body, middelware_res).await)
+        } else {
+            Err(warp::reject::custom(UnknownError))
         }
     }));
 
