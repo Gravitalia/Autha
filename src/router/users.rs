@@ -1,5 +1,6 @@
 use warp::reply::{WithStatus, Json};
 use super::model;
+use regex::Regex;
 use crate::database::cassandra::query;
 
 pub async fn get(id: String) -> WithStatus<Json> {
@@ -25,4 +26,33 @@ pub async fn get(id: String) -> WithStatus<Json> {
             }
         ), warp::http::StatusCode::OK)
     }
+}
+
+pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<Json> {
+    let mut is_psw_valid: bool = false;
+    if body.password.is_some() {
+        let psw = query("SELECT password FROM accounts.users WHERE vanity = ?", vec![vanity]).await.rows.unwrap();
+        if !psw.is_empty() && crate::helpers::hash_test(&psw[0].columns[0].as_ref().unwrap().as_text().unwrap().to_string()[..], body.password.unwrap().as_ref()) {
+            is_psw_valid = true;
+        } else {
+            return super::err("Invalid password".to_string());
+        }
+    }
+
+    // Check email
+    if body.email.is_some() {
+        if !is_psw_valid || !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&body.email.unwrap_or("".to_string())) {
+            return super::err("Invalid email".to_string());
+        } else {
+            // Save new email
+        }
+    }
+
+    warp::reply::with_status(warp::reply::json(
+        &model::Error{
+            error: false,
+            message: "OK".to_string(),
+        }
+    ),
+    warp::http::StatusCode::OK)
 }
