@@ -41,7 +41,7 @@ pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<
 
     // Check email
     if body.email.is_some() {
-        if !is_psw_valid || !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&body.email.unwrap_or("".to_string())) {
+        if !is_psw_valid || !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&body.email.unwrap_or_else(|| "".to_string())) {
             return super::err("Invalid email".to_string());
         } else {
             // Save new email
