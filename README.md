@@ -1,4 +1,4 @@
-<img src="https://www.gravitalia.studio/favicon.webp" width="40" />
+<img src="https://avatars.githubusercontent.com/u/81774317?s=200&v=4" width="40" />
 
 # Autha
 > Autha, pronounced `Otter` 🦦, is the service that manages user accounts and the associated delegation. ☄️
