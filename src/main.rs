@@ -13,7 +13,7 @@ impl Reject for UnknownError {}
 
 async fn middleware(token: Option<String>, fallback: String) -> String {
     if token.is_some() && fallback == *"@me" {
-        match helpers::get_jwt(token.unwrap()).await {
+        match helpers::get_jwt(token.unwrap()) {
             Ok(data) => {
                 data.claims.sub
             },
