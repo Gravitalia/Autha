@@ -6,13 +6,13 @@ WORKDIR /autha
 COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
 
-RUN cargo build --release
-RUN rm src/*.rs
+RUN cargo build --release \
+ && rm src/*.rs
 
 COPY ./src ./src
 
-RUN rm ./target/release/deps/autha*
-RUN cargo build --release
+RUN rm ./target/release/deps/autha* \
+ && cargo build --release
 
 FROM rust:1.63-slim-buster
 
