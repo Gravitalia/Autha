@@ -92,7 +92,7 @@ pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<
         if !Regex::new(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$").unwrap().is_match(&birth) {
             return super::err("Invalid birthdate".to_string());
         } else {
-            let dates: Vec<&str> = birth.split("-").collect();
+            let dates: Vec<&str> = birth.split('-').collect();
 
             if 13 > crate::helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
                 suspend(vanity.clone()).await;
