@@ -1,7 +1,8 @@
 use warp::reply::{WithStatus, Json};
+use crate::database::cassandra::query;
 use super::model;
 use regex::Regex;
-use crate::database::cassandra::query;
+use sha256::digest;
 
 pub async fn get(id: String) -> WithStatus<Json> {
     let user = query("SELECT username, avatar, bio, verified, deleted, flags FROM accounts.users WHERE vanity = ?", vec![id.clone()]).await.rows.unwrap();
@@ -31,7 +32,7 @@ pub async fn get(id: String) -> WithStatus<Json> {
 pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<Json> {
     let mut is_psw_valid: bool = false;
     if body.password.is_some() {
-        let psw = query("SELECT password FROM accounts.users WHERE vanity = ?", vec![vanity]).await.rows.unwrap();
+        let psw = query("SELECT password FROM accounts.users WHERE vanity = ?", vec![vanity.clone()]).await.rows.unwrap();
         if !psw.is_empty() && crate::helpers::hash_test(&psw[0].columns[0].as_ref().unwrap().as_text().unwrap().to_string()[..], body.password.unwrap().as_ref()) {
             is_psw_valid = true;
         } else {
@@ -41,10 +42,10 @@ pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<
 
     // Check email
     if body.email.is_some() {
-        if !is_psw_valid || !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&body.email.unwrap_or_else(|| "".to_string())) {
+        if !is_psw_valid || !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&body.email.clone().unwrap_or_else(|| "".to_string())) {
             return super::err("Invalid email".to_string());
         } else {
-            // Save new email
+            query("UPDATE accounts.users SET email = ? WHERE vanity = ?", vec![digest(&*body.email.unwrap_or_else(|| "".to_string())), vanity.clone()]).await;
         }
     }
 
