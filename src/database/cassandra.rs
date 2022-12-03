@@ -31,3 +31,10 @@ pub async fn create_security(vanity: String, _code: u8, fingerprint: String, ip:
 pub async fn query(query: &'static str, params: Vec<String>) -> scylla::QueryResult {
     SESSION.get().unwrap().query(query, params).await.expect("Query error")
 }
+
+pub async fn suspend(vanity: String) -> scylla::QueryResult {
+    // Send request to mod center
+    SESSION.get().unwrap().query("UPDATE accounts.users SET deleted = ?, verified = ?, birthdate = ?, mfa_code = ? WHERE vanity = ?", (true, false, "", "", vanity.clone())).await.expect("Query error");
+    SESSION.get().unwrap().query("UPDATE accounts.security SET revoked = ?, fingerprint = ? WHERE user_id = ? ALLOW FILTERING", (true, "", vanity.clone())).await.expect("Query error");
+    SESSION.get().unwrap().query("UPDATE accounts.bots SET deleted = ?, ip = ? WHERE user_id = ? ALLOW FILTERING", (true, "", vanity)).await.expect("Query error")
+}
