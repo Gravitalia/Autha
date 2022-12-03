@@ -1,5 +1,5 @@
 use warp::reply::{WithStatus, Json};
-use crate::database::cassandra::query;
+use crate::database::cassandra::{query, suspend};
 use super::model;
 use regex::Regex;
 use sha256::digest;
@@ -40,12 +40,65 @@ pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<
         }
     }
 
-    // Check email
+    // Change username
+    if body.username.is_some() {
+        let username = match body.username {
+            Some(u) => u,
+            None => "".to_string()
+        };
+
+        if username.len() >= 16 {
+            return super::err("Invalid username".to_string());
+        } else {
+            query("UPDATE accounts.users SET username = ? WHERE vanity = ?", vec![username, vanity.clone()]).await;
+        }
+    }
+
+    // Change bio
+    if body.bio.is_some() {
+        let bio = match body.bio {
+            Some(b) => b,
+            None => "".to_string()
+        };
+
+        if bio.len() > 255 {
+            return super::err("Invalid bio".to_string());
+        } else {
+            query("UPDATE accounts.users SET bio = ? WHERE vanity = ?", vec![bio, vanity.clone()]).await;
+        }
+    }
+
+    // Change email
     if body.email.is_some() {
-        if !is_psw_valid || !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&body.email.clone().unwrap_or_else(|| "".to_string())) {
+        let email = match body.email {
+            Some(e) => e,
+            None => "".to_string()
+        };
+
+        if !is_psw_valid || !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&email) {
             return super::err("Invalid email".to_string());
         } else {
-            query("UPDATE accounts.users SET email = ? WHERE vanity = ?", vec![digest(&*body.email.unwrap_or_else(|| "".to_string())), vanity.clone()]).await;
+            query("UPDATE accounts.users SET email = ? WHERE vanity = ?", vec![digest(&*email), vanity.clone()]).await;
+        }
+    }
+
+    // Change birthdate
+    if body.birthdate.is_some() {
+        let birth = match body.birthdate {
+            Some(b) => b,
+            None => "".to_string()
+        };
+
+        if !Regex::new(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$").unwrap().is_match(&birth) {
+            return super::err("Invalid birthdate".to_string());
+        } else {
+            let dates: Vec<&str> = birth.split("-").collect();
+
+            if 13 > crate::helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
+                suspend(vanity.clone()).await;
+            } else {
+                query("UPDATE accounts.users SET birthdate = ? WHERE vanity = ?", vec![crate::helpers::encrypt(birth.as_bytes()), vanity.clone()]).await;
+            }
         }
     }
 
