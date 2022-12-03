@@ -51,7 +51,7 @@ pub async fn login(body: super::model::Login, finger: String) -> Result<WithStat
     let vanity: String = user[0].columns[0].as_ref().unwrap().as_text().unwrap().to_string();
     Ok(warp::reply::with_status(warp::reply::json(
         &super::model::CreateResponse{
-            token: crate::helpers::create_jwt(vanity.to_lowercase(), Some(digest(&*finger)), Some(crate::database::cassandra::create_security(vanity.to_lowercase(), crate::router::model::SecurityCode::Jwt as u8, finger, None, None).await.to_string())).await
+            token: crate::helpers::create_jwt(vanity.to_lowercase(), Some(digest(&*finger)), Some(crate::database::cassandra::create_security(vanity.to_lowercase(), crate::router::model::SecurityCode::Jwt as u8, finger, None, None).await.to_string()))
         }
     ), warp::http::StatusCode::OK))
 }

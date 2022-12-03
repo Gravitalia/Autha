@@ -88,7 +88,7 @@ pub fn encrypt(data: &[u8]) -> String {
     }
 }
 
-pub async fn create_jwt(user_id: String, finger: Option<String>, nonce: Option<String>) -> String {
+pub fn create_jwt(user_id: String, finger: Option<String>, nonce: Option<String>) -> String {
     match EncodingKey::from_rsa_pem(RSA_PRIVATE_KEY.get().unwrap().as_bytes()) {
         Ok(d) => {
             encode(&Header::new(Algorithm::RS256), &Claims {
@@ -104,7 +104,7 @@ pub async fn create_jwt(user_id: String, finger: Option<String>, nonce: Option<S
     }
 }
 
-pub async fn get_jwt(token: String) -> Result<TokenData<Claims>, String> {
+pub fn get_jwt(token: String) -> Result<TokenData<Claims>, String> {
     match DecodingKey::from_rsa_pem(RSA_PUBLIC_KEY.get().unwrap().as_bytes()) {
         Ok(d) => {
             match decode::<Claims>(&token, &d, &Validation::new(Algorithm::RS256)) {
@@ -146,6 +146,6 @@ mod tests {
     #[tokio::test]
     async fn test_jwt() {
         init();
-        assert!(regex::Regex::new(r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)").unwrap().is_match(&create_jwt("test".to_string(), None, None).await));
+        assert!(regex::Regex::new(r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)").unwrap().is_match(&create_jwt("test".to_string(), None, None)));
     }
 }
