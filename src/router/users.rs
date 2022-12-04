@@ -86,7 +86,7 @@ pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<
 
         if bio.len() > 160 {
             return super::err("Invalid bio".to_string());
-        } else if bio == "" {
+        } else if bio.is_empty() {
             params.2 = None
         } else {
             params.2 = Some(bio);
