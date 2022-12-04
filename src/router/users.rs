@@ -1,5 +1,5 @@
 use warp::reply::{WithStatus, Json};
-use crate::database::cassandra::{query, suspend};
+use crate::database::cassandra::{query, suspend, update_user};
 use super::model;
 use regex::Regex;
 use sha256::digest;
@@ -14,6 +14,18 @@ pub async fn get(id: String) -> WithStatus<Json> {
                 message: "Unknown user".to_string()
             }
         ), warp::http::StatusCode::NOT_FOUND)
+    } else if user[0].columns[4].as_ref().unwrap().as_boolean().unwrap() {
+        warp::reply::with_status(warp::reply::json(
+            &model::User {
+                username: "Account suspended".to_string(),
+                vanity: id,
+                avatar: None,
+                bio: None,
+                verified: false,
+                deleted: true,
+                flags: 0,
+            }
+        ), warp::http::StatusCode::OK)
     } else {
         warp::reply::with_status(warp::reply::json(
             &model::User {
@@ -30,6 +42,8 @@ pub async fn get(id: String) -> WithStatus<Json> {
 }
 
 pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<Json> {
+    let user = query("SELECT username, avatar, bio, birthdate, phone, email FROM accounts.users WHERE vanity = ?", vec![vanity.clone()]).await.rows.unwrap();
+
     let mut is_psw_valid: bool = false;
     if body.password.is_some() {
         let psw = query("SELECT password FROM accounts.users WHERE vanity = ?", vec![vanity.clone()]).await.rows.unwrap();
@@ -39,6 +53,15 @@ pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<
             return super::err("Invalid password".to_string());
         }
     }
+
+    let mut params= (user[0].columns[0].as_ref().unwrap().as_text().unwrap().to_string(),
+                        if user[0].columns[1].is_none() { None } else { Some(user[0].columns[1].as_ref().unwrap().as_text().unwrap().to_string()) },
+                        if user[0].columns[2].is_none() { None } else { Some(user[0].columns[2].as_ref().unwrap().as_text().unwrap().to_string()) },
+                        if user[0].columns[3].is_none() { None } else { Some(user[0].columns[3].as_ref().unwrap().as_text().unwrap().to_string()) },
+                        if user[0].columns[4].is_none() { None } else { Some(user[0].columns[4].as_ref().unwrap().as_text().unwrap().to_string()) },
+                        user[0].columns[5].as_ref().unwrap().as_text().unwrap().to_string(),
+                        vanity.clone()
+                    );
 
     // Change username
     if body.username.is_some() {
@@ -50,7 +73,7 @@ pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<
         if username.len() >= 16 {
             return super::err("Invalid username".to_string());
         } else {
-            query("UPDATE accounts.users SET username = ? WHERE vanity = ?", vec![username, vanity.clone()]).await;
+            params.0 = username;
         }
     }
 
@@ -61,10 +84,12 @@ pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<
             None => "".to_string()
         };
 
-        if bio.len() > 255 {
+        if bio.len() > 160 {
             return super::err("Invalid bio".to_string());
+        } else if bio == "" {
+            params.2 = None
         } else {
-            query("UPDATE accounts.users SET bio = ? WHERE vanity = ?", vec![bio, vanity.clone()]).await;
+            params.2 = Some(bio);
         }
     }
 
@@ -78,7 +103,7 @@ pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<
         if !is_psw_valid || !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&email) {
             return super::err("Invalid email".to_string());
         } else {
-            query("UPDATE accounts.users SET email = ? WHERE vanity = ?", vec![digest(&*email), vanity.clone()]).await;
+            params.5 = digest(&*email);
         }
     }
 
@@ -95,12 +120,25 @@ pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<
             let dates: Vec<&str> = birth.split('-').collect();
 
             if 13 > crate::helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
-                suspend(vanity.clone()).await;
+                suspend(vanity).await;
+                return super::err("Your account has been suspended: age".to_string());
             } else {
-                query("UPDATE accounts.users SET birthdate = ? WHERE vanity = ?", vec![crate::helpers::encrypt(birth.as_bytes()), vanity.clone()]).await;
+                params.3 = Some(crate::helpers::encrypt(birth.as_bytes()));
             }
         }
     }
+
+    // Change phone
+    if body.phone.is_some() {
+        let _phone = match body.phone {
+            Some(p) => p,
+            None => "".to_string()
+        };
+
+        return super::err("Phones not implemented yet".to_string());
+    }
+
+    update_user(params).await;
 
     warp::reply::with_status(warp::reply::json(
         &model::Error{
