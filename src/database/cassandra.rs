@@ -36,6 +36,10 @@ pub async fn update_user(params: (String, Option<String>, Option<String>, Option
     SESSION.get().unwrap().query("UPDATE accounts.users SET username = ?, avatar = ?, bio = ?, birthdate = ?, phone = ?, email = ? WHERE vanity = ?", params).await.expect("Query error")
 }
 
+pub async fn update_password(new_password: String, vanity: String) -> scylla::QueryResult {
+    SESSION.get().unwrap().query("UPDATE accounts.users SET password = ? WHERE vanity = ?", (new_password, vanity)).await.expect("Query error")
+}
+
 pub async fn suspend(vanity: String) -> scylla::QueryResult {
     // Send request to mod center
     SESSION.get().unwrap().query("UPDATE accounts.users SET deleted = ?, verified = ? WHERE vanity = ?", (true, false, vanity.clone())).await.expect("Query error")
