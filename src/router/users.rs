@@ -1,5 +1,5 @@
 use warp::reply::{WithStatus, Json};
-use crate::database::cassandra::{query, suspend, update_user};
+use crate::database::cassandra::{query, suspend, update_user, update_password};
 use super::model;
 use regex::Regex;
 use sha256::digest;
@@ -136,6 +136,20 @@ pub async fn patch(body: super::model::UserPatch, vanity: String) -> WithStatus<
         };
 
         return super::err("Phones not implemented yet".to_string());
+    }
+
+    // Change password
+    if body.newpassword.is_some() {
+        let psw = match body.newpassword {
+            Some(p) => p,
+            None => "".to_string()
+        };
+    
+        if !is_psw_valid || !Regex::new(r"([0-9|*|]|[$&+,:;=?@#|'<>.^*()%!-])+").unwrap().is_match(&psw) {
+            return super::err("Invalid password".to_string());
+        } else {
+            update_password(crate::helpers::hash(psw.as_ref()), vanity).await;
+        }
     }
 
     update_user(params).await;
