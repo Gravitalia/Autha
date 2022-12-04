@@ -1,4 +1,5 @@
 use warp::{Filter, reject::Reject};
+use crate::database::cassandra::query;
 mod router;
 mod helpers;
 mod database;
@@ -13,9 +14,16 @@ impl Reject for UnknownError {}
 
 async fn middleware(token: Option<String>, fallback: String) -> String {
     if token.is_some() && fallback == *"@me" {
-        match helpers::get_jwt(token.unwrap()).await {
+        match helpers::get_jwt(token.unwrap()) {
             Ok(data) => {
-                data.claims.sub
+                let user = query("SELECT deleted FROM accounts.users WHERE vanity = ?", vec![data.claims.sub.clone()]).await.rows.unwrap();
+                if !user.is_empty() && user[0].columns[0].as_ref().unwrap().as_boolean().unwrap() {
+                    "Suspended".to_string()
+                } else if user.is_empty() {
+                    "Invalid".to_string()
+                } else {
+                    data.claims.sub
+                }
             },
             Err(_) => "Invalid".to_string()
         }
@@ -40,11 +48,19 @@ async fn main() {
             }
         }
     })
-    .or(warp::path!("users" / String).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async {
+    .or(warp::path!("users" / String).and(warp::get()).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async {
         // Lets's check Sec header later
         let middelware_res: String = middleware(token, id).await;
-        if middelware_res != *"Invalid" {
+        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
             Ok(router::users::get(middelware_res.to_lowercase()).await)
+        } else if middelware_res == "Suspended" {
+            Ok(warp::reply::with_status(warp::reply::json(
+                &router::model::Error{
+                    error: true,
+                    message: "Account suspended".to_string(),
+                }
+            ),
+            warp::http::StatusCode::FORBIDDEN))
         } else {
             Err(warp::reject::custom(InvalidQuery))
         }
@@ -57,6 +73,22 @@ async fn main() {
             Err(_) => {
                 Err(warp::reject::custom(UnknownError))
             }
+        }
+    }))
+    .or(warp::path!("users" / "@me").and(warp::patch()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: router::model::UserPatch, token: String| async {
+        let middelware_res: String = middleware(Some(token), "@me".to_string()).await;
+        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
+            Ok(router::users::patch(body, middelware_res).await)
+        } else if middelware_res == "Suspended" {
+            Ok(warp::reply::with_status(warp::reply::json(
+                &router::model::Error{
+                    error: true,
+                    message: "Account suspended".to_string(),
+                }
+            ),
+            warp::http::StatusCode::FORBIDDEN))
+        } else {
+            Err(warp::reject::custom(UnknownError))
         }
     }));
 

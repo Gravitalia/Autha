@@ -22,6 +22,18 @@ pub struct CreateResponse {
 }
 
 #[derive(Deserialize)]
+pub struct UserPatch {
+    pub username: Option<String>,
+    pub avatar: Option<String>,
+    pub bio: Option<String>,
+    pub email: Option<String>,
+    pub password: Option<String>,
+    pub newpassword: Option<String>,
+    pub birthdate: Option<String>,
+    pub phone: Option<String>,
+}
+
+#[derive(Deserialize)]
 pub struct Login {
     pub email: String,
     pub password: String,
