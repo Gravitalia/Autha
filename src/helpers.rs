@@ -93,7 +93,7 @@ pub fn create_jwt(user_id: String, finger: Option<String>, nonce: Option<String>
         Ok(d) => {
             encode(&Header::new(Algorithm::RS256), &Claims {
                 sub: user_id.to_lowercase(),
-                aud: if finger.is_some() { Some(finger.unwrap()[0..24].to_string()) } else { None },
+                aud: if let Some(val) = finger { Some(val[0..24].to_string()) } else { None },
                 exp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()+5259600000,
                 iss: "https://oauth.gravitalia.studio".to_string(),
                 iat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
