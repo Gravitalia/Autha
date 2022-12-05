@@ -119,9 +119,9 @@ pub fn get_jwt(token: String) -> Result<TokenData<Claims>, String> {
 }
 
 pub fn get_age(year: i32, month: u32, day: u32) -> f64 {
-    return (((SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+    (((SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
     - NaiveDate::from_ymd_opt(year, month, day).unwrap().and_hms_milli_opt(0, 0, 0, 0).unwrap().and_local_timezone(Utc).unwrap().timestamp_millis() as u128)
-    / 31540000000) as f64).floor();
+    / 31540000000) as f64).floor()
 }
 
 
