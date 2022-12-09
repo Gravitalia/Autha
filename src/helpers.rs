@@ -38,7 +38,7 @@ pub fn init() {
 
 pub fn random_string() -> String {
     let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".chars().collect();
-    let mut result = String::new();
+    let mut result = String::default();
 
     unsafe {
         for _ in 0..16 {
