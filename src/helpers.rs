@@ -73,6 +73,7 @@ pub fn hash_test(hash: &str, pwd: &[u8]) -> bool {
     argon2::verify_encoded_ext(hash, pwd, ARGON_SECRET.get().unwrap().as_bytes(), &[]).unwrap()
 }
 
+#[allow(clippy::type_complexity)]
 pub fn encrypt(data: &[u8]) -> String {
     match hex::decode(CHA_KEY.get().unwrap()) {
         Ok(v) => {
@@ -93,7 +94,7 @@ pub fn create_jwt(user_id: String, finger: Option<String>, nonce: Option<String>
         Ok(d) => {
             encode(&Header::new(Algorithm::RS256), &Claims {
                 sub: user_id.to_lowercase(),
-                aud: if let Some(val) = finger { Some(val[0..24].to_string()) } else { None },
+                aud: finger.map(|val| val[0..24].to_string()),
                 exp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()+5259600000,
                 iss: "https://oauth.gravitalia.studio".to_string(),
                 iat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
