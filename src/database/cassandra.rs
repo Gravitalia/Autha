@@ -32,6 +32,7 @@ pub async fn query(query: &'static str, params: Vec<String>) -> scylla::QueryRes
     SESSION.get().unwrap().query(query, params).await.expect("Query error")
 }
 
+#[allow(clippy::type_complexity)]
 pub async fn update_user(params: (String, Option<String>, Option<String>, Option<String>, Option<String>, String, String)) -> scylla::QueryResult {
     SESSION.get().unwrap().query("UPDATE accounts.users SET username = ?, avatar = ?, bio = ?, birthdate = ?, phone = ?, email = ? WHERE vanity = ?", params).await.expect("Query error")
 }
