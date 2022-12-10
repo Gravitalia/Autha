@@ -26,6 +26,7 @@ pub struct Claims {
     iat: u128
 }
 
+/// Set every variables
 #[allow(unused_must_use)]
 pub fn init() {
     ARGON_SECRET.set(dotenv::var("KEY").expect("Missing env `KEY`"));
@@ -36,9 +37,14 @@ pub fn init() {
     RSA_PUBLIC_KEY.set(dotenv::var("RSA_PUBLIC_KEY").expect("Missing env `RSA_PUBLIC_KEY`"));
 }
 
+/// Generate a random string
+/// ```rust
+/// let rand = random_string();
+/// assert_eq!(random_string().len(), 16);
+/// ```
 pub fn random_string() -> String {
     let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".chars().collect();
-    let mut result = String::new();
+    let mut result = String::default();
 
     unsafe {
         for _ in 0..16 {
@@ -51,6 +57,7 @@ pub fn random_string() -> String {
     result
 }
 
+/// Hash data in bytes using Argon2id
 pub fn hash(data: &[u8]) -> String {
     argon2::hash_encoded(
         data,
@@ -69,10 +76,14 @@ pub fn hash(data: &[u8]) -> String {
     ).unwrap()
 }
 
+/// Test if the password is corresponding with another one hashed
 pub fn hash_test(hash: &str, pwd: &[u8]) -> bool {
     argon2::verify_encoded_ext(hash, pwd, ARGON_SECRET.get().unwrap().as_bytes(), &[]).unwrap()
 }
 
+
+/// Encrypt data as bytes into String with ChaCha20 (Salsa20) and Poly1305 
+#[allow(clippy::type_complexity)]
 pub fn encrypt(data: &[u8]) -> String {
     match hex::decode(CHA_KEY.get().unwrap()) {
         Ok(v) => {
@@ -88,12 +99,13 @@ pub fn encrypt(data: &[u8]) -> String {
     }
 }
 
+/// Create a JWT token, used for authentification
 pub fn create_jwt(user_id: String, finger: Option<String>, nonce: Option<String>) -> String {
     match EncodingKey::from_rsa_pem(RSA_PRIVATE_KEY.get().unwrap().as_bytes()) {
         Ok(d) => {
             encode(&Header::new(Algorithm::RS256), &Claims {
                 sub: user_id.to_lowercase(),
-                aud: if finger.is_some() { Some(finger.unwrap()[0..24].to_string()) } else { None },
+                aud: finger.map(|val| val[0..24].to_string()),
                 exp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()+5259600000,
                 iss: "https://oauth.gravitalia.studio".to_string(),
                 iat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
@@ -104,6 +116,7 @@ pub fn create_jwt(user_id: String, finger: Option<String>, nonce: Option<String>
     }
 }
 
+// Decode a JWT token and check if it is valid
 pub fn get_jwt(token: String) -> Result<TokenData<Claims>, String> {
     match DecodingKey::from_rsa_pem(RSA_PUBLIC_KEY.get().unwrap().as_bytes()) {
         Ok(d) => {
@@ -118,10 +131,19 @@ pub fn get_jwt(token: String) -> Result<TokenData<Claims>, String> {
     }
 }
 
+/// Get age with given data
+/// ```rust
+/// assert_eq!(get_age(2000, 01, 29), 23);
+/// ```
 pub fn get_age(year: i32, month: u32, day: u32) -> f64 {
-    return (((SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
-    - NaiveDate::from_ymd_opt(year, month, day).unwrap().and_hms_milli_opt(0, 0, 0, 0).unwrap().and_local_timezone(Utc).unwrap().timestamp_millis() as u128)
-    / 31540000000) as f64).floor();
+    match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(date) => {
+            (((date.as_millis()
+            - NaiveDate::from_ymd_opt(year, month, day).unwrap().and_hms_milli_opt(0, 0, 0, 0).unwrap().and_local_timezone(Utc).unwrap().timestamp_millis() as u128)
+            / 31540000000) as f64).floor()
+        },
+        Err(_) => 0.0
+    }
 }
 
 
@@ -147,5 +169,10 @@ mod tests {
     async fn test_jwt() {
         init();
         assert!(regex::Regex::new(r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)").unwrap().is_match(&create_jwt("test".to_string(), None, None)));
+    }
+
+    #[tokio::test]
+    async fn test_random_string() {
+        assert_eq!(random_string().len(), 16);
     }
 }
