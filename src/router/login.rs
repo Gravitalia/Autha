@@ -6,7 +6,7 @@ use totp_lite::{totp_custom, Sha1};
 use crate::database::cassandra::query;
 use crate::database::mem;
 
-pub async fn login(body: super::model::Login, finger: String) -> Result<WithStatus<Json>, memcache::MemcacheError> {
+pub async fn login(body: super::model::Login, finger: String, req_query: super::model::LoginQuery) -> Result<WithStatus<Json>, memcache::MemcacheError> {
     // Email verification
     if !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&body.email) {
         return Ok(super::err("Invalid email".to_string()));
@@ -30,12 +30,26 @@ pub async fn login(body: super::model::Login, finger: String) -> Result<WithStat
         warp::http::StatusCode::TOO_MANY_REQUESTS));
     }
 
-    let user = query("SELECT vanity, mfa_code, password, deleted FROM accounts.users WHERE email = ?", vec![digest(&*body.email)]).await.rows.unwrap();
+    let user = query("SELECT vanity, mfa_code, password, deleted, username, avatar FROM accounts.users WHERE email = ?", vec![digest(&*body.email)]).await.rows.unwrap();
     if user.is_empty() {
         return Ok(super::err("Invalid email".to_string()));
     } else if !crate::helpers::hash_test(&user[0].columns[2].as_ref().unwrap().as_text().unwrap().to_string()[..], body.password.as_ref()) {
         let _ = mem::set(digest(body.email), mem::SetValue::Number(rate_limit+1));
-        return Ok(super::err("Invalid password".to_string()));
+        if req_query.user.unwrap_or(false) {
+            return Ok(warp::reply::with_status(warp::reply::json(
+                &super::model::User{
+                    username: user[0].columns[4].as_ref().unwrap().as_text().unwrap().to_string(),
+                    vanity: user[0].columns[0].as_ref().unwrap().as_text().unwrap().to_string(),
+                    avatar: if user[0].columns[5].is_none() { None } else { Some(user[0].columns[1].as_ref().unwrap().as_text().unwrap().to_string()) },
+                    bio: None,
+                    verified: false,
+                    deleted: false,
+                    flags: 0
+                }
+            ), warp::http::StatusCode::OK));
+        } else {
+            return Ok(super::err("Invalid password".to_string()));
+        }
     } else if user[0].columns[3].as_ref().unwrap().as_boolean().unwrap() {
         return Ok(warp::reply::with_status(warp::reply::json(
             &super::model::Error{
