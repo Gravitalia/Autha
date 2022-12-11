@@ -40,6 +40,11 @@ pub struct Login {
     pub mfa: Option<String>,
 }
 
+#[derive(Deserialize)]
+pub struct LoginQuery {
+    pub user: Option<bool>
+}
+
 #[allow(dead_code)]
 pub enum SecurityCode {
     Jwt,
