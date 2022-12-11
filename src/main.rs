@@ -21,9 +21,7 @@ async fn middleware(token: Option<String>, fallback: String, finger: Option<Stri
                 let user = query("SELECT deleted FROM accounts.users WHERE vanity = ?", vec![data.claims.sub.clone()]).await.rows.unwrap();
                 if !user.is_empty() && user[0].columns[0].as_ref().unwrap().as_boolean().unwrap() {
                     "Suspended".to_string()
-                } else if user.is_empty() {
-                    "Invalid".to_string()
-                } else if data.claims.aud.clone().unwrap_or_else(|| "".to_string()) != sha256::digest(&*finger.clone().unwrap_or_else(|| "none".to_string()))[0..24] {
+                } else if user.is_empty() || data.claims.aud.clone().unwrap_or_else(|| "".to_string()) != sha256::digest(&*finger.clone().unwrap_or_else(|| "none".to_string()))[0..24] {
                     "Invalid".to_string()
                 } else {
                     data.claims.sub
