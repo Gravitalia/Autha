@@ -53,7 +53,7 @@ pub enum SecurityCode {
     Password,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct User {
     pub username: String,
     pub vanity: String,
