@@ -66,8 +66,8 @@ async fn main() {
             Err(warp::reject::custom(InvalidQuery))
         }
     }))
-    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).and(warp::header("cf-turnstile-token")).and_then(|body: router::model::Login, finger: String, _cf_token: String| async {
-        match router::login::login(body, finger).await {
+    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("sec")).and(warp::header("cf-turnstile-token")).and(warp::query::<router::model::LoginQuery>()).and_then(|body: router::model::Login, finger: String, _cf_token: String, query: router::model::LoginQuery| async {
+        match router::login::login(body, finger, query).await {
             Ok(r) => {
                 Ok(r)
             },
