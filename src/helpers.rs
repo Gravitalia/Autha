@@ -20,7 +20,7 @@ static RSA_PUBLIC_KEY: OnceCell<String> = OnceCell::new();
 pub struct Claims {
     pub sub: String,
     pub nonce: Option<String>,
-    aud: Option<String>,
+    pub aud: Option<String>,
     exp: u128,
     iss: String,
     iat: u128
