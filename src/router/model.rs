@@ -63,3 +63,11 @@ pub struct User {
     pub deleted: bool,
     pub flags: u32,
 }
+
+#[derive(Deserialize)]
+pub struct OAuth {
+    pub response_type: String,
+    pub bot_id: String,
+    pub redirect_uri: String,
+    pub scope: String
+}
