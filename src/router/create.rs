@@ -1,7 +1,7 @@
 use regex::Regex;
 use warp::reply::{WithStatus, Json};
 use sha256::digest;
-use crate::database::cassandra::query;
+use crate::database::{get_user, cassandra::query};
 use crate::database::mem;
 
 /// Creates accounts from the data provided
@@ -51,7 +51,7 @@ pub async fn create(body: super::model::Create, finger: String) -> Result<WithSt
 
     if !query("SELECT vanity FROM accounts.users WHERE email = ?", vec![digest(&*body.email)]).await.rows.unwrap().is_empty() {
         Ok(super::err("Invalid email".to_string()))
-    } else if !query("SELECT vanity FROM accounts.users WHERE vanity = ?", vec![body.vanity.clone()]).await.rows.unwrap().is_empty() {
+    } else if !get_user(body.vanity.clone()).await.vanity.is_empty() {
         Ok(super::err("Invalid vanity".to_string()))
     } else {
         // Phone verification
