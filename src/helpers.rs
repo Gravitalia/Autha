@@ -39,15 +39,15 @@ pub fn init() {
 
 /// Generate a random string
 /// ```rust
-/// let rand = random_string();
-/// assert_eq!(random_string().len(), 16);
+/// let rand = random_string(23);
+/// assert_eq!(random_string(16).len(), 16);
 /// ```
-pub fn random_string() -> String {
+pub fn random_string(length: i32) -> String {
     let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".chars().collect();
     let mut result = String::default();
 
     unsafe {
-        for _ in 0..16 {
+        for _ in 0..length {
             result.push(
                 *chars.get_unchecked(fastrand::usize(0..62))
             );
@@ -61,7 +61,7 @@ pub fn random_string() -> String {
 pub fn hash(data: &[u8]) -> String {
     argon2::hash_encoded(
         data,
-        random_string().as_bytes(),
+        random_string(16).as_bytes(),
         &Config {
             variant: Variant::Argon2id,
             version: Version::Version13,
@@ -173,6 +173,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_random_string() {
-        assert_eq!(random_string().len(), 16);
+        assert_eq!(random_string(16).len(), 16);
     }
 }

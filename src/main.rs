@@ -76,6 +76,22 @@ async fn main() {
             }
         }
     }))
+    .or(warp::path("oauth").and(warp::post()).and(warp::body::json()).and(warp::header("authorization")).and(warp::header("sec")).and_then(|body: router::model::OAuth, token: String, finger: String| async {
+        let middelware_res: String = middleware(Some(token), "@me".to_string(), Some(finger)).await;
+        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
+            Ok(router::oauth::post(body, middelware_res).await)
+        } else if middelware_res == "Suspended" {
+            Ok(warp::reply::with_status(warp::reply::json(
+                &router::model::Error{
+                    error: true,
+                    message: "Account suspended".to_string(),
+                }
+            ),
+            warp::http::StatusCode::FORBIDDEN))
+        } else {
+            Err(warp::reject::custom(UnknownError))
+        }
+    }))
     .or(warp::path!("users" / "@me").and(warp::patch()).and(warp::body::json()).and(warp::header("authorization")).and(warp::header("sec")).and_then(|body: router::model::UserPatch, token: String, finger: String| async {
         let middelware_res: String = middleware(Some(token), "@me".to_string(), Some(finger)).await;
         if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
