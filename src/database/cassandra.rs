@@ -15,7 +15,7 @@ pub async fn tables() {
     SESSION.get().unwrap().query("CREATE KEYSPACE IF NOT EXISTS accounts WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };", &[]).await.expect("Keyspace create error");
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.users ( vanity text, email text, username text, avatar text, banner text, bio text, verified boolean, flags int, phone text, password text, birthdate text, deleted boolean, mfa_code text, PRIMARY KEY (vanity) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 864000;", &[]).await.expect("accounts.users create error");
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.security ( id text, user_id text, fingerprint text, ip text, country text, revoked boolean, type int, created_at timestamp, PRIMARY KEY (id) ) WITH caching = {'keys': 'ALL', 'rows_per_partition': 'ALL'} AND compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 172800 AND default_time_to_live = 15770000;", &[]).await.expect("accounts.security create error");
-    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.bots ( id text, user_id text, client_secret text, username text, avatar text, bio text, flags int, deleted boolean, PRIMARY KEY (id, username) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 864000;", &[]).await.expect("accounts.bots create error");
+    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.bots ( id text, user_id text, client_secret text, username text, avatar text, bio text, redirect_url set<text>, flags int, deleted boolean, PRIMARY KEY (id) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 864000;", &[]).await.expect("accounts.bots create error");
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.oauth ( id text, user_id text, bot_id text, ip text, scope set<text>, deleted boolean, PRIMARY KEY (id) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 0;", &[]).await.expect("accounts.oauth create error");
     SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON accounts.users (email);", &[]).await.expect("second index (email) create error");
     SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON accounts.oauth (user_id);", &[]).await.expect("second index (user_id) create error");
@@ -34,6 +34,14 @@ pub async fn create_security(vanity: String, _code: u8, fingerprint: String, ip:
     let id: uuid::Uuid = Uuid::new_v4();
 
     SESSION.get().unwrap().query("INSERT INTO accounts.security (id, user_id, fingerprint, created_at, ip, country, revoked, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (id.to_string(), vanity, fingerprint, SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as i64, ip, country, false, 0)).await.expect("Failed to create security token");
+    id
+}
+
+/// Create an oauth token
+pub async fn create_oauth(vanity: String, bot_id: String, scope: Vec<String>) -> uuid::Uuid {
+    let id: uuid::Uuid = Uuid::new_v4();
+
+    SESSION.get().unwrap().query("INSERT INTO accounts.oauth (id, user_id, bot_id, scope) VALUES (?, ?, ?, ?)", (id.to_string(), vanity, bot_id, scope)).await.expect("Failed to create security token");
     id
 }
 
