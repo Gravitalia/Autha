@@ -31,7 +31,7 @@ pub async fn post(body: super::model::OAuth, vanity: String) -> WithStatus<Json>
             warp::reply::with_status(warp::reply::json(
                 &super::model::Error{
                     error: false,
-                    message: code.next().unwrap_or_else(|| "".to_string()),
+                    message: code.next().unwrap_or_default(),
                 }
             ),
             warp::http::StatusCode::OK)
