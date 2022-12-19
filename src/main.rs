@@ -21,7 +21,7 @@ async fn middleware(token: Option<String>, fallback: String, finger: Option<Stri
                 let user = query("SELECT deleted FROM accounts.users WHERE vanity = ?", vec![data.claims.sub.clone()]).await.rows.unwrap();
                 if !user.is_empty() && user[0].columns[0].as_ref().unwrap().as_boolean().unwrap() {
                     "Suspended".to_string()
-                } else if user.is_empty() || data.claims.aud.clone().unwrap_or_else(|| "".to_string()) != sha256::digest(&*finger.clone().unwrap_or_else(|| "none".to_string()))[0..24] {
+                } else if user.is_empty() || finger.is_some() && data.claims.aud.clone().unwrap_or_else(|| "".to_string()) != sha256::digest(&*finger.clone().unwrap_or_else(|| "none".to_string()))[0..24] {
                     "Invalid".to_string()
                 } else {
                     data.claims.sub
@@ -113,6 +113,8 @@ async fn main() {
     database::cassandra::tables().await;
     database::mem::init();
     helpers::init();
+
+    //database::cassandra::query("INSERT INTO accounts.bots (id, user_id, username, client_secret) VALUES (?, ?, ?, ?)", vec!["suba".to_string(), "realhinome".to_string(), "Suba".to_string(), helpers::random_string(32)]).await;
 
     warp::serve(warp::any().and(warp::options()).map(|| "OK").or(routes))
     .run((
