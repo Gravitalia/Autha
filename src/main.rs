@@ -51,7 +51,7 @@ async fn main() {
         }
     })
     .or(warp::path!("users" / String).and(warp::get()).and(warp::header::optional::<String>("authorization")).and(warp::header::optional::<String>("sec")).and_then(|id: String, token: Option<String>, finger: Option<String>| async {
-        if id == "@me" && regex::Regex::new(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$").unwrap().is_match(&token.clone().unwrap()) {
+        if id == "@me" && token.is_some() && regex::Regex::new(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$").unwrap().is_match(&token.clone().unwrap()) {
             let oauth = query("SELECT user_id FROM accounts.oauth WHERE id = ?", vec![token.unwrap()]).await.rows.unwrap();
             if oauth.is_empty() {
                 Err(warp::reject::custom(InvalidQuery))
@@ -132,7 +132,7 @@ async fn main() {
 
     //database::cassandra::query("INSERT INTO accounts.bots (id, user_id, username, client_secret) VALUES (?, ?, ?, ?)", vec!["suba".to_string(), "realhinome".to_string(), "Suba".to_string(), helpers::random_string(32)]).await;
 
-    warp::serve(warp::any().and(warp::options()).map(|| "OK").or(routes))
+    warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes))
     .run((
         [127, 0, 0, 1],
         dotenv::var("PORT").expect("Missing env `PORT`").parse::<u16>().unwrap(),
