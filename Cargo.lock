@@ -825,9 +825,9 @@ dependencies = [
 
 [[package]]
 name = "memcache"
-version = "0.16.0"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "757b4de02817c63ff4efc98a282b305977a7468b2bdf2085c140cdab1604fa61"
+checksum = "063cadf0ccd3d27460d95d973ba1cf1e805a36d3d6297481b74d55ead4ebcb52"
 dependencies = [
  "byteorder",
  "enum_dispatch",
