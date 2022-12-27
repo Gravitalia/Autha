@@ -71,3 +71,11 @@ pub struct OAuth {
     pub redirect_uri: String,
     pub scope: String
 }
+
+#[derive(Deserialize)]
+pub struct GetOAuth {
+    pub client_id: String,
+    pub client_secret: String,
+    pub code: String,
+    pub redirect_uri: String
+}
