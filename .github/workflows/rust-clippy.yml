@@ -1,6 +1,6 @@
 name: Rust Clippy
 
-on: push
+on: [push, pull_request]
 
 jobs:
   rust-clippy-analyze:
