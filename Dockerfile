@@ -3,7 +3,6 @@ FROM rust:1.63 as build
 RUN USER=root cargo new --bin autha
 WORKDIR /autha
 
-COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
 
 RUN cargo build --release \
