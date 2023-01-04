@@ -1,10 +1,20 @@
+mod model;
 use warp::Filter;
 
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
 
-    let routes = warp::path("").map(|| "test");
+    let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and_then(|body: model::Body::Create, _cf_token: String| async {
+        match router::create::create(body).await {
+            Ok(r) => {
+                Ok(r)
+            },
+            Err(_) => {
+                Err(warp::reject::custom(UnknownError))
+            }
+        }
+    });
 
     warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK"))).or(routes)
     .run((
