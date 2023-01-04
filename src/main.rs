@@ -1,5 +1,10 @@
 mod model;
+mod router;
 use warp::Filter;
+
+#[derive(Debug)]
+struct UnknownError;
+impl Reject for UnknownError {}
 
 #[tokio::main]
 async fn main() {
