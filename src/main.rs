@@ -1,6 +1,6 @@
 mod model;
 mod router;
-use warp::Filter;
+use warp::{Filter, reject::Reject};
 
 #[derive(Debug)]
 struct UnknownError;
