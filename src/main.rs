@@ -1,12 +1,12 @@
 mod model;
 mod router;
-use warp::{Filter, reject::Reject, http::StatusCode};
+use warp::{Filter, reject::Reject, http::StatusCode, Reply};
 
 #[derive(Debug)]
 struct UnknownError;
 impl Reject for UnknownError {}
 
-async fn handle_rejection(_err: Rejection) -> Result<impl Reply, Infallible> {
+async fn handle_rejection(_err: warp::Rejection) -> Result<impl Reply, std::convert::Infallible> {
     Ok(warp::reply::with_status(warp::reply::json(&model::Error::Error {
         error: true,
         message: "Check the information provided".to_string(),
