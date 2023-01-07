@@ -1,10 +1,17 @@
 mod model;
 mod router;
-use warp::{Filter, reject::Reject};
+use warp::{Filter, reject::Reject, http::StatusCode};
 
 #[derive(Debug)]
 struct UnknownError;
 impl Reject for UnknownError {}
+
+async fn handle_rejection(_err: Rejection) -> Result<impl Reply, Infallible> {
+    Ok(warp::reply::with_status(warp::reply::json(&model::Error::Error {
+        error: true,
+        message: "Check the information provided".to_string(),
+    }), StatusCode::BAD_REQUEST))
+}
 
 #[tokio::main]
 async fn main() {
@@ -19,7 +26,7 @@ async fn main() {
                 Err(warp::reject::custom(UnknownError))
             }
         }
-    });
+    }).recover(handle_rejection);
 
     warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes))
     .run((
