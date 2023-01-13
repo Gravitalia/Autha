@@ -2,7 +2,7 @@ use warp::reply::{WithStatus, Json};
 use regex::Regex;
 
 /// Handle create route and check if everything is valid
-pub async fn create(body: crate::model::Body::Create) -> Result<WithStatus<Json>, memcache::MemcacheError> {
+pub async fn create(body: crate::model::body::Create) -> Result<WithStatus<Json>, memcache::MemcacheError> {
     // Email verification
     if !Regex::new(r"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$").unwrap().is_match(&body.email) {
         return Ok(super::err("Invalid email".to_string()));
