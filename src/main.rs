@@ -20,9 +20,9 @@ async fn handle_rejection(_err: warp::Rejection) -> Result<impl Reply, std::conv
 async fn main() {
     dotenv::dotenv().ok();
 
-    let cassandra = database::cassandra::init().await;
-    let _memcached = database::mem::init().unwrap();
-    database::cassandra::create_tables(&cassandra).await;
+    database::cassandra::init().await;
+    database::cassandra::create_tables().await;
+    let _ = database::mem::init();
 
     let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and_then(|body: model::body::Create, _cf_token: String| async {
         match router::create::create(body).await {
