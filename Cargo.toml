@@ -24,7 +24,7 @@ cdrs-tokio = "7.0.4"
 
 chacha20poly1305 = "0.10.1"
 rust-argon2 = "1.0.0"
-sha2 = "0.10.6"
+sha3 = "0.10.6"
 
 uuid = { version = "1.2.2", features = ["v4"] }
 regex = "1.7.0"
