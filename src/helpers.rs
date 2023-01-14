@@ -29,7 +29,7 @@ pub fn hash(data: &[u8]) -> String {
             variant: Variant::Argon2id,
             version: Version::Version13,
             mem_cost: 1048576,
-            time_cost: 10,
+            time_cost: 1,
             lanes: 8,
             thread_mode: ThreadMode::Parallel,
             secret: "aOLJ5k4PuXbOmQmfggM2qm82LtGCInz8Hn8qGEczZrYBcr5cRsrg860mPY4NA6Is".as_bytes(),
