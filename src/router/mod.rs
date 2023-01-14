@@ -4,7 +4,7 @@ use warp::reply::{WithStatus, Json};
 /// Create message error easier
 fn err(message: String) -> WithStatus<Json> {
     warp::reply::with_status(warp::reply::json(
-        &crate::model::Error::Error{
+        &crate::model::error::Error{
             error: true,
             message,
         }

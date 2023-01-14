@@ -7,7 +7,7 @@ struct UnknownError;
 impl Reject for UnknownError {}
 
 async fn handle_rejection(_err: warp::Rejection) -> Result<impl Reply, std::convert::Infallible> {
-    Ok(warp::reply::with_status(warp::reply::json(&model::Error::Error {
+    Ok(warp::reply::with_status(warp::reply::json(&model::error::Error {
         error: true,
         message: "Check the information provided".to_string(),
     }), StatusCode::BAD_REQUEST))
@@ -17,7 +17,7 @@ async fn handle_rejection(_err: warp::Rejection) -> Result<impl Reply, std::conv
 async fn main() {
     dotenv::dotenv().ok();
 
-    let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and_then(|body: model::Body::Create, _cf_token: String| async {
+    let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and_then(|body: model::body::Create, _cf_token: String| async {
         match router::create::create(body).await {
             Ok(r) => {
                 Ok(r)
