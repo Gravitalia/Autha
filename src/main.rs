@@ -1,5 +1,8 @@
 mod model;
 mod router;
+mod helpers;
+mod database;
+#[macro_use] extern crate lazy_static;
 use warp::{Filter, reject::Reject, http::StatusCode, Reply};
 
 #[derive(Debug)]
@@ -16,6 +19,10 @@ async fn handle_rejection(_err: warp::Rejection) -> Result<impl Reply, std::conv
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
+
+    let cassandra = database::cassandra::init().await;
+    let _memcached = database::mem::init().unwrap();
+    database::cassandra::create_tables(&cassandra).await;
 
     let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and_then(|body: model::body::Create, _cf_token: String| async {
         match router::create::create(body).await {
