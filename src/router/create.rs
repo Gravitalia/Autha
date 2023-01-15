@@ -51,9 +51,9 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr) -> R
         Some(r) => r.parse::<u16>().unwrap_or(0),
         None => 0,
     };
-    /*if rate_limit >= 1 {
+    if rate_limit >= 1 {
         return Ok(super::rate());
-    }*/
+    }
     let _ = mem::set(ip, mem::SetValue::Number(1));
 
     // Hash email
