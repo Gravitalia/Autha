@@ -54,7 +54,7 @@ pub fn hash(data: &[u8]) -> String {
 
 /// Test if the password is corresponding with another one hashed
 pub fn hash_test(hash: &str, pwd: &[u8]) -> bool {
-    argon2::verify_encoded_ext(hash, pwd, dotenv::var("KEY").expect("Missing env `KEY`").as_bytes(), &[]).unwrap()
+    argon2::verify_encoded_ext(hash, pwd, dotenv::var("KEY").expect("Missing env `KEY`").as_bytes(), &[]).unwrap_or(false)
 }
 
 /// Create a JWT token

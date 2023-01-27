@@ -34,7 +34,18 @@ async fn main() {
                 Err(warp::reject::custom(UnknownError))
             }
         }
-    }).recover(handle_rejection);
+    })
+    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::addr::remote()).and_then(|body: model::body::Login, _cf_token: String, ip: Option<SocketAddr>| async move {
+        match router::login::login(body, ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip()).await {
+            Ok(r) => {
+                Ok(r)
+            },
+            Err(_) => {
+                Err(warp::reject::custom(UnknownError))
+            }
+        }
+    }))
+    .recover(handle_rejection);
 
     warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes))
     .run((
