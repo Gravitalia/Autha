@@ -61,6 +61,7 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Res
         return Ok(super::err("Invalid user".to_string()));
     }
 
+    // Check if password is same
     match query_res[0][1].clone().into_plain() {
         Some(d) => {
             match std::str::from_utf8(&d[..]) {
@@ -80,6 +81,7 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Res
     }
 
     let mut vanity: String = "".to_string();
+    // Set vanity
     match query_res[0][0].clone().into_plain() {
         Some(d) => {
             match std::str::from_utf8(&d[..]) {
