@@ -1,5 +1,5 @@
+use jsonwebtoken::{encode, decode, Header, Algorithm, EncodingKey, Validation, DecodingKey, TokenData};
 use chacha20poly1305::{aead::{Aead, AeadCore, KeyInit, OsRng}, ChaCha20Poly1305};
-use jsonwebtoken::{encode, Header, Algorithm, EncodingKey};
 use argon2::{self, Config, ThreadMode, Variant, Version};
 use std::time::{SystemTime, UNIX_EPOCH};
 use serde::{Serialize, Deserialize};
@@ -69,6 +69,21 @@ pub fn create_jwt(user_id: String) -> String {
             }, &d).unwrap()
         },
         Err(_) => "Error".to_string(),
+    }
+}
+
+// Decode a JWT token and check if it is valid
+pub fn get_jwt(token: String) -> Result<TokenData<Claims>, String> {
+    match DecodingKey::from_rsa_pem(dotenv::var("RSA_PUBLIC_KEY").expect("Missing env `RSA_PUBLIC_KEY`").as_bytes()) {
+        Ok(d) => {
+            match decode::<Claims>(&token, &d, &Validation::new(Algorithm::RS256)) {
+                Ok(token_data) => {
+                    Ok(token_data)
+                },
+                Err(err) => Err(err.to_string()),
+            }
+        },
+        Err(_) => Err("Error".to_string()),
     }
 }
 
