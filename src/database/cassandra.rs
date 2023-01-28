@@ -37,7 +37,7 @@ pub fn create_user(vanity: &String, email: String, username: String, password: S
     if let Some(x) = phone { user.push(x); } else { user.push("".to_string()); }
     if let Some(y) = birthdate { user.push(y); } else { user.push("".to_string()); }
 
-    SESSION.get().unwrap().query_with_values(format!("INSERT INTO accounts.users (vanity, email, username, password, phone, birthdate, flags, deleted) VALUES (?, ?, ?, ?, ?, ?, {}, {})", 0, false), user)?;
+    SESSION.get().unwrap().query_with_values(format!("INSERT INTO accounts.users (vanity, email, username, password, phone, birthdate, flags, deleted, verified) VALUES (?, ?, ?, ?, ?, ?, {}, {}, {})", 0, false, false), user)?;
 
     Ok(())
 }
