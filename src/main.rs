@@ -17,6 +17,38 @@ async fn handle_rejection(_err: warp::Rejection) -> Result<impl Reply, std::conv
     }), StatusCode::BAD_REQUEST))
 }
 
+/// Check if a token is valid and if have a real user behind (not suspended)
+fn middleware(token: Option<String>, fallback: String) -> String {
+    if let Some(ntoken) = token {
+        if fallback != *"@me" {
+            return fallback;
+        }
+
+        match helpers::get_jwt(ntoken) {
+            Ok(data) => {
+                let user = match database::cassandra::query("SELECT deleted FROM accounts.users WHERE vanity = ?", vec![data.claims.sub.clone()]) {
+                    Ok(data) => data.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
+                    Err(_) => {
+                        return data.claims.sub;
+                    }
+                };
+                if !user.is_empty() && user[0][0].clone().into_plain().unwrap()[..] != [0] {
+                    "Suspended".to_string()
+                } else if user.is_empty() {
+                    "Invalid".to_string()
+                } else {
+                    data.claims.sub
+                }
+            },
+            Err(_) => "Invalid".to_string()
+        }
+    } else if fallback == *"@me" {
+        "Invalid".to_string()
+    } else {
+        fallback
+    }
+}
+
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
@@ -44,6 +76,25 @@ async fn main() {
                 Err(warp::reject::custom(UnknownError))
             }
         }
+    }))
+    .or(warp::path!("users" / String).and(warp::get()).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async {
+            let middelware_res: String = middleware(token, id);
+            if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
+                match router::users::get(middelware_res.to_lowercase()) {
+                    Ok(res) => Ok(res),
+                    Err(_) => Err(warp::reject::custom(UnknownError))
+                }
+            } else if middelware_res == *"Suspended" {
+                Ok(warp::reply::with_status(warp::reply::json(
+                    &model::error::Error{
+                        error: true,
+                        message: "Account suspended".to_string(),
+                    }
+                ),
+                warp::http::StatusCode::FORBIDDEN))
+            } else {
+                Err(warp::reject::custom(UnknownError))
+            }
     }))
     .recover(handle_rejection);
 
