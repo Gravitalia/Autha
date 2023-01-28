@@ -31,7 +31,7 @@ pub fn get_user(vanity: String) -> Result<crate::model::user::User, String> {
                     vanity,
                     avatar: if cassandra[0][1].clone().into_plain().is_none() { None } else { Some(std::str::from_utf8(&cassandra[0][1].clone().into_plain().unwrap()[..]).unwrap_or("").to_string()) },
                     bio: if cassandra[0][2].clone().into_plain().is_none() { None } else { Some(std::str::from_utf8(&cassandra[0][2].clone().into_plain().unwrap()[..]).unwrap_or("").to_string()) },
-                    verified: if cassandra[0][3].clone().into_plain().is_none() { false } else { cassandra[0][3].clone().into_plain().unwrap()[..] != [0] },
+                    verified: cassandra[0][3].clone().into_plain().unwrap()[..] != [0],
                     deleted: cassandra[0][4].clone().into_plain().unwrap()[..] != [0],
                     flags: u32::from_be_bytes((&cassandra[0][5].clone().into_plain().unwrap()[..])[..4].try_into().unwrap()),
                 })
