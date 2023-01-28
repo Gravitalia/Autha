@@ -80,10 +80,7 @@ async fn main() {
     .or(warp::path!("users" / String).and(warp::get()).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async {
             let middelware_res: String = middleware(token, id);
             if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
-                match router::users::get(middelware_res.to_lowercase()) {
-                    Ok(res) => Ok(res),
-                    Err(_) => Err(warp::reject::custom(UnknownError))
-                }
+                Ok(router::users::get(middelware_res.to_lowercase()))
             } else if middelware_res == *"Suspended" {
                 Ok(warp::reply::with_status(warp::reply::json(
                     &model::error::Error{
