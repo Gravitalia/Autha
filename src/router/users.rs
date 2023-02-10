@@ -80,101 +80,101 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
     let mut birthdate: Option<String> = None;
     let phone: Option<String> = None;
 
-        // Change username
-        if body.username.is_some() {
-            let nusername = match body.username {
-                Some(u) => u,
-                None => "".to_string()
-            };
+    // Change username
+    if body.username.is_some() {
+        let nusername = match body.username {
+            Some(u) => u,
+            None => "".to_string()
+        };
     
-            if nusername.len() >= 16 {
-                return Ok(super::err("Invalid username".to_string()));
+        if nusername.len() >= 16 {
+            return Ok(super::err("Invalid username".to_string()));
+        } else {
+            username = nusername;
+        }
+    }
+    
+    // Change bio
+    if body.bio.is_some() {
+        let nbio = match body.bio {
+            Some(b) => b,
+            None => "".to_string()
+        };
+    
+        if nbio.len() > 160 {
+            return Ok(super::err("Invalid bio".to_string()));
+        } else if nbio.is_empty() {
+            bio = None
+        } else {
+            bio = Some(nbio);
+        }
+    }
+
+    // Change email
+    if body.email.is_some() {
+        let nemail = match body.email {
+            Some(e) => e,
+            None => "".to_string()
+        };
+    
+        if !is_psw_valid || !EMAIL.is_match(&nemail) {
+            return Ok(super::err("Invalid email".to_string()));
+        } else {
+            let mut hasher = Keccak256::new();
+            hasher.update(nemail.as_bytes());
+            email = hex::encode(&hasher.finalize()[..]);
+        }
+    }
+    
+    // Change birthdate
+    if body.birthdate.is_some() {
+        let birth = match body.birthdate {
+            Some(b) => b,
+            None => "".to_string()
+        };
+    
+        if !BIRTH.is_match(&birth) {
+            return Ok(super::err("Invalid birthdate".to_string()));
+        } else {
+            let dates: Vec<&str> = birth.split('-').collect();
+    
+            if 13 > crate::helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
+                //suspend(vanity);
+                return Ok(super::err("Your account has been suspended: age".to_string()));
             } else {
-                username = nusername;
+                birthdate = Some(crate::helpers::encrypt(birth.as_bytes()));
             }
         }
+    }
     
-        // Change bio
-        if body.bio.is_some() {
-            let nbio = match body.bio {
-                Some(b) => b,
-                None => "".to_string()
-            };
-    
-            if nbio.len() > 160 {
-                return Ok(super::err("Invalid bio".to_string()));
-            } else if nbio.is_empty() {
-                bio = None
-            } else {
-                bio = Some(nbio);
-            }
-        }
-    
-        // Change email
-        if body.email.is_some() {
-            let nemail = match body.email {
-                Some(e) => e,
-                None => "".to_string()
-            };
-    
-            if !is_psw_valid || !EMAIL.is_match(&nemail) {
-                return Ok(super::err("Invalid email".to_string()));
-            } else {
-                let mut hasher = Keccak256::new();
-                hasher.update(nemail.as_bytes());
-                email = hex::encode(&hasher.finalize()[..]);
-            }
-        }
-    
-        // Change birthdate
-        if body.birthdate.is_some() {
-            let birth = match body.birthdate {
-                Some(b) => b,
-                None => "".to_string()
-            };
-    
-            if !BIRTH.is_match(&birth) {
-                return Ok(super::err("Invalid birthdate".to_string()));
-            } else {
-                let dates: Vec<&str> = birth.split('-').collect();
-    
-                if 13 > crate::helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
-                    //suspend(vanity);
-                    return Ok(super::err("Your account has been suspended: age".to_string()));
-                } else {
-                    birthdate = Some(crate::helpers::encrypt(birth.as_bytes()));
-                }
-            }
-        }
-    
-        // Change phone
-        if body.phone.is_some() {
-            let _phone = match body.phone {
-                Some(p) => p,
-                None => "".to_string()
-            };
+    // Change phone
+    if body.phone.is_some() {
+        let _phone = match body.phone {
+            Some(p) => p,
+            None => "".to_string()
+        };
             
-            return Ok(super::err("Phones not implemented yet".to_string()));
-        }
+        return Ok(super::err("Phones not implemented yet".to_string()));
+    }
     
-        // Change password
-        if body.newpassword.is_some() {
-            let psw = match body.newpassword {
-                Some(p) => p,
-                None => "".to_string()
-            };
+    // Change password
+    if body.newpassword.is_some() {
+        let psw = match body.newpassword {
+            Some(p) => p,
+            None => "".to_string()
+        };
         
-            if !is_psw_valid || !PASSWORD.is_match(&psw) {
-                return Ok(super::err("Invalid password".to_string()));
-            } else {
-                match query("UPDATE accounts.users SET password = ? WHERE vanity = ?", vec![crate::helpers::hash(psw.as_ref()), vanity.clone()]) {
-                    Ok(_) => {},
-                    Err(_) => {
-                        return Ok(super::err("Internal server error".to_string()));
-                    }
-                };
-            }
+        if !is_psw_valid || !PASSWORD.is_match(&psw) {
+            return Ok(super::err("Invalid password".to_string()));
+        } else {
+            match query("UPDATE accounts.users SET password = ? WHERE vanity = ?", vec![crate::helpers::hash(psw.as_ref()), vanity.clone()]) {
+                Ok(_) => {},
+                Err(_) => {
+                    return Ok(super::err("Internal server error".to_string()));
+                }
+            };
         }
+    }
 
     match update_user(username, None, bio, birthdate, phone, email, vanity.clone()) {
         Ok(_) => {
