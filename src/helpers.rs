@@ -4,6 +4,7 @@ use argon2::{self, Config, ThreadMode, Variant, Version};
 use std::time::{SystemTime, UNIX_EPOCH};
 use serde::{Serialize, Deserialize};
 use generic_array::GenericArray;
+use chrono::prelude::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -104,6 +105,21 @@ pub fn encrypt(data: &[u8]) -> String {
     }
 }
 
+/// Get age with given data
+/// ```rust
+/// assert_eq!(get_age(2000, 01, 29), 23.0);
+/// ```
+pub fn get_age(year: i32, month: u32, day: u32) -> f64 {
+    match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(date) => {
+            (((date.as_millis()
+            - NaiveDate::from_ymd_opt(year, month, day).unwrap().and_hms_milli_opt(0, 0, 0, 0).unwrap().and_local_timezone(Utc).unwrap().timestamp_millis() as u128)
+            / 31540000000) as f64).floor()
+        },
+        Err(_) => 0.0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -123,5 +139,10 @@ mod tests {
     #[tokio::test]
     async fn test_jwt() {
         assert!(regex::Regex::new(r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)").unwrap().is_match(&create_jwt("test".to_string())));
+    }
+
+    #[tokio::test]
+    async fn test_get_age() {
+        assert_eq!(get_age(2000, 01, 29), 23.0);
     }
 }
