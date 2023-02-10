@@ -31,3 +31,9 @@ pub fn get(key: String) -> Result<Option<String>, MemcacheError> {
 
     Ok(value)
 }
+
+pub fn del(key: String) -> Result<(), MemcacheError> {
+    SESSION.get().unwrap().delete(&key)?;
+
+    Ok(())
+}
