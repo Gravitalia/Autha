@@ -143,6 +143,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_age() {
-        assert_eq!(get_age(2000, 01, 29), 23f64);
+        assert_eq!(get_age(2000, 1, 29), 23f64);
     }
 }
