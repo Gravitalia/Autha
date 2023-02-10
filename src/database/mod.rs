@@ -29,8 +29,8 @@ pub fn get_user(vanity: String) -> Result<crate::model::user::User, String> {
                 Ok(crate::model::user::User {
                     username: std::str::from_utf8(&cassandra[0][0].clone().into_plain().unwrap()[..]).unwrap().to_string(),
                     vanity,
-                    avatar: if cassandra[0][1].clone().into_plain().is_none() { None } else { Some(std::str::from_utf8(&cassandra[0][1].clone().into_plain().unwrap()[..]).unwrap_or("").to_string()) },
-                    bio: if cassandra[0][2].clone().into_plain().is_none() { None } else { Some(std::str::from_utf8(&cassandra[0][2].clone().into_plain().unwrap()[..]).unwrap_or("").to_string()) },
+                    avatar: if cassandra[0][1].clone().into_plain().is_none() { None } else { let res = std::str::from_utf8(&cassandra[0][1].clone().into_plain().unwrap()[..]).unwrap_or("").to_string(); if res == "" { None } else { Some(res) } },
+                    bio: if cassandra[0][2].clone().into_plain().is_none() { None } else { let res = std::str::from_utf8(&cassandra[0][2].clone().into_plain().unwrap()[..]).unwrap_or("").to_string(); if res == "" { None } else { Some(res) } },
                     verified: cassandra[0][3].clone().into_plain().unwrap()[..] != [0],
                     deleted: cassandra[0][4].clone().into_plain().unwrap()[..] != [0],
                     flags: u32::from_be_bytes((&cassandra[0][5].clone().into_plain().unwrap()[..])[..4].try_into().unwrap()),
