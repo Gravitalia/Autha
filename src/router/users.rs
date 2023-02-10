@@ -67,7 +67,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
 
     let mut is_psw_valid: bool = false;
     if body.password.is_some() {
-        if crate::helpers::hash_test(&std::str::from_utf8(&res[0][4].clone().into_plain().unwrap()[..]).unwrap().to_string(), body.password.unwrap().as_ref()) {
+        if crate::helpers::hash_test(std::str::from_utf8(&res[0][4].clone().into_plain().unwrap()[..]).unwrap(), body.password.unwrap().as_ref()) {
             is_psw_valid = true;
         } else {
             return Ok(super::err("Invalid password".to_string()));
