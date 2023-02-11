@@ -1,4 +1,4 @@
-use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query}}, model::{user::User, error::Error}};
+use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query, suspend}}, model::{user::User, error::Error}};
 use warp::reply::{WithStatus, Json};
 use sha3::{Digest, Keccak256};
 use regex::Regex;
@@ -52,7 +52,7 @@ pub fn get(vanity: String) -> WithStatus<Json> {
 }
 
 /// Handle PATCH users route and let users modifie their profile
-pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<WithStatus<Json>, String> {
+pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<WithStatus<Json>, cdrs::error::Error> {
     let res = match query("SELECT username, avatar, bio, email, password FROM accounts.users WHERE vanity = ?", vec![vanity.clone()]) {
         Ok(x) => x.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
         Err(_) => {
@@ -139,7 +139,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
             let dates: Vec<&str> = birth.split('-').collect();
     
             if 13 > crate::helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
-                //suspend(vanity);
+                suspend(vanity)?;
                 return Ok(super::err("Your account has been suspended: age".to_string()));
             } else {
                 birthdate = Some(crate::helpers::encrypt(birth.as_bytes()));
