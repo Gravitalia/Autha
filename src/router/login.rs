@@ -51,7 +51,7 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Res
     let hashed_email = hex::encode(&hasher.finalize()[..]);
     
     // Check if account exists
-    let query_res = match query("SELECT vanity, password FROM accounts.users WHERE email = ?", vec![hashed_email]) {
+    let query_res = match query("SELECT vanity, password, deleted FROM accounts.users WHERE email = ?", vec![hashed_email]) {
         Ok(x) => x.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
         Err(_) => {
             return Ok(super::err("Internal server error".to_string()));
@@ -59,6 +59,18 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Res
     };
     if query_res.is_empty() {
         return Ok(super::err("Invalid user".to_string()));
+    }
+
+    // Check if account is deleted
+    match query_res[0][2].clone().into_plain() {
+        Some(d) => {
+            if d == [1] {
+                return Ok(super::err("Account suspended".to_string()));
+            }
+        },
+        None => {
+            return Ok(super::err("Internal server error".to_string()));
+        }
     }
 
     // Check if password is same
