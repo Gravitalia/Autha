@@ -68,3 +68,8 @@ pub fn update_user(
 
     Ok(())
 }
+
+/// Suspend an account
+pub fn suspend(vanity: String) -> Result<cdrs::frame::Frame, cdrs::error::Error> {
+    SESSION.get().unwrap().query_with_values(format!("UPDATE accounts.users SET deleted = {} WHERE vanity = ?", true), vec![vanity])
+}
