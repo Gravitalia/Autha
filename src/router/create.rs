@@ -95,7 +95,10 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr) -> R
     // Birthdate verification
     let mut birth: Option<String> = None;
     if body.birthdate.is_some() {
-        if !BIRTH.is_match(body.birthdate.as_ref().unwrap()) {
+        let birthdate = body.birthdate.clone().unwrap_or_default();
+        let dates: Vec<&str> = birthdate.split('-').collect();
+
+        if !BIRTH.is_match(body.birthdate.as_ref().unwrap()) || 13 > crate::helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
             return Ok(super::err("Invalid birthdate".to_string()));
         } else {
             birth = Some(crate::helpers::encrypt(body.birthdate.unwrap().as_bytes()));

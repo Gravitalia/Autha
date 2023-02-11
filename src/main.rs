@@ -93,6 +93,29 @@ async fn main() {
                 Err(warp::reject::custom(UnknownError))
             }
     }))
+    .or(warp::path("users").and(warp::path("@me")).and(warp::patch()).and(warp::body::json()).and(warp::header::<String>("authorization")).and_then(|body: model::body::UserPatch, token: String| async {
+        let middelware_res: String = middleware(Some(token), "@me".to_string());
+        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
+            match router::users::patch(middelware_res.to_lowercase(), body) {
+                Ok(r) => {
+                    Ok(r)
+                },
+                Err(_) => {
+                    Err(warp::reject::custom(UnknownError))
+                }
+            }
+        } else if middelware_res == *"Suspended" {
+            Ok(warp::reply::with_status(warp::reply::json(
+                &model::error::Error{
+                    error: true,
+                    message: "Account suspended".to_string(),
+                }
+            ),
+            warp::http::StatusCode::FORBIDDEN))
+        } else {
+            Err(warp::reject::custom(UnknownError))
+        }
+    }))
     .recover(handle_rejection);
 
     warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes))

@@ -5,8 +5,10 @@ use cdrs::load_balancing::RoundRobin;
 use cdrs::query::*;
 
 type CurrentSession = Session<RoundRobin<TcpConnectionPool<NoneAuthenticator>>>;
+use std::vec;
 use once_cell::sync::OnceCell;
 static SESSION: OnceCell<CurrentSession> = OnceCell::new();
+const DEFAULT_VALUE: &str = "";
 
 /// Init cassandra session
 pub fn init() {
@@ -19,12 +21,12 @@ pub fn create_tables() {
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.users ( vanity text, email text, username text, avatar text, banner text, bio text, verified boolean, flags int, phone text, password text, birthdate text, deleted boolean, mfa_code text, PRIMARY KEY (vanity) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 864000;").expect("accounts.users create error");
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.bots ( id text, user_id text, client_secret text, username text, avatar text, bio text, redirect_url set<text>, flags int, deleted boolean, PRIMARY KEY (id) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 864000;").expect("accounts.bots create error");
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.oauth ( id text, user_id text, bot_id text, ip text, scope set<text>, deleted boolean, PRIMARY KEY (id) ) WITH compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.ZstdCompressor'} AND gc_grace_seconds = 0;").expect("accounts.oauth create error");
-    SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON accounts.users (email);").expect("second index (email) create error");
-    SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON accounts.oauth (user_id);").expect("second index (user_id) create error");
+    SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON accounts.users ( email );").expect("second index (email) create error");
+    SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON accounts.oauth ( user_id );").expect("second index (user_id) create error");
 }
 
 /// Make a query to cassandra
-pub fn query(query: &'static str, params: Vec<String>) -> std::result::Result<cdrs::frame::Frame, cdrs::error::Error> {
+pub fn query(query: &'static str, params: Vec<String>) -> Result<cdrs::frame::Frame, cdrs::error::Error> {
     SESSION.get().unwrap().query_with_values(query, params)
 }
 
@@ -40,4 +42,34 @@ pub fn create_user(vanity: &String, email: String, username: String, password: S
     SESSION.get().unwrap().query_with_values(format!("INSERT INTO accounts.users (vanity, email, username, password, phone, birthdate, flags, deleted, verified) VALUES (?, ?, ?, ?, ?, ?, {}, {}, {})", 0, false, false), user)?;
 
     Ok(())
+}
+
+/// Update a user in cassandra database
+pub fn update_user(
+    username: String,
+    avatar: Option<String>,
+    bio: Option<String>,
+    birthdate: Option<String>,
+    phone: Option<String>,
+    email: String,
+    vanity: String,
+) -> Result<(), cdrs::error::Error> {
+    SESSION.get().unwrap().query_with_values("UPDATE accounts.users SET username = ?, avatar = ?, bio = ?, birthdate = ?, phone = ?, email = ? WHERE vanity = ?",
+    vec![
+            username,
+            avatar.unwrap_or_else(|| DEFAULT_VALUE.to_string()),
+            bio.unwrap_or_else(|| DEFAULT_VALUE.to_string()),
+            birthdate.unwrap_or_else(|| DEFAULT_VALUE.to_string()),
+            phone.unwrap_or_else(|| DEFAULT_VALUE.to_string()),
+            email, 
+            vanity
+        ]
+    )?;
+
+    Ok(())
+}
+
+/// Suspend an account
+pub fn suspend(vanity: String) -> Result<cdrs::frame::Frame, cdrs::error::Error> {
+    SESSION.get().unwrap().query_with_values(format!("UPDATE accounts.users SET deleted = {} WHERE vanity = ?", true), vec![vanity])
 }
