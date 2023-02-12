@@ -118,7 +118,11 @@ async fn main() {
     }))
     .recover(handle_rejection);
 
-    warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes))
+    let cors = warp::cors()
+                        .allow_any_origin()
+                        .allow_methods(vec!["GET", "POST", "DELETE", "PATCH"]);
+
+    warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes).with(cors))
     .run((
         [127, 0, 0, 1],
         dotenv::var("PORT").expect("Missing env `PORT`").parse::<u16>().unwrap(),
