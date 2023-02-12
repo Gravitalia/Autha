@@ -28,3 +28,19 @@ pub struct UserPatch {
     pub phone: Option<String>,
     pub mfa: Option<String>
 }
+
+#[derive(Deserialize)]
+pub struct OAuth {
+    pub response_type: String,
+    pub bot_id: String,
+    pub redirect_uri: String,
+    pub scope: String
+}
+
+#[derive(Deserialize)]
+pub struct GetOAuth {
+    pub client_id: String,
+    pub client_secret: String,
+    pub code: String,
+    pub redirect_uri: String
+}
