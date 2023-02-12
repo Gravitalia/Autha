@@ -5,6 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use serde::{Serialize, Deserialize};
 use generic_array::GenericArray;
 use chrono::prelude::*;
+use rand::RngCore;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -19,16 +20,15 @@ pub struct Claims {
 /// let rand = random_string(23);
 /// assert_eq!(random_string(16).len(), 16);
 /// ```
-pub fn random_string(length: i32) -> String {
-    let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".chars().collect();
-    let mut result = String::default();
+pub fn random_string(length: usize) -> String {
+    let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_%?!&".chars().collect();
+    let mut result = String::with_capacity(length);
+    let mut rng = rand::thread_rng();
 
-    unsafe {
-        for _ in 0..length {
-            result.push(
-                *chars.get_unchecked(fastrand::usize(0..62))
-            );
-        }
+    for _ in 0..length {
+        result.push(
+            chars[rng.next_u32() as usize % 62],
+        );
     }
 
     result

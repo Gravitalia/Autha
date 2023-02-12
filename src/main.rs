@@ -57,6 +57,8 @@ async fn main() {
     database::cassandra::create_tables();
     let _ = database::mem::init();
 
+    //let _ = database::cassandra::create_bot("suba".to_string(), "TF5hobQgfPJSqs-QICYlDl9H1USn-vZ3".to_string(), "Suba".to_string());
+
     let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::addr::remote()).and_then(|body: model::body::Create, _cf_token: String, ip: Option<SocketAddr>| async move {
         match router::create::create(body, ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip()).await {
             Ok(r) => {
@@ -105,6 +107,23 @@ async fn main() {
                 }
             }
         } else if middelware_res == *"Suspended" {
+            Ok(warp::reply::with_status(warp::reply::json(
+                &model::error::Error{
+                    error: true,
+                    message: "Account suspended".to_string(),
+                }
+            ),
+            warp::http::StatusCode::FORBIDDEN))
+        } else {
+            Err(warp::reject::custom(UnknownError))
+        }
+    }))
+    .or(warp::path("oauth2").and(warp::path("token")).and(warp::post()).and(warp::body::json()).map(router::oauth::get_oauth_code))
+    .or(warp::path("oauth2").and(warp::post()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: model::body::OAuth, token: String| async {
+        let middelware_res: String = middleware(Some(token), "@me".to_string());
+        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
+            Ok(router::oauth::post(body, middelware_res))
+        } else if middelware_res == "Suspended" {
             Ok(warp::reply::with_status(warp::reply::json(
                 &model::error::Error{
                     error: true,
