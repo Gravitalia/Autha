@@ -1,6 +1,7 @@
 pub mod create;
 pub mod login;
 pub mod users;
+pub mod oauth;
 use warp::reply::{WithStatus, Json};
 
 /// Create message error easier
