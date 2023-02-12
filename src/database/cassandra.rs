@@ -3,6 +3,7 @@ use cdrs::cluster::session::{new as new_session, Session};
 use cdrs::cluster::{ClusterTcpConfig, NodeTcpConfigBuilder, TcpConnectionPool};
 use cdrs::load_balancing::RoundRobin;
 use cdrs::query::*;
+use uuid::Uuid;
 
 type CurrentSession = Session<RoundRobin<TcpConnectionPool<NoneAuthenticator>>>;
 use std::vec;
@@ -49,6 +50,15 @@ pub fn _create_bot(vanity: String, client_secret: String, username: String) -> R
     SESSION.get().unwrap().query_with_values(format!("INSERT INTO accounts.bots (id, client_secret, username, flags, deleted) VALUES (?, ?, ?, {}, {})", 0, false), vec![vanity, client_secret, username])?;
 
     Ok(())
+}
+
+/// Create a OAuth2 code
+pub fn create_oauth(vanity: String, bot_id: String, scope: Vec<String>) -> String {
+    let id = Uuid::new_v4().to_string();
+
+    let _ = SESSION.get().unwrap().query_with_values("INSERT INTO accounts.bots (id, user_id, bot_id, scope, deleted) VALUES (?, ?, ?, ?, ?)", cdrs::query_values!(id.clone(), vanity, bot_id, scope, false));
+
+    id
 }
 
 /// Update a user in cassandra database
