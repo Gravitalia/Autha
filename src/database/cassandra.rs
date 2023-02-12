@@ -44,6 +44,13 @@ pub fn create_user(vanity: &String, email: String, username: String, password: S
     Ok(())
 }
 
+/// Create a bot
+pub fn _create_bot(vanity: String, client_secret: String, username: String) -> Result<(), cdrs::error::Error> {
+    SESSION.get().unwrap().query_with_values(format!("INSERT INTO accounts.bots (id, client_secret, username, flags, deleted) VALUES (?, ?, ?, {}, {})", 0, false), vec![vanity, client_secret, username])?;
+
+    Ok(())
+}
+
 /// Update a user in cassandra database
 pub fn update_user(
     username: String,
