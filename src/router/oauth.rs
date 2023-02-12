@@ -1,4 +1,4 @@
-use crate::database::{cassandra::{query, create_oauth}, mem::{set, get, SetValue::Characters}};
+use crate::database::{cassandra::{query, create_oauth}, mem::{set, get, del, SetValue::Characters}};
 use crate::helpers::random_string;
 use warp::reply::{WithStatus, Json};
 
@@ -66,7 +66,7 @@ pub fn post(body: crate::model::body::OAuth, vanity: String) -> WithStatus<Json>
 }
 
 pub fn get_oauth_code(body: crate::model::body::GetOAuth) -> WithStatus<Json> {
-    let data = match get(body.code).unwrap() {
+    let data = match get(body.code.clone()).unwrap() {
         Some(r) => Vec::from_iter(r.split('+').map(|x| x.to_string())),
         None => vec![],
     };
@@ -103,6 +103,10 @@ pub fn get_oauth_code(body: crate::model::body::GetOAuth) -> WithStatus<Json> {
             return super::err("Internal server error".to_string());
         }
     };
+
+    // Delete used key
+    let _ = del(body.code);
+
     if res.is_empty() {
         warp::reply::with_status(warp::reply::json(
             &crate::model::error::Error {
