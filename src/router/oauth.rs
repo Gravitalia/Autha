@@ -79,7 +79,7 @@ pub fn get_oauth_code(body: crate::model::body::GetOAuth) -> WithStatus<Json> {
         return super::err("Invalid client_id".to_string());
     }
 
-    let bot = match query("SELECT flags, deleted, redirect_url FROM accounts.bots WHERE id = ?", vec![body.client_id.clone()]) {
+    let bot = match query("SELECT flags, deleted, redirect_url, client_secret FROM accounts.bots WHERE id = ?", vec![body.client_id.clone()]) {
         Ok(x) => x.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
         Err(_) => {
             return super::err("Internal server error".to_string());
@@ -95,6 +95,10 @@ pub fn get_oauth_code(body: crate::model::body::GetOAuth) -> WithStatus<Json> {
     // Check if the redirect_url is valid
     if !std::str::from_utf8(&bot[0][2].clone().into_plain().unwrap()[..]).unwrap().to_string().replace("\u{2}\0\0\0\u{1d}", "").replace("\0\0\0", "").split('#').any(|x| x == &body.redirect_uri[..]) {
         return super::err("Invalid redirect_uri".to_string());
+    }
+    // Check if client_secret is valid
+    if std::str::from_utf8(&bot[0][3].clone().into_plain().unwrap()[..]).unwrap().to_string() != body.client_secret {
+        return super::err("Invalid client_secret".to_string());
     }
 
     let res = match query("SELECT id, bot_id FROM accounts.oauth WHERE user_id = ?", vec![user_id.to_string()]) {
