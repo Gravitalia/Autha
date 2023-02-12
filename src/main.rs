@@ -118,10 +118,11 @@ async fn main() {
             Err(warp::reject::custom(UnknownError))
         }
     }))
+    .or(warp::path("oauth2").and(warp::path("token")).and(warp::post()).and(warp::body::json()).map(router::oauth::get_oauth_code))
     .or(warp::path("oauth2").and(warp::post()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: model::body::OAuth, token: String| async {
         let middelware_res: String = middleware(Some(token), "@me".to_string());
         if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
-            Ok(router::oauth::post(body, middelware_res).await)
+            Ok(router::oauth::post(body, middelware_res))
         } else if middelware_res == "Suspended" {
             Ok(warp::reply::with_status(warp::reply::json(
                 &model::error::Error{
