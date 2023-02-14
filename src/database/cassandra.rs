@@ -56,7 +56,7 @@ pub fn _create_bot(vanity: String, client_secret: String, username: String) -> R
 pub fn create_oauth(vanity: String, bot_id: String, scope: Vec<String>) -> String {
     let id = Uuid::new_v4().to_string();
 
-    let _ = SESSION.get().unwrap().query_with_values("INSERT INTO accounts.bots (id, user_id, bot_id, scope, deleted) VALUES (?, ?, ?, ?, ?)", cdrs::query_values!(id.clone(), vanity, bot_id, scope, false));
+    let _ = SESSION.get().unwrap().query_with_values("INSERT INTO accounts.oauth (id, user_id, bot_id, scope, deleted) VALUES (?, ?, ?, ?, ?)", cdrs::query_values!(id.clone(), vanity, bot_id, scope, false));
 
     id
 }
