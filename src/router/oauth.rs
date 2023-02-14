@@ -97,7 +97,7 @@ pub fn get_oauth_code(body: crate::model::body::GetOAuth) -> WithStatus<Json> {
         return super::err("Invalid redirect_uri".to_string());
     }
     // Check if client_secret is valid
-    if std::str::from_utf8(&bot[0][3].clone().into_plain().unwrap()[..]).unwrap().to_string() != body.client_secret {
+    if *std::str::from_utf8(&bot[0][3].clone().into_plain().unwrap()[..]).unwrap() != body.client_secret {
         return super::err("Invalid client_secret".to_string());
     }
 
