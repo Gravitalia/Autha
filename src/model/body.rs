@@ -13,7 +13,8 @@ pub struct Create {
 #[derive(Deserialize, Clone)]
 pub struct Login {
     pub email: String,
-    pub password: String
+    pub password: String,
+    pub mfa: Option<String>
 }
 
 #[derive(Deserialize)]
