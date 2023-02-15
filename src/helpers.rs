@@ -5,6 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use serde::{Serialize, Deserialize};
 use generic_array::GenericArray;
 use chrono::prelude::*;
+
 use rand::RngCore;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -97,7 +98,29 @@ pub fn encrypt(data: &[u8]) -> String {
 
             let nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng);
             match ChaCha20Poly1305::new(&bytes).encrypt(&nonce, data) {
-                Ok(v) => format!("{}//{}", hex::encode(nonce), hex::encode(v)),
+                Ok(y) => format!("{}//{}", hex::encode(nonce), hex::encode(y)),
+                Err(_) => "Error".to_string(),
+            }
+        },
+        Err(_) => "Error".to_string(),
+    }
+}
+
+/// Decrypt
+#[allow(clippy::type_complexity)]
+pub fn decrypt(data: String) -> String {
+    match hex::decode(dotenv::var("CHA_KEY").expect("Missing env `CHA_KEY`")) {
+        Ok(v) => {
+            let bytes = GenericArray::clone_from_slice(&v);
+            match hex::decode(data.split("//").collect::<Vec<&str>>()[0]) {
+                Ok(x) => {
+                    let arr_ref = GenericArray::from_slice(&x);
+
+                    match ChaCha20Poly1305::new(&bytes).decrypt(arr_ref, hex::decode(data.split("//").collect::<Vec<&str>>()[1]).unwrap().as_ref()) {
+                        Ok(y) => String::from_utf8(y).unwrap(),
+                        Err(_) => "Error".to_string(),
+                    }
+                },
                 Err(_) => "Error".to_string(),
             }
         },

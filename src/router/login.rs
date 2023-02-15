@@ -1,5 +1,7 @@
 use crate::{database::cassandra::query, helpers};
+use std::time::{SystemTime, UNIX_EPOCH};
 use warp::reply::{WithStatus, Json};
+use totp_lite::{totp_custom, Sha1};
 use sha3::{Digest, Keccak256};
 use crate::database::mem;
 use regex::Regex;
@@ -51,7 +53,7 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Res
     let hashed_email = hex::encode(&hasher.finalize()[..]);
     
     // Check if account exists
-    let query_res = match query("SELECT vanity, password, deleted FROM accounts.users WHERE email = ?", vec![hashed_email]) {
+    let query_res = match query("SELECT vanity, password, deleted, mfa_code FROM accounts.users WHERE email = ?", vec![hashed_email]) {
         Ok(x) => x.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
         Err(_) => {
             return Ok(super::err("Internal server error".to_string()));
@@ -89,6 +91,24 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Res
         },
         None => {
             return Ok(super::err("Internal server error".to_string()));
+        }
+    }
+    
+    // Check if MFA is valid
+    if let Some(d) = query_res[0][3].clone().into_plain() {
+        if body.mfa.is_none() {
+            return Ok(super::err("Invalid MFA".to_string()));
+        }
+
+        match std::str::from_utf8(&d[..]) {
+            Ok(x) => {
+                if totp_custom::<Sha1>(30, 6, helpers::decrypt(x.to_string()).as_ref(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()) != body.mfa.unwrap()  {
+                    return Ok(super::err("Invalid MFA".to_string()));
+                }
+            },
+            Err(_) => {
+                return Ok(super::err("Internal server error".to_string()));
+            }
         }
     }
 

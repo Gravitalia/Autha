@@ -156,6 +156,21 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
             
         return Ok(super::err("Phones not implemented yet".to_string()));
     }
+
+    // Change 2FA (mfa)
+    if body.mfa.is_some() {
+        let nmfa = match body.mfa {
+            Some(b) => b,
+            None => "".to_string()
+        };
+
+        match query("UPDATE accounts.users SET mfa_code = ? WHERE vanity = ?", vec![crate::helpers::encrypt(nmfa.as_bytes()), vanity.clone()]) {
+            Ok(_) => {},
+            Err(_) => {
+                return Ok(super::err("Internal server error".to_string()));
+            }
+        };
+    }
     
     // Change password
     if body.newpassword.is_some() {
@@ -186,8 +201,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
                 }
             ), warp::http::StatusCode::OK))
         },
-        Err(e) => {
-            println!("{:?}", e);
+        Err(_) => {
             Ok(super::err("Internal server error".to_string()))
         }
     }
