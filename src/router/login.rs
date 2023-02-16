@@ -102,6 +102,7 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Res
 
         match std::str::from_utf8(&d[..]) {
             Ok(x) => {
+                // Save MFA code in clear, not in base32 => for generate key, use helpers::random_string with 10 as length
                 if totp_custom::<Sha1>(30, 6, helpers::decrypt(x.to_string()).as_ref(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()) != body.mfa.unwrap()  {
                     return Ok(super::err("Invalid MFA".to_string()));
                 }
