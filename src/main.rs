@@ -27,7 +27,7 @@ async fn handle_rejection(_err: warp::Rejection) -> Result<impl Reply, std::conv
 fn middleware(token: Option<String>, fallback: &str) -> String {
     match &token {
         Some(ntoken) if fallback == "@me" => {
-            if let Ok(data) = helpers::get_jwt(ntoken.clone()) {
+            if let Ok(data) = helpers::jwt::get_jwt(ntoken.clone()) {
                 if let Ok(user) = database::cassandra::query("SELECT deleted FROM accounts.users WHERE vanity = ?", vec![data.claims.sub.clone()]) {
                     if let Some(row) = user.get_body().unwrap().as_cols().unwrap().rows_content.get(0) {
                         if row.get(0).unwrap().clone().into_plain().unwrap()[..] != [0] {
