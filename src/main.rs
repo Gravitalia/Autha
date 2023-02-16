@@ -33,13 +33,13 @@ fn middleware(token: Option<String>, fallback: &str) -> String {
                         if row.get(0).unwrap().clone().into_plain().unwrap()[..] != [0] {
                             return "Suspended".to_string();
                         } else {
-                            return data.claims.sub.clone();
+                            return data.claims.sub;
                         }
                     }
                 }
-                return data.claims.sub.clone();
+                return data.claims.sub;
             }
-            return "Invalid".to_string();
+            "Invalid".to_string()
         }
         None if fallback == "@me" => "Invalid".to_string(),
         _ => fallback.to_string(),
