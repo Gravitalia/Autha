@@ -2,9 +2,15 @@ mod model;
 mod router;
 mod helpers;
 mod database;
+
 #[macro_use] extern crate lazy_static;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use warp::{Filter, reject::Reject, http::StatusCode, Reply};
+use regex::Regex;
+
+lazy_static! {
+    static ref TOKEN: Regex = Regex::new(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$").unwrap();
+}
 
 #[derive(Debug)]
 struct UnknownError;
@@ -18,34 +24,25 @@ async fn handle_rejection(_err: warp::Rejection) -> Result<impl Reply, std::conv
 }
 
 /// Check if a token is valid and if have a real user behind (not suspended)
-fn middleware(token: Option<String>, fallback: String) -> String {
-    if let Some(ntoken) = token {
-        if fallback != *"@me" {
-            return fallback;
-        }
-
-        match helpers::get_jwt(ntoken) {
-            Ok(data) => {
-                let user = match database::cassandra::query("SELECT deleted FROM accounts.users WHERE vanity = ?", vec![data.claims.sub.clone()]) {
-                    Ok(data) => data.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
-                    Err(_) => {
-                        return data.claims.sub;
+fn middleware(token: Option<String>, fallback: &str) -> String {
+    match &token {
+        Some(ntoken) if fallback == "@me" => {
+            if let Ok(data) = helpers::get_jwt(ntoken.clone()) {
+                if let Ok(user) = database::cassandra::query("SELECT deleted FROM accounts.users WHERE vanity = ?", vec![data.claims.sub.clone()]) {
+                    if let Some(row) = user.get_body().unwrap().as_cols().unwrap().rows_content.get(0) {
+                        if row.get(0).unwrap().clone().into_plain().unwrap()[..] != [0] {
+                            return "Suspended".to_string();
+                        } else {
+                            return data.claims.sub.clone();
+                        }
                     }
-                };
-                if !user.is_empty() && user[0][0].clone().into_plain().unwrap()[..] != [0] {
-                    "Suspended".to_string()
-                } else if user.is_empty() {
-                    "Invalid".to_string()
-                } else {
-                    data.claims.sub
                 }
-            },
-            Err(_) => "Invalid".to_string()
+                return data.claims.sub.clone();
+            }
+            return "Invalid".to_string();
         }
-    } else if fallback == *"@me" {
-        "Invalid".to_string()
-    } else {
-        fallback
+        None if fallback == "@me" => "Invalid".to_string(),
+        _ => fallback.to_string(),
     }
 }
 
@@ -79,8 +76,8 @@ async fn main() {
             }
         }
     }))
-    .or(warp::path!("users" / String).and(warp::get()).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async {
-        if id == "@me" && token.is_some() && regex::Regex::new(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$").unwrap().is_match(&token.clone().unwrap()) {
+    .or(warp::path!("users" / String).and(warp::get()).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async move {
+        if id == "@me" && token.is_some() && TOKEN.is_match(&token.clone().unwrap()) {
             let oauth = match database::cassandra::query("SELECT user_id FROM accounts.oauth WHERE id = ?", vec![token.unwrap()]) {
                 Ok(x) => x.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
                 Err(_) => {
@@ -94,7 +91,7 @@ async fn main() {
                 Ok(router::users::get(std::str::from_utf8(&oauth[0][0].clone().into_plain().unwrap()[..]).unwrap().to_string()))
             }
         } else {
-            let middelware_res: String = middleware(token, id);
+            let middelware_res: String = middleware(token, &id);
             if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
                 Ok(router::users::get(middelware_res.to_lowercase()))
             } else if middelware_res == *"Suspended" {
@@ -111,7 +108,7 @@ async fn main() {
         }
     }))
     .or(warp::path("users").and(warp::path("@me")).and(warp::patch()).and(warp::body::json()).and(warp::header::<String>("authorization")).and_then(|body: model::body::UserPatch, token: String| async {
-        let middelware_res: String = middleware(Some(token), "@me".to_string());
+        let middelware_res: String = middleware(Some(token), "@me");
         if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
             match router::users::patch(middelware_res.to_lowercase(), body) {
                 Ok(r) => {
@@ -135,7 +132,7 @@ async fn main() {
     }))
     .or(warp::path("oauth2").and(warp::path("token")).and(warp::post()).and(warp::body::json()).map(router::oauth::get_oauth_code))
     .or(warp::path("oauth2").and(warp::post()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: model::body::OAuth, token: String| async {
-        let middelware_res: String = middleware(Some(token), "@me".to_string());
+        let middelware_res: String = middleware(Some(token), "@me");
         if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
             Ok(router::oauth::post(body, middelware_res))
         } else if middelware_res == "Suspended" {
@@ -162,4 +159,14 @@ async fn main() {
         dotenv::var("PORT").expect("Missing env `PORT`").parse::<u16>().unwrap(),
     ))
     .await;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_regex() {
+        assert!(TOKEN.is_match("0ef32821-0b07-43a9-83b9-93f8e49253aa"));
+    }
 }
