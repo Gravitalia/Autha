@@ -44,16 +44,16 @@ pub fn encrypt(data: &[u8]) -> String {
 
 /// Decrypt a string with ChaCha20 (Salsa20) and Poly1305
 pub fn decrypt(data: String) -> String {
-    let splited: Vec<&str> = data.splitn(2, "//").collect();
+    let splited = data.split_once("//").unwrap_or((data.as_str(), ""));
 
     match hex::decode(dotenv::var("CHA_KEY").expect("Missing env `CHA_KEY`")) {
         Ok(v) => {
             let bytes = GenericArray::clone_from_slice(&v);
-            match hex::decode(splited[0]) {
+            match hex::decode(splited.0) {
                 Ok(x) => {
                     let arr_ref = GenericArray::from_slice(&x);
 
-                    match ChaCha20Poly1305::new(&bytes).decrypt(arr_ref, hex::decode(splited[1]).unwrap().as_ref()) {
+                    match ChaCha20Poly1305::new(&bytes).decrypt(arr_ref, hex::decode(splited.1).unwrap().as_ref()) {
                         Ok(y) => String::from_utf8(y).unwrap(),
                         Err(_) => "Error".to_string(),
                     }
