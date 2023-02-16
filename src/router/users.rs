@@ -1,4 +1,5 @@
 use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query, suspend}}, model::{user::User, error::Error}};
+use crate::helpers::crypto::{encrypt, hash};
 use warp::reply::{WithStatus, Json};
 use sha3::{Digest, Keccak256};
 use regex::Regex;
@@ -67,7 +68,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
 
     let mut is_psw_valid: bool = false;
     if body.password.is_some() {
-        if crate::helpers::hash_test(std::str::from_utf8(&res[0][4].clone().into_plain().unwrap()[..]).unwrap(), body.password.unwrap().as_ref()) {
+        if crate::helpers::crypto::hash_test(std::str::from_utf8(&res[0][4].clone().into_plain().unwrap()[..]).unwrap(), body.password.unwrap().as_ref()) {
             is_psw_valid = true;
         } else {
             return Ok(super::err("Invalid password".to_string()));
@@ -142,7 +143,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
                 suspend(vanity)?;
                 return Ok(super::err("Your account has been suspended: age".to_string()));
             } else {
-                birthdate = Some(crate::helpers::encrypt(birth.as_bytes()));
+                birthdate = Some(encrypt(birth.as_bytes()));
             }
         }
     }
@@ -164,7 +165,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
             None => "".to_string()
         };
 
-        match query("UPDATE accounts.users SET mfa_code = ? WHERE vanity = ?", vec![crate::helpers::encrypt(nmfa.as_bytes()), vanity.clone()]) {
+        match query("UPDATE accounts.users SET mfa_code = ? WHERE vanity = ?", vec![encrypt(nmfa.as_bytes()), vanity.clone()]) {
             Ok(_) => {},
             Err(_) => {
                 return Ok(super::err("Internal server error".to_string()));
@@ -182,7 +183,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
         if !is_psw_valid || !PASSWORD.is_match(&psw) {
             return Ok(super::err("Invalid password".to_string()));
         } else {
-            match query("UPDATE accounts.users SET password = ? WHERE vanity = ?", vec![crate::helpers::hash(psw.as_ref()), vanity.clone()]) {
+            match query("UPDATE accounts.users SET password = ? WHERE vanity = ?", vec![hash(psw.as_ref()), vanity.clone()]) {
                 Ok(_) => {},
                 Err(_) => {
                     return Ok(super::err("Internal server error".to_string()));

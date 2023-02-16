@@ -80,7 +80,7 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Res
         Some(d) => {
             match std::str::from_utf8(&d[..]) {
                 Ok(x) => {
-                    if !helpers::hash_test(x, data.password.as_bytes()) {
+                    if !helpers::crypto::hash_test(x, data.password.as_bytes()) {
                         return Ok(super::err("Invalid password".to_string()));
                     }
                 },
@@ -103,7 +103,7 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Res
         match std::str::from_utf8(&d[..]) {
             Ok(x) => {
                 // Save MFA code in clear, not in base32 => for generate key, use helpers::random_string with 10 as length
-                if totp_custom::<Sha1>(30, 6, helpers::decrypt(x.to_string()).as_ref(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()) != body.mfa.unwrap()  {
+                if totp_custom::<Sha1>(30, 6, helpers::crypto::decrypt(x.to_string()).as_ref(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()) != body.mfa.unwrap()  {
                     return Ok(super::err("Invalid MFA".to_string()));
                 }
             },
@@ -119,7 +119,7 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Res
         Some(d) => {
             match std::str::from_utf8(&d[..]) {
                 Ok(x) => {
-                    if !helpers::hash_test(x, data.password.as_bytes()) {
+                    if !helpers::crypto::hash_test(x, data.password.as_bytes()) {
                         vanity = x.to_string();
                     }
                 },
@@ -137,7 +137,7 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Res
     Ok(warp::reply::with_status(warp::reply::json(
         &crate::model::error::Error{
             error: false,
-            message: crate::helpers::create_jwt(vanity),
+            message: crate::helpers::jwt::create_jwt(vanity),
         }
     ),
     warp::http::StatusCode::OK))
