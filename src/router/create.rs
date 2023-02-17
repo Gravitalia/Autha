@@ -89,7 +89,7 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr) -> R
         if !PHONE.is_match(body.phone.as_ref().unwrap()) {
             return Ok(super::err("Invalid phone".to_string()));
         } else {
-            phone = Some(crate::helpers::encrypt(body.phone.unwrap().as_bytes()));
+            phone = Some(crate::helpers::crypto::encrypt(body.phone.unwrap().as_bytes()));
         }
     }
     // Birthdate verification
@@ -101,12 +101,12 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr) -> R
         if !BIRTH.is_match(body.birthdate.as_ref().unwrap()) || 13 > crate::helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
             return Ok(super::err("Invalid birthdate".to_string()));
         } else {
-            birth = Some(crate::helpers::encrypt(body.birthdate.unwrap().as_bytes()));
+            birth = Some(crate::helpers::crypto::encrypt(body.birthdate.unwrap().as_bytes()));
         }
     }
 
     // Create account
-    match create_user(&data.vanity, hashed_email, data.username, crate::helpers::hash(data.password.as_bytes()), phone, birth) {
+    match create_user(&data.vanity, hashed_email, data.username, crate::helpers::crypto::hash(data.password.as_bytes()), phone, birth) {
         Ok(_) => {},
         Err(_) => {
             return Ok(super::err("Internal server error".to_string()));
@@ -117,7 +117,7 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr) -> R
     Ok(warp::reply::with_status(warp::reply::json(
         &crate::model::error::Error{
             error: false,
-            message: crate::helpers::create_jwt(data.vanity),
+            message: crate::helpers::jwt::create_jwt(data.vanity),
         }
     ),
     warp::http::StatusCode::CREATED))
