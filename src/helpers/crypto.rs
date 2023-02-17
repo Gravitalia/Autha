@@ -44,7 +44,7 @@ pub fn encrypt(data: &[u8]) -> String {
 
 /// Decrypt a string with ChaCha20 (Salsa20) and Poly1305
 pub fn decrypt(data: String) -> String {
-    let splited = data.split_once("//").unwrap_or((data.as_str(), ""));
+    let splited = data.split_once("//").unwrap_or_else(|| ("", ""));
 
     match hex::decode(dotenv::var("CHA_KEY").expect("Missing env `CHA_KEY`")) {
         Ok(v) => {
