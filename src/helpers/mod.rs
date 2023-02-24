@@ -1,5 +1,6 @@
 pub mod crypto;
 pub mod jwt;
+pub mod request;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 use chrono::prelude::*;

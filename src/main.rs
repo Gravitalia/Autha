@@ -56,8 +56,8 @@ async fn main() {
 
     //let _ = database::cassandra::create_bot("suba".to_string(), "TF5hobQgfPJSqs-QICYlDl9H1USn-vZ3".to_string(), "Suba".to_string());
 
-    let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::addr::remote()).and_then(|body: model::body::Create, _cf_token: String, ip: Option<SocketAddr>| async move {
-        match router::create::create(body, ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip()).await {
+    let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::addr::remote()).and_then(|body: model::body::Create, cf_token: String, ip: Option<SocketAddr>| async move {
+        match router::create::create(body, ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip(), cf_token).await {
             Ok(r) => {
                 Ok(r)
             },
@@ -66,8 +66,8 @@ async fn main() {
             }
         }
     })
-    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::addr::remote()).and_then(|body: model::body::Login, _cf_token: String, ip: Option<SocketAddr>| async move {
-        match router::login::login(body, ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip()).await {
+    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::addr::remote()).and_then(|body: model::body::Login, cf_token: String, ip: Option<SocketAddr>| async move {
+        match router::login::login(body, ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip(), cf_token).await {
             Ok(r) => {
                 Ok(r)
             },
@@ -149,11 +149,7 @@ async fn main() {
     }))
     .recover(handle_rejection);
 
-    let cors = warp::cors()
-                        .allow_any_origin()
-                        .allow_methods(vec!["GET", "POST", "DELETE", "PATCH"]);
-
-    warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes).with(cors))
+    warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes))
     .run((
         [127, 0, 0, 1],
         dotenv::var("PORT").expect("Missing env `PORT`").parse::<u16>().unwrap(),

@@ -2,6 +2,7 @@ use crate::database::cassandra::{query, create_user};
 use warp::reply::{WithStatus, Json};
 use sha3::{Digest, Keccak256};
 use crate::database::mem;
+use crate::helpers;
 use regex::Regex;
 use tokio::task;
 
@@ -14,7 +15,7 @@ lazy_static! {
 }
 
 /// Handle create route and check if everything is valid
-pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr) -> Result<WithStatus<Json>, memcache::MemcacheError> {
+pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr, token: String) -> Result<WithStatus<Json>, memcache::MemcacheError> {
     let data = body.clone();
     let is_valid = task::spawn(async move {
         // Email verification
@@ -89,7 +90,7 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr) -> R
         if !PHONE.is_match(body.phone.as_ref().unwrap()) {
             return Ok(super::err("Invalid phone".to_string()));
         } else {
-            phone = Some(crate::helpers::crypto::encrypt(body.phone.unwrap().as_bytes()));
+            phone = Some(helpers::crypto::encrypt(body.phone.unwrap().as_bytes()));
         }
     }
     // Birthdate verification
@@ -98,15 +99,26 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr) -> R
         let birthdate = body.birthdate.clone().unwrap_or_default();
         let dates: Vec<&str> = birthdate.split('-').collect();
 
-        if !BIRTH.is_match(body.birthdate.as_ref().unwrap()) || 13 > crate::helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
+        if !BIRTH.is_match(body.birthdate.as_ref().unwrap()) || 13 > helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
             return Ok(super::err("Invalid birthdate".to_string()));
         } else {
-            birth = Some(crate::helpers::crypto::encrypt(body.birthdate.unwrap().as_bytes()));
+            birth = Some(helpers::crypto::encrypt(body.birthdate.unwrap().as_bytes()));
+        }
+    }
+
+    match helpers::request::check_turnstile(token).await {
+        Ok(res) => {
+            if !res {
+                return Ok(super::err("Invalid user".to_string()));
+            }
+        },
+        Err(_) => {
+            return Ok(super::err("Internal server error".to_string()));
         }
     }
 
     // Create account
-    match create_user(&data.vanity, hashed_email, data.username, crate::helpers::crypto::hash(data.password.as_bytes()), phone, birth) {
+    match create_user(&data.vanity, hashed_email, data.username, helpers::crypto::hash(data.password.as_bytes()), phone, birth) {
         Ok(_) => {},
         Err(_) => {
             return Ok(super::err("Internal server error".to_string()));
@@ -117,7 +129,7 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr) -> R
     Ok(warp::reply::with_status(warp::reply::json(
         &crate::model::error::Error{
             error: false,
-            message: crate::helpers::jwt::create_jwt(data.vanity),
+            message: helpers::jwt::create_jwt(data.vanity),
         }
     ),
     warp::http::StatusCode::CREATED))

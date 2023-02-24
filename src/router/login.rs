@@ -13,7 +13,7 @@ lazy_static! {
 }
 
 /// Handle login route and check if everything is valid
-pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Result<WithStatus<Json>, memcache::MemcacheError> {
+pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr, token: String) -> Result<WithStatus<Json>, memcache::MemcacheError> {
     let data = body.clone();
     let is_valid = task::spawn(async move {
         // Email verification
@@ -110,6 +110,17 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr) -> Res
             Err(_) => {
                 return Ok(super::err("Internal server error".to_string()));
             }
+        }
+    }
+
+    match helpers::request::check_turnstile(token).await {
+        Ok(res) => {
+            if !res {
+                return Ok(super::err("Invalid user".to_string()));
+            }
+        },
+        Err(_) => {
+            return Ok(super::err("Internal server error".to_string()));
         }
     }
 
