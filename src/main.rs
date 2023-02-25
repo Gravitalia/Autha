@@ -53,6 +53,7 @@ async fn main() {
     database::cassandra::init();
     database::cassandra::create_tables();
     let _ = database::mem::init();
+    helpers::remove_deleted_account().await;
 
     //let _ = database::cassandra::create_bot("suba".to_string(), "TF5hobQgfPJSqs-QICYlDl9H1USn-vZ3".to_string(), "Suba".to_string());
 
@@ -135,6 +136,29 @@ async fn main() {
         let middelware_res: String = middleware(Some(token), "@me");
         if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
             Ok(router::oauth::post(body, middelware_res))
+        } else if middelware_res == "Suspended" {
+            Ok(warp::reply::with_status(warp::reply::json(
+                &model::error::Error{
+                    error: true,
+                    message: "Account suspended".to_string(),
+                }
+            ),
+            warp::http::StatusCode::FORBIDDEN))
+        } else {
+            Err(warp::reject::custom(UnknownError))
+        }
+    }))
+    .or(warp::path("users").and(warp::path("@me")).and(warp::delete()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: model::body::Gdrp, token: String| async {
+        let middelware_res: String = middleware(Some(token), "@me");
+        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
+            match  router::users::delete(middelware_res, body).await {
+                Ok(r) => {
+                    Ok(r)
+                },
+                Err(_) => {
+                    Err(warp::reject::custom(UnknownError))
+                }
+            }
         } else if middelware_res == "Suspended" {
             Ok(warp::reply::with_status(warp::reply::json(
                 &model::error::Error{

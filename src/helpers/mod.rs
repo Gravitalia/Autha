@@ -2,7 +2,7 @@ pub mod crypto;
 pub mod jwt;
 pub mod request;
 
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH, Duration};
 use chrono::prelude::*;
 use rand::RngCore;
 
@@ -27,7 +27,7 @@ pub fn random_string(length: usize) -> String {
 
 /// Get age with given data
 /// ```rust
-/// assert_eq!(get_age(2000, 01, 29), 23.0);
+/// assert_eq!(get_age(2000, 01, 29), 23f64);
 /// ```
 pub fn get_age(year: i32, month: u32, day: u32) -> f64 {
     match SystemTime::now().duration_since(UNIX_EPOCH) {
@@ -38,6 +38,26 @@ pub fn get_age(year: i32, month: u32, day: u32) -> f64 {
         },
         Err(_) => 0.0
     }
+}
+
+/// Check every day at 00h00 if users need to be deleted
+pub async fn remove_deleted_account() {
+    tokio::task::spawn(async {
+        loop {
+            let now = chrono::Utc::now();
+            let time = Utc.with_ymd_and_hms(now.year(), now.month(), now.day()+1, 0, 0, 0).unwrap().timestamp()-now.timestamp();
+            std::thread::sleep(Duration::from_secs(time.try_into().unwrap_or_default()));
+
+            if let Ok(x) = crate::database::cassandra::query(format!("SELECT vanity FROM accounts.users WHERE expire_at >= '{}' ALLOW FILTERING", (now+chrono::Duration::days(30)).format("%Y-%m-%d+0000")), vec![]) {
+                let res = x.get_body().unwrap().as_cols().unwrap().rows_content.clone();
+
+                for acc in res.iter() {
+                        let _ = crate::database::cassandra::query("UPDATE accounts.users SET email = null, password = null, phone = null, birthdate = null, avatar = null, bio = null, banner = null, mfa_code = null, username = ?, expire_at = null WHERE vanity = ?",
+                        vec!["".to_string(), std::str::from_utf8(&acc[0].clone().into_plain().unwrap()[..]).unwrap().to_string()]);
+                }
+            };
+        }
+    });
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
+use reqwest::{Client, header::HeaderValue, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use reqwest::Client;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct SiteVerifyResponse {
@@ -13,7 +13,8 @@ struct SiteVerifyResponse {
     cdata: Option<String>,
 }
 
-pub async fn check_turnstile(token: String) -> Result<bool, Box<dyn std::error::Error>>  {
+/// Send a request to Cloudflare for check if Turnstile token is valid
+pub async fn check_turnstile(token: String) -> Result<bool, Box<dyn std::error::Error>> {
     let mut data = HashMap::new();
     data.insert("secret", dotenv::var("TURNSTILE_SECRET").expect("Missing env `TURNSTILE_SECRET`"));
     data.insert("response", token);
@@ -26,4 +27,16 @@ pub async fn check_turnstile(token: String) -> Result<bool, Box<dyn std::error::
         .await?;
 
     Ok(res.success)
+}
+
+/// Send a request to the URL for delete account
+pub async fn delete_account(url: String) -> Result<bool, Box<dyn std::error::Error>> {
+    let auth_header_value = HeaderValue::from_str(&dotenv::var("GLOBAL_AUTH").expect("Missing env `GLOBAL_AUTH`"))?;
+
+    let res = Client::new().delete(url+"/account/deletion")
+    .header("authorization", auth_header_value)
+    .send()
+    .await?;
+
+    Ok(res.status() == StatusCode::OK)
 }

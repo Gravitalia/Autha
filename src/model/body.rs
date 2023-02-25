@@ -31,6 +31,11 @@ pub struct UserPatch {
 }
 
 #[derive(Deserialize)]
+pub struct Gdrp {
+    pub password: String,
+}
+
+#[derive(Deserialize)]
 pub struct OAuth {
     pub response_type: String,
     pub bot_id: String,
