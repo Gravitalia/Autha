@@ -28,7 +28,7 @@ pub fn create_tables() {
 }
 
 /// Make a query to cassandra
-pub fn query(query: &'static str, params: Vec<String>) -> Result<cdrs::frame::Frame, cdrs::error::Error> {
+pub fn query<Q: ToString>(query: Q, params: Vec<String>) -> Result<cdrs::frame::Frame, cdrs::error::Error> {
     SESSION.get().unwrap().query_with_values(query, params)
 }
 
