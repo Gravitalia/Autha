@@ -11,7 +11,7 @@ pub fn hash(data: &[u8]) -> String {
             variant: Variant::Argon2id,
             version: Version::Version13,
             mem_cost: 524288,
-            time_cost: 1,
+            time_cost: dotenv::var("ROUND").expect("Missing env `ROUND`").parse::<u32>().unwrap_or(1),
             lanes: 8,
             thread_mode: ThreadMode::Parallel,
             secret: dotenv::var("KEY").expect("Missing env `KEY`").as_bytes(),
