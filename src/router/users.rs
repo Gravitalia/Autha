@@ -34,7 +34,7 @@ pub fn get(vanity: String) -> WithStatus<Json> {
     } else if user.deleted {
         warp::reply::with_status(warp::reply::json(
             &User {
-                username: "Account suspended".to_string(),
+                username: "Deleted suspended".to_string(),
                 vanity,
                 avatar: None,
                 bio: None,
