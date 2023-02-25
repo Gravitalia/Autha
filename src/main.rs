@@ -147,6 +147,29 @@ async fn main() {
             Err(warp::reject::custom(UnknownError))
         }
     }))
+    .or(warp::path("users").and(warp::path("@me")).and(warp::delete()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: model::body::GDRP, token: String| async {
+        let middelware_res: String = middleware(Some(token), "@me");
+        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
+            match  router::users::delete(middelware_res, body).await {
+                Ok(r) => {
+                    Ok(r)
+                },
+                Err(_) => {
+                    Err(warp::reject::custom(UnknownError))
+                }
+            }
+        } else if middelware_res == "Suspended" {
+            Ok(warp::reply::with_status(warp::reply::json(
+                &model::error::Error{
+                    error: true,
+                    message: "Account suspended".to_string(),
+                }
+            ),
+            warp::http::StatusCode::FORBIDDEN))
+        } else {
+            Err(warp::reject::custom(UnknownError))
+        }
+    }))
     .recover(handle_rejection);
 
     warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes))
