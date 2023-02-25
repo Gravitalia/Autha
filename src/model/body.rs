@@ -31,7 +31,7 @@ pub struct UserPatch {
 }
 
 #[derive(Deserialize)]
-pub struct GDRP {
+pub struct Gdrp {
     pub password: String,
 }
 
