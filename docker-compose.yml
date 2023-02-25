@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  autha:
+    image: gravitalia/autha
+    restart: unless-stopped
+    ports:
+      - "1111:1111"
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      memcached:
+        condition: service_healthy
+    env_file:
+      - .env
+
+  cassandra:
+    image: cassandra:latest
+    restart: always
+    ports:
+      - "9042:9042"
+    volumes:
+      - ./data/cassandra:/var/lib/cassandra
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "cqlsh -e 'describe cluster' localhost 2>&1 >/dev/null | grep 'Connected' || exit 1"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  memcached:
+    image: memcached:latest
+    restart: always
+    ports:
+      - "11211:11211"
+    healthcheck:
+      test: ["CMD", "memcached-tool", "localhost:11211", "stats"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
