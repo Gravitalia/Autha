@@ -148,7 +148,7 @@ async fn main() {
             Err(warp::reject::custom(UnknownError))
         }
     }))
-    .or(warp::path("users").and(warp::path("@me")).and(warp::delete()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: model::body::GDRP, token: String| async {
+    .or(warp::path("users").and(warp::path("@me")).and(warp::delete()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: model::body::Gdrp, token: String| async {
         let middelware_res: String = middleware(Some(token), "@me");
         if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
             match  router::users::delete(middelware_res, body).await {
