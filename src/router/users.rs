@@ -209,7 +209,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
 }
 
 /// Delete route for remove account from database
-pub async fn delete(vanity: String, body: crate::model::body::GDRP) -> Result<WithStatus<Json>, cdrs::error::Error> {
+pub async fn delete(vanity: String, body: crate::model::body::Gdrp) -> Result<WithStatus<Json>, cdrs::error::Error> {
     let res = match query("SELECT password FROM accounts.users WHERE vanity = ?", vec![vanity.clone()]) {
         Ok(x) => x.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
         Err(_) => {
@@ -226,11 +226,11 @@ pub async fn delete(vanity: String, body: crate::model::body::GDRP) -> Result<Wi
         return Ok(super::err("Invalid password".to_string()));
     }
 
-    for url in dotenv::var("SERVICES").expect("Missing env `SERVICES`").split(" ").collect::<Vec<&str>>().iter().map(|&s| s.to_owned()) {
+    for url in dotenv::var("SERVICES").expect("Missing env `SERVICES`").split(' ').collect::<Vec<&str>>().iter().map(|&s| s.to_owned()) {
         let _ = delete_account(url).await;
     }
 
-    query(format!("UPDATE accounts.users SET deleted = {}, expire_at = '{}' WHERE vanity = ?", true, (chrono::Utc::now()+chrono::Duration::days(30)).format("%Y-%m-%d+0000").to_string()), vec![vanity])?;
+    query(format!("UPDATE accounts.users SET deleted = {}, expire_at = '{}' WHERE vanity = ?", true, (chrono::Utc::now()+chrono::Duration::days(30)).format("%Y-%m-%d+0000")), vec![vanity])?;
 
     Ok(warp::reply::with_status(warp::reply::json(
         &Error {
