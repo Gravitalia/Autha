@@ -48,16 +48,13 @@ pub async fn remove_deleted_account() {
             let time = Utc.with_ymd_and_hms(now.year(), now.month(), now.day()+1, 0, 0, 0).unwrap().timestamp()-now.timestamp();
             std::thread::sleep(Duration::from_secs(time.try_into().unwrap_or_default()));
 
-            match crate::database::cassandra::query(format!("SELECT vanity FROM accounts.users WHERE expire_at >= '{}' ALLOW FILTERING", (now+chrono::Duration::days(30)).format("%Y-%m-%d+0000").to_string()), vec![]) {
-                Ok(x) => {
-                    let res = x.get_body().unwrap().as_cols().unwrap().rows_content.clone();
-    
-                    for acc in res.iter() {
+            if let Ok(x) = crate::database::cassandra::query(format!("SELECT vanity FROM accounts.users WHERE expire_at >= '{}' ALLOW FILTERING", (now+chrono::Duration::days(30)).format("%Y-%m-%d+0000")), vec![]) {
+                let res = x.get_body().unwrap().as_cols().unwrap().rows_content.clone();
+
+                for acc in res.iter() {
                         let _ = crate::database::cassandra::query("UPDATE accounts.users SET email = null, password = null, phone = null, birthdate = null, avatar = null, bio = null, banner = null, mfa_code = null, username = ?, expire_at = null WHERE vanity = ?",
                         vec!["".to_string(), std::str::from_utf8(&acc[0].clone().into_plain().unwrap()[..]).unwrap().to_string()]);
-                    }
-                },
-                Err(_) => {}
+                }
             };
         }
     });
