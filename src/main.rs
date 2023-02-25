@@ -53,6 +53,7 @@ async fn main() {
     database::cassandra::init();
     database::cassandra::create_tables();
     let _ = database::mem::init();
+    helpers::remove_deleted_account().await;
 
     //let _ = database::cassandra::create_bot("suba".to_string(), "TF5hobQgfPJSqs-QICYlDl9H1USn-vZ3".to_string(), "Suba".to_string());
 
