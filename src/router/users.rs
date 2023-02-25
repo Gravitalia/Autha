@@ -1,5 +1,5 @@
 use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query, suspend}}, model::{user::User, error::Error}};
-use crate::helpers::crypto::{encrypt, hash};
+use crate::helpers::{crypto::{encrypt, hash}, request::delete_account};
 use warp::reply::{WithStatus, Json};
 use sha3::{Digest, Keccak256};
 use regex::Regex;
@@ -206,6 +206,38 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
             Ok(super::err("Internal server error".to_string()))
         }
     }
+}
+
+/// Delete route for remove account from database
+pub async fn delete(vanity: String, body: crate::model::body::GDRP) -> Result<WithStatus<Json>, cdrs::error::Error> {
+    let res = match query("SELECT password FROM accounts.users WHERE vanity = ?", vec![vanity.clone()]) {
+        Ok(x) => x.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
+        Err(_) => {
+            return Ok(warp::reply::with_status(warp::reply::json(
+                &Error {
+                    error: true,
+                    message: "Unknown user".to_string()
+                }
+            ), warp::http::StatusCode::NOT_FOUND));
+        }
+    };
+
+    if !crate::helpers::crypto::hash_test(std::str::from_utf8(&res[0][0].clone().into_plain().unwrap()[..]).unwrap(), body.password.as_ref()) {
+        return Ok(super::err("Invalid password".to_string()));
+    }
+
+    for url in dotenv::var("SERVICES").expect("Missing env `SERVICES`").split(" ").collect::<Vec<&str>>().iter().map(|&s| s.to_owned()) {
+        let _ = delete_account(url).await;
+    }
+
+    query(format!("UPDATE accounts.users SET deleted = {}, expire_at = '{}' WHERE vanity = ?", true, (chrono::Utc::now()+chrono::Duration::days(30)).format("%Y-%m-%d+0000").to_string()), vec![vanity])?;
+
+    Ok(warp::reply::with_status(warp::reply::json(
+        &Error {
+            error: false,
+            message: "OK".to_string()
+        }
+    ), warp::http::StatusCode::OK))
 }
 
 #[cfg(test)]
