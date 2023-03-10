@@ -8,7 +8,7 @@ pub enum SetValue {
 }
 
 pub fn init() -> Result<(), MemcacheError> {
-    let _ = SESSION.set(memcache::connect(format!("memcache://{}?timeout=2&tcp_nodelay=true", dotenv::var("MEMCACHED_HOST").unwrap_or("127.0.0.1:11211".to_string())))?);
+    let _ = SESSION.set(memcache::connect(format!("memcache://{}?timeout=2&tcp_nodelay=true", dotenv::var("MEMCACHED_HOST").unwrap_or_else(|_| "127.0.0.1:11211".to_string())))?);
 
     Ok(())
 }
