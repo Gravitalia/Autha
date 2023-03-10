@@ -13,7 +13,7 @@ const DEFAULT_VALUE: &str = "";
 
 /// Init cassandra session
 pub fn init() {
-    let _ = SESSION.set(new_session(&ClusterTcpConfig(vec![NodeTcpConfigBuilder::new("127.0.0.1:9042", NoneAuthenticator {}).build()]), RoundRobin::new()).expect("session should be created"));
+    let _ = SESSION.set(new_session(&ClusterTcpConfig(vec![NodeTcpConfigBuilder::new(dotenv::var("CASSANDRA_HOST").unwrap_or_else(|_| "127.0.0.1:9042".to_string()).as_str(), NoneAuthenticator {}).build()]), RoundRobin::new()).expect("session should be created"));
 }
 
 /// Create tables in cassandra keyspace if not exists
