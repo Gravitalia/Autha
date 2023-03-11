@@ -176,7 +176,10 @@ async fn main() {
     let port: u16 = dotenv::var("PORT").expect("Missing env `PORT`").parse::<u16>().unwrap();
     println!("Server started on port {}", port);
 
-    warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes))
+    warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::any().and(warp::get()).map(|| {
+        println!("Received");
+        "OK"
+    })).or(warp::head().map(|| "OK")).or(routes))
     .run((
         [127, 0, 0, 1],
         port,
