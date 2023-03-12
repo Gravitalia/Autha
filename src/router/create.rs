@@ -55,7 +55,6 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr, toke
     if rate_limit >= 1 {
         return Ok(super::rate());
     }
-    let _ = mem::set(ip, mem::SetValue::Number(1));
 
     // Hash email
     hasher = Keccak256::new();
@@ -99,7 +98,7 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr, toke
         let birthdate = body.birthdate.clone().unwrap_or_default();
         let dates: Vec<&str> = birthdate.split('-').collect();
 
-        if !BIRTH.is_match(body.birthdate.as_ref().unwrap()) || 13 > helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
+        if !birthdate.is_empty() && !BIRTH.is_match(body.birthdate.as_ref().unwrap()) || 13 > helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
             return Ok(super::err("Invalid birthdate".to_string()));
         } else {
             birth = Some(helpers::crypto::encrypt(body.birthdate.unwrap().as_bytes()));
@@ -124,6 +123,8 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr, toke
             return Ok(super::err("Internal server error".to_string()));
         }
     }
+    
+    let _ = mem::set(ip, mem::SetValue::Number(1));
 
     // Finish, create a JWT token and sent it
     Ok(warp::reply::with_status(warp::reply::json(
