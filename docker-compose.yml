@@ -1,11 +1,18 @@
-version: '3'
+version: '3.9'
 
 services:
   autha:
-    image: gravitalia/autha
-    restart: unless-stopped
+    image: gravitalia/autha:latest
+    container_name: autha
+    restart: always
+    networks:
+      - authwork
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     ports:
-      - "1111:1111"
+      - '1111:1111'
     depends_on:
       cassandra:
         condition: service_healthy
@@ -17,27 +24,58 @@ services:
   cassandra:
     image: cassandra:latest
     restart: always
+    container_name: cassandra
+    environment:
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+    networks:
+      - authwork
+    deploy:
+      resources:
+        limits:
+          memory: 5g
+        reservations:
+          memory: 1g
     ports:
-      - "9042:9042"
+      - '9042:9042'
+      - '7000:7000'
+      - '7001:7001'
+      - '7199:7199'
+      - '9142:9142'
+      - '9160:9160'
     volumes:
       - ./data/cassandra:/var/lib/cassandra
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "cqlsh -e 'describe cluster' localhost 2>&1 >/dev/null | grep 'Connected' || exit 1"
-        ]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+      test: ["CMD-SHELL", "cqlsh --execute='SELECT * FROM system_schema.keyspaces;' || exit 1"]
+      interval: 10s
+      start_period: 90s
+      timeout: 10s
+      retries: 5
 
   memcached:
     image: memcached:latest
     restart: always
+    container_name: memcached
+    networks:
+      - authwork
+      - gravitalia
+    deploy:
+      resources:
+        limits:
+          memory: 1g
     ports:
       - "11211:11211"
     healthcheck:
-      test: ["CMD", "memcached-tool", "localhost:11211", "stats"]
-      interval: 30s
+      test: ["CMD", "true"]
+      start_period: 40s
+      interval: 10s
       timeout: 5s
       retries: 3
+
+volumes:
+  cassandra-data:
+
+networks:
+  authwork:
+  gravitalia:
+    external: true
