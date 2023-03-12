@@ -178,9 +178,12 @@ async fn main() {
     println!("Server started on port {}", port);
 
     warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes))
+    .tls()
+    .cert_path("/cert.pem")
+    .key_path("/key.pem")
     .run((
         [0, 0, 0, 0],
-        port,
+        port
     ))
     .await;
 }
