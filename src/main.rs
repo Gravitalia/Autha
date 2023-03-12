@@ -49,6 +49,7 @@ fn middleware(token: Option<String>, fallback: &str) -> String {
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
+    println!("Starting server...");
 
     database::cassandra::init();
     database::cassandra::create_tables();
