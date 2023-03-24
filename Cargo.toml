@@ -1,6 +1,6 @@
 [package]
 name = "autha"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 
 [profile.release]
@@ -9,6 +9,7 @@ lto = true
 codegen-units = 1
 panic = "abort"
 strip = true
+debug = false
 
 [profile.dev]
 opt-level = 0
@@ -16,7 +17,7 @@ debug = true
 
 [dependencies]
 tokio = { version = "1.23.0", features = ["full"] }
-warp = "0.3.3"
+warp = { version = "0.3.3", features = ["tls"] }
 serde = { version = "1.0", features = ["derive"] }
 
 memcache = "0.17.0"
@@ -39,3 +40,4 @@ chrono = "0.4.23"
 rand = "0.8.5"
 totp-lite = "2.0.0"
 reqwest = { version = "0.11.14", features = ["json"] }
+openssl = "0.10.45"
