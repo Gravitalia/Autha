@@ -79,6 +79,17 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr, toke
             return Ok(super::err("Internal server error".to_string()));
         }
     };
+
+    // Check if bot id is already used
+    if query_res.is_empty() {
+        query_res = match query("SELECT id FROM accounts.bots WHERE id = ?", vec![data.vanity.clone()]) {
+            Ok(x) => x.get_body().unwrap().into_rows().unwrap(),
+            Err(_) => {
+                return Ok(super::err("Internal server error".to_string()));
+            }
+        };
+    }
+
     if !query_res.is_empty() {
         return Ok(super::err("Vanity already used".to_string()));
     }
