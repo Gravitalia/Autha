@@ -29,7 +29,7 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr, token:
     let result = is_valid.await.unwrap();
 
     if result != "ok" {
-        return Ok(super::err(result.to_string()));
+        return Ok(crate::router::err(result.to_string()));
     }
 
     // Hash IP
@@ -56,22 +56,22 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr, token:
     let query_res = match query("SELECT vanity, password, deleted, mfa_code FROM accounts.users WHERE email = ?", vec![hashed_email]) {
         Ok(x) => x.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
         Err(_) => {
-            return Ok(super::err("Internal server error".to_string()));
+            return Ok(crate::router::err("Internal server error".to_string()));
         }
     };
     if query_res.is_empty() {
-        return Ok(super::err("Invalid user".to_string()));
+        return Ok(crate::router::err("Invalid user".to_string()));
     }
 
     // Check if account is deleted
     match query_res[0][2].clone().into_plain() {
         Some(d) => {
             if d == [1] {
-                return Ok(super::err("Account suspended".to_string()));
+                return Ok(crate::router::err("Account suspended".to_string()));
             }
         },
         None => {
-            return Ok(super::err("Internal server error".to_string()));
+            return Ok(crate::router::err("Internal server error".to_string()));
         }
     }
 
@@ -81,34 +81,34 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr, token:
             match std::str::from_utf8(&d[..]) {
                 Ok(x) => {
                     if !helpers::crypto::hash_test(x, data.password.as_bytes()) {
-                        return Ok(super::err("Invalid password".to_string()));
+                        return Ok(crate::router::err("Invalid password".to_string()));
                     }
                 },
                 Err(_) => {
-                    return Ok(super::err("Internal server error".to_string()));
+                    return Ok(crate::router::err("Internal server error".to_string()));
                 }
             }
         },
         None => {
-            return Ok(super::err("Internal server error".to_string()));
+            return Ok(crate::router::err("Internal server error".to_string()));
         }
     }
     
     // Check if MFA is valid
     if let Some(d) = query_res[0][3].clone().into_plain() {
         if body.mfa.is_none() {
-            return Ok(super::err("Invalid MFA".to_string()));
+            return Ok(crate::router::err("Invalid MFA".to_string()));
         }
 
         match std::str::from_utf8(&d[..]) {
             Ok(x) => {
                 // Save MFA code in clear, not in base32 => for generate key, use helpers::random_string with 10 as length
                 if totp_custom::<Sha1>(30, 6, helpers::crypto::decrypt(x.to_string()).as_ref(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()) != body.mfa.unwrap()  {
-                    return Ok(super::err("Invalid MFA".to_string()));
+                    return Ok(crate::router::err("Invalid MFA".to_string()));
                 }
             },
             Err(_) => {
-                return Ok(super::err("Internal server error".to_string()));
+                return Ok(crate::router::err("Internal server error".to_string()));
             }
         }
     }
@@ -116,11 +116,11 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr, token:
     match helpers::request::check_turnstile(token).await {
         Ok(res) => {
             if !res {
-                return Ok(super::err("Invalid user".to_string()));
+                return Ok(crate::router::err("Invalid user".to_string()));
             }
         },
         Err(_) => {
-            return Ok(super::err("Internal server error".to_string()));
+            return Ok(crate::router::err("Internal server error".to_string()));
         }
     }
 
@@ -135,12 +135,12 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr, token:
                     }
                 },
                 Err(_) => {
-                    return Ok(super::err("Internal server error".to_string()));
+                    return Ok(crate::router::err("Internal server error".to_string()));
                 }
             }
         },
         None => {
-            return Ok(super::err("Internal server error".to_string()));
+            return Ok(crate::router::err("Internal server error".to_string()));
         }
     }
 

@@ -1,1 +1,1 @@
-mod main;
+pub mod main;
