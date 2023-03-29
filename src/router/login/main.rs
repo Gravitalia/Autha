@@ -43,7 +43,7 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr, token:
         None => 0,
     };
     if rate_limit >= 8 {
-        return Ok(super::rate());
+        return Ok(crate::router::rate());
     }
     let _ = mem::set(ip, mem::SetValue::Number(rate_limit+1));
 
