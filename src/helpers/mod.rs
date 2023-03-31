@@ -3,7 +3,7 @@ pub mod jwt;
 pub mod request;
 
 use std::time::{SystemTime, UNIX_EPOCH, Duration};
-use chrono::prelude::*;
+use chrono::{Duration as ChronoDuration, Utc, NaiveDate};
 use rand::RngCore;
 
 /// Generate a random string
@@ -44,9 +44,9 @@ pub fn get_age(year: i32, month: u32, day: u32) -> f64 {
 pub async fn remove_deleted_account() {
     tokio::task::spawn(async {
         loop {
-            let now = chrono::Utc::now();
-            let time = Utc.with_ymd_and_hms(now.year(), now.month(), now.day()+1, 0, 0, 0).unwrap().timestamp()-now.timestamp();
-            std::thread::sleep(Duration::from_secs(time.try_into().unwrap_or_default()));
+            let now = Utc::now();
+            let time = (now.naive_utc().date().and_hms_opt(0, 0, 0).unwrap() + ChronoDuration::days(1)).timestamp()-now.timestamp();
+            std::thread::sleep(Duration::from_secs(time as u64));
 
             if let Ok(x) = crate::database::cassandra::query(format!("SELECT vanity FROM accounts.users WHERE expire_at >= '{}' ALLOW FILTERING", (now+chrono::Duration::days(30)).format("%Y-%m-%d+0000")), vec![]) {
                 let res = x.get_body().unwrap().as_cols().unwrap().rows_content.clone();
