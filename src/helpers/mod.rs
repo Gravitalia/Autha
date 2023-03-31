@@ -3,7 +3,7 @@ pub mod jwt;
 pub mod request;
 
 use std::time::{SystemTime, UNIX_EPOCH, Duration};
-use chrono::{Duration as ChronoDuration, Utc};
+use chrono::{Duration as ChronoDuration, Utc, NaiveDate};
 use rand::RngCore;
 
 /// Generate a random string
