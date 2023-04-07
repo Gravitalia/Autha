@@ -50,3 +50,9 @@ pub struct GetOAuth {
     pub code: String,
     pub redirect_uri: String
 }
+
+#[derive(Deserialize)]
+pub struct TempToken {
+    pub password: Option<String>,
+    pub mfa: Option<String>
+}
