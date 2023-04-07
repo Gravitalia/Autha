@@ -16,9 +16,9 @@ opt-level = 0
 debug = true
 
 [dependencies]
-tokio = { version = "1.23.0", features = ["full"] }
-warp = { version = "0.3.3", features = ["tls"] }
-serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.27.0", features = ["full"] }
+warp = { version = "0.3.4", features = ["tls"] }
+serde = { version = "1.0.159", features = ["derive"] }
 
 memcache = "0.17.0"
 cdrs = "2.3.3"
@@ -28,17 +28,16 @@ rust-argon2 = "1.0.0"
 sha3 = "0.10.6"
 
 uuid = { version = "1.3.0", features = ["v4"] }
-regex = "1.7.0"
-jsonwebtoken = "8.2.0"
+regex = "1.7.3"
+jsonwebtoken = "8.3.0"
 dotenv = "0.15.0"
 lazy_static = "1.4.0"
-once_cell = "1.17.0"
+once_cell = "1.17.1"
 hex = "0.4.3"
-generic-array = "0.14.6"
-serde_json = "1.0.91"
-chrono = "0.4.23"
+generic-array = "0.14.7"
+serde_json = "1.0.95"
+chrono = "0.4.24"
 rand = "0.8.5"
 totp-lite = "2.0.0"
-reqwest = { version = "0.11.14", features = ["json"] }
-openssl = "0.10.45"
+reqwest = { version = "0.11.16", features = ["json"] }
 anyhow = "1.0.70"
