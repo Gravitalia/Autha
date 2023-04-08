@@ -1,20 +1,21 @@
-FROM rust:1.68 as build
+FROM rust:1.63 as build
 
-RUN USER=root cargo new --bin torresix
-WORKDIR /torresix
+RUN USER=root cargo new --bin autha
+WORKDIR /autha
 
 COPY ./Cargo.toml ./Cargo.toml
+
+RUN cargo build --release \
+ && rm src/*.rs
+
 COPY ./src ./src
-COPY ./build.rs ./build.rs
-COPY proto/ proto/
 
-RUN apt-get update && apt-get install -y libssl-dev pkg-config protobuf-compiler
+RUN rm ./target/release/deps/autha* \
+ && cargo build --release
 
-RUN cargo build --release --bin server
+FROM rust:1.63-slim-buster
 
-FROM rust:1.68-slim-buster
+COPY --from=build /autha/target/release/autha .
 
-COPY --from=build /torresix/target/release/server .
-
-EXPOSE 50051
-CMD ["./server"]
+EXPOSE 1111
+CMD ["./autha"]
