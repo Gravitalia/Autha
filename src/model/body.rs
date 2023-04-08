@@ -33,6 +33,7 @@ pub struct UserPatch {
 #[derive(Deserialize)]
 pub struct Gdrp {
     pub password: String,
+    pub security_token: String
 }
 
 #[derive(Deserialize)]
@@ -49,4 +50,10 @@ pub struct GetOAuth {
     pub client_secret: String,
     pub code: String,
     pub redirect_uri: String
+}
+
+#[derive(Deserialize)]
+pub struct TempToken {
+    pub password: Option<String>,
+    pub mfa: Option<String>
 }

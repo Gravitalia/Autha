@@ -13,7 +13,7 @@ pub fn init() -> Result<(), MemcacheError> {
     Ok(())
 }
 
-pub fn set(key: String, value: SetValue) -> Result<(), MemcacheError> {
+pub fn set(key: String, value: SetValue) -> Result<String, MemcacheError> {
     match value {
         SetValue::Characters(data) => {
             SESSION.get().unwrap().set(&key, data, 300)?;
@@ -23,7 +23,7 @@ pub fn set(key: String, value: SetValue) -> Result<(), MemcacheError> {
         }
     };
 
-    Ok(())
+    Ok(key)
 }
 
 pub fn get(key: String) -> Result<Option<String>, MemcacheError> {
