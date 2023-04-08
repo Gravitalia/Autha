@@ -33,6 +33,7 @@ pub struct UserPatch {
 #[derive(Deserialize)]
 pub struct Gdrp {
     pub password: String,
+    pub security_token: String
 }
 
 #[derive(Deserialize)]
