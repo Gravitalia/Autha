@@ -96,7 +96,7 @@ pub async fn temp_token(body: crate::model::body::TempToken, ip: std::net::IpAdd
     Ok(warp::reply::with_status(warp::reply::json(
         &crate::model::error::Error{
             error: false,
-            message: mem::set(crate::helpers::random_string(23), mem::SetValue::Characters("ok".to_string()))?
+            message: mem::set(crate::helpers::random_string(23), mem::SetValue::Characters("security".to_string()))?
         }
     ),
     warp::http::StatusCode::OK))
