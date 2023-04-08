@@ -12,7 +12,7 @@ services:
         limits:
           memory: 1g
     ports:
-      - '1111:1111'
+      - '127.0.0.1:1111:1111'
     depends_on:
       cassandra:
         condition: service_healthy
@@ -36,13 +36,13 @@ services:
           memory: 5g
         reservations:
           memory: 1g
-    ports:
-      - '9042:9042'
-      - '7000:7000'
-      - '7001:7001'
-      - '7199:7199'
-      - '9142:9142'
-      - '9160:9160'
+    expose:
+      - '9042'
+      - '7000'
+      - '7001'
+      - '7199'
+      - '9142'
+      - '9160'
     volumes:
       - ./data/cassandra:/var/lib/cassandra
     healthcheck:
@@ -63,8 +63,8 @@ services:
       resources:
         limits:
           memory: 1g
-    ports:
-      - "11211:11211"
+    expose:
+      - "11211"
     healthcheck:
       test: ["CMD", "true"]
       start_period: 40s
