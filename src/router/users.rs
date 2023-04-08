@@ -1,7 +1,8 @@
-use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query, suspend}}, model::{user::User, error::Error}};
+use crate::{database::{get_user, mem::{set, del, get as mem_get, SetValue}, cassandra::{update_user, query, suspend}}, model::{user::User, error::Error}};
 use crate::helpers::{crypto::{encrypt, hash}, request::delete_account};
 use warp::reply::{WithStatus, Json};
 use sha3::{Digest, Keccak256};
+use anyhow::Result;
 use regex::Regex;
 
 lazy_static! {
@@ -209,7 +210,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
 }
 
 /// Delete route for remove account from database
-pub async fn delete(vanity: String, body: crate::model::body::Gdrp) -> Result<WithStatus<Json>, cdrs::error::Error> {
+pub async fn delete(vanity: String, body: crate::model::body::Gdrp) -> Result<WithStatus<Json>> {
     let res = match query("SELECT password FROM accounts.users WHERE vanity = ?", vec![vanity.clone()]) {
         Ok(x) => x.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
         Err(_) => {
@@ -219,6 +220,18 @@ pub async fn delete(vanity: String, body: crate::model::body::Gdrp) -> Result<Wi
                     message: "Unknown user".to_string()
                 }
             ), warp::http::StatusCode::NOT_FOUND));
+        }
+    };
+
+    // Check if security token is valid
+    match mem_get(body.security_token)? {
+        Some(r) => {
+            if r != "security" {
+                return Ok(super::err("Invalid security_token".to_string()));
+            }
+        },
+        None => {
+            return Ok(super::err("Invalid security_token".to_string()));
         }
     };
 
