@@ -17,8 +17,9 @@ pub fn post(body: crate::model::body::OAuth, vanity: String) -> WithStatus<Json>
     } else if bot[0][1].clone().into_plain().unwrap()[..] == [1] {
         return super::err("This bot has been deleted".to_string());
     }
+
     // Check if the redirect_url is valid
-    if !std::str::from_utf8(&bot[0][2].clone().into_plain().unwrap()[..]).unwrap().to_string().replace("\u{2}\0\0\0\u{1d}", "").replace("\0\0\0", "").split('#').any(|x| x == &body.redirect_uri[..]) {
+    if bot[0][2].clone().into_plain().is_none() || !std::str::from_utf8(&bot[0][2].clone().into_plain().unwrap()[..]).unwrap().to_string().replace("\u{2}\0\0\0\u{1d}", "").replace("\0\0\0", "").split('#').any(|x| x == &body.redirect_uri[..]) {
         return super::err("Invalid redirect_uri".to_string());
     }
 
@@ -93,7 +94,7 @@ pub fn get_oauth_code(body: crate::model::body::GetOAuth) -> WithStatus<Json> {
         return super::err("This bot has been deleted".to_string());
     }
     // Check if the redirect_url is valid
-    if !std::str::from_utf8(&bot[0][2].clone().into_plain().unwrap()[..]).unwrap().to_string().replace("\u{2}\0\0\0\u{1d}", "").replace("\0\0\0", "").split('#').any(|x| x == &body.redirect_uri[..]) {
+    if bot[0][2].clone().into_plain().is_none() || !std::str::from_utf8(&bot[0][2].clone().into_plain().unwrap()[..]).unwrap().to_string().replace("\u{2}\0\0\0\u{1d}", "").replace("\0\0\0", "").split('#').any(|x| x == &body.redirect_uri[..]) {
         return super::err("Invalid redirect_uri".to_string());
     }
     // Check if client_secret is valid
