@@ -48,13 +48,13 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr, toke
     let ip = hex::encode(&hasher.finalize()[..]);
 
     // Check if user have already created account 5 minutes ago
-    let rate_limit = match mem::get(ip.clone())? {
+    let rate_limit = match mem::get(format!("account_create_{}", ip.clone()))? {
         Some(r) => r.parse::<u16>().unwrap_or(0),
         None => 0,
     };
-    if rate_limit >= 1 {
+    /*if rate_limit >= 1 {
         return Ok(super::rate());
-    }
+    }*/
 
     // Hash email
     hasher = Keccak256::new();
