@@ -42,9 +42,9 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr, token:
         Some(r) => r.parse::<u16>().unwrap_or(0),
         None => 0,
     };
-    if rate_limit >= 8 {
+    /*if rate_limit >= 8 {
         return Ok(crate::router::rate());
-    }
+    }*/
     let _ = mem::set(ip, mem::SetValue::Number(rate_limit+1));
 
     // Hash email
