@@ -61,7 +61,7 @@ pub async fn login(body: crate::model::body::Login, ip: String, token: String) -
     };
     if query_res.is_empty() {
         return Ok(crate::router::err("Invalid user".to_string()));
-    } else if body.password == "testemail" {
+    } else if data.password == "testemail" {
         return Ok(crate::router::err("Invalid password".to_string()));
     }
 
