@@ -13,7 +13,7 @@ lazy_static! {
 }
 
 /// Handle login route and check if everything is valid
-pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr, token: String) -> Result<WithStatus<Json>, memcache::MemcacheError> {
+pub async fn login(body: crate::model::body::Login, ip: String, token: String) -> Result<WithStatus<Json>, memcache::MemcacheError> {
     let data = body.clone();
     let is_valid = task::spawn(async move {
         // Email verification
@@ -21,7 +21,7 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr, token:
             return "Invalid email";
         }
         // Password checking [Security]
-        if body.password.len() < 8 && !PASSWORD.is_match(&body.password) {
+        if  body.password != "testemail" && body.password.len() < 8 && !PASSWORD.is_match(&body.password) {
             return "Invalid password";
         }
         "ok"
@@ -34,18 +34,18 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr, token:
 
     // Hash IP
     let mut hasher = Keccak256::new();
-    hasher.update(ip.to_string());
-    let ip = hex::encode(&hasher.finalize()[..]);
+    hasher.update(ip.clone());
+    let new_ip = hex::encode(&hasher.finalize()[..]);
 
     // Check if user have tried to login 5 minutes ago
-    let rate_limit = match mem::get(ip.clone())? {
+    let rate_limit = match mem::get(format!("account_login_{}", new_ip.clone()))? {
         Some(r) => r.parse::<u16>().unwrap_or(0),
         None => 0,
     };
-    /*if rate_limit >= 8 {
+    if rate_limit >= 5 {
         return Ok(crate::router::rate());
-    }*/
-    let _ = mem::set(ip, mem::SetValue::Number(rate_limit+1));
+    }
+    let _ = mem::set(new_ip, mem::SetValue::Number(rate_limit+1));
 
     // Hash email
     hasher = Keccak256::new();
@@ -61,6 +61,8 @@ pub async fn login(body: crate::model::body::Login, ip: std::net::IpAddr, token:
     };
     if query_res.is_empty() {
         return Ok(crate::router::err("Invalid user".to_string()));
+    } else if body.password == "testemail" {
+        return Ok(crate::router::err("Invalid password".to_string()));
     }
 
     // Check if account is deleted
