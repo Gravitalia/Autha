@@ -55,11 +55,9 @@ async fn main() {
     database::cassandra::create_tables();
     let _ = database::mem::init();
     helpers::remove_deleted_account().await;
-
-    //let _ = database::cassandra::create_bot("suba".to_string(), "TF5hobQgfPJSqs-QICYlDl9H1USn-vZ3".to_string(), "Suba".to_string());
-
-    let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::addr::remote()).and_then(|body: model::body::Create, cf_token: String, ip: Option<SocketAddr>| async move {
-        match router::create::create(body, ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip(), cf_token).await {
+    
+    let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::header::optional::<String>("X-Forwarded-For")).and(warp::addr::remote()).and_then(|body: model::body::Create, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>| async move {
+        match router::create::create(body, forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string()), cf_token).await {
             Ok(r) => {
                 Ok(r)
             },
@@ -68,8 +66,8 @@ async fn main() {
             }
         }
     })
-    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::addr::remote()).and_then(|body: model::body::Login, cf_token: String, ip: Option<SocketAddr>| async move {
-        match router::login::main::login(body, ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip(), cf_token).await {
+    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::header::optional::<String>("X-Forwarded-For")).and(warp::addr::remote()).and_then(|body: model::body::Login, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>| async move {
+        match router::login::main::login(body, forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string()), cf_token).await {
             Ok(r) => {
                 Ok(r)
             },

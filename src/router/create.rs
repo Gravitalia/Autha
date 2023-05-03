@@ -15,7 +15,7 @@ lazy_static! {
 }
 
 /// Handle create route and check if everything is valid
-pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr, token: String) -> Result<WithStatus<Json>, memcache::MemcacheError> {
+pub async fn create(body: crate::model::body::Create, ip: String, token: String) -> Result<WithStatus<Json>, memcache::MemcacheError> {
     let data = body.clone();
     let is_valid = task::spawn(async move {
         // Email verification
@@ -44,11 +44,11 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr, toke
 
     // Hash IP
     let mut hasher = Keccak256::new();
-    hasher.update(ip.to_string());
-    let ip = hex::encode(&hasher.finalize()[..]);
+    hasher.update(ip);
+    let new_ip = hex::encode(&hasher.finalize()[..]);
 
     // Check if user have already created account 5 minutes ago
-    let rate_limit = match mem::get(ip.clone())? {
+    let rate_limit = match mem::get(format!("account_create_{}", new_ip.clone()))? {
         Some(r) => r.parse::<u16>().unwrap_or(0),
         None => 0,
     };
@@ -135,7 +135,7 @@ pub async fn create(body: crate::model::body::Create, ip: std::net::IpAddr, toke
         }
     }
     
-    let _ = mem::set(ip, mem::SetValue::Number(1));
+    let _ = mem::set(new_ip, mem::SetValue::Number(1));
 
     // Finish, create a JWT token and sent it
     Ok(warp::reply::with_status(warp::reply::json(
