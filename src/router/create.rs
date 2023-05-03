@@ -109,7 +109,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
         let birthdate = body.birthdate.clone().unwrap_or_default();
         let dates: Vec<&str> = birthdate.split('-').collect();
 
-        if !birthdate.is_empty() && !BIRTH.is_match(body.birthdate.as_ref().unwrap()) || 13 > helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
+        if !birthdate.is_empty() && (!BIRTH.is_match(body.birthdate.as_ref().unwrap()) || 13 > helpers::get_age(dates[0].parse::<i32>().unwrap_or_default(), dates[1].parse::<u32>().unwrap_or_default(), dates[2].parse::<u32>().unwrap_or_default()) as i32) {
             return Ok(super::err("Invalid birthdate".to_string()));
         } else {
             birth = Some(helpers::crypto::encrypt(body.birthdate.unwrap().as_bytes()));
