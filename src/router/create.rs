@@ -135,7 +135,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
         }
     }
     
-    let _ = mem::set(new_ip, mem::SetValue::Number(1));
+    let _ = mem::set(format!("account_create_{}", new_ip), mem::SetValue::Number(1));
 
     // Finish, create a JWT token and sent it
     Ok(warp::reply::with_status(warp::reply::json(
