@@ -31,7 +31,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
             return "Invalid vanity";
         }
         // Username checking
-        if body.username.len() >= 16 {
+        if body.username.len() > 25 {
             return "Invalid username";
         }
         "ok"
