@@ -89,7 +89,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
             None => "".to_string()
         };
     
-        if nusername.len() >= 16 {
+        if nusername.len() > 25 {
             return Ok(super::err("Invalid username".to_string()));
         } else {
             username = nusername;
