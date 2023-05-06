@@ -1,4 +1,4 @@
-use crate::{database::{get_user, mem::{set, del, get as mem_get, SetValue}, cassandra::{update_user, query, suspend}}, model::{user::User, error::Error}};
+use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query, suspend}}, model::{user::User, error::Error}};
 use crate::helpers::{crypto::{encrypt, hash}, request::delete_account};
 use warp::reply::{WithStatus, Json};
 use sha3::{Digest, Keccak256};
@@ -224,7 +224,7 @@ pub async fn delete(vanity: String, body: crate::model::body::Gdrp) -> Result<Wi
     };
 
     // Check if security token is valid
-    match crate::helpers::request::check_turnstile(token).await {
+    match crate::helpers::request::check_turnstile(body.security_token).await {
         Ok(res) => {
             if !res {
                 return Ok(crate::router::err("Invalid security_token".to_string()));
