@@ -1,4 +1,4 @@
-use crate::{database::{get_user, mem::{set, del, get as mem_get, SetValue}, cassandra::{update_user, query, suspend}}, model::{user::User, error::Error}};
+use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query, suspend}}, model::{user::User, error::Error}};
 use crate::helpers::{crypto::{encrypt, hash}, request::delete_account};
 use warp::reply::{WithStatus, Json};
 use sha3::{Digest, Keccak256};
@@ -224,16 +224,16 @@ pub async fn delete(vanity: String, body: crate::model::body::Gdrp) -> Result<Wi
     };
 
     // Check if security token is valid
-    match mem_get(body.security_token)? {
-        Some(r) => {
-            if r != "security" {
-                return Ok(super::err("Invalid security_token".to_string()));
+    match crate::helpers::request::check_turnstile(body.security_token).await {
+        Ok(res) => {
+            if !res {
+                return Ok(crate::router::err("Invalid security_token".to_string()));
             }
         },
-        None => {
-            return Ok(super::err("Invalid security_token".to_string()));
+        Err(_) => {
+            return Ok(crate::router::err("Internal server error".to_string()));
         }
-    };
+    }
 
     if !crate::helpers::crypto::hash_test(std::str::from_utf8(&res[0][0].clone().into_plain().unwrap()[..]).unwrap(), body.password.as_ref()) {
         return Ok(super::err("Invalid password".to_string()));
