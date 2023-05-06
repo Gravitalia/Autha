@@ -1,4 +1,4 @@
-FROM rust:1.63 as build
+FROM rust:1.69 as build
 
 RUN USER=root cargo new --bin autha
 WORKDIR /autha
@@ -13,7 +13,7 @@ COPY ./src ./src
 RUN rm ./target/release/deps/autha* \
  && cargo build --release
 
-FROM rust:1.63-slim-buster
+FROM rust:1.69-slim-buster
 
 COPY --from=build /autha/target/release/autha .
 
