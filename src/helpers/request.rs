@@ -30,10 +30,10 @@ pub async fn check_turnstile(token: String) -> Result<bool, Box<dyn std::error::
 }
 
 /// Send a request to the URL for delete account
-pub async fn delete_account(url: String) -> Result<bool, Box<dyn std::error::Error>> {
+pub async fn delete_account(url: String, vanity: String) -> Result<bool, Box<dyn std::error::Error>> {
     let auth_header_value = HeaderValue::from_str(&dotenv::var("GLOBAL_AUTH").expect("Missing env `GLOBAL_AUTH`"))?;
 
-    let res = Client::new().delete(url+"/account/deletion")
+    let res = Client::new().delete(url+"/account/deletion?user="+&vanity)
     .header("authorization", auth_header_value)
     .send()
     .await?;
