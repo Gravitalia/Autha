@@ -1,5 +1,6 @@
-use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query, suspend}}, model::{user::User, error::Error}};
+use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query, suspend}}};
 use crate::helpers::{crypto::{encrypt, hash}, request::delete_account};
+use crate::model::{user::User, error::Error};
 use warp::reply::{WithStatus, Json};
 use sha3::{Digest, Keccak256};
 use anyhow::Result;
@@ -35,7 +36,7 @@ pub fn get(vanity: String) -> WithStatus<Json> {
     } else if user.deleted {
         warp::reply::with_status(warp::reply::json(
             &User {
-                username: "Deleted suspended".to_string(),
+                username: "Deleted user".to_string(),
                 vanity,
                 avatar: None,
                 bio: None,
@@ -243,7 +244,7 @@ pub async fn delete(vanity: String, body: crate::model::body::Gdrp) -> Result<Wi
         let _ = delete_account(url, vanity.clone()).await;
     }
 
-    query(format!("UPDATE accounts.users SET deleted = {}, expire_at = '{}' WHERE vanity = ?", true, (chrono::Utc::now()+chrono::Duration::days(30)).format("%Y-%m-%d+0000")), vec![vanity])?;
+    query(format!("UPDATE accounts.users SET deleted = true, expire_at = '{}' WHERE vanity = ?", (chrono::Utc::now()+chrono::Duration::days(30)).format("%Y-%m-%d+0000")), vec![vanity])?;
 
     Ok(warp::reply::with_status(warp::reply::json(
         &Error {
