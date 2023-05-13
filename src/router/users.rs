@@ -1,4 +1,4 @@
-use crate::database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query, suspend}};
+use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query, suspend}}, helpers};
 use crate::helpers::{crypto::{encrypt, hash}, request::delete_account};
 use crate::model::{user::User, error::Error};
 use warp::reply::{WithStatus, Json};
@@ -240,7 +240,7 @@ pub async fn delete(vanity: String, body: crate::model::body::Gdrp) -> Result<Wi
         return Ok(super::err("Invalid password".to_string()));
     }
 
-    for url in dotenv::var("SERVICES").expect("Missing env `SERVICES`").split(' ').collect::<Vec<&str>>().iter().map(|&s| s.to_owned()) {
+    for url in helpers::config_reader::read().services.iter().map(|s| s.to_owned()) {
         let _ = delete_account(url, vanity.clone()).await;
     }
 
