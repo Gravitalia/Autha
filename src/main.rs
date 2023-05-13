@@ -4,9 +4,10 @@ mod helpers;
 mod database;
 
 #[macro_use] extern crate lazy_static;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use warp::{Filter, reject::Reject, http::StatusCode, Reply};
+use warp::{Filter, reject::Reject, http::StatusCode, Reply, Rejection};
+use std::{net::{IpAddr, Ipv4Addr, SocketAddr}, fmt::Debug};
 use regex::Regex;
+use std::error::Error;
 
 lazy_static! {
     static ref TOKEN: Regex = Regex::new(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$").unwrap();
@@ -16,11 +17,36 @@ lazy_static! {
 struct UnknownError;
 impl Reject for UnknownError {}
 
-async fn handle_rejection(_err: warp::Rejection) -> Result<impl Reply, std::convert::Infallible> {
+// This function receives a `Rejection` and tries to return a custom
+// value, otherwise simply passes the rejection along.
+async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::Infallible> {
+    let code;
+    let message: String;
+
+    if err.is_not_found() {
+        code = StatusCode::NOT_FOUND;
+        message = "Not found".to_string();
+    } else if let Some(e) = err.find::<warp::filters::body::BodyDeserializeError>() {
+        message = match e.source() {
+            Some(cause) => {
+                cause.to_string()
+            }
+            None => "Invalid body".to_string(),
+        };
+        code = StatusCode::BAD_REQUEST;
+    } else if err.find::<warp::reject::MethodNotAllowed>().is_some() {
+        code = StatusCode::METHOD_NOT_ALLOWED;
+        message = "Method not allowed".to_string();
+    } else {
+        eprintln!("unhandled rejection: {:?}", err);
+        code = StatusCode::INTERNAL_SERVER_ERROR;
+        message = "Internal server error".to_string();
+    }
+
     Ok(warp::reply::with_status(warp::reply::json(&model::error::Error {
         error: true,
-        message: "Check the information provided".to_string(),
-    }), StatusCode::BAD_REQUEST))
+        message,
+    }), code))
 }
 
 /// Check if a token is valid and if have a real user behind (not suspended)
@@ -168,6 +194,16 @@ async fn main() {
             warp::http::StatusCode::FORBIDDEN))
         } else {
             Err(warp::reject::custom(UnknownError))
+        }
+    }))
+    .or(warp::path("login").and(warp::path("recuperate")).and(warp::get()).and(warp::header("code")).and(warp::header("cf-turnstile-token")).and_then(|code: String, cf_token: String| async move {
+        match router::login::recuperate::recuperate_account(code, cf_token).await {
+            Ok(r) => {
+                Ok(r)
+            },
+            Err(_) => {
+                Err(warp::reject::custom(UnknownError))
+            }
         }
     }))
     .or(warp::path("login").and(warp::path("security_token")).and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::addr::remote()).and(warp::header("authorization")).and_then(|body: model::body::TempToken, cf_token: String, ip: Option<SocketAddr>, token: String| async move {

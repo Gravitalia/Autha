@@ -1,0 +1,5 @@
+avatars: # Where to save avatars. Values: intern, cloudlare
+  - intern
+
+services: # List of Gravitalia's connected services
+  - http://gravitalia:8888

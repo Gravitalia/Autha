@@ -1,15 +1,18 @@
 pub mod crypto;
 pub mod jwt;
 pub mod request;
+pub mod config_reader;
 
 use std::time::{SystemTime, UNIX_EPOCH, Duration};
 use chrono::{Duration as ChronoDuration, Utc, NaiveDate};
 use rand::RngCore;
 
 /// Generate a random string
+/// 
+/// # Example
 /// ```rust
-/// let rand = random_string(23);
-/// assert_eq!(random_string(16).len(), 16);
+/// let rand = random_string(16);
+/// assert_eq!(rand.len(), 16);
 /// ```
 pub fn random_string(length: usize) -> String {
     let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_%?!&".chars().collect();
@@ -52,7 +55,7 @@ pub async fn remove_deleted_account() {
                 let res = x.get_body().unwrap().as_cols().unwrap().rows_content.clone();
 
                 for acc in res.iter() {
-                        let _ = crate::database::cassandra::query("UPDATE accounts.users SET email = null, password = null, phone = null, birthdate = null, avatar = null, bio = null, banner = null, mfa_code = null, username = ?, expire_at = null WHERE vanity = ?",
+                        let _ = crate::database::cassandra::query("UPDATE accounts.users SET email = null, password = null, phone = null, birthdate = null, avatar = null, bio = null, banner = null, mfa_code = null, username = ? WHERE vanity = ?",
                         vec!["".to_string(), std::str::from_utf8(&acc[0].clone().into_plain().unwrap()[..]).unwrap().to_string()]);
                 }
             };
