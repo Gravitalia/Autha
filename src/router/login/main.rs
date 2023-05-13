@@ -22,7 +22,7 @@ pub async fn login(body: crate::model::body::Login, ip: String, token: String) -
             return "Invalid email";
         }
         // Password checking [Security]
-        if &body.password != &"testemail" && body.password.len() < 8 && !PASSWORD.is_match(&body.password) {
+        if body.password != "testemail" && body.password.len() < 8 && !PASSWORD.is_match(&body.password) {
             return "Invalid password";
         }
         "ok"
