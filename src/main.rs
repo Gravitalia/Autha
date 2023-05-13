@@ -34,7 +34,7 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::In
             None => "Invalid body".to_string(),
         };
         code = StatusCode::BAD_REQUEST;
-    } else if let Some(_) = err.find::<warp::reject::MethodNotAllowed>() {
+    } else if err.find::<warp::reject::MethodNotAllowed>().is_some() {
         code = StatusCode::METHOD_NOT_ALLOWED;
         message = "Method not allowed".to_string();
     } else {
