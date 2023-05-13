@@ -1,4 +1,4 @@
-use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query, suspend}}};
+use crate::database::{get_user, mem::{set, del, SetValue}, cassandra::{update_user, query, suspend}};
 use crate::helpers::{crypto::{encrypt, hash}, request::delete_account};
 use crate::model::{user::User, error::Error};
 use warp::reply::{WithStatus, Json};
