@@ -66,19 +66,15 @@ pub async fn login(body: crate::model::body::Login, ip: String, token: String) -
         return Ok(crate::router::err("Invalid password".to_string()));
     }
 
-    let mut vanity = "".to_string();
     // Set vanity
-    match query_res[0][0].clone().into_plain() {
+    let vanity = match query_res[0][0].clone().into_plain() {
         Some(d) => {
-            let x = std::str::from_utf8(&d[..])?;
-            if !helpers::crypto::hash_test(x, data.password.as_bytes()) {
-                vanity = x.to_string();
-            }
+            std::str::from_utf8(&d[..])?.to_string()
         },
         None => {
             return Ok(crate::router::err("Internal server error".to_string()));
         }
-    }
+    };
 
     let expire = match query_res[0][4].clone().into_plain() {
         Some(d) => {
@@ -112,15 +108,8 @@ pub async fn login(body: crate::model::body::Login, ip: String, token: String) -
     // Check if password is same
     match query_res[0][1].clone().into_plain() {
         Some(d) => {
-            match std::str::from_utf8(&d[..]) {
-                Ok(x) => {
-                    if !helpers::crypto::hash_test(x, data.password.as_bytes()) {
-                        return Ok(crate::router::err("Invalid password".to_string()));
-                    }
-                },
-                Err(_) => {
-                    return Ok(crate::router::err("Internal server error".to_string()));
-                }
+            if !helpers::crypto::hash_test(std::str::from_utf8(&d[..])?, data.password.as_bytes()) {
+                return Ok(crate::router::err("Invalid password".to_string()));
             }
         },
         None => {
@@ -133,17 +122,9 @@ pub async fn login(body: crate::model::body::Login, ip: String, token: String) -
         if body.mfa.is_none() {
             return Ok(crate::router::err("Invalid MFA".to_string()));
         }
-
-        match std::str::from_utf8(&d[..]) {
-            Ok(x) => {
-                // Save MFA code in clear, not in base32 => for generate key, use helpers::random_string with 10 as length
-                if totp_custom::<Sha1>(30, 6, helpers::crypto::decrypt(x.to_string()).as_ref(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()) != body.mfa.unwrap()  {
-                    return Ok(crate::router::err("Invalid MFA".to_string()));
-                }
-            },
-            Err(_) => {
-                return Ok(crate::router::err("Internal server error".to_string()));
-            }
+        // Save MFA code in clear, not in base32 => for generate key, use helpers::random_string with 10 as length
+        if totp_custom::<Sha1>(30, 6, helpers::crypto::decrypt(std::str::from_utf8(&d[..])?.to_string()).as_ref(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()) != body.mfa.unwrap()  {
+            return Ok(crate::router::err("Invalid MFA".to_string()));
         }
     }
 
