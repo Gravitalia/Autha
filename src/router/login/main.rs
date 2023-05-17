@@ -123,7 +123,7 @@ pub async fn login(body: crate::model::body::Login, ip: String, token: String) -
             return Ok(crate::router::err("Invalid MFA".to_string()));
         }
         // Save MFA code in clear, not in base32 => for generate key, use helpers::random_string with 10 as length
-        if totp_custom::<Sha1>(30, 6, helpers::crypto::decrypt(std::str::from_utf8(&d[..])?.to_string()).as_ref(), SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()) != body.mfa.unwrap()  {
+        if totp_custom::<Sha1>(30, 6, helpers::crypto::decrypt(std::str::from_utf8(&d[..])?.to_string()).as_ref(), SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()) != body.mfa.unwrap_or_default()  {
             return Ok(crate::router::err("Invalid MFA".to_string()));
         }
     }
