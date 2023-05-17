@@ -3,6 +3,7 @@ use warp::reply::{WithStatus, Json};
 use sha3::{Digest, Keccak256};
 use crate::database::mem;
 use crate::helpers;
+use anyhow::Result;
 use regex::Regex;
 use tokio::task;
 
@@ -15,7 +16,7 @@ lazy_static! {
 }
 
 /// Handle create route and check if everything is valid
-pub async fn create(body: crate::model::body::Create, ip: String, token: String) -> Result<WithStatus<Json>, memcache::MemcacheError> {
+pub async fn create(body: crate::model::body::Create, ip: String, token: String) -> Result<WithStatus<Json>> {
     let data = body.clone();
     let is_valid = task::spawn(async move {
         // Email verification
@@ -36,7 +37,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
         }
         "ok"
     });
-    let result = is_valid.await.unwrap();
+    let result = is_valid.await?;
 
     if result != "ok" {
         return Ok(super::err(result.to_string()));
@@ -63,7 +64,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
     
     // Check if account with this email and vanity already exists
     let mut query_res = match query("SELECT vanity FROM accounts.users WHERE email = ?", vec![hashed_email.clone()]) {
-        Ok(x) => x.get_body().unwrap().into_rows().unwrap(),
+        Ok(x) => x.get_body()?.into_rows().unwrap_or_default(),
         Err(_) => {
             return Ok(super::err("Internal server error".to_string()));
         }
@@ -74,7 +75,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
 
     // Check if vanity is already used
     query_res = match query("SELECT vanity FROM accounts.users WHERE vanity = ?", vec![data.vanity.clone()]) {
-        Ok(x) => x.get_body().unwrap().into_rows().unwrap(),
+        Ok(x) => x.get_body()?.into_rows().unwrap_or_default(),
         Err(_) => {
             return Ok(super::err("Internal server error".to_string()));
         }
@@ -83,7 +84,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
     // Check if bot id is already used
     if query_res.is_empty() {
         query_res = match query("SELECT id FROM accounts.bots WHERE id = ?", vec![data.vanity.clone()]) {
-            Ok(x) => x.get_body().unwrap().into_rows().unwrap(),
+            Ok(x) => x.get_body()?.into_rows().unwrap_or_default(),
             Err(_) => {
                 return Ok(super::err("Internal server error".to_string()));
             }
@@ -97,10 +98,10 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
     // Phone verification
     let mut phone: Option<String> = None;
     if body.phone.is_some() {
-        if !PHONE.is_match(body.phone.as_ref().unwrap()) {
+        if !PHONE.is_match(body.phone.as_ref().unwrap_or(&"".to_string())) {
             return Ok(super::err("Invalid phone".to_string()));
         } else {
-            phone = Some(helpers::crypto::encrypt(body.phone.unwrap().as_bytes()));
+            phone = Some(helpers::crypto::encrypt(body.phone.unwrap_or_default().as_bytes()));
         }
     }
     // Birthdate verification
@@ -109,10 +110,10 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
         let birthdate = body.birthdate.clone().unwrap_or_default();
         let dates: Vec<&str> = birthdate.split('-').collect();
 
-        if !birthdate.is_empty() && (!BIRTH.is_match(body.birthdate.as_ref().unwrap()) || 13 > helpers::get_age(dates[0].parse::<i32>().unwrap_or_default(), dates[1].parse::<u32>().unwrap_or_default(), dates[2].parse::<u32>().unwrap_or_default()) as i32) {
+        if !birthdate.is_empty() && (!BIRTH.is_match(body.birthdate.as_ref().unwrap_or(&"".to_string())) || 13 > helpers::get_age(dates[0].parse::<i32>().unwrap_or_default(), dates[1].parse::<u32>().unwrap_or_default(), dates[2].parse::<u32>().unwrap_or_default()) as i32) {
             return Ok(super::err("Invalid birthdate".to_string()));
         } else {
-            birth = Some(helpers::crypto::encrypt(body.birthdate.unwrap().as_bytes()));
+            birth = Some(helpers::crypto::encrypt(body.birthdate.unwrap_or_default().as_bytes()));
         }
     }
 
