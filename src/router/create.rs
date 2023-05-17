@@ -91,7 +91,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
         };
     }
 
-    if !query_res.is_empty() {
+    if !query_res.is_empty() || [ "explore", "callback", "home", "blogs", "blog", "gravitalia", "suba", "support", "oauth", "upload", "new", "settings", "parameters" ].contains(&data.vanity.as_str()) {
         return Ok(super::err("Vanity already used".to_string()));
     }
 
@@ -117,6 +117,17 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
         }
     }
 
+    // Create account
+    match create_user(&data.vanity, hashed_email, data.username, helpers::crypto::hash(data.password.as_bytes()), phone, birth) {
+        Ok(_) => {},
+        Err(_) => {
+            return Ok(super::err("Internal server error".to_string()));
+        }
+    }
+    
+    let _ = mem::set(format!("account_create_{}", new_ip), mem::SetValue::Number(1));
+
+    // Check if CF Turnstile token is valid
     match helpers::request::check_turnstile(token).await {
         Ok(res) => {
             if !res {
@@ -127,16 +138,6 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
             return Ok(super::err("Internal server error".to_string()));
         }
     }
-
-    // Create account
-    match create_user(&data.vanity, hashed_email, data.username, helpers::crypto::hash(data.password.as_bytes()), phone, birth) {
-        Ok(_) => {},
-        Err(_) => {
-            return Ok(super::err("Internal server error".to_string()));
-        }
-    }
-    
-    let _ = mem::set(format!("account_create_{}", new_ip), mem::SetValue::Number(1));
 
     // Finish, create a JWT token and sent it
     Ok(warp::reply::with_status(warp::reply::json(
