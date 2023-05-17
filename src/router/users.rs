@@ -46,7 +46,7 @@ pub fn get(vanity: String) -> WithStatus<Json> {
             }
         ), warp::http::StatusCode::OK)
     } else {
-        let _ = set(vanity, SetValue::Characters(serde_json::to_string(&user).unwrap()));
+        let _ = set(vanity, SetValue::Characters(serde_json::to_string(&user).unwrap_or_default()));
 
         warp::reply::with_status(warp::reply::json(
             &user
@@ -55,9 +55,9 @@ pub fn get(vanity: String) -> WithStatus<Json> {
 }
 
 /// Handle PATCH users route and let users modifie their profile
-pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<WithStatus<Json>, cdrs::error::Error> {
+pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<WithStatus<Json>> {
     let res = match query("SELECT username, avatar, bio, email, password FROM accounts.users WHERE vanity = ?", vec![vanity.clone()]) {
-        Ok(x) => x.get_body().unwrap().as_cols().unwrap().rows_content.clone(),
+        Ok(x) => x.get_body()?.as_cols().unwrap().rows_content.clone(),
         Err(_) => {
             return Ok(warp::reply::with_status(warp::reply::json(
                 &Error {
@@ -70,15 +70,15 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
 
     let mut is_psw_valid: bool = false;
     if body.password.is_some() {
-        if crate::helpers::crypto::hash_test(std::str::from_utf8(&res[0][4].clone().into_plain().unwrap()[..]).unwrap(), body.password.unwrap().as_ref()) {
+        if crate::helpers::crypto::hash_test(std::str::from_utf8(&res[0][4].clone().into_plain().unwrap_or_default()[..]).unwrap(), body.password.unwrap_or_default().as_ref()) {
             is_psw_valid = true;
         } else {
             return Ok(super::err("Invalid password".to_string()));
         }
     }
 
-    let mut username = std::str::from_utf8(&res[0][0].clone().into_plain().unwrap()[..]).unwrap().to_string();
-    let mut email = std::str::from_utf8(&res[0][3].clone().into_plain().unwrap()[..]).unwrap().to_string();
+    let mut username = std::str::from_utf8(&res[0][0].clone().into_plain().unwrap_or_default()[..])?.to_string();
+    let mut email = std::str::from_utf8(&res[0][3].clone().into_plain().unwrap_or_default()[..])?.to_string();
     let mut bio: Option<String> = None;
     let mut birthdate: Option<String> = None;
     let phone: Option<String> = None;
@@ -123,9 +123,23 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
         if !is_psw_valid || !EMAIL.is_match(&nemail) {
             return Ok(super::err("Invalid email".to_string()));
         } else {
+            // Hash email
             let mut hasher = Keccak256::new();
             hasher.update(nemail.as_bytes());
-            email = hex::encode(&hasher.finalize()[..]);
+            let hashed_email = hex::encode(&hasher.finalize()[..]);
+
+            // Check if email is already used
+            let query_res = match query("SELECT vanity FROM accounts.users WHERE email = ?", vec![hashed_email.clone()]) {
+                Ok(x) => x.get_body()?.into_rows().unwrap_or_default(),
+                Err(_) => {
+                    return Ok(super::err("Internal server error".to_string()));
+                }
+            };
+            if !query_res.is_empty() {
+                return Ok(super::err("Email already used".to_string()));
+            }
+
+            email = hashed_email;
         }
     }
     
@@ -141,7 +155,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
         } else {
             let dates: Vec<&str> = birth.split('-').collect();
     
-            if 13 > crate::helpers::get_age(dates[0].parse::<i32>().unwrap(), dates[1].parse::<u32>().unwrap(), dates[2].parse::<u32>().unwrap()) as i32 {
+            if 13 > crate::helpers::get_age(dates[0].parse::<i32>()?, dates[1].parse::<u32>()?, dates[2].parse::<u32>()?) as i32 {
                 suspend(vanity)?;
                 return Ok(super::err("Your account has been suspended: age".to_string()));
             } else {
@@ -236,7 +250,7 @@ pub async fn delete(vanity: String, body: crate::model::body::Gdrp) -> Result<Wi
         }
     }
 
-    if !crate::helpers::crypto::hash_test(std::str::from_utf8(&res[0][0].clone().into_plain().unwrap()[..]).unwrap(), body.password.as_ref()) {
+    if !crate::helpers::crypto::hash_test(std::str::from_utf8(&res[0][0].clone().into_plain().unwrap_or_default()[..])?, body.password.as_ref()) {
         return Ok(super::err("Invalid password".to_string()));
     }
 
