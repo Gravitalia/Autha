@@ -1,4 +1,4 @@
-use chacha20poly1305::{aead::{Aead, AeadCore, KeyInit, OsRng}, ChaCha20Poly1305};
+use chacha20poly1305::{aead::{Aead, AeadCore, KeyInit, OsRng}, XChaCha20Poly1305};
 use argon2::{self, Config, ThreadMode, Variant, Version};
 use generic_array::GenericArray;
 
@@ -32,8 +32,8 @@ pub fn encrypt(data: &[u8]) -> String {
         Ok(v) => {
             let bytes = GenericArray::clone_from_slice(&v);
 
-            let nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng);
-            match ChaCha20Poly1305::new(&bytes).encrypt(&nonce, data) {
+            let nonce = XChaCha20Poly1305::generate_nonce(&mut OsRng);
+            match XChaCha20Poly1305::new(&bytes).encrypt(&nonce, data) {
                 Ok(y) => format!("{}//{}", hex::encode(nonce), hex::encode(y)),
                 Err(_) => "Error".to_string(),
             }
@@ -53,7 +53,7 @@ pub fn decrypt(data: String) -> String {
                 Ok(x) => {
                     let arr_ref = GenericArray::from_slice(&x);
 
-                    match ChaCha20Poly1305::new(&bytes).decrypt(arr_ref, hex::decode(splited.1).unwrap().as_ref()) {
+                    match XChaCha20Poly1305::new(&bytes).decrypt(arr_ref, hex::decode(splited.1).unwrap().as_ref()) {
                         Ok(y) => String::from_utf8(y).unwrap(),
                         Err(_) => "Error".to_string(),
                     }
