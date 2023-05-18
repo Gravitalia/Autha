@@ -58,9 +58,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
     }
 
     // Hash email
-    hasher = Keccak256::new();
-    hasher.update(data.email.as_bytes());
-    let hashed_email = hex::encode(&hasher.finalize()[..]);
+    let hashed_email = helpers::crypto::fpe_encrypt(data.email.encode_utf16().collect())?;
     
     // Check if account with this email and vanity already exists
     let mut query_res = match query("SELECT vanity FROM accounts.users WHERE email = ?", vec![hashed_email.clone()]) {
