@@ -49,9 +49,7 @@ pub async fn login(body: crate::model::body::Login, ip: String, token: String) -
     let _ = mem::set(new_ip, mem::SetValue::Number(rate_limit+1));
 
     // Hash email
-    hasher = Keccak256::new();
-    hasher.update(data.email.as_bytes());
-    let hashed_email = hex::encode(&hasher.finalize()[..]);
+    let hashed_email = helpers::crypto::fpe_encrypt(data.email.encode_utf16().collect())?;
     
     // Check if account exists
     let query_res = match query("SELECT vanity, password, deleted, mfa_code, expire_at FROM accounts.users WHERE email = ?", vec![hashed_email]) {
