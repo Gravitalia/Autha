@@ -12,19 +12,26 @@ It implements an account creation, connection and authorization delegation syste
 
 ## Security
 > We want to guarantee our users **increased security**. This way, all users can see how we store data and also help us to improve the cryptographic systems.
-- `Argon2` & `ChaCha20Poly1305` are the two hashing and cryptographic systems used
+- `Argon2`, `ChaCha20Poly1305`, `SHA-3` and `FPE` (with `AES`) are the hashing and cryptographic systems used
 - Short expiration time (< `15 min.`)
 - JWT with asymmetric key
 - One-Time Usage OAuth token
 
 #### Argon2
 [Argon2id](https://en.wikipedia.org/wiki/Argon2) is a key-derivative hash function which resists to side-channel attacks and is more reliable against GPU cracking attacks.<br />
-It allows us to manage the amount of memory used (normally `1GB`), the degree of parallelism as well as the number of iterations to do.
+It allows us to manage the amount of memory used, the degree of parallelism as well as the number of iterations to do.
 
 #### ChaCha20Poly1305
 [ChaCha20](https://en.wikipedia.org/wiki/Salsa20) is an encryption function built around a pseudorandom function.<br />
 [Poly1305](https://en.wikipedia.org/wiki/Poly1305) (MAC) allows to verify the integrity of the data as well as their veracity (authenticity).<br />
 [ChaCha20Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305) is an AEAD algorithm standardized by RFC. It allows to verify authenticity and confidentiality.
+
+#### SHA-3
+[SHA-3](https://en.wikipedia.org/wiki/SHA-3) is a hash function and is the latest version of the Secure Hashed Algorithm. Even if SHA-2 is not replaced by this version, SHA-3 can resist a length extension attack.
+
+#### FPE & AES
+[Format-preserving encryption](https://en.wikipedia.org/wiki/Format-preserving_encryption) aka FPE is an encryption function that provides the same output for the same text and the same format.<br />
+To achieve encryption, we use [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard), which is used by the US government. 
 
 ## Database
 > We try to use high-performance databases to optimize critical response times.
