@@ -89,7 +89,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
         };
     }
 
-    if !query_res.is_empty() || [ "explore", "callback", "home", "blogs", "blog", "gravitalia", "suba", "support", "oauth", "upload", "new", "settings", "parameters" ].contains(&data.vanity.as_str()) {
+    if !query_res.is_empty() || [ "explore", "callback", "home", "blogs", "blog", "gravitalia", "suba", "support", "oauth", "upload", "new", "settings", "parameters", "fallback" ].contains(&data.vanity.as_str()) {
         return Ok(super::err("Vanity already used".to_string()));
     }
 
