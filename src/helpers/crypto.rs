@@ -75,6 +75,7 @@ pub fn fpe_encrypt(data: Vec<u16>) -> Result<String> {
     Ok(hex::encode(ff.encrypt(&[], &FlexibleNumeralString::from(data))?.to_be_bytes(256, length)))
 }
 
+#[allow(dead_code)]
 /// Decrypt hex string to clear string value, using FPE
 pub fn fpe_decrypt(data: String) -> Result<String> {
     let data_to_vec: Vec<u16> = hex::decode(data)?.iter().map(|&x| x as u16).collect();
