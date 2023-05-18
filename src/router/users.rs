@@ -172,18 +172,22 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
     }
 
     // Change 2FA (mfa)
-    if body.mfa.is_some() {
+    if body.mfa.is_some()  {
         let nmfa = match body.mfa {
             Some(b) => b,
             None => "".to_string()
         };
 
-        match query("UPDATE accounts.users SET mfa_code = ? WHERE vanity = ?", vec![encrypt(nmfa.as_bytes()), vanity.clone()]) {
-            Ok(_) => {},
-            Err(_) => {
-                return Ok(super::err("Internal server error".to_string()));
-            }
-        };
+        if !is_psw_valid {
+            return Ok(super::err("Invalid MFA".to_string()));
+        } else {
+            match query("UPDATE accounts.users SET mfa_code = ? WHERE vanity = ?", vec![encrypt(nmfa.as_bytes()), vanity.clone()]) {
+                Ok(_) => {},
+                Err(_) => {
+                    return Ok(super::err("Internal server error".to_string()));
+                }
+            };
+        }
     }
     
     // Change password
