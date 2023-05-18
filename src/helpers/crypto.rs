@@ -1,6 +1,8 @@
-use chacha20poly1305::{aead::{Aead, AeadCore, KeyInit, OsRng}, ChaCha20Poly1305};
-use argon2::{self, Config, ThreadMode, Variant, Version};
+use chacha20poly1305::{aead::{Aead, AeadCore, KeyInit, OsRng}, XChaCha20Poly1305};
+use fpe::ff1::{FF1, FlexibleNumeralString, Operations};
+use argon2::{Config, ThreadMode, Variant, Version};
 use generic_array::GenericArray;
+use anyhow::Result;
 
 /// Hash data in bytes using Argon2id
 pub fn hash(data: &[u8]) -> String {
@@ -16,7 +18,7 @@ pub fn hash(data: &[u8]) -> String {
             thread_mode: ThreadMode::Parallel,
             secret: dotenv::var("KEY").expect("Missing env `KEY`").as_bytes(),
             ad: &[],
-            hash_length: 32
+            hash_length: dotenv::var("HASH_LENGTH").expect("Missing env `HASH_LENGTH`").parse::<u32>().unwrap_or(32)
         }
     ).unwrap()
 }
@@ -32,8 +34,8 @@ pub fn encrypt(data: &[u8]) -> String {
         Ok(v) => {
             let bytes = GenericArray::clone_from_slice(&v);
 
-            let nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng);
-            match ChaCha20Poly1305::new(&bytes).encrypt(&nonce, data) {
+            let nonce = XChaCha20Poly1305::generate_nonce(&mut OsRng);
+            match XChaCha20Poly1305::new(&bytes).encrypt(&nonce, data) {
                 Ok(y) => format!("{}//{}", hex::encode(nonce), hex::encode(y)),
                 Err(_) => "Error".to_string(),
             }
@@ -53,7 +55,7 @@ pub fn decrypt(data: String) -> String {
                 Ok(x) => {
                     let arr_ref = GenericArray::from_slice(&x);
 
-                    match ChaCha20Poly1305::new(&bytes).decrypt(arr_ref, hex::decode(splited.1).unwrap().as_ref()) {
+                    match XChaCha20Poly1305::new(&bytes).decrypt(arr_ref, hex::decode(splited.1).unwrap().as_ref()) {
                         Ok(y) => String::from_utf8(y).unwrap(),
                         Err(_) => "Error".to_string(),
                     }
@@ -63,6 +65,26 @@ pub fn decrypt(data: String) -> String {
         },
         Err(_) => "Error".to_string(),
     }
+}
+
+/// Encrypt data with FPE (Format-preserving encryption) and FF1 (Feistel-based Encryption Mode)
+pub fn fpe_encrypt(data: Vec<u16>) -> Result<String> {
+    let length = data.len();
+
+    let ff = FF1::<aes::Aes256>::new(&hex::decode(dotenv::var("AES_KEY").expect("Missing env `AES_KEY`"))?, 256)?;
+    Ok(hex::encode(ff.encrypt(&[], &FlexibleNumeralString::from(data))?.to_be_bytes(256, length)))
+}
+
+#[allow(dead_code)]
+/// Decrypt hex string to clear string value, using FPE
+pub fn fpe_decrypt(data: String) -> Result<String> {
+    let data_to_vec: Vec<u16> = hex::decode(data)?.iter().map(|&x| x as u16).collect();
+    let length_data = data_to_vec.len();
+
+    let ff = FF1::<aes::Aes256>::new(&hex::decode(dotenv::var("AES_KEY").expect("Missing env `AES_KEY`"))?, 256)?;
+    let decrypt = ff.decrypt(&[], &FlexibleNumeralString::from(data_to_vec))?;
+    
+    Ok(String::from_utf8_lossy(&decrypt.to_be_bytes(256, length_data)).to_string())
 }
 
 #[cfg(test)]
