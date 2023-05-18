@@ -2,7 +2,6 @@ use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_u
 use crate::helpers::{crypto::{encrypt, hash}, request::delete_account};
 use crate::model::{user::User, error::Error};
 use warp::reply::{WithStatus, Json};
-use sha3::{Digest, Keccak256};
 use anyhow::Result;
 use regex::Regex;
 
@@ -124,9 +123,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
             return Ok(super::err("Invalid email".to_string()));
         } else {
             // Hash email
-            let mut hasher = Keccak256::new();
-            hasher.update(nemail.as_bytes());
-            let hashed_email = hex::encode(&hasher.finalize()[..]);
+            let hashed_email = helpers::crypto::fpe_encrypt(nemail.encode_utf16().collect())?;
 
             // Check if email is already used
             let query_res = match query("SELECT vanity FROM accounts.users WHERE email = ?", vec![hashed_email.clone()]) {
@@ -155,7 +152,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
         } else {
             let dates: Vec<&str> = birth.split('-').collect();
     
-            if 13 > crate::helpers::get_age(dates[0].parse::<i32>()?, dates[1].parse::<u32>()?, dates[2].parse::<u32>()?) as i32 {
+            if 13 > helpers::get_age(dates[0].parse::<i32>()?, dates[1].parse::<u32>()?, dates[2].parse::<u32>()?) as i32 {
                 suspend(vanity)?;
                 return Ok(super::err("Your account has been suspended: age".to_string()));
             } else {
