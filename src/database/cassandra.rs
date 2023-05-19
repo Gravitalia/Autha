@@ -55,10 +55,8 @@ pub fn _create_bot(vanity: String, client_secret: String, username: String) -> R
 }
 
 /// Create a OAuth2 code
-pub fn create_oauth(id: String, vanity: String, bot_id: String, scope: Vec<String>) -> bool {
+pub fn create_oauth(id: String, vanity: String, bot_id: String, scope: Vec<String>) {
     let _ = SESSION.get().unwrap().query_with_values("INSERT INTO accounts.oauth (id, user_id, bot_id, scope, deleted) VALUES (?, ?, ?, ?, ?)", cdrs::query_values!(id, vanity, bot_id, scope, false));
-
-    true
 }
 
 /// Update a user in cassandra database
