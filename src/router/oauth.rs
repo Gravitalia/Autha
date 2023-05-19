@@ -119,7 +119,7 @@ pub fn get_oauth_code(body: crate::model::body::GetOAuth) -> WithStatus<Json> {
 
     // Create JWT & OAuth
     let jwt = helpers::jwt::create_jwt(user_id.to_string(), data[3].split_whitespace().map(|x| x.to_string()).collect());
-    let _ = create_oauth(jwt.clone(), user_id.to_string(), body.client_id.clone(), data[3].split_whitespace().map(|x| x.to_string()).collect());
+    create_oauth(jwt.clone(), user_id.to_string(), body.client_id.clone(), data[3].split_whitespace().map(|x| x.to_string()).collect());
 
     if res.is_empty() {
         warp::reply::with_status(warp::reply::json(
