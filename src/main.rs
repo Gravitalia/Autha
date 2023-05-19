@@ -114,12 +114,12 @@ async fn main() {
             if oauth.is_empty() {
                 Err(warp::reject::custom(UnknownError))
             } else {
-                Ok(router::users::get(std::str::from_utf8(&oauth[0][0].clone().into_plain().unwrap()[..]).unwrap().to_string()))
+                Ok(router::users::get(std::str::from_utf8(&oauth[0][0].clone().into_plain().unwrap()[..]).unwrap().to_string(), "".to_string()))
             }
         } else {
-            let middelware_res: String = middleware(token, &id).unwrap_or_else(|_| "Invalid".to_string());
+            let middelware_res = middleware(token, &"fallback").unwrap_or_else(|_| "Invalid".to_string());
             if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
-                Ok(router::users::get(middelware_res.to_lowercase()))
+                Ok(router::users::get(if middelware_res == "fallback" { id } else { middelware_res.to_lowercase() }, middelware_res.to_lowercase()))
             } else if middelware_res == *"Suspended" {
                 Ok(warp::reply::with_status(warp::reply::json(
                     &model::error::Error{
