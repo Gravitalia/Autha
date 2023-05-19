@@ -142,7 +142,7 @@ pub async fn login(body: crate::model::body::Login, ip: String, token: String) -
     Ok(warp::reply::with_status(warp::reply::json(
         &crate::model::error::Error{
             error: false,
-            message: helpers::jwt::create_jwt(vanity),
+            message: helpers::token::create(vanity, ip)?,
         }
     ),
     warp::http::StatusCode::OK))

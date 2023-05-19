@@ -1,4 +1,4 @@
-use crate::database::{cassandra::{query, create_oauth}, mem::{set, get, del, SetValue::Characters}};
+use crate::{database::{cassandra::{query, create_oauth}, mem::{set, get, del, SetValue::Characters}}, helpers};
 use crate::helpers::random_string;
 use warp::reply::{WithStatus, Json};
 
@@ -50,11 +50,11 @@ pub fn post(body: crate::model::body::OAuth, vanity: String) -> WithStatus<Json>
             ),
             warp::http::StatusCode::OK)
         }
-    } else if body.scope.split_whitespace().filter(|x| !["identity"].contains(x)).any(|_| true) {
+    } else if body.scope.split_whitespace().filter(|x| !["identity"/*, "private" */].contains(x)).any(|_| true) {
         super::err("Invalid scope".to_string())
     } else {
         let id = random_string(24);
-        let _ = set(id.clone(), Characters(format!("{}+{}+{}", body.bot_id, body.redirect_uri, vanity)));
+        let _ = set(id.clone(), Characters(format!("{}+{}+{}+{}", body.bot_id, body.redirect_uri, vanity, body.scope)));
 
         warp::reply::with_status(warp::reply::json(
             &crate::model::error::Error {
@@ -66,6 +66,7 @@ pub fn post(body: crate::model::body::OAuth, vanity: String) -> WithStatus<Json>
     }
 }
 
+/// Handle JWT creation, code deletation
 pub fn get_oauth_code(body: crate::model::body::GetOAuth) -> WithStatus<Json> {
     let data = match get(body.code.clone()).unwrap() {
         Some(r) => Vec::from_iter(r.split('+').map(|x| x.to_string())),
@@ -78,6 +79,10 @@ pub fn get_oauth_code(body: crate::model::body::GetOAuth) -> WithStatus<Json> {
 
     if *data[0] != body.client_id {
         return super::err("Invalid client_id".to_string());
+    }
+
+    if data[3].split_whitespace().filter(|x| !["identity"/*, "private" */].contains(x)).any(|_| true) {
+        return super::err("Invalid scope".to_string());
     }
 
     let bot = match query("SELECT flags, deleted, redirect_url, client_secret FROM accounts.bots WHERE id = ?", vec![body.client_id.clone()]) {
@@ -112,11 +117,15 @@ pub fn get_oauth_code(body: crate::model::body::GetOAuth) -> WithStatus<Json> {
     // Delete used key
     let _ = del(body.code);
 
+    // Create JWT & OAuth
+    let jwt = helpers::jwt::create_jwt(user_id.to_string(), data[3].split_whitespace().map(|x| x.to_string()).collect());
+    create_oauth(jwt.clone(), user_id.to_string(), body.client_id.clone(), data[3].split_whitespace().map(|x| x.to_string()).collect());
+
     if res.is_empty() {
         warp::reply::with_status(warp::reply::json(
             &crate::model::error::Error {
                 error: false,
-                message: create_oauth(user_id.to_string(), body.client_id, /*body.scope.split_whitespace().map(|s| s.to_string()).collect()*/vec!["identity".to_string()]),
+                message: jwt,
             }
         ),
         warp::http::StatusCode::CREATED)
@@ -126,7 +135,7 @@ pub fn get_oauth_code(body: crate::model::body::GetOAuth) -> WithStatus<Json> {
             warp::reply::with_status(warp::reply::json(
                 &crate::model::error::Error {
                     error: false,
-                    message: create_oauth(user_id.to_string(), body.client_id, /*body.scope.split_whitespace().map(|s| s.to_string()).collect()*/vec!["identity".to_string()]),
+                    message: jwt,
                 }
             ),
             warp::http::StatusCode::CREATED)
