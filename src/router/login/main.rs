@@ -88,14 +88,14 @@ pub async fn login(body: crate::model::body::Login, ip: String, token: String) -
         Some(d) => {
             let timestamp_ms: u64 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis().try_into()?;
 
-            if d == [1] && expire >= timestamp_ms {
+            if d == [1] && expire == 0 {
+                return Ok(crate::router::err("Account suspended".to_string()));
+            } else if d == [1] && expire >= timestamp_ms {
                 let recup_acc_id = helpers::random_string(37);
                 mem::set(recup_acc_id.clone(), mem::SetValue::Characters(vanity.clone()))?;
                 return Ok(crate::router::err(format!("Deleted account {} the {} recuperate with {}", vanity, expire, recup_acc_id)));
             } else if d == [1] && expire <= timestamp_ms {
                 return Ok(crate::router::err("Invalid email".to_string()));
-            } else if d == [1] && expire == 0 {
-                return Ok(crate::router::err("Account suspended".to_string()));
             }
         },
         None => {
