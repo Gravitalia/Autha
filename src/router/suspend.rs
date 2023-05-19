@@ -1,4 +1,4 @@
-use crate::{database::cassandra::query};
+use crate::database::cassandra::query;
 use warp::reply::{WithStatus, Json};
 use anyhow::Result;
 
