@@ -12,8 +12,8 @@ lazy_static! {
 }
 
 /// Handle GET users route
-pub fn get(vanity: String) -> WithStatus<Json> {
-    let user: User = match get_user(vanity.clone()) {
+pub fn get(vanity: String, requester: String) -> WithStatus<Json> {
+    let user: User = match get_user(vanity.clone(), requester) {
         Ok(d) => d,
         Err(_) => {
             return warp::reply::with_status(warp::reply::json(
@@ -39,6 +39,8 @@ pub fn get(vanity: String) -> WithStatus<Json> {
                 vanity,
                 avatar: None,
                 bio: None,
+                email: None,
+                birthdate: None,
                 verified: false,
                 deleted: true,
                 flags: 0,

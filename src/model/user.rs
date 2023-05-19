@@ -6,7 +6,9 @@ pub struct User {
     pub vanity: String,
     pub avatar: Option<String>,
     pub bio: Option<String>,
+    pub email: Option<String>,
+    pub birthdate: Option<String>,
     pub verified: bool,
     pub deleted: bool,
-    pub flags: u32,
+    pub flags: u32
 }

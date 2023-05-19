@@ -1,6 +1,7 @@
 use reqwest::{Client, header::HeaderValue, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use anyhow::Result;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct SiteVerifyResponse {
@@ -14,7 +15,7 @@ struct SiteVerifyResponse {
 }
 
 /// Send a request to Cloudflare for check if Turnstile token is valid
-pub async fn check_turnstile(token: String) -> Result<bool, Box<dyn std::error::Error>> {
+pub async fn check_turnstile(token: String) -> Result<bool> {
     let mut data = HashMap::new();
     data.insert("secret", dotenv::var("TURNSTILE_SECRET").expect("Missing env `TURNSTILE_SECRET`"));
     data.insert("response", token);
@@ -30,7 +31,7 @@ pub async fn check_turnstile(token: String) -> Result<bool, Box<dyn std::error::
 }
 
 /// Send a request to the URL for delete account
-pub async fn delete_account(url: String, vanity: String) -> Result<bool, Box<dyn std::error::Error>> {
+pub async fn delete_account(url: String, vanity: String) -> Result<bool> {
     let auth_header_value = HeaderValue::from_str(&dotenv::var("GLOBAL_AUTH").expect("Missing env `GLOBAL_AUTH`"))?;
 
     let res = Client::new().delete(url+"/account/deletion?user="+&vanity)
