@@ -45,7 +45,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
 
     // Hash IP
     let mut hasher = Keccak256::new();
-    hasher.update(ip);
+    hasher.update(ip.clone());
     let new_ip = hex::encode(&hasher.finalize()[..]);
 
     // Check if user have already created account 5 minutes ago
@@ -141,7 +141,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
     Ok(warp::reply::with_status(warp::reply::json(
         &crate::model::error::Error{
             error: false,
-            message: helpers::jwt::create_jwt(data.vanity),
+            message: helpers::token::create(data.vanity, ip)?,
         }
     ),
     warp::http::StatusCode::CREATED))
