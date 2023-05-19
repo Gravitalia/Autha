@@ -58,8 +58,17 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::In
 fn middleware(token: Option<String>, fallback: &str) -> anyhow::Result<String> {
     match token {
         Some(ntoken) if fallback == "@me" => {
-            if let Ok(data) = helpers::token::check(ntoken) {
-                return Ok(data);
+            match helpers::token::check(ntoken) {
+                Ok(data) => {
+                    return Ok(data);
+                },
+                Err(e) => {
+                    if e.to_string() == *"revoked" {
+                        return Ok("Suspended".to_string());
+                    } else if e.to_string() == *"expired" {
+                        return Ok("Invalid".to_string());
+                    }
+                }
             }
             Ok("Invalid".to_string())
         }
@@ -104,12 +113,12 @@ async fn main() {
                 Ok(res)
             },
             Err(_) => {
-                return Err(warp::reject::custom(UnknownError));
+                Err(warp::reject::custom(UnknownError))
             }
         }
     })))
     .or(warp::path!("users" / String).and(warp::get()).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async move {
-        if id == "@me" && token.is_some() && TOKEN.is_match(&token.clone().unwrap_or_default()) {
+        if id == "@me" && token.is_some() && TOKEN.is_match(token.as_deref().unwrap_or_default()) {
             let oauth = match helpers::jwt::get_jwt(token.unwrap_or_default()) {
                 Ok(d) => {
                     if d.claims.exp <= SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() {
