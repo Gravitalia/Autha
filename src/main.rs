@@ -98,6 +98,16 @@ async fn main() {
             }
         }
     }))
+    .or(warp::path("account").and(warp::path("suspend").and(warp::post()).and(warp::query::<model::query::Suspend>()).and(warp::header("authorization")).and_then(|query: model::query::Suspend, token: String| async {
+        match router::suspend::suspend(query.vanity, token) {
+            Ok(res) => {
+                Ok(res)
+            },
+            Err(_) => {
+                return Err(warp::reject::custom(UnknownError));
+            }
+        }
+    })))
     .or(warp::path!("users" / String).and(warp::get()).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async move {
         if id == "@me" && token.is_some() && TOKEN.is_match(&token.clone().unwrap_or_default()) {
             let oauth = match helpers::jwt::get_jwt(token.unwrap_or_default()) {
