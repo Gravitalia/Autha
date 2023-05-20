@@ -15,7 +15,7 @@ lazy_static! {
 
 /// Handle GET users route
 pub fn get(vanity: String, requester: String) -> WithStatus<Json> {
-    let user: User = match get_user(vanity.clone(), requester) {
+    let user = match get_user(vanity.clone(), requester) {
         Ok(d) => d,
         Err(_) => {
             return warp::reply::with_status(warp::reply::json(
@@ -26,6 +26,8 @@ pub fn get(vanity: String, requester: String) -> WithStatus<Json> {
             ), warp::http::StatusCode::NOT_FOUND);
         }
     };
+
+    println!("{:?} {}", user.vanity, user.username);
 
     if user.vanity.is_empty() {
         warp::reply::with_status(warp::reply::json(
