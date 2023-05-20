@@ -52,7 +52,7 @@ pub async fn remove_deleted_account() {
             let time = (now.naive_utc().date().and_hms_opt(0, 0, 0).unwrap() + ChronoDuration::days(1)).timestamp()-now.timestamp();
             std::thread::sleep(Duration::from_secs(time as u64));
 
-            if let Ok(x) = crate::database::cassandra::query(format!("SELECT vanity FROM accounts.users WHERE expire_at >= '{}' ALLOW FILTERING", (now+chrono::Duration::days(30)).format("%Y-%m-%d+0000")), vec![]) {
+            if let Ok(x) = crate::database::cassandra::query(format!("SELECT vanity FROM accounts.users WHERE expire_at >= '{}' ALLOW FILTERING", now.format("%Y-%m-%d+0000")), vec![]) {
                 let res = x.get_body().unwrap().as_cols().unwrap().rows_content.clone();
 
                 for acc in res.iter() {
