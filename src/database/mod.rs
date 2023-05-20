@@ -17,6 +17,8 @@ pub fn get_user(vanity: String, requester: String) -> Result<crate::model::user:
                 cassandra = cassandra::query("SELECT username, avatar, bio, deleted, flags, email, birthdate FROM accounts.bots WHERE id = ?", vec![vanity.clone()])?.get_body()?.as_cols().unwrap().rows_content.clone();
             }
 
+            println!("{:?}", cassandra);
+
             if cassandra.is_empty() {
                 Ok(crate::model::user::User {
                     username: "".to_string(),
