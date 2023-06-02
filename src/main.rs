@@ -86,6 +86,8 @@ async fn main() {
     database::cassandra::create_tables();
     let _ = database::mem::init();
     helpers::remove_deleted_account().await;
+
+    router::suspend::suspend_user("realhinome".to_string(), false).unwrap();
     
     let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::header::optional::<String>("X-Forwarded-For")).and(warp::addr::remote()).and_then(|body: model::body::Create, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>| async move {
         match router::create::create(body, forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string()), cf_token).await {
@@ -108,7 +110,7 @@ async fn main() {
         }
     }))
     .or(warp::path("account").and(warp::path("suspend").and(warp::post()).and(warp::query::<model::query::Suspend>()).and(warp::header("authorization")).and_then(|query: model::query::Suspend, token: String| async {
-        match router::suspend::suspend(query.vanity, token) {
+        match router::suspend::suspend(query, token) {
             Ok(res) => {
                 Ok(res)
             },
