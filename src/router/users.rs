@@ -2,10 +2,9 @@ use crate::{database::{get_user, mem::{set, del, SetValue}, cassandra::{update_u
 use crate::helpers::{crypto::{encrypt, hash}, request::delete_account};
 use crate::model::{user::User, error::Error};
 use warp::reply::{WithStatus, Json};
+use super::suspend::suspend_user;
 use anyhow::Result;
 use regex::Regex;
-
-use super::suspend::suspend_user;
 
 lazy_static! {
     static ref EMAIL: Regex = Regex::new(r".+@.+.([a-zA-Z]{2,7})$").unwrap();
@@ -157,7 +156,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
             let dates: Vec<&str> = birth.split('-').collect();
     
             if 13 > helpers::get_age(dates[0].parse::<i32>()?, dates[1].parse::<u32>()?, dates[2].parse::<u32>()?) as i32 {
-                suspend_user(vanity)?;
+                suspend_user(vanity, true)?;
                 return Ok(super::err("Your account has been suspended: age".to_string()));
             } else {
                 birthdate = Some(encrypt(birth.as_bytes()));
