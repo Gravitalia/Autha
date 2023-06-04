@@ -3,6 +3,7 @@ pub mod jwt;
 pub mod request;
 pub mod config_reader;
 pub mod token;
+pub mod grpc;
 
 use std::time::{SystemTime, UNIX_EPOCH, Duration};
 use chrono::{Duration as ChronoDuration, Utc, NaiveDate};
