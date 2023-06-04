@@ -1,0 +1,26 @@
+syntax = "proto3";
+package spinoza;
+
+option go_package = "./proto;proto";
+option java_multiple_files = true;
+option java_package = "com.gravitalia.spinoza";
+option java_outer_classname = "SpinozaProto";
+
+// The service definition
+service Spinoza {
+    // Compress and then upload the image to the CDN provider
+    rpc Upload (UploadRequest) returns (UploadReply) {}
+}
+
+// The request message containing the image in bytes
+message UploadRequest {
+    bytes data = 1;
+    int32 width = 2;
+    int32 height = 3;
+}
+
+// The response message containing the image hash/name
+message UploadReply {
+    string message = 1;
+    bool error = 2;
+}
