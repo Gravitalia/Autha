@@ -57,7 +57,7 @@ pub fn get(vanity: String, requester: String) -> WithStatus<Json> {
 }
 
 /// Handle PATCH users route and let users modifie their profile
-pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<WithStatus<Json>> {
+pub async fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<WithStatus<Json>> {
     let res = match query("SELECT username, avatar, bio, email, password FROM accounts.users WHERE vanity = ?", vec![vanity.clone()]) {
         Ok(x) => x.get_body()?.as_cols().unwrap().rows_content.clone(),
         Err(_) => {
@@ -80,53 +80,50 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
     }
 
     let mut username = std::str::from_utf8(&res[0][0].clone().into_plain().unwrap_or_default()[..])?.to_string();
-    let mut email = std::str::from_utf8(&res[0][3].clone().into_plain().unwrap_or_default()[..])?.to_string();
+    let mut avatar = if res[0][1].clone().into_plain().is_some() { Some(std::str::from_utf8(&res[0][1].clone().into_plain().unwrap_or_default()[..])?.to_string()) } else { None };
     let mut bio: Option<String> = None;
+    let mut email = std::str::from_utf8(&res[0][3].clone().into_plain().unwrap_or_default()[..])?.to_string();
     let mut birthdate: Option<String> = None;
     let phone: Option<String> = None;
 
     // Change username
-    if body.username.is_some() {
-        let nusername = match body.username {
-            Some(u) => u,
-            None => "".to_string()
-        };
-    
-        if nusername.len() > 25 {
+    if let Some(u) = body.username {
+        if u.len() > 25 {
             return Ok(super::err("Invalid username".to_string()));
         } else {
-            username = nusername;
+            username = u;
         }
     }
     
     // Change bio
-    if body.bio.is_some() {
-        let nbio = match body.bio {
-            Some(b) => b,
-            None => "".to_string()
-        };
-    
-        if nbio.len() > 160 {
+    if let Some(b) = body.bio {
+        if b.len() > 160 {
             return Ok(super::err("Invalid bio".to_string()));
-        } else if nbio.is_empty() {
-            bio = None
+        } else if !b.is_empty() {
+            bio = Some(b);
+        }
+    }
+
+    // Change avatar
+    if let Some(a) = body.avatar {
+        if a.is_empty() {
+            avatar = None;
         } else {
-            bio = Some(nbio);
+            if helpers::grpc::check_avatar(a.clone()).await? {
+                return Ok(super::err("Avatar seems to be nsfw".to_string()));
+            } else {
+                avatar = Some(helpers::grpc::upload_avatar(a).await?);
+            }
         }
     }
 
     // Change email
-    if body.email.is_some() {
-        let nemail = match body.email {
-            Some(e) => e,
-            None => "".to_string()
-        };
-    
-        if !is_psw_valid || !EMAIL.is_match(&nemail) {
+    if let Some(e) = body.email {
+        if !is_psw_valid || !EMAIL.is_match(&e) {
             return Ok(super::err("Invalid email".to_string()));
         } else {
             // Hash email
-            let hashed_email = helpers::crypto::fpe_encrypt(nemail.encode_utf16().collect())?;
+            let hashed_email = helpers::crypto::fpe_encrypt(e.encode_utf16().collect())?;
 
             // Check if email is already used
             let query_res = match query("SELECT vanity FROM accounts.users WHERE email = ?", vec![hashed_email.clone()]) {
@@ -144,47 +141,32 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
     }
     
     // Change birthdate
-    if body.birthdate.is_some() {
-        let birth = match body.birthdate {
-            Some(b) => b,
-            None => "".to_string()
-        };
-    
-        if !BIRTH.is_match(&birth) {
+    if let Some(b) = body.birthdate {
+        if !BIRTH.is_match(&b) {
             return Ok(super::err("Invalid birthdate".to_string()));
         } else {
-            let dates: Vec<&str> = birth.split('-').collect();
+            let dates: Vec<&str> = b.split('-').collect();
     
             if 13 > helpers::get_age(dates[0].parse::<i32>()?, dates[1].parse::<u32>()?, dates[2].parse::<u32>()?) as i32 {
                 suspend_user(vanity, true)?;
                 return Ok(super::err("Your account has been suspended: age".to_string()));
             } else {
-                birthdate = Some(encrypt(birth.as_bytes()));
+                birthdate = Some(encrypt(b.as_bytes()));
             }
         }
     }
     
     // Change phone
-    if body.phone.is_some() {
-        let _phone = match body.phone {
-            Some(p) => p,
-            None => "".to_string()
-        };
-            
+    if let Some(_p) = body.phone {
         return Ok(super::err("Phones not implemented yet".to_string()));
     }
 
     // Change 2FA (mfa)
-    if body.mfa.is_some()  {
-        let nmfa = match body.mfa {
-            Some(b) => b,
-            None => "".to_string()
-        };
-
+    if let Some(m) = body.mfa {
         if !is_psw_valid {
             return Ok(super::err("Invalid MFA".to_string()));
         } else {
-            match query("UPDATE accounts.users SET mfa_code = ? WHERE vanity = ?", vec![encrypt(nmfa.as_bytes()), vanity.clone()]) {
+            match query("UPDATE accounts.users SET mfa_code = ? WHERE vanity = ?", vec![encrypt(m.as_bytes()), vanity.clone()]) {
                 Ok(_) => {},
                 Err(_) => {
                     return Ok(super::err("Internal server error".to_string()));
@@ -194,16 +176,11 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
     }
     
     // Change password
-    if body.newpassword.is_some() {
-        let psw = match body.newpassword {
-            Some(p) => p,
-            None => "".to_string()
-        };
-        
-        if !is_psw_valid || !PASSWORD.is_match(&psw) {
+    if let Some(np) = body.newpassword {
+        if !is_psw_valid || !PASSWORD.is_match(&np) {
             return Ok(super::err("Invalid password".to_string()));
         } else {
-            match query("UPDATE accounts.users SET password = ? WHERE vanity = ?", vec![hash(psw.as_ref()), vanity.clone()]) {
+            match query("UPDATE accounts.users SET password = ? WHERE vanity = ?", vec![hash(np.as_ref()), vanity.clone()]) {
                 Ok(_) => {},
                 Err(_) => {
                     return Ok(super::err("Internal server error".to_string()));
@@ -212,7 +189,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
         }
     }
 
-    match update_user(username, None, bio, birthdate, phone, email, vanity.clone()) {
+    match update_user(username, avatar, bio, birthdate, phone, email, vanity.clone()) {
         Ok(_) => {
             let _ = del(vanity);
             Ok(warp::reply::with_status(warp::reply::json(

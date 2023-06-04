@@ -20,7 +20,7 @@ pub struct Login {
 #[derive(Deserialize)]
 pub struct UserPatch {
     pub username: Option<String>,
-    pub avatar: Option<String>,
+    pub avatar: Option<Vec<u8>>,
     pub bio: Option<String>,
     pub email: Option<String>,
     pub password: Option<String>,

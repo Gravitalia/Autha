@@ -155,7 +155,7 @@ async fn main() {
     .or(warp::path("users").and(warp::path("@me")).and(warp::patch()).and(warp::body::json()).and(warp::header::<String>("authorization")).and_then(|body: model::body::UserPatch, token: String| async {
         let middelware_res: String = middleware(Some(token), "@me").unwrap_or_else(|_| "Invalid".to_string());
         if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
-            match router::users::patch(middelware_res.to_lowercase(), body) {
+            match router::users::patch(middelware_res.to_lowercase(), body).await {
                 Ok(r) => {
                     Ok(r)
                 },
