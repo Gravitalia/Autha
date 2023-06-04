@@ -57,7 +57,7 @@ pub fn get(vanity: String, requester: String) -> WithStatus<Json> {
 }
 
 /// Handle PATCH users route and let users modifie their profile
-pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<WithStatus<Json>> {
+pub async fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<WithStatus<Json>> {
     let res = match query("SELECT username, avatar, bio, email, password FROM accounts.users WHERE vanity = ?", vec![vanity.clone()]) {
         Ok(x) => x.get_body()?.as_cols().unwrap().rows_content.clone(),
         Err(_) => {
@@ -80,8 +80,9 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
     }
 
     let mut username = std::str::from_utf8(&res[0][0].clone().into_plain().unwrap_or_default()[..])?.to_string();
-    let mut email = std::str::from_utf8(&res[0][3].clone().into_plain().unwrap_or_default()[..])?.to_string();
+    let mut avatar = if res[0][1].clone().into_plain().is_some() { Some(std::str::from_utf8(&res[0][1].clone().into_plain().unwrap_or_default()[..])?.to_string()) } else { None };
     let mut bio: Option<String> = None;
+    let mut email = std::str::from_utf8(&res[0][3].clone().into_plain().unwrap_or_default()[..])?.to_string();
     let mut birthdate: Option<String> = None;
     let phone: Option<String> = None;
 
@@ -112,6 +113,24 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
             bio = None
         } else {
             bio = Some(nbio);
+        }
+    }
+
+    // Change avatar
+    if body.avatar.is_some() {
+        let navatar = match body.avatar {
+            Some(b) => b,
+            None => vec![]
+        };
+    
+        if navatar.is_empty() {
+            avatar = None
+        } else {
+            if helpers::grpc::check_avatar(navatar.clone()).await? {
+                return Ok(super::err("Avatar seems to be nsfw".to_string()));
+            } else {
+                avatar = Some(helpers::grpc::upload_avatar(navatar).await?);
+            }
         }
     }
 
@@ -212,7 +231,7 @@ pub fn patch(vanity: String, body: crate::model::body::UserPatch) -> Result<With
         }
     }
 
-    match update_user(username, None, bio, birthdate, phone, email, vanity.clone()) {
+    match update_user(username, avatar, bio, birthdate, phone, email, vanity.clone()) {
         Ok(_) => {
             let _ = del(vanity);
             Ok(warp::reply::with_status(warp::reply::json(
