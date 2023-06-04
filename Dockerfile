@@ -5,6 +5,8 @@ WORKDIR /autha
 
 COPY ./Cargo.toml ./Cargo.toml
 
+RUN apt-get update && apt-get install -y libssl-dev pkg-config protobuf-compiler
+
 RUN cargo build --release \
  && rm src/*.rs
 
