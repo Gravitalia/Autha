@@ -108,12 +108,10 @@ pub async fn patch(vanity: String, body: crate::model::body::UserPatch) -> Resul
     if let Some(a) = body.avatar {
         if a.is_empty() {
             avatar = None;
+        } else if helpers::grpc::check_avatar(a.clone()).await? {
+            return Ok(super::err("Avatar seems to be nsfw".to_string()));
         } else {
-            if helpers::grpc::check_avatar(a.clone()).await? {
-                return Ok(super::err("Avatar seems to be nsfw".to_string()));
-            } else {
-                avatar = Some(helpers::grpc::upload_avatar(a).await?);
-            }
+            avatar = Some(helpers::grpc::upload_avatar(a).await?);
         }
     }
 

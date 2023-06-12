@@ -57,6 +57,18 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
         return Ok(super::rate());
     }
 
+    // Check if CF Turnstile token is valid
+    match helpers::request::check_turnstile(token).await {
+        Ok(res) => {
+            if !res {
+                return Ok(super::err("Invalid user".to_string()));
+            }
+        },
+        Err(_) => {
+            return Ok(super::err("Internal server error".to_string()));
+        }
+    }
+
     // Hash email
     let hashed_email = helpers::crypto::fpe_encrypt(data.email.encode_utf16().collect())?;
     
@@ -124,18 +136,6 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
     }
     
     let _ = mem::set(format!("account_create_{}", new_ip), mem::SetValue::Number(1));
-
-    // Check if CF Turnstile token is valid
-    match helpers::request::check_turnstile(token).await {
-        Ok(res) => {
-            if !res {
-                return Ok(super::err("Invalid user".to_string()));
-            }
-        },
-        Err(_) => {
-            return Ok(super::err("Internal server error".to_string()));
-        }
-    }
 
     // Finish, create a JWT token and sent it
     Ok(warp::reply::with_status(warp::reply::json(

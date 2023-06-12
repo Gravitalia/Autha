@@ -48,6 +48,18 @@ pub async fn login(body: crate::model::body::Login, ip: String, token: String) -
     }
     let _ = mem::set(new_ip, mem::SetValue::Number(rate_limit+1));
 
+    // Check if provided security header is ok
+    match helpers::request::check_turnstile(token).await {
+        Ok(res) => {
+            if !res {
+                return Ok(crate::router::err("Invalid user".to_string()));
+            }
+        },
+        Err(_) => {
+            return Ok(crate::router::err("Internal server error".to_string()));
+        }
+    }
+
     // Hash email
     let hashed_email = helpers::crypto::fpe_encrypt(data.email.encode_utf16().collect())?;
     
@@ -123,18 +135,6 @@ pub async fn login(body: crate::model::body::Login, ip: String, token: String) -
         // Save MFA code in clear, not in base32 => for generate key, use helpers::random_string with 10 as length
         if totp_custom::<Sha1>(30, 6, helpers::crypto::decrypt(std::str::from_utf8(&d[..])?.to_string()).as_ref(), SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()) != body.mfa.unwrap_or_default()  {
             return Ok(crate::router::err("Invalid MFA".to_string()));
-        }
-    }
-
-    // Check if provided security header is ok
-    match helpers::request::check_turnstile(token).await {
-        Ok(res) => {
-            if !res {
-                return Ok(crate::router::err("Invalid user".to_string()));
-            }
-        },
-        Err(_) => {
-            return Ok(crate::router::err("Internal server error".to_string()));
         }
     }
 
