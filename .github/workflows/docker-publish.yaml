@@ -36,7 +36,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
         
-    - name: Build and push
-      uses: docker/bake-action@v2
-      with:
-        push: true
+    - name: Build the Docker image
+      run: |
+            docker build . --tag ghcr.io/gravitalia/autha:latest
+            docker push ghcr.io/gravitalia/autha:latest
