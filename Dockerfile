@@ -9,7 +9,8 @@ RUN cargo build --release \
  && rm src/*.rs
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends libssl-dev pkg-config protobuf-compiler
+ && apt-get install -y --no-install-recommends libssl-dev pkg-config protobuf-compiler \
+ && rm -rf /var/lib/apt/lists/*
 
 COPY ./src ./src
 COPY ./proto ./proto
@@ -21,7 +22,8 @@ RUN rm ./target/release/deps/autha* \
 FROM debian:latest
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends libssl-dev
+ && apt-get install -y --no-install-recommends libssl-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /autha/target/release/autha .
 
