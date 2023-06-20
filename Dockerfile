@@ -1,25 +1,26 @@
-FROM rust:1.70 as build
+FROM rust:alpine3.18 AS builder
 
 RUN USER=root cargo new --bin autha
 WORKDIR /autha
 
+ENV     RUSTFLAGS="-C target-feature=-crt-static"
+RUN     apk add -q --update-cache --no-cache build-base openssl-dev musl pkgconfig protobuf-dev
+
 COPY ./Cargo.toml ./Cargo.toml
-
-RUN apt-get update && apt-get install -y --no-install-recommends libssl-dev pkg-config protobuf-compiler
-
 RUN cargo build --release \
  && rm src/*.rs
 
 COPY ./src ./src
-COPY ./proto ./proto
-COPY ./build.rs ./build.rs
-
 RUN rm ./target/release/deps/autha* \
  && cargo build --release
 
-FROM rust:1.69-slim-buster
+FROM alpine:3.18 AS runtime
 
-COPY --from=build /autha/target/release/autha .
+RUN apk update \
+ && apk add --no-cache libssl1.1 musl-dev libgcc tini curl
 
-EXPOSE 1111
-CMD ["./autha"]
+COPY --from=builder /autha/target/release/autha /bin/autha
+
+EXPOSE 1111/tcp
+ENTRYPOINT ["tini", "--"]
+CMD     /bin/autha
