@@ -14,7 +14,7 @@ pub mod torresix {
 
 /// Check if an avatar contains NSFW content
 pub async fn check_avatar(avatar: Vec<u8>) -> Result<bool> {
-    let mut client = TorreClient::connect(dotenv::var("TORRESIX_URL").unwrap_or_else(|_| "http://[::1]:50051".to_string()).await?;
+    let mut client = TorreClient::connect(dotenv::var("TORRESIX_URL").unwrap_or_else(|_| "http://[::1]:50051".to_string())).await?;
 
     let response = client.torre_predict(tonic::Request::new(TorreRequest {
         model: 1,
