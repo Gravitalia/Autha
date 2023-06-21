@@ -30,8 +30,7 @@ pub async fn upload_avatar(avatar: Vec<u8>) -> Result<String> {
 
     let response = client.upload(tonic::Request::new(UploadRequest {
         data: avatar,
-        width: 256,
-        height: 256
+        width: 256
     })).await?;
 
     Ok(response.into_inner().message)
