@@ -9,7 +9,7 @@ use tokio::task;
 
 lazy_static! {
     static ref EMAIL: Regex = Regex::new(r".+@.+.([a-zA-Z]{2,7})$").unwrap();
-    static ref PASSWORD: Regex = Regex::new(r#"^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$"#).unwrap();
+    static ref PASSWORD: Regex = Regex::new(r#"^(?=.*\d)(?=.*[a-zA-Z])(?=.*[^a-zA-Z0-9]).{8,}$"#).unwrap();
     static ref VANITY: Regex = Regex::new(r"[A-z|0-9|_]{3,16}$").unwrap();
     static ref PHONE: Regex = Regex::new(r"^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$").unwrap();
     static ref BIRTH: Regex = Regex::new(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$").unwrap();
@@ -154,7 +154,7 @@ mod tests {
     #[test]
     fn test_regex() {
         assert!(EMAIL.is_match("foo@🏹.to"));
-        assert!(PASSWORD.is_match("Test1234_"));
+        assert!(PASSWORD.is_match("Password1234._"));
         assert!(VANITY.is_match("realhinome"));
         assert!(PHONE.is_match("0000000000"));
         assert!(BIRTH.is_match("2000-01-01"));
