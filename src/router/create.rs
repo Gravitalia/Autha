@@ -10,7 +10,7 @@ use tokio::task;
 lazy_static! {
     static ref EMAIL: Regex = Regex::new(r".+@.+.([a-zA-Z]{2,7})$").unwrap();
     static ref PASSWORD: Regex = Regex::new(r"([0-9|*|]|[$&+,:;=?@#|'<>.^*()%!-])+").unwrap();
-    static ref VANITY: Regex = Regex::new(r"[A-z|0-9|_]{3,16}").unwrap();
+    static ref VANITY: Regex = Regex::new(r"[A-z|0-9|_]{3,16}$").unwrap();
     static ref PHONE: Regex = Regex::new(r"^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$").unwrap();
     static ref BIRTH: Regex = Regex::new(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$").unwrap();
 }
