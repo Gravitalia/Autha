@@ -28,7 +28,7 @@ pub async fn create(body: crate::model::body::Create, ip: String, token: String)
             return "Invalid password";
         }
         // Vanity verification
-        if !VANITY.is_match(&body.vanity) {
+        if !VANITY.is_match(&body.vanity) || body.vanity.chars().all(|c| c.is_digit(10)) {
             return "Invalid vanity";
         }
         // Username checking
