@@ -247,6 +247,51 @@ pub async fn delete(vanity: String, body: crate::model::body::Gdrp) -> Result<Wi
     ), warp::http::StatusCode::OK))
 }
 
+/// This route allows to obtain every data saved by Autha
+pub async fn get_data(vanity: String, body: crate::model::body::Gdrp) -> Result<WithStatus<Json>> {
+    let res = match query("SELECT password, username, avatar, bio, birthdate, deleted, email, flags, phone, verified FROM accounts.users WHERE vanity = ?", vec![vanity.clone()]) {
+        Ok(x) => x.get_body()?.as_cols().unwrap().rows_content.clone(),
+        Err(_) => {
+            return Ok(warp::reply::with_status(warp::reply::json(
+                &Error {
+                    error: true,
+                    message: "Unknown user".to_string()
+                }
+            ), warp::http::StatusCode::NOT_FOUND));
+        }
+    };
+
+    // Check if security token is valid
+    match crate::helpers::request::check_turnstile(body.security_token).await {
+        Ok(res) => {
+            if !res {
+                return Ok(crate::router::err("Invalid security_token".to_string()));
+            }
+        },
+        Err(_) => {
+            return Ok(crate::router::err("Internal server error".to_string()));
+        }
+    }
+
+    if !crate::helpers::crypto::hash_test(std::str::from_utf8(&res[0][0].clone().into_plain().unwrap_or_default()[..])?, body.password.as_ref()) {
+        return Ok(super::err("Invalid password".to_string()));
+    }
+
+    Ok(warp::reply::with_status(warp::reply::json(
+        &User {
+            username: std::str::from_utf8(&res[0][1].clone().into_plain().unwrap()[..])?.to_string(),
+            vanity,
+            avatar: if res[0][2].clone().into_plain().is_none() { None } else { let avatar = std::str::from_utf8(&res[0][2].clone().into_plain().unwrap()[..]).unwrap_or("").to_string(); if res.is_empty() { None } else { Some(avatar) } },
+            bio: if res[0][3].clone().into_plain().is_none() { None } else { let bio = std::str::from_utf8(&res[0][3].clone().into_plain().unwrap()[..]).unwrap_or("").to_string(); if res.is_empty() { None } else { Some(bio) } },
+            email: Some(crate::helpers::crypto::fpe_decrypt(std::str::from_utf8(&res[0][6].clone().into_plain().unwrap()[..])?.to_string())?),
+            birthdate: if res[0][4].clone().into_plain().is_none() { None } else { let birth = std::str::from_utf8(&res[0][6].clone().into_plain().unwrap()[..])?.to_string(); if res.is_empty() { None } else { Some(crate::helpers::crypto::decrypt(birth)?) } },
+            verified: res[0][9].clone().into_plain().unwrap_or_default()[..] != [0],
+            deleted: res[0][5].clone().into_plain().unwrap_or_default()[..] != [0],
+            flags: u32::from_be_bytes((&res[0][4].clone().into_plain().unwrap_or_default()[..])[..4].try_into()?)
+        }
+    ), warp::http::StatusCode::OK))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
