@@ -22,6 +22,7 @@ pub fn create_tables() {
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.bots ( id TEXT, user_id TEXT, client_secret TEXT, username TEXT, avatar TEXT, bio TEXT, redirect_url SET<TEXT>, flags INT, deleted BOOLEAN, PRIMARY KEY (id) )").expect("accounts.bots create error");
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.oauth ( id TEXT, user_id TEXT, bot_id TEXT, ip TEXT, scope SET<TEXT>, deleted BOOLEAN, PRIMARY KEY (id) )").expect("accounts.oauth create error");
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.tokens ( id TEXT, user_id TEXT, ip TEXT, date TIMESTAMP, expire_at TIMESTAMP, deleted BOOLEAN, PRIMARY KEY (id) )").expect("accounts.tokens create error");
+    SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.salts ( id TEXT, salt TEXT, PRIMARY KEY (id) )").expect("accounts.salts create error");
     SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON accounts.users ( email );").expect("second index (email) create error");
     SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON accounts.users ( expire_at );").expect("second index (expire_at) create error");
     SESSION.get().unwrap().query("CREATE INDEX IF NOT EXISTS ON accounts.oauth ( user_id );").expect("second index (user_id) create error");
@@ -57,6 +58,15 @@ pub fn _create_bot(vanity: String, client_secret: String, username: String) -> R
 /// Create a OAuth2 code
 pub fn create_oauth(id: String, vanity: String, bot_id: String, scope: Vec<String>) {
     let _ = SESSION.get().unwrap().query_with_values("INSERT INTO accounts.oauth (id, user_id, bot_id, scope, deleted) VALUES (?, ?, ?, ?, ?)", cdrs::query_values!(id, vanity, bot_id, scope, false));
+}
+
+/// Create a new salt to split it and secure it
+pub fn create_salt(salt: String) -> String {
+    let id = uuid::Uuid::new_v4().to_string();
+
+    let _ = SESSION.get().unwrap().query_with_values("INSERT INTO accounts.oauth (id, salt) VALUES (?, ?)", cdrs::query_values!(id.clone(), salt));
+
+    id
 }
 
 /// Update a user in cassandra database
