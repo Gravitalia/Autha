@@ -86,7 +86,7 @@ async fn main() {
     database::cassandra::create_tables();
     let _ = database::mem::init();
     helpers::remove_deleted_account().await;
-    
+
     let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::header::optional::<String>("X-Forwarded-For")).and(warp::addr::remote()).and_then(|body: model::body::Create, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>| async move {
         match router::create::create(body, forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string()), cf_token).await {
             Ok(r) => {
@@ -227,6 +227,29 @@ async fn main() {
         let middelware_res: String = middleware(Some(token), "@me").unwrap_or_else(|_| "Invalid".to_string());
         if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
             match router::login::token::temp_token(body, ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip(), cf_token, "t".to_string()).await {
+                Ok(r) => {
+                    Ok(r)
+                },
+                Err(_) => {
+                    Err(warp::reject::custom(UnknownError))
+                }
+            }
+        } else if middelware_res == "Suspended" {
+            Ok(warp::reply::with_status(warp::reply::json(
+                &model::error::Error{
+                    error: true,
+                    message: "Account suspended".to_string(),
+                }
+            ),
+            warp::http::StatusCode::FORBIDDEN))
+        } else {
+            Err(warp::reject::custom(UnknownError))
+        }
+    }))
+    .or(warp::path("account").and(warp::path("data")).and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::header("authorization")).and_then(|body: model::body::Gdrp, token: String, authorization: String| async {
+        let middelware_res: String = middleware(Some(token), "@me").unwrap_or_else(|_| "Invalid".to_string());
+        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
+            match  router::users::get_data(middelware_res, body).await {
                 Ok(r) => {
                     Ok(r)
                 },
