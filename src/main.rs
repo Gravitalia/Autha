@@ -246,7 +246,7 @@ async fn main() {
             Err(warp::reject::custom(UnknownError))
         }
     }))
-    .or(warp::path("account").and(warp::path("data")).and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::header("authorization")).and_then(|body: model::body::Gdrp, token: String, authorization: String| async {
+    .or(warp::path("account").and(warp::path("data")).and(warp::post()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: model::body::Gdrp, token: String| async {
         let middelware_res: String = middleware(Some(token), "@me").unwrap_or_else(|_| "Invalid".to_string());
         if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
             match  router::users::get_data(middelware_res, body).await {
