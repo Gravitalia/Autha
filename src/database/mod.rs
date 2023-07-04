@@ -36,7 +36,7 @@ pub fn get_user(vanity: String, requester: String) -> Result<crate::model::user:
                 avatar: if cassandra[0][1].clone().into_plain().is_none() { None } else { let res = std::str::from_utf8(&cassandra[0][1].clone().into_plain().unwrap()[..]).unwrap_or("").to_string(); if res.is_empty() { None } else { Some(res) } },
                 bio: if cassandra[0][2].clone().into_plain().is_none() { None } else { let res = std::str::from_utf8(&cassandra[0][2].clone().into_plain().unwrap()[..]).unwrap_or("").to_string(); if res.is_empty() { None } else { Some(res) } },
                 email: if vanity == requester && !is_bot { Some(fpe_decrypt(std::str::from_utf8(&cassandra[0][5].clone().into_plain().unwrap()[..])?.to_string())?) } else { None },
-                birthdate: if vanity != requester || is_bot || cassandra[0][6].clone().into_plain().is_none() { None } else { let res = std::str::from_utf8(&cassandra[0][6].clone().into_plain().unwrap()[..])?.to_string(); if res.is_empty() { None } else { Some(decrypt(res)) } },
+                birthdate: if vanity != requester || is_bot || cassandra[0][6].clone().into_plain().is_none() { None } else { let res = std::str::from_utf8(&cassandra[0][6].clone().into_plain().unwrap()[..])?.to_string(); if res.is_empty() { None } else { Some(decrypt(res)?) } },
                 deleted: cassandra[0][3].clone().into_plain().unwrap_or_default()[..] != [0],
                 flags: u32::from_be_bytes((&cassandra[0][4].clone().into_plain().unwrap_or_default()[..])[..4].try_into()?),
                 verified: false,
