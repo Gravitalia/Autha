@@ -65,7 +65,7 @@ pub async fn temp_token(body: crate::model::body::TempToken, ip: std::net::IpAdd
     } else if body.mfa.is_some() && query_res[0][3].clone().into_plain().is_some() {
         match query_res[0][3].clone().into_plain() {
             Some(d) => {
-                if totp_custom::<Sha1>(30, 6, helpers::crypto::decrypt(std::str::from_utf8(&d[..])?.to_string()).as_ref(), SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()) != body.mfa.unwrap()  {
+                if totp_custom::<Sha1>(30, 6, helpers::crypto::decrypt(std::str::from_utf8(&d[..])?.to_string())?.as_ref(), SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()) != body.mfa.unwrap()  {
                     return Ok(crate::router::err("Invalid MFA".to_string()));
                 } else {
                     is_valid = true;

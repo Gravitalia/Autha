@@ -1,5 +1,6 @@
 use chacha20poly1305::{aead::{Aead, AeadCore, KeyInit, OsRng}, XChaCha20Poly1305};
 use fpe::ff1::{FF1, FlexibleNumeralString, Operations};
+use crate::database::cassandra::{create_salt, query};
 use argon2::{Config, ThreadMode, Variant, Version};
 use generic_array::GenericArray;
 use anyhow::Result;
@@ -12,13 +13,13 @@ pub fn hash(data: &[u8]) -> String {
         &Config {
             variant: Variant::Argon2id,
             version: Version::Version13,
-            mem_cost: 524288,
-            time_cost: dotenv::var("ROUND").expect("Missing env `ROUND`").parse::<u32>().unwrap_or(1),
+            mem_cost: dotenv::var("MEMORY_COST").unwrap_or_default().parse::<u32>().unwrap_or(524288),
+            time_cost: dotenv::var("ROUND").unwrap_or_default().parse::<u32>().unwrap_or(1),
             lanes: 8,
             thread_mode: ThreadMode::Parallel,
             secret: dotenv::var("KEY").expect("Missing env `KEY`").as_bytes(),
             ad: &[],
-            hash_length: dotenv::var("HASH_LENGTH").expect("Missing env `HASH_LENGTH`").parse::<u32>().unwrap_or(32)
+            hash_length: dotenv::var("HASH_LENGTH").unwrap_or_default().parse::<u32>().unwrap_or(32)
         }
     ).unwrap()
 }
@@ -36,7 +37,7 @@ pub fn encrypt(data: &[u8]) -> String {
 
             let nonce = XChaCha20Poly1305::generate_nonce(&mut OsRng);
             match XChaCha20Poly1305::new(&bytes).encrypt(&nonce, data) {
-                Ok(y) => format!("{}//{}", hex::encode(nonce), hex::encode(y)),
+                Ok(y) => format!("{}//{}", create_salt(hex::encode(nonce)), hex::encode(y)),
                 Err(_) => "Error".to_string(),
             }
         },
@@ -45,25 +46,18 @@ pub fn encrypt(data: &[u8]) -> String {
 }
 
 /// Decrypt a string with ChaCha20 (Salsa20) and Poly1305
-pub fn decrypt(data: String) -> String {
-    let splited = data.split_once("//").unwrap_or(("", ""));
+pub fn decrypt(data: String) -> Result<String> {
+    let (salt, cypher) = data.split_once("//").unwrap_or(("", ""));
 
-    match hex::decode(dotenv::var("CHA_KEY").expect("Missing env `CHA_KEY`")) {
-        Ok(v) => {
-            let bytes = GenericArray::clone_from_slice(&v);
-            match hex::decode(splited.0) {
-                Ok(x) => {
-                    let arr_ref = GenericArray::from_slice(&x);
+    let bytes = GenericArray::clone_from_slice(&hex::decode(dotenv::var("CHA_KEY").expect("Missing env `CHA_KEY`"))?);
+    let binding = hex::decode(std::str::from_utf8(&query("SELECT salt FROM accounts.salts WHERE id = ?", vec![salt.to_string()])?.get_body()?.as_cols().unwrap().rows_content.clone()[0][0].clone().into_plain().unwrap()[..])?)?;
 
-                    match XChaCha20Poly1305::new(&bytes).decrypt(arr_ref, hex::decode(splited.1).unwrap().as_ref()) {
-                        Ok(y) => String::from_utf8(y).unwrap(),
-                        Err(_) => "Error".to_string(),
-                    }
-                },
-                Err(_) => "Error".to_string(),
-            }
-        },
-        Err(_) => "Error".to_string(),
+    match XChaCha20Poly1305::new(&bytes).decrypt(GenericArray::from_slice(&binding), hex::decode(cypher)?.as_ref()) {
+        Ok(y) => Ok(String::from_utf8(y)?),
+        Err(e) => {
+            eprintln!("(decrypt) cannot decrypt: {}", e);
+            Ok("Error".to_string())
+        }
     }
 }
 
@@ -75,7 +69,6 @@ pub fn fpe_encrypt(data: Vec<u16>) -> Result<String> {
     Ok(hex::encode(ff.encrypt(&[], &FlexibleNumeralString::from(data))?.to_be_bytes(256, length)))
 }
 
-#[allow(dead_code)]
 /// Decrypt hex string to clear string value, using FPE
 pub fn fpe_decrypt(data: String) -> Result<String> {
     let data_to_vec: Vec<u16> = hex::decode(data)?.iter().map(|&x| x as u16).collect();
