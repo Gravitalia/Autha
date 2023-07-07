@@ -30,7 +30,7 @@ sha3 = "0.10.6"
 fpe = "0.6.1"
 aes = "0.8.2"
 
-regex = "1.9.0"
+regex = "1.9.1"
 jsonwebtoken = "8.3.0"
 dotenv = "0.15.0"
 lazy_static = "1.4.0"
