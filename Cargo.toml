@@ -43,7 +43,7 @@ rand = "0.8.5"
 totp-lite = "2.0.0"
 reqwest = { version = "0.11.16", features = ["json"] }
 anyhow = "1.0.72"
-serde_yaml = "0.9.23"
+serde_yaml = "0.9.24"
 prost = "0.11.9"
 prost-types = "0.11.9"
 uuid = { version = "1.4.1", features = ["v4"] }
