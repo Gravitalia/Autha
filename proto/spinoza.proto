@@ -1,7 +1,7 @@
 syntax = "proto3";
 package spinoza;
 
-option go_package = "./proto;proto";
+option go_package = "github.com/gravitalia/spinoza/proto";
 option java_multiple_files = true;
 option java_package = "com.gravitalia.spinoza";
 option java_outer_classname = "SpinozaProto";
@@ -9,7 +9,9 @@ option java_outer_classname = "SpinozaProto";
 // The service definition
 service Spinoza {
     // Compress and then upload the image to the CDN provider
-    rpc Upload (UploadRequest) returns (UploadReply) {}
+    rpc Upload (UploadRequest) returns (BasicReponse) {}
+    // Allows to remove a picture from CDN provider
+    rpc Delete (DeleteRequest) returns (BasicReponse) {}
 }
 
 // The request message containing the image in bytes
@@ -20,7 +22,12 @@ message UploadRequest {
 }
 
 // The response message containing the image hash/name
-message UploadReply {
+message BasicReponse {
     string message = 1;
     bool error = 2;
+}
+
+// Request message containing the hash
+message DeleteRequest {
+    string hash = 1;
 }
