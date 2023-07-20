@@ -27,7 +27,7 @@ pub fn init() {
 
 /// Create tables in cassandra keyspace if not exists
 pub fn create_tables() {
-    SESSION.get().unwrap().query("CREATE KEYSPACE IF NOT EXISTS accounts WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };").expect("Keyspace create error");
+    //SESSION.get().unwrap().query("CREATE KEYSPACE IF NOT EXISTS accounts WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };").expect("Keyspace create error");
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.users ( vanity TEXT, email TEXT, username TEXT, avatar TEXT, banner TEXT, bio TEXT, verified BOOLEAN, flags INT, phone TEXT, password TEXT, birthdate TEXT, deleted BOOLEAN, mfa_code TEXT, expire_at TIMESTAMP, PRIMARY KEY (vanity) )").expect("accounts.users create error");
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.bots ( id TEXT, user_id TEXT, client_secret TEXT, username TEXT, avatar TEXT, bio TEXT, redirect_url SET<TEXT>, flags INT, deleted BOOLEAN, PRIMARY KEY (id) )").expect("accounts.bots create error");
     SESSION.get().unwrap().query("CREATE TABLE IF NOT EXISTS accounts.oauth ( id TEXT, user_id TEXT, bot_id TEXT, ip TEXT, scope SET<TEXT>, deleted BOOLEAN, PRIMARY KEY (id) )").expect("accounts.oauth create error");
