@@ -1,18 +1,28 @@
-use cdrs::authenticators::NoneAuthenticator;
+use cdrs::authenticators::StaticPasswordAuthenticator;
 use cdrs::cluster::session::{new as new_session, Session};
 use cdrs::cluster::{ClusterTcpConfig, NodeTcpConfigBuilder, TcpConnectionPool};
 use cdrs::load_balancing::RoundRobin;
-use cdrs::query::*;
-
-type CurrentSession = Session<RoundRobin<TcpConnectionPool<NoneAuthenticator>>>;
-use std::vec;
 use once_cell::sync::OnceCell;
+use cdrs::query::*;
+use std::vec;
+
+type CurrentSession = Session<RoundRobin<TcpConnectionPool<StaticPasswordAuthenticator>>>;
 static SESSION: OnceCell<CurrentSession> = OnceCell::new();
+
 const DEFAULT_VALUE: &str = "";
 
 /// Init cassandra session
 pub fn init() {
-    let _ = SESSION.set(new_session(&ClusterTcpConfig(vec![NodeTcpConfigBuilder::new(dotenv::var("CASSANDRA_HOST").unwrap_or_else(|_| "127.0.0.1:9042".to_string()).as_str(), NoneAuthenticator {}).build()]), RoundRobin::new()).expect("session should be created"));
+    let _ = SESSION.set(new_session(
+        &ClusterTcpConfig(vec![
+            NodeTcpConfigBuilder::new(
+                dotenv::var("CASSANDRA_HOST").unwrap_or_else(|_| "127.0.0.1:9042".to_string()).as_str(),
+                StaticPasswordAuthenticator::new(
+                    &dotenv::var("CASSANDRA_USER").unwrap_or_else(|_| "cassandra".to_string()).as_str(),
+                    &dotenv::var("CASSANDRA_PASSWORD").unwrap_or_else(|_| "cassandra".to_string()).as_str()
+                )
+            ).build()]
+        ), RoundRobin::new()).expect("session should be created"));
 }
 
 /// Create tables in cassandra keyspace if not exists
