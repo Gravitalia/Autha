@@ -50,7 +50,22 @@ pub fn decrypt(data: String) -> Result<String> {
     let (salt, cypher) = data.split_once("//").unwrap_or(("", ""));
 
     let bytes = GenericArray::clone_from_slice(&hex::decode(dotenv::var("CHA_KEY").expect("Missing env `CHA_KEY`"))?);
-    let binding = hex::decode(std::str::from_utf8(&query("SELECT salt FROM accounts.salts WHERE id = ?", vec![salt.to_string()])?.get_body()?.as_cols().unwrap().rows_content.clone()[0][0].clone().into_plain().unwrap()[..])?)?;
+    let binding = hex::decode(
+        std::str::from_utf8(
+            &query(
+                "SELECT salt FROM accounts.salts WHERE id = ?",
+                vec![salt.to_string()]
+            )?
+            .get_body()?
+            .as_cols()
+            .unwrap()
+            .rows_content
+            .clone()[0][0]
+            .clone()
+            .into_plain()
+            .unwrap()[..]
+        )?
+    )?;
 
     match XChaCha20Poly1305::new(&bytes).decrypt(GenericArray::from_slice(&binding), hex::decode(cypher)?.as_ref()) {
         Ok(y) => Ok(String::from_utf8(y)?),
