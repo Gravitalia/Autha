@@ -261,6 +261,18 @@ pub async fn get_data(vanity: String, body: crate::model::body::Gdrp) -> Result<
         }
     };
 
+    // Check if security token is valid
+    match crate::helpers::request::check_turnstile(body.security_token).await {
+        Ok(res) => {
+            if !res {
+                return Ok(crate::router::err("Invalid security_token".to_string()));
+            }
+        },
+        Err(_) => {
+            return Ok(crate::router::err("Internal server error".to_string()));
+        }
+    }
+
     if !crate::helpers::crypto::hash_test(std::str::from_utf8(&res[0][0].clone().into_plain().unwrap_or_default()[..])?, body.password.as_ref()) {
         return Ok(super::err("Invalid password".to_string()));
     }
@@ -275,7 +287,7 @@ pub async fn get_data(vanity: String, body: crate::model::body::Gdrp) -> Result<
             birthdate: if res[0][4].clone().into_plain().is_none() { None } else { let birth = std::str::from_utf8(&res[0][4].clone().into_plain().unwrap()[..])?.to_string(); if res.is_empty() { None } else { Some(crate::helpers::crypto::decrypt(birth)?) } },
             verified: res[0][9].clone().into_plain().unwrap_or_default()[..] != [0],
             deleted: res[0][5].clone().into_plain().unwrap_or_default()[..] != [0],
-            flags: u32::from_be_bytes((&res[0][8].clone().into_plain().unwrap_or_default()[..])[..4].try_into()?)
+            flags: u32::from_be_bytes((&res[0][4].clone().into_plain().unwrap_or_default()[..])[..4].try_into()?)
         }
     ), warp::http::StatusCode::OK))
 }
