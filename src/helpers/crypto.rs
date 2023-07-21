@@ -47,6 +47,7 @@ pub fn encrypt(data: &[u8]) -> String {
 
 /// Decrypt a string with ChaCha20 (Salsa20) and Poly1305
 pub fn decrypt(data: String) -> Result<String> {
+    println!("{}", data);
     let (salt, cypher) = data.split_once("//").unwrap_or(("", ""));
 
     let bytes = GenericArray::clone_from_slice(&hex::decode(dotenv::var("CHA_KEY").expect("Missing env `CHA_KEY`"))?);
