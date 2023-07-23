@@ -1,3 +1,4 @@
+pub mod suspend;
 pub mod create;
 pub mod users;
 pub mod login;
