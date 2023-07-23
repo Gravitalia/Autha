@@ -21,7 +21,7 @@ pub fn hash(data: &[u8]) -> String {
             time_cost: std::env::var("ROUND").unwrap_or_default().parse::<u32>().unwrap_or(1),
             lanes: 8,
             thread_mode: ThreadMode::Parallel,
-            secret: std::env::var("KEY").expect("Missing env `KEY`").as_bytes(),
+            secret: std::env::var("KEY").unwrap_or_else(|_| "KEY".to_string()).as_bytes(),
             ad: &[],
             hash_length: std::env::var("HASH_LENGTH").unwrap_or_default().parse::<u32>().unwrap_or(32)
         }
@@ -30,7 +30,7 @@ pub fn hash(data: &[u8]) -> String {
 
 /// Test if the password is corresponding with another one hashed
 pub fn hash_test(hash: &str, pwd: &[u8]) -> bool {
-    argon2::verify_encoded_ext(hash, pwd, std::env::var("KEY").expect("Missing env `KEY`").as_bytes(), &[]).unwrap_or(false)
+    argon2::verify_encoded_ext(hash, pwd, std::env::var("KEY").unwrap_or_else(|_| "KEY".to_string()).as_bytes(), &[]).unwrap_or(false)
 }
 
 /// Encrypt data as bytes into String with ChaCha20 (Salsa20) and Poly1305 
