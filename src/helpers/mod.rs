@@ -4,6 +4,7 @@ pub mod request;
 pub mod config_reader;
 pub mod token;
 pub mod grpc;
+pub mod ratelimiter;
 
 use std::{time::{SystemTime, UNIX_EPOCH, Duration}, sync::Arc};
 use chrono::{Duration as ChronoDuration, Utc, NaiveDate};
