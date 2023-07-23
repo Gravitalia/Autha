@@ -51,7 +51,7 @@ async fn create_user(scylla: Arc<Session>, memcached: Client, body: model::body:
 async fn login(scylla: Arc<Session>, memcached: Client, body: model::body::Login, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>) -> Result<impl Reply, Rejection> {
     let ip = forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string());
 
-    match router::login::login::login(scylla, memcached, body, ip, cf_token).await {
+    match router::login::main::login(scylla, memcached, body, ip, cf_token).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -64,6 +64,14 @@ async fn get_user(id: String, scylla: Arc<Session>, memcached: Client, limiter: 
     match rate_limit(limiter, ip.clone()).await {
         Ok(_) => Ok(router::users::get::get(scylla, memcached, id, token).await),
         Err(e) => Err(e),
+    }
+}
+
+/// Suspend user from all services
+async fn suspend_user(scylla: Arc<Session>, query: model::query::Suspend, token: String) -> Result<impl Reply, Rejection> {
+    match router::suspend::suspend(scylla, query, token).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
 
@@ -108,6 +116,7 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::In
 #[tokio::main]
 async fn main() {
     println!("Starting server...");
+    dotenv::dotenv().ok();
 
     // Starts database
     let scylla = Arc::new(database::scylla::init().await.unwrap());
@@ -118,6 +127,8 @@ async fn main() {
 
     let get_scylla = Arc::clone(&scylla);
     let get_mem = memcached.clone();
+
+    let suspend_scylla = Arc::clone(&scylla);
 
     // Create tables
     database::scylla::create_tables(Arc::clone(&scylla)).await;
@@ -158,9 +169,18 @@ async fn main() {
         .and(warp::addr::remote())
         .and_then(get_user);
 
+    let suspend_user_route = warp::path("account")
+        .and(warp::path("suspend"))
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&suspend_scylla)))
+        .and(warp::query::<model::query::Suspend>())
+        .and(warp::header("authorization"))
+        .and_then(suspend_user);
+
     let routes = create_route
         .or(login_route)
         .or(get_user_route)
+        .or(suspend_user_route)
         .recover(handle_rejection);
 
     let port = std::env::var("PORT")
