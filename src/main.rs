@@ -6,22 +6,28 @@ mod model;
 #[macro_use] extern crate lazy_static;
 use warp::{Filter, reject::Reject, http::StatusCode, Reply, Rejection};
 use std::{net::{IpAddr, Ipv4Addr, SocketAddr}, fmt::Debug};
+use helpers::ratelimiter::RateLimiter;
+use std::sync::{Arc, Mutex};
 use std::error::Error;
 use memcache::Client;
 use scylla::Session;
-use std::sync::Arc;
 use regex::Regex;
 
 lazy_static! {
     static ref TOKEN: Regex = Regex::new(r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)").unwrap();
 }
 
+// Define errors
 #[derive(Debug)]
 struct UnknownError;
 impl Reject for UnknownError {}
 
-// This function receives a `Rejection` and tries to return a custom
-// value, otherwise simply passes the rejection along.
+#[derive(Debug)]
+struct RateLimitExceeded;
+impl Reject for RateLimitExceeded {}
+
+/// This function receives a `Rejection` and tries to return a custom
+/// value, otherwise simply passes the rejection along.
 async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::Infallible> {
     let code;
     let message: String;
@@ -29,6 +35,9 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::In
     if err.is_not_found() {
         code = StatusCode::NOT_FOUND;
         message = "Not found".to_string();
+    } else if let Some(_) = err.find::<RateLimitExceeded>() {
+        message = "Rate limit exceeded".to_string();
+        code = StatusCode::TOO_MANY_REQUESTS;
     } else if let Some(e) = err.find::<warp::filters::body::BodyDeserializeError>() {
         message = match e.source() {
             Some(cause) => {
@@ -52,10 +61,21 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::In
     }), code))
 }
 
+/// Handle requests and verify limits per IP
+async fn rate_limit(rate_limiter: Arc<Mutex<RateLimiter>>, ip: String) -> Result<(), Rejection> {
+    let mut rate_limiter = rate_limiter.lock().unwrap();
+    if rate_limiter.check_rate(&ip) {
+        Ok(())
+    } else {
+        // Reject the request if the rate limit is exceeded
+        Err(warp::reject::custom(RateLimitExceeded))
+    }
+}
+
 #[tokio::main]
 async fn main() {
     println!("Starting server...");
-    
+
     // Starts database
     let scylla = Arc::new(database::scylla::init().await.unwrap());
     let memcached = database::mem::init().unwrap();
@@ -66,21 +86,35 @@ async fn main() {
     // Delete all old accounts
     helpers::remove_deleted_account(Arc::clone(&scylla)).await;
 
+    // Add middleware to rate-limit
+    let rate_limiter = Arc::new(Mutex::new(RateLimiter::new()));
+
+    // Create routes
     let routes = warp::path("create")
                     .and(warp::post())
                     .and(warp::any().map(move || Arc::clone(&scylla)))
                     .and(warp::any().map(move || memcached.clone()))
+                    .and(warp::any().map(move || rate_limiter.clone()))
                     .and(warp::body::json())
                     .and(warp::header("cf-turnstile-token"))
                     .and(warp::header::optional::<String>("X-Forwarded-For"))
                     .and(warp::addr::remote())
-                    .and_then(|scylla: std::sync::Arc<Session>, memcached: Client, body: model::body::Create, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>| async move {
-                        match router::create::create(scylla, memcached, body, forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string()), cf_token).await {
-                            Ok(r) => {
-                                Ok(r)
+                    .and_then(|scylla: std::sync::Arc<Session>, memcached: Client, limiter: Arc<Mutex<RateLimiter>>, body: model::body::Create, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>| async move {
+                        let ip = forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string());
+
+                        match rate_limit(limiter, ip.clone()).await {
+                            Ok(_) => {
+                                match router::create::create(scylla, memcached, body, ip, cf_token).await {
+                                    Ok(r) => {
+                                        Ok(r)
+                                    },
+                                    Err(_) => {
+                                        Err(warp::reject::custom(UnknownError))
+                                    }
+                                }
                             },
-                            Err(_) => {
-                                Err(warp::reject::custom(UnknownError))
+                            Err(e) => {
+                                Err(e)
                             }
                         }
                     })
