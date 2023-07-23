@@ -3,28 +3,64 @@ mod helpers;
 mod router;
 mod model;
 
-#[macro_use] extern crate lazy_static;
-use warp::{Filter, reject::Reject, http::StatusCode, Reply, Rejection};
+#[macro_use]
+extern crate lazy_static;
+use warp::{Filter, http::StatusCode, Reply, Rejection};
 use std::{net::{IpAddr, Ipv4Addr, SocketAddr}, fmt::Debug};
 use helpers::ratelimiter::RateLimiter;
 use std::sync::{Arc, Mutex};
 use std::error::Error;
 use memcache::Client;
 use scylla::Session;
-use regex::Regex;
-
-lazy_static! {
-    static ref TOKEN: Regex = Regex::new(r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)").unwrap();
-}
 
 // Define errors
 #[derive(Debug)]
 struct UnknownError;
-impl Reject for UnknownError {}
+impl warp::reject::Reject for UnknownError {}
 
 #[derive(Debug)]
 struct RateLimitExceeded;
-impl Reject for RateLimitExceeded {}
+impl warp::reject::Reject for RateLimitExceeded {}
+
+#[derive(Debug)]
+struct InvalidAuthorization;
+impl warp::reject::Reject for InvalidAuthorization {}
+
+/// Handle requests and verify limits per IP
+async fn rate_limit(rate_limiter: Arc<Mutex<RateLimiter>>, ip: String) -> Result<(), Rejection> {
+    let mut rate_limiter = rate_limiter.lock().unwrap();
+    if rate_limiter.check_rate(&ip) {
+        Ok(())
+    } else {
+        // Reject the request if the rate limit is exceeded
+        Err(warp::reject::custom(RateLimitExceeded))
+    }
+}
+
+/// Create a new user
+async fn create_user(scylla: Arc<Session>, memcached: Client, limiter: Arc<Mutex<RateLimiter>>, body: model::body::Create, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>) -> Result<impl Reply, Rejection> {
+    let ip = forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string());
+
+    match rate_limit(limiter, ip.clone()).await {
+        Ok(_) => {
+            match router::create::create(scylla, memcached, body, ip, cf_token).await {
+                Ok(r) => Ok(r),
+                Err(_) => Err(warp::reject::custom(UnknownError)),
+            }
+        }
+        Err(e) => Err(e),
+    }
+}
+
+/// Get user by ID
+async fn get_user(id: String, scylla: Arc<Session>, memcached: Client, limiter: Arc<Mutex<RateLimiter>>, token: Option<String>, forwarded: Option<String>, ip: Option<SocketAddr>) -> Result<impl Reply, Rejection> {
+    let ip = forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string());
+
+    match rate_limit(limiter, ip.clone()).await {
+        Ok(_) => Ok(router::users::get::get(scylla, memcached, id, token).await),
+        Err(e) => Err(e),
+    }
+}
 
 /// This function receives a `Rejection` and tries to return a custom
 /// value, otherwise simply passes the rejection along.
@@ -38,7 +74,10 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::In
     } else if let Some(_) = err.find::<RateLimitExceeded>() {
         message = "Rate limit exceeded".to_string();
         code = StatusCode::TOO_MANY_REQUESTS;
-    } else if let Some(e) = err.find::<warp::filters::body::BodyDeserializeError>() {
+    } else if let Some(_) = err.find::<InvalidAuthorization>() {
+        message = "Invalid token".to_string();
+        code = StatusCode::UNAUTHORIZED;
+    }  else if let Some(e) = err.find::<warp::filters::body::BodyDeserializeError>() {
         message = match e.source() {
             Some(cause) => {
                 cause.to_string()
@@ -61,24 +100,17 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::In
     }), code))
 }
 
-/// Handle requests and verify limits per IP
-async fn rate_limit(rate_limiter: Arc<Mutex<RateLimiter>>, ip: String) -> Result<(), Rejection> {
-    let mut rate_limiter = rate_limiter.lock().unwrap();
-    if rate_limiter.check_rate(&ip) {
-        Ok(())
-    } else {
-        // Reject the request if the rate limit is exceeded
-        Err(warp::reject::custom(RateLimitExceeded))
-    }
-}
-
 #[tokio::main]
 async fn main() {
     println!("Starting server...");
+    dotenv::dotenv().ok();
 
     // Starts database
     let scylla = Arc::new(database::scylla::init().await.unwrap());
     let memcached = database::mem::init().unwrap();
+
+    let get_scylla = Arc::clone(&scylla);
+    let get_mem = memcached.clone();
 
     // Create tables
     database::scylla::create_tables(Arc::clone(&scylla)).await;
@@ -88,58 +120,41 @@ async fn main() {
 
     // Add middleware to rate-limit
     let rate_limiter = Arc::new(Mutex::new(RateLimiter::new()));
+    let get_limiter = Arc::new(Mutex::new(RateLimiter::new()));
 
     // Create routes
-    let routes = warp::path("create")
-                    .and(warp::post())
-                    .and(warp::any().map(move || Arc::clone(&scylla)))
-                    .and(warp::any().map(move || memcached.clone()))
-                    .and(warp::any().map(move || rate_limiter.clone()))
-                    .and(warp::body::json())
-                    .and(warp::header("cf-turnstile-token"))
-                    .and(warp::header::optional::<String>("X-Forwarded-For"))
-                    .and(warp::addr::remote())
-                    .and_then(|scylla: std::sync::Arc<Session>, memcached: Client, limiter: Arc<Mutex<RateLimiter>>, body: model::body::Create, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>| async move {
-                        let ip = forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string());
+    let create_route = warp::path("create")
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&scylla)))
+        .and(warp::any().map(move || memcached.clone()))
+        .and(warp::any().map(move || rate_limiter.clone()))
+        .and(warp::body::json())
+        .and(warp::header("cf-turnstile-token"))
+        .and(warp::header::optional::<String>("X-Forwarded-For"))
+        .and(warp::addr::remote())
+        .and_then(create_user);
 
-                        match rate_limit(limiter, ip.clone()).await {
-                            Ok(_) => {
-                                match router::create::create(scylla, memcached, body, ip, cf_token).await {
-                                    Ok(r) => {
-                                        Ok(r)
-                                    },
-                                    Err(_) => {
-                                        Err(warp::reject::custom(UnknownError))
-                                    }
-                                }
-                            },
-                            Err(e) => {
-                                Err(e)
-                            }
-                        }
-                    })
-                    .recover(handle_rejection);
+    let get_user_route = warp::path!("users" / String)
+        .and(warp::get())
+        .and(warp::any().map(move || Arc::clone(&get_scylla)))
+        .and(warp::any().map(move || get_mem.clone()))
+        .and(warp::any().map(move || get_limiter.clone()))
+        .and(warp::header::optional::<String>("authorization"))
+        .and(warp::header::optional::<String>("X-Forwarded-For"))
+        .and(warp::addr::remote())
+        .and_then(get_user);
 
-    let port = std::env::var("PORT").unwrap_or_else(|_| "1111".to_string()).parse::<u16>().unwrap();
+    let routes = create_route.or(get_user_route).recover(handle_rejection);
+
+    let port = std::env::var("PORT")
+        .unwrap_or_else(|_| "1111".to_string())
+        .parse::<u16>()
+        .unwrap();
     println!("Server started on port {}", port);
 
     warp::serve(
-        warp::any().and(warp::options()).map(|| "OK")
-        .or(routes)
+        warp::any().and(warp::options()).map(|| "OK").or(routes),
     )
-    .run((
-        [0, 0, 0, 0],
-        port
-    ))
+    .run(([0, 0, 0, 0], port))
     .await;
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_regex() {
-        assert!(TOKEN.is_match("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"));
-    }
 }
