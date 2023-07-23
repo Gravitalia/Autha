@@ -1,11 +1,11 @@
 use chacha20poly1305::{aead::{Aead, AeadCore, KeyInit, OsRng}, XChaCha20Poly1305};
 use fpe::ff1::{FF1, FlexibleNumeralString, Operations};
-use crate::database::scylla::{create_salt, query};
 use argon2::{Config, ThreadMode, Variant, Version};
+use crate::database::scylla::{create_salt, query};
 use generic_array::GenericArray;
 use scylla::Session;
 use std::sync::Arc;
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 /// Hash data in bytes using Argon2id
 pub fn hash(data: &[u8]) -> String {
@@ -49,7 +49,6 @@ pub async fn encrypt(scylla: Arc<Session>, data: &[u8]) -> String {
 
 /// Decrypt a string with ChaCha20 (Salsa20) and Poly1305
 pub async fn decrypt(scylla: Arc<Session>, data: String) -> Result<String> {
-    println!("data: {}", data);
     let (salt, cypher) = data.split_once("//").unwrap_or(("", ""));
 
     let bytes = GenericArray::clone_from_slice(&hex::decode(std::env::var("CHA_KEY").expect("Missing env `CHA_KEY`"))?);
@@ -63,9 +62,9 @@ pub async fn decrypt(scylla: Arc<Session>, data: String) -> Result<String> {
             .unwrap_or_default()[0]
             .columns[0]
             .as_ref()
-            .unwrap()
+            .ok_or_else(|| anyhow!("No reference"))?
             .as_text()
-            .unwrap()
+            .ok_or_else(|| anyhow!("Can't unwrap string"))?
     )?;
 
     match XChaCha20Poly1305::new(&bytes).decrypt(GenericArray::from_slice(&binding), hex::decode(cypher)?.as_ref()) {

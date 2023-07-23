@@ -1,8 +1,12 @@
 use super::{random_string, crypto::encrypt};
 use std::{time::{SystemTime, UNIX_EPOCH}, sync::Arc};
 use crate::database::scylla::query;
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use scylla::Session;
+
+// Set CQL queries
+const CREATE_TOKEN: &str = "INSERT INTO accounts.tokens (id, user_id, ip, date, expire_at, deleted) VALUES (?, ?, ?, ?, ?, false);";
+const CHECK_TOKEN: &str = "SELECT expire_at, user_id, deleted FROM accounts.tokens WHERE id = ?";
 
 /// create allows to add a token into database
 pub async fn create(scylla: Arc<Session>, user_id: String, ip: String) -> Result<String> {
@@ -10,7 +14,7 @@ pub async fn create(scylla: Arc<Session>, user_id: String, ip: String) -> Result
 
     query(
         scylla.clone(),
-        "INSERT INTO accounts.tokens (id, user_id, ip, date, expire_at, deleted) VALUES (?, ?, ?, ?, ?, false)",
+        CREATE_TOKEN,
         (
                 id.clone(),
                 user_id,
@@ -25,19 +29,19 @@ pub async fn create(scylla: Arc<Session>, user_id: String, ip: String) -> Result
 
 /// check allows to verify if token is valid and not expired
 pub async fn check(scylla: Arc<Session>, token: String) -> Result<String> {
-    let res = query(scylla, "SELECT expire_at, user_id, deleted FROM accounts.tokens WHERE id = ?", vec![token]).await?.rows.unwrap_or_default();
+    let query_response = query(scylla, CHECK_TOKEN, vec![token]).await?.rows.unwrap_or_default();
 
-    if res.is_empty() {
+    if query_response.is_empty() {
         return Err(anyhow::Error::msg("not exists"));
     }
 
-    if res[0].columns[0].as_ref().unwrap().as_bigint().unwrap() as u128 <= SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() {
+    if query_response[0].columns[0].as_ref().ok_or_else(|| anyhow!("No reference"))?.as_bigint().ok_or_else(|| anyhow!("Can't convert to bigint"))? as u128 <= SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() {
         return Err(anyhow::Error::msg("expired"));
-    } else if res[0].columns[2].as_ref().unwrap().as_boolean().unwrap() == true {
+    } else if query_response[0].columns[2].as_ref().ok_or_else(|| anyhow!("No reference"))?.as_boolean().ok_or_else(|| anyhow!("Can't convert to bool"))? == true {
         return Err(anyhow::Error::msg("revoked"));
     }
 
     Ok(
-        res[0].columns[1].as_ref().unwrap().as_text().unwrap().to_string()
+        query_response[0].columns[1].as_ref().ok_or_else(|| anyhow!("No reference"))?.as_text().ok_or_else(|| anyhow!("Can't convert to string"))?.to_string()
     )
 }
