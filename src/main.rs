@@ -5,8 +5,8 @@ mod model;
 
 #[macro_use]
 extern crate lazy_static;
-use warp::{Filter, http::StatusCode, Reply, Rejection};
 use std::{net::{IpAddr, Ipv4Addr, SocketAddr}, fmt::Debug};
+use warp::{Filter, http::StatusCode, Reply, Rejection};
 use helpers::ratelimiter::RateLimiter;
 use std::sync::{Arc, Mutex};
 use std::error::Error;
@@ -38,17 +38,22 @@ async fn rate_limit(rate_limiter: Arc<Mutex<RateLimiter>>, ip: String) -> Result
 }
 
 /// Create a new user
-async fn create_user(scylla: Arc<Session>, memcached: Client, limiter: Arc<Mutex<RateLimiter>>, body: model::body::Create, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>) -> Result<impl Reply, Rejection> {
+async fn create_user(scylla: Arc<Session>, memcached: Client, body: model::body::Create, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>) -> Result<impl Reply, Rejection> {
     let ip = forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string());
 
-    match rate_limit(limiter, ip.clone()).await {
-        Ok(_) => {
-            match router::create::create(scylla, memcached, body, ip, cf_token).await {
-                Ok(r) => Ok(r),
-                Err(_) => Err(warp::reject::custom(UnknownError)),
-            }
-        }
-        Err(e) => Err(e),
+    match router::create::create(scylla, memcached, body, ip, cf_token).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Login to an account
+async fn login(scylla: Arc<Session>, memcached: Client, body: model::body::Login, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>) -> Result<impl Reply, Rejection> {
+    let ip = forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string());
+
+    match router::login::login::login(scylla, memcached, body, ip, cf_token).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
 
@@ -108,6 +113,9 @@ async fn main() {
     let scylla = Arc::new(database::scylla::init().await.unwrap());
     let memcached = database::mem::init().unwrap();
 
+    let login_scylla = Arc::clone(&scylla);
+    let login_mem = memcached.clone();
+
     let get_scylla = Arc::clone(&scylla);
     let get_mem = memcached.clone();
 
@@ -119,31 +127,41 @@ async fn main() {
 
     // Add middleware to rate-limit
     let rate_limiter = Arc::new(Mutex::new(RateLimiter::new()));
-    let get_limiter = Arc::new(Mutex::new(RateLimiter::new()));
 
-    // Create routes
     let create_route = warp::path("create")
         .and(warp::post())
         .and(warp::any().map(move || Arc::clone(&scylla)))
         .and(warp::any().map(move || memcached.clone()))
-        .and(warp::any().map(move || rate_limiter.clone()))
         .and(warp::body::json())
         .and(warp::header("cf-turnstile-token"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
         .and(warp::addr::remote())
         .and_then(create_user);
 
+    let login_route = warp::path("login")
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&login_scylla)))
+        .and(warp::any().map(move || login_mem.clone()))
+        .and(warp::body::json())
+        .and(warp::header("cf-turnstile-token"))
+        .and(warp::header::optional::<String>("X-Forwarded-For"))
+        .and(warp::addr::remote())
+        .and_then(login);
+
     let get_user_route = warp::path!("users" / String)
         .and(warp::get())
         .and(warp::any().map(move || Arc::clone(&get_scylla)))
         .and(warp::any().map(move || get_mem.clone()))
-        .and(warp::any().map(move || get_limiter.clone()))
+        .and(warp::any().map(move || rate_limiter.clone()))
         .and(warp::header::optional::<String>("authorization"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
         .and(warp::addr::remote())
         .and_then(get_user);
 
-    let routes = create_route.or(get_user_route).recover(handle_rejection);
+    let routes = create_route
+        .or(login_route)
+        .or(get_user_route)
+        .recover(handle_rejection);
 
     let port = std::env::var("PORT")
         .unwrap_or_else(|_| "1111".to_string())
@@ -151,9 +169,5 @@ async fn main() {
         .unwrap();
     println!("Server started on port {}", port);
 
-    warp::serve(
-        warp::any().and(warp::options()).map(|| "OK").or(routes),
-    )
-    .run(([0, 0, 0, 0], port))
-    .await;
+    warp::serve(routes).run(([0, 0, 0, 0], port)).await;
 }
