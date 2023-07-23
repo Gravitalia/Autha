@@ -7,13 +7,11 @@ pub enum SetValue {
 
 // Inits memcached database connection
 pub fn init() -> Result<Client, MemcacheError> {
-    Ok(
-        memcache::connect(
-            format!(
-                "memcache://{}?timeout=2&tcp_nodelay=true",
-                std::env::var("MEMCACHED_HOST").unwrap_or_else(|_| "127.0.0.1:11211".to_string())
-            )
-        )?
+    memcache::connect(
+        format!(
+            "memcache://{}?timeout=2&tcp_nodelay=true",
+            std::env::var("MEMCACHED_HOST").unwrap_or_else(|_| "127.0.0.1:11211".to_string())
+        )
     )
 }
 

@@ -36,13 +36,12 @@ impl DatabaseConfig {
 pub async fn init() -> Result<Session, scylla::transport::errors::NewSessionError> {
     let config = DatabaseConfig::new();
 
-    Ok(
-        SessionBuilder::new()
-            .known_node(config.host)
-            .user(config.username, config.password)
-            .build()
-            .await?
-    )
+    
+    SessionBuilder::new()
+        .known_node(config.host)
+        .user(config.username, config.password)
+        .build()
+        .await
 }
 
 // This function allows to create every needed tables
