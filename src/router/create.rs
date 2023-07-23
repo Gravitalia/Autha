@@ -37,6 +37,7 @@ pub async fn create(scylla: Arc<scylla::Session>, memcached: memcache::Client, b
         if body.username.len() > 25 {
             return "Invalid username";
         }
+        
         "ok"
     });
     let result = is_valid.await?;
@@ -73,18 +74,13 @@ pub async fn create(scylla: Arc<scylla::Session>, memcached: memcache::Client, b
 
     // Hash email
     let hashed_email = helpers::crypto::fpe_encrypt(data.email.encode_utf16().collect())?;
-    
+
+    let mut query_res: Vec<scylla::_macro_internal::Row>;
     // Check if account with this email and vanity already exists
-    let mut query_res = query(Arc::clone(&scylla), "SELECT vanity FROM accounts.users WHERE email = ?;", vec![hashed_email.clone()])
-                                    .await?
-                                    .rows
-                                    .unwrap_or_default()[0]
-                                    .columns[0]
-                                    .as_ref()
-                                    .unwrap()
-                                    .as_text()
-                                    .unwrap()
-                                    .to_string();
+    query_res = query(Arc::clone(&scylla), "SELECT vanity FROM accounts.users WHERE email = ?;", vec![hashed_email.clone()])
+                    .await?
+                    .rows
+                    .unwrap_or_default();
 
     if !query_res.is_empty() {
         return Ok(super::err("Email already used".to_string()));
@@ -94,26 +90,14 @@ pub async fn create(scylla: Arc<scylla::Session>, memcached: memcache::Client, b
     query_res = query(Arc::clone(&scylla), "SELECT vanity FROM accounts.users WHERE vanity = ?;", vec![data.vanity.clone()])
                     .await?
                     .rows
-                    .unwrap_or_default()[0]
-                    .columns[0]
-                    .as_ref()
-                    .unwrap()
-                    .as_text()
-                    .unwrap()
-                    .to_string();
+                    .unwrap_or_default();
 
     // Check if bot id is already used
     if query_res.is_empty() {
         query_res = query(Arc::clone(&scylla),"SELECT id FROM accounts.bots WHERE id = ?", vec![data.vanity.clone()])
                         .await?
                         .rows
-                        .unwrap_or_default()[0]
-                        .columns[0]
-                        .as_ref()
-                        .unwrap()
-                        .as_text()
-                        .unwrap()
-                        .to_string();
+                        .unwrap_or_default();
     }
 
     if !query_res.is_empty() || [ "explore", "callback", "home", "blogs", "blog", "gravitalia", "suba", "support", "oauth", "upload", "new", "settings", "parameters", "fallback" ].contains(&data.vanity.as_str()) {
@@ -145,7 +129,8 @@ pub async fn create(scylla: Arc<scylla::Session>, memcached: memcache::Client, b
     // Create account
     match create_user(Arc::clone(&scylla), &data.vanity, hashed_email, data.username, helpers::crypto::hash(data.password.as_bytes()), phone, birth).await {
         Ok(_) => {},
-        Err(_) => {
+        Err(e) => {
+            eprintln!("(create) Cannot create user: {}", e);
             return Ok(super::err("Internal server error".to_string()));
         }
     }
