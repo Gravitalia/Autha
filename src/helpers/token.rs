@@ -19,8 +19,8 @@ pub async fn create(scylla: Arc<Session>, user_id: String, ip: String) -> Result
                 id.clone(),
                 user_id,
                 encrypt(scylla, ip.as_bytes()).await,
-                chrono::Utc::now().format("%Y-%m-%d %H:%M:%S%:z").to_string(),
-                (chrono::Utc::now()+chrono::Duration::days(90)).format("%Y-%m-%d %H:%M:%S%:z").to_string()
+                chrono::Utc::now().timestamp(),
+                (chrono::Utc::now() + chrono::Duration::days(90)).timestamp()
             )
     ).await?;
 
