@@ -1,5 +1,6 @@
 pub mod create;
 pub mod users;
+pub mod login;
 
 use warp::reply::{WithStatus, Json};
 use regex::Regex;
