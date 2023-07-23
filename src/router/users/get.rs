@@ -1,4 +1,4 @@
-use crate::{database::{get_user, mem::{set, SetValue}}};
+use crate::database::{get_user, mem::{set, SetValue}};
 use crate::model::{user::User, error::Error};
 use warp::reply::{WithStatus, Json};
 use std::sync::Arc;

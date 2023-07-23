@@ -76,10 +76,10 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::In
     if err.is_not_found() {
         code = StatusCode::NOT_FOUND;
         message = "Not found".to_string();
-    } else if let Some(_) = err.find::<RateLimitExceeded>() {
+    } else if err.find::<RateLimitExceeded>().is_some() {
         message = "Rate limit exceeded".to_string();
         code = StatusCode::TOO_MANY_REQUESTS;
-    } else if let Some(_) = err.find::<InvalidAuthorization>() {
+    } else if err.find::<InvalidAuthorization>().is_some() {
         message = "Invalid token".to_string();
         code = StatusCode::UNAUTHORIZED;
     }  else if let Some(e) = err.find::<warp::filters::body::BodyDeserializeError>() {

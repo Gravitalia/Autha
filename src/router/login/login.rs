@@ -101,13 +101,13 @@ pub async fn login(scylla: Arc<scylla::Session>, memcached: memcache::Client, bo
     // Check if account is deleted
     let timestamp_ms: i64 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis().try_into()?;
 
-    if deleted == true && expire == 0 {
+    if deleted && expire == 0 {
         return Ok(crate::router::err("Account suspended".to_string()));
-    } else if deleted == true && expire >= timestamp_ms {
+    } else if deleted && expire >= timestamp_ms {
         let recup_acc_id = helpers::random_string(37);
         mem::set(memcached, recup_acc_id.clone(), mem::SetValue::Characters(vanity.clone()))?;
         return Ok(crate::router::err(format!("Deleted account {} the {} recuperate with {}", vanity, expire, recup_acc_id)));
-    } else if deleted == true && expire <= timestamp_ms {
+    } else if deleted && expire <= timestamp_ms {
         return Ok(crate::router::err("Invalid email".to_string()));
     }
 
