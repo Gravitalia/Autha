@@ -108,7 +108,6 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::In
 #[tokio::main]
 async fn main() {
     println!("Starting server...");
-    dotenv::dotenv().ok();
 
     // Starts database
     let scylla = Arc::new(database::scylla::init().await.unwrap());
