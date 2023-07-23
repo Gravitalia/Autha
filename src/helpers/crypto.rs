@@ -70,7 +70,6 @@ pub async fn decrypt(scylla: Arc<Session>, data: String) -> Result<String> {
         .ok_or_else(|| anyhow!("No reference"))?
         .as_text()
         .ok_or_else(|| anyhow!("Can't convert to string"))?
-        .to_string()
     )?;
 
     match XChaCha20Poly1305::new(&bytes).decrypt(GenericArray::from_slice(&binding), hex::decode(cypher)?.as_ref()) {
