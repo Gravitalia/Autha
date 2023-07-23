@@ -7,6 +7,8 @@ use scylla::Session;
 use std::sync::Arc;
 use anyhow::{Result, anyhow};
 
+const GET_SALT: &str = "SELECT salt FROM accounts.salts WHERE id = ?;";
+
 /// Hash data in bytes using Argon2id
 pub fn hash(data: &[u8]) -> String {
     argon2::hash_encoded(
@@ -52,19 +54,23 @@ pub async fn decrypt(scylla: Arc<Session>, data: String) -> Result<String> {
     let (salt, cypher) = data.split_once("//").unwrap_or(("", ""));
 
     let bytes = GenericArray::clone_from_slice(&hex::decode(std::env::var("CHA_KEY").expect("Missing env `CHA_KEY`"))?);
+    let query_res = query(scylla, GET_SALT, vec![salt.to_string()])
+                        .await?
+                        .rows
+                        .unwrap_or_default();
+
+    if query_res.is_empty() {
+        return Ok("".to_string());
+    }
+
     let binding = hex::decode(
-            &query(
-                scylla,
-                "SELECT salt FROM accounts.salts WHERE id = ?",
-                vec![salt.to_string()]
-            ).await?
-            .rows
-            .unwrap_or_default()[0]
-            .columns[0]
-            .as_ref()
-            .ok_or_else(|| anyhow!("No reference"))?
-            .as_text()
-            .ok_or_else(|| anyhow!("Can't unwrap string"))?
+        query_res[0]
+        .columns[0]
+        .as_ref()
+        .ok_or_else(|| anyhow!("No reference"))?
+        .as_text()
+        .ok_or_else(|| anyhow!("Can't convert to string"))?
+        .to_string()
     )?;
 
     match XChaCha20Poly1305::new(&bytes).decrypt(GenericArray::from_slice(&binding), hex::decode(cypher)?.as_ref()) {
