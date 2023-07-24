@@ -51,7 +51,7 @@ pub async fn post(
             x.as_text()
                 .ok_or_else(|| anyhow!("Can't convert to string"))
                 .unwrap()
-                == &&body.redirect_uri[..]
+                == &body.redirect_uri[..]
         })
     {
         return Ok(super::err("Invalid redirect_uri".to_string()));
@@ -196,7 +196,7 @@ pub async fn get_oauth_code(
             x.as_text()
                 .ok_or_else(|| anyhow!("Can't convert to string"))
                 .unwrap()
-                == &&body.redirect_uri[..]
+                == &body.redirect_uri[..]
         })
     {
         return Ok(super::err("Invalid redirect_uri".to_string()));
