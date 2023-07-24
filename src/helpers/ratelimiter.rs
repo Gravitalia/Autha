@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 
 // Define the rate limiter configuration
 const WINDOW_SIZE: u64 = 60; // Window size in seconds
-const MAX_REQUESTS: u64 = 100; // Maximum allowed requests within the window
+const MAX_REQUESTS: u64 = 100_000_000; // Maximum allowed requests within the window
 
 // Define a data structure to hold the sliding window counter for each IP
 #[derive(Default, Clone)]
