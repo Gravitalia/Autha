@@ -20,8 +20,27 @@ pub async fn post(
     scylla: Arc<scylla::Session>,
     memcached: Arc<memcache::Client>,
     body: crate::model::body::OAuth,
-    vanity: String,
+    token: String,
 ) -> Result<WithStatus<Json>> {
+    let vanity: String;
+
+    let middelware_res =
+        crate::router::middleware(Arc::clone(&scylla), Some(token), "Invalid")
+            .await
+            .unwrap_or_else(|_| "Invalid".to_string());
+
+    if middelware_res != "Invalid" && middelware_res != "Suspended" {
+        vanity = middelware_res.to_lowercase();
+    } else {
+        return Ok(warp::reply::with_status(
+            warp::reply::json(&crate::model::error::Error {
+                error: true,
+                message: "Invalid token".to_string(),
+            }),
+            warp::http::StatusCode::UNAUTHORIZED,
+        ));
+    }
+
     let bot = query(Arc::clone(&scylla), GET_BOT, vec![body.bot_id.clone()])
         .await?
         .rows
