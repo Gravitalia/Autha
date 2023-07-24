@@ -2,7 +2,7 @@ name: Publish Docker image
 
 on:
   push:
-    branches: [master]
+    branches: [v2]
     
 env:
   REGISTRY: ghcr.io
@@ -35,5 +35,5 @@ jobs:
         
     - name: Build the Docker image
       run: |
-            docker build . --tag ghcr.io/gravitalia/autha:latest
-            docker push ghcr.io/gravitalia/autha:latest
+            docker build . --tag ghcr.io/gravitalia/autha-dev:latest
+            docker push ghcr.io/gravitalia/autha-dev:latest
