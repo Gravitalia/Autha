@@ -91,6 +91,23 @@ async fn login(
     }
 }
 
+/// Route to recuperate a deleted account after 30 days maximum
+async fn recuperate_account(
+    scylla: Arc<Session>,
+    memcached: Arc<Client>,
+    code: String,
+    cf_token: String,
+) -> Result<impl Reply, Rejection> {
+    match router::login::recuperate::recuperate_account(
+        scylla, memcached, code, cf_token,
+    )
+    .await
+    {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
 /// Get user by ID
 async fn get_user(
     id: String,
@@ -208,6 +225,9 @@ async fn main() {
     let login_scylla = Arc::clone(&scylla);
     let login_mem = Arc::clone(&memcached);
 
+    let recuperate_scylla = Arc::clone(&scylla);
+    let recuperate_mem = Arc::clone(&memcached);
+
     let get_scylla = Arc::clone(&scylla);
     let get_mem = Arc::clone(&memcached);
 
@@ -248,6 +268,15 @@ async fn main() {
         .and(warp::addr::remote())
         .and_then(login);
 
+    let recuperate_account_route = warp::path("login")
+        .and(warp::path("recuperate"))
+        .and(warp::get())
+        .and(warp::any().map(move || Arc::clone(&recuperate_scylla)))
+        .and(warp::any().map(move || Arc::clone(&recuperate_mem)))
+        .and(warp::header("code"))
+        .and(warp::header("cf-turnstile-token"))
+        .and_then(recuperate_account);
+
     let get_user_route = warp::path!("users" / String)
         .and(warp::get())
         .and(warp::any().map(move || Arc::clone(&get_scylla)))
@@ -284,6 +313,7 @@ async fn main() {
 
     let routes = create_route
         .or(login_route)
+        .or(recuperate_account_route)
         .or(get_user_route)
         .or(suspend_user_route)
         .or(oauth_code)
