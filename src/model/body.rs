@@ -14,7 +14,7 @@ pub struct Create {
 pub struct Login {
     pub email: String,
     pub password: String,
-    pub mfa: Option<String>
+    pub mfa: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -27,13 +27,13 @@ pub struct UserPatch {
     pub newpassword: Option<String>,
     pub birthdate: Option<String>,
     pub phone: Option<String>,
-    pub mfa: Option<String>
+    pub mfa: Option<String>,
 }
 
 #[derive(Deserialize)]
 pub struct Gdrp {
     pub password: String,
-    pub security_token: String
+    pub security_token: String,
 }
 
 #[derive(Deserialize)]
@@ -41,7 +41,7 @@ pub struct OAuth {
     pub response_type: String,
     pub bot_id: String,
     pub redirect_uri: String,
-    pub scope: String
+    pub scope: String,
 }
 
 #[derive(Deserialize)]
@@ -49,11 +49,11 @@ pub struct GetOAuth {
     pub client_id: String,
     pub client_secret: String,
     pub code: String,
-    pub redirect_uri: String
+    pub redirect_uri: String,
 }
 
 #[derive(Deserialize)]
 pub struct TempToken {
     pub password: Option<String>,
-    pub mfa: Option<String>
+    pub mfa: Option<String>,
 }

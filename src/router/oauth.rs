@@ -18,7 +18,7 @@ const GET_OAUTH: &str =
 /// Handle post request for /oauth
 pub async fn post(
     scylla: Arc<scylla::Session>,
-    memcached: memcache::Client,
+    memcached: Arc<memcache::Client>,
     body: crate::model::body::OAuth,
     vanity: String,
 ) -> Result<WithStatus<Json>> {
@@ -97,7 +97,7 @@ pub async fn post(
 
             let id = random_string(24);
             let _ = set(
-                memcached.clone(),
+                Arc::clone(&memcached),
                 id.clone(),
                 Characters(format!(
                     "{}+{}+{}",
@@ -144,10 +144,10 @@ pub async fn post(
 /// Handle JWT creation, code deletation
 pub async fn get_oauth_code(
     scylla: Arc<scylla::Session>,
-    memcached: memcache::Client,
+    memcached: Arc<memcache::Client>,
     body: crate::model::body::GetOAuth,
 ) -> Result<WithStatus<Json>> {
-    let data = match get(memcached.clone(), body.code.clone()).unwrap() {
+    let data = match get(Arc::clone(&memcached), body.code.clone()).unwrap() {
         Some(r) => Vec::from_iter(r.split('+').map(|x| x.to_string())),
         None => vec![],
     };

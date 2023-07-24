@@ -1,47 +1,73 @@
-use super::{random_string, crypto::encrypt};
-use std::{time::{SystemTime, UNIX_EPOCH}, sync::Arc};
+use super::{crypto::encrypt, random_string};
 use crate::database::scylla::query;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use scylla::Session;
+use std::{
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 // Set CQL queries
 const CREATE_TOKEN: &str = "INSERT INTO accounts.tokens (id, user_id, ip, date, expire_at, deleted) VALUES (?, ?, ?, ?, ?, false);";
-const CHECK_TOKEN: &str = "SELECT expire_at, user_id, deleted FROM accounts.tokens WHERE id = ?";
+const CHECK_TOKEN: &str =
+    "SELECT expire_at, user_id, deleted FROM accounts.tokens WHERE id = ?";
 
 /// create allows to add a token into database
-pub async fn create(scylla: Arc<Session>, user_id: String, ip: String) -> Result<String> {
+pub async fn create(
+    scylla: Arc<Session>,
+    user_id: String,
+    ip: String,
+) -> Result<String> {
     let id = random_string(65);
 
     query(
         scylla.clone(),
         CREATE_TOKEN,
         (
-                id.clone(),
-                user_id,
-                encrypt(scylla, ip.as_bytes()).await,
-                chrono::Utc::now().timestamp(),
-                (chrono::Utc::now() + chrono::Duration::days(90)).timestamp()
-            )
-    ).await?;
+            id.clone(),
+            user_id,
+            encrypt(scylla, ip.as_bytes()).await,
+            chrono::Utc::now().timestamp(),
+            (chrono::Utc::now() + chrono::Duration::days(90)).timestamp(),
+        ),
+    )
+    .await?;
 
     Ok(id)
 }
 
 /// check allows to verify if token is valid and not expired
 pub async fn check(scylla: Arc<Session>, token: String) -> Result<String> {
-    let query_response = query(scylla, CHECK_TOKEN, vec![token]).await?.rows.unwrap_or_default();
+    let query_response = query(scylla, CHECK_TOKEN, vec![token])
+        .await?
+        .rows
+        .unwrap_or_default();
 
     if query_response.is_empty() {
         return Err(anyhow::Error::msg("not exists"));
     }
 
-    if query_response[0].columns[0].as_ref().ok_or_else(|| anyhow!("No reference"))?.as_bigint().ok_or_else(|| anyhow!("Can't convert to bigint"))? as u128 <= SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() {
+    if query_response[0].columns[0]
+        .as_ref()
+        .ok_or_else(|| anyhow!("No reference"))?
+        .as_bigint()
+        .ok_or_else(|| anyhow!("Can't convert to bigint"))? as u128
+        <= SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis()
+    {
         return Err(anyhow::Error::msg("expired"));
-    } else if query_response[0].columns[2].as_ref().ok_or_else(|| anyhow!("No reference"))?.as_boolean().ok_or_else(|| anyhow!("Can't convert to bool"))? {
+    } else if query_response[0].columns[2]
+        .as_ref()
+        .ok_or_else(|| anyhow!("No reference"))?
+        .as_boolean()
+        .ok_or_else(|| anyhow!("Can't convert to bool"))?
+    {
         return Err(anyhow::Error::msg("revoked"));
     }
 
-    Ok(
-        query_response[0].columns[1].as_ref().ok_or_else(|| anyhow!("No reference"))?.as_text().ok_or_else(|| anyhow!("Can't convert to string"))?.to_string()
-    )
+    Ok(query_response[0].columns[1]
+        .as_ref()
+        .ok_or_else(|| anyhow!("No reference"))?
+        .as_text()
+        .ok_or_else(|| anyhow!("Can't convert to string"))?
+        .to_string())
 }

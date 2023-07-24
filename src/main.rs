@@ -46,7 +46,7 @@ async fn rate_limit(
 /// Create a new user
 async fn create_user(
     scylla: Arc<Session>,
-    memcached: Client,
+    memcached: Arc<Client>,
     body: model::body::Create,
     cf_token: String,
     forwarded: Option<String>,
@@ -69,7 +69,7 @@ async fn create_user(
 /// Login to an account
 async fn login(
     scylla: Arc<Session>,
-    memcached: Client,
+    memcached: Arc<Client>,
     body: model::body::Login,
     cf_token: String,
     forwarded: Option<String>,
@@ -95,7 +95,7 @@ async fn login(
 async fn get_user(
     id: String,
     scylla: Arc<Session>,
-    memcached: Client,
+    memcached: Arc<Client>,
     limiter: Arc<Mutex<RateLimiter>>,
     token: Option<String>,
     forwarded: Option<String>,
@@ -132,7 +132,7 @@ async fn suspend_user(
 /// Returns 5-minute code to get JWT
 async fn post_oauth(
     scylla: Arc<Session>,
-    memcached: Client,
+    memcached: Arc<Client>,
     body: model::body::OAuth,
     token: String,
 ) -> Result<impl Reply, Rejection> {
@@ -145,7 +145,7 @@ async fn post_oauth(
 /// Get JWT code via the 5-minute code
 async fn get_oauth(
     scylla: Arc<Session>,
-    memcached: Client,
+    memcached: Arc<Client>,
     body: model::body::GetOAuth,
 ) -> Result<impl Reply, Rejection> {
     match router::oauth::get_oauth_code(scylla, memcached, body).await {
@@ -200,24 +200,25 @@ async fn handle_rejection(
 #[tokio::main]
 async fn main() {
     println!("Starting server...");
+    dotenv::dotenv().ok();
 
     // Starts database
     let scylla = Arc::new(database::scylla::init().await.unwrap());
-    let memcached = database::mem::init().unwrap();
+    let memcached = Arc::new(database::mem::init().unwrap());
 
     let login_scylla = Arc::clone(&scylla);
-    let login_mem = memcached.clone();
+    let login_mem = Arc::clone(&memcached);
 
     let get_scylla = Arc::clone(&scylla);
-    let get_mem = memcached.clone();
+    let get_mem = Arc::clone(&memcached);
 
     let suspend_scylla = Arc::clone(&scylla);
 
     let get_code_scylla = Arc::clone(&scylla);
-    let get_code_mem = memcached.clone();
+    let get_code_mem = Arc::clone(&memcached);
 
     let get_jwt_scylla = Arc::clone(&scylla);
-    let get_jwt_mem = memcached.clone();
+    let get_jwt_mem = Arc::clone(&memcached);
 
     // Create tables
     database::scylla::create_tables(Arc::clone(&scylla)).await;
@@ -231,7 +232,7 @@ async fn main() {
     let create_route = warp::path("create")
         .and(warp::post())
         .and(warp::any().map(move || Arc::clone(&scylla)))
-        .and(warp::any().map(move || memcached.clone()))
+        .and(warp::any().map(move || Arc::clone(&memcached)))
         .and(warp::body::json())
         .and(warp::header("cf-turnstile-token"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
@@ -241,7 +242,7 @@ async fn main() {
     let login_route = warp::path("login")
         .and(warp::post())
         .and(warp::any().map(move || Arc::clone(&login_scylla)))
-        .and(warp::any().map(move || login_mem.clone()))
+        .and(warp::any().map(move || Arc::clone(&login_mem)))
         .and(warp::body::json())
         .and(warp::header("cf-turnstile-token"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
@@ -251,7 +252,7 @@ async fn main() {
     let get_user_route = warp::path!("users" / String)
         .and(warp::get())
         .and(warp::any().map(move || Arc::clone(&get_scylla)))
-        .and(warp::any().map(move || get_mem.clone()))
+        .and(warp::any().map(move || Arc::clone(&get_mem)))
         .and(warp::any().map(move || rate_limiter.clone()))
         .and(warp::header::optional::<String>("authorization"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
@@ -269,7 +270,7 @@ async fn main() {
     let oauth_code = warp::path("oauth2")
         .and(warp::post())
         .and(warp::any().map(move || Arc::clone(&get_code_scylla)))
-        .and(warp::any().map(move || get_code_mem.clone()))
+        .and(warp::any().map(move || Arc::clone(&get_code_mem)))
         .and(warp::body::json())
         .and(warp::header("authorization"))
         .and_then(post_oauth);
@@ -278,7 +279,7 @@ async fn main() {
         .and(warp::path("token"))
         .and(warp::post())
         .and(warp::any().map(move || Arc::clone(&get_jwt_scylla)))
-        .and(warp::any().map(move || get_jwt_mem.clone()))
+        .and(warp::any().map(move || Arc::clone(&get_jwt_mem)))
         .and(warp::body::json())
         .and_then(get_oauth);
 
