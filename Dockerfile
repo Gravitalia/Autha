@@ -25,4 +25,4 @@ COPY --from=builder /autha/target/release/autha /bin/autha
 
 EXPOSE 1111/tcp
 ENTRYPOINT ["tini", "--"]
-CMD     /bin/autha
+CMD     ["/bin/autha"]
