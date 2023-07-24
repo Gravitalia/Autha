@@ -171,6 +171,18 @@ async fn get_oauth(
     }
 }
 
+/// Get JWT code via the 5-minute code
+async fn delete_user(
+    scylla: Arc<Session>,
+    body: model::body::Gdrp,
+    token: String
+) -> Result<impl Reply, Rejection> {
+    match router::users::delete::delete(scylla, token, body).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
 /// This function receives a `Rejection` and tries to return a custom
 /// value, otherwise simply passes the rejection along.
 async fn handle_rejection(
@@ -238,6 +250,8 @@ async fn main() {
 
     let get_jwt_scylla = Arc::clone(&scylla);
     let get_jwt_mem = Arc::clone(&memcached);
+
+    let delete_scylla = Arc::clone(&scylla);
 
     // Create tables
     database::scylla::create_tables(Arc::clone(&scylla)).await;
@@ -311,6 +325,14 @@ async fn main() {
         .and(warp::body::json())
         .and_then(get_oauth);
 
+    let delete_user = warp::path("users")
+        .and(warp::path("@me"))
+        .and(warp::delete())
+        .and(warp::any().map(move || Arc::clone(&delete_scylla)))
+        .and(warp::body::json())
+        .and(warp::header("authorization"))
+        .and_then(delete_user);
+
     let routes = create_route
         .or(login_route)
         .or(recuperate_account_route)
@@ -318,6 +340,7 @@ async fn main() {
         .or(suspend_user_route)
         .or(oauth_code)
         .or(get_jwt_code)
+        .or(delete_user)
         .recover(handle_rejection);
 
     let port = std::env::var("PORT")
