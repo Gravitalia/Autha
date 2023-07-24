@@ -1,17 +1,20 @@
 mod database;
 mod helpers;
-mod router;
 mod model;
+mod router;
 
 #[macro_use]
 extern crate lazy_static;
-use std::{net::{IpAddr, Ipv4Addr, SocketAddr}, fmt::Debug};
-use warp::{Filter, http::StatusCode, Reply, Rejection};
 use helpers::ratelimiter::RateLimiter;
-use std::sync::{Arc, Mutex};
-use std::error::Error;
 use memcache::Client;
 use scylla::Session;
+use std::error::Error;
+use std::sync::{Arc, Mutex};
+use std::{
+    fmt::Debug,
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+};
+use warp::{http::StatusCode, Filter, Rejection, Reply};
 
 // Define errors
 #[derive(Debug)]
@@ -27,7 +30,10 @@ struct InvalidAuthorization;
 impl warp::reject::Reject for InvalidAuthorization {}
 
 /// Handle requests and verify limits per IP
-async fn rate_limit(rate_limiter: Arc<Mutex<RateLimiter>>, ip: String) -> Result<(), Rejection> {
+async fn rate_limit(
+    rate_limiter: Arc<Mutex<RateLimiter>>,
+    ip: String,
+) -> Result<(), Rejection> {
     let mut rate_limiter = rate_limiter.lock().unwrap();
     if rate_limiter.check_rate(&ip) {
         Ok(())
@@ -38,8 +44,21 @@ async fn rate_limit(rate_limiter: Arc<Mutex<RateLimiter>>, ip: String) -> Result
 }
 
 /// Create a new user
-async fn create_user(scylla: Arc<Session>, memcached: Client, body: model::body::Create, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>) -> Result<impl Reply, Rejection> {
-    let ip = forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string());
+async fn create_user(
+    scylla: Arc<Session>,
+    memcached: Client,
+    body: model::body::Create,
+    cf_token: String,
+    forwarded: Option<String>,
+    ip: Option<SocketAddr>,
+) -> Result<impl Reply, Rejection> {
+    let ip = forwarded.unwrap_or_else(|| {
+        ip.unwrap_or_else(|| {
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
+        })
+        .ip()
+        .to_string()
+    });
 
     match router::create::create(scylla, memcached, body, ip, cf_token).await {
         Ok(r) => Ok(r),
@@ -48,28 +67,88 @@ async fn create_user(scylla: Arc<Session>, memcached: Client, body: model::body:
 }
 
 /// Login to an account
-async fn login(scylla: Arc<Session>, memcached: Client, body: model::body::Login, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>) -> Result<impl Reply, Rejection> {
-    let ip = forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string());
+async fn login(
+    scylla: Arc<Session>,
+    memcached: Client,
+    body: model::body::Login,
+    cf_token: String,
+    forwarded: Option<String>,
+    ip: Option<SocketAddr>,
+) -> Result<impl Reply, Rejection> {
+    let ip = forwarded.unwrap_or_else(|| {
+        ip.unwrap_or_else(|| {
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
+        })
+        .ip()
+        .to_string()
+    });
 
-    match router::login::main::login(scylla, memcached, body, ip, cf_token).await {
+    match router::login::main::login(scylla, memcached, body, ip, cf_token)
+        .await
+    {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
 
 /// Get user by ID
-async fn get_user(id: String, scylla: Arc<Session>, memcached: Client, limiter: Arc<Mutex<RateLimiter>>, token: Option<String>, forwarded: Option<String>, ip: Option<SocketAddr>) -> Result<impl Reply, Rejection> {
-    let ip = forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string());
+async fn get_user(
+    id: String,
+    scylla: Arc<Session>,
+    memcached: Client,
+    limiter: Arc<Mutex<RateLimiter>>,
+    token: Option<String>,
+    forwarded: Option<String>,
+    ip: Option<SocketAddr>,
+) -> Result<impl Reply, Rejection> {
+    let ip = forwarded.unwrap_or_else(|| {
+        ip.unwrap_or_else(|| {
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
+        })
+        .ip()
+        .to_string()
+    });
 
     match rate_limit(limiter, ip.clone()).await {
-        Ok(_) => Ok(router::users::get::get(scylla, memcached, id, token).await),
+        Ok(_) => {
+            Ok(router::users::get::get(scylla, memcached, id, token).await)
+        }
         Err(e) => Err(e),
     }
 }
 
 /// Suspend user from all services
-async fn suspend_user(scylla: Arc<Session>, query: model::query::Suspend, token: String) -> Result<impl Reply, Rejection> {
+async fn suspend_user(
+    scylla: Arc<Session>,
+    query: model::query::Suspend,
+    token: String,
+) -> Result<impl Reply, Rejection> {
     match router::suspend::suspend(scylla, query, token).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Returns 5-minute code to get JWT
+async fn post_oauth(
+    scylla: Arc<Session>,
+    memcached: Client,
+    body: model::body::OAuth,
+    token: String,
+) -> Result<impl Reply, Rejection> {
+    match router::oauth::post(scylla, memcached, body, token).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Get JWT code via the 5-minute code
+async fn get_oauth(
+    scylla: Arc<Session>,
+    memcached: Client,
+    body: model::body::GetOAuth,
+) -> Result<impl Reply, Rejection> {
+    match router::oauth::get_oauth_code(scylla, memcached, body).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -77,7 +156,9 @@ async fn suspend_user(scylla: Arc<Session>, query: model::query::Suspend, token:
 
 /// This function receives a `Rejection` and tries to return a custom
 /// value, otherwise simply passes the rejection along.
-async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::Infallible> {
+async fn handle_rejection(
+    err: Rejection,
+) -> Result<impl Reply, std::convert::Infallible> {
     let code;
     let message: String;
 
@@ -90,11 +171,11 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::In
     } else if err.find::<InvalidAuthorization>().is_some() {
         message = "Invalid token".to_string();
         code = StatusCode::UNAUTHORIZED;
-    }  else if let Some(e) = err.find::<warp::filters::body::BodyDeserializeError>() {
+    } else if let Some(e) =
+        err.find::<warp::filters::body::BodyDeserializeError>()
+    {
         message = match e.source() {
-            Some(cause) => {
-                cause.to_string()
-            }
+            Some(cause) => cause.to_string(),
             None => "Invalid body".to_string(),
         };
         code = StatusCode::BAD_REQUEST;
@@ -107,16 +188,18 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::In
         message = "Internal server error".to_string();
     }
 
-    Ok(warp::reply::with_status(warp::reply::json(&model::error::Error {
-        error: true,
-        message,
-    }), code))
+    Ok(warp::reply::with_status(
+        warp::reply::json(&model::error::Error {
+            error: true,
+            message,
+        }),
+        code,
+    ))
 }
 
 #[tokio::main]
 async fn main() {
     println!("Starting server...");
-    dotenv::dotenv().ok();
 
     // Starts database
     let scylla = Arc::new(database::scylla::init().await.unwrap());
@@ -129,6 +212,12 @@ async fn main() {
     let get_mem = memcached.clone();
 
     let suspend_scylla = Arc::clone(&scylla);
+
+    let get_code_scylla = Arc::clone(&scylla);
+    let get_code_mem = memcached.clone();
+
+    let get_jwt_scylla = Arc::clone(&scylla);
+    let get_jwt_mem = memcached.clone();
 
     // Create tables
     database::scylla::create_tables(Arc::clone(&scylla)).await;
@@ -177,10 +266,28 @@ async fn main() {
         .and(warp::header("authorization"))
         .and_then(suspend_user);
 
+    let oauth_code = warp::path("oauth2")
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&get_code_scylla)))
+        .and(warp::any().map(move || get_code_mem.clone()))
+        .and(warp::body::json())
+        .and(warp::header("authorization"))
+        .and_then(post_oauth);
+
+    let get_jwt_code = warp::path("oauth2")
+        .and(warp::path("token"))
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&get_jwt_scylla)))
+        .and(warp::any().map(move || get_jwt_mem.clone()))
+        .and(warp::body::json())
+        .and_then(get_oauth);
+
     let routes = create_route
         .or(login_route)
         .or(get_user_route)
         .or(suspend_user_route)
+        .or(oauth_code)
+        .or(get_jwt_code)
         .recover(handle_rejection);
 
     let port = std::env::var("PORT")
