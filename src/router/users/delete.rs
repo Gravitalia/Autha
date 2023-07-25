@@ -16,15 +16,13 @@ pub async fn delete(
     token: String,
     body: crate::model::body::Gdrp,
 ) -> Result<WithStatus<Json>> {
-    let vanity: String;
-
     let middelware_res =
         crate::router::middleware(Arc::clone(&scylla), Some(token), "Invalid")
             .await
             .unwrap_or_else(|_| "Invalid".to_string());
 
-    if middelware_res != "Invalid" && middelware_res != "Suspended" {
-        vanity = middelware_res.to_lowercase();
+    let vanity = if middelware_res != "Invalid" && middelware_res != "Suspended" {
+        middelware_res.to_lowercase()
     } else {
         return Ok(warp::reply::with_status(
             warp::reply::json(&crate::model::error::Error {
@@ -33,7 +31,7 @@ pub async fn delete(
             }),
             warp::http::StatusCode::UNAUTHORIZED,
         ));
-    }
+    };
 
     let res =
         query(Arc::clone(&scylla), GET_USER_PASSWORD, vec![vanity.clone()])
@@ -65,7 +63,7 @@ pub async fn delete(
 
     // Check if password matches
     if !crate::helpers::crypto::hash_test(
-        &res[0].columns[1]
+        res[0].columns[1]
             .as_ref()
             .ok_or_else(|| anyhow!("No reference"))?
             .as_text()
