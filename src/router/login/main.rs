@@ -8,6 +8,9 @@ use tokio::task;
 use totp_lite::{totp_custom, Sha1};
 use warp::reply::{Json, WithStatus};
 
+// Define query
+pub const GET_LOGIN_DATA: &str = "SELECT vanity, password, deleted, mfa_code, expire_at FROM accounts.users WHERE email = ?;";
+
 /// Handle login route and check if everything is valid
 pub async fn login(
     scylla: Arc<scylla::Session>,
@@ -77,7 +80,11 @@ pub async fn login(
         helpers::crypto::fpe_encrypt(data.email.encode_utf16().collect())?;
 
     // Check if account exists
-    let query_res = query(Arc::clone(&scylla), "SELECT vanity, password, deleted, mfa_code, expire_at FROM accounts.users WHERE email = ?", vec![hashed_email]).await?.rows.unwrap_or_default();
+    let query_res =
+        query(Arc::clone(&scylla), GET_LOGIN_DATA, vec![hashed_email])
+            .await?
+            .rows
+            .unwrap_or_default();
 
     if query_res.is_empty() {
         return Ok(crate::router::err("Invalid user".to_string()));
