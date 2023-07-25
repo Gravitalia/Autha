@@ -1,19 +1,12 @@
 use crate::database::mem;
 use crate::{database::scylla::query, helpers};
 use anyhow::{anyhow, Result};
-use regex::Regex;
 use sha3::{Digest, Keccak256};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::task;
 use totp_lite::{totp_custom, Sha1};
 use warp::reply::{Json, WithStatus};
-
-lazy_static! {
-    static ref EMAIL: Regex = Regex::new(r".+@.+.([a-zA-Z]{2,7})$").unwrap();
-    static ref PASSWORD: Regex =
-        Regex::new(r"([0-9|*|]|[$&+,:;=?@#|'<>.^*()%!-])+").unwrap();
-}
 
 /// Handle login route and check if everything is valid
 pub async fn login(
@@ -26,13 +19,13 @@ pub async fn login(
     let data = body.clone();
     let is_valid = task::spawn(async move {
         // Email verification
-        if !EMAIL.is_match(&body.email) {
+        if !crate::router::create::EMAIL.is_match(&body.email) {
             return "Invalid email";
         }
         // Password checking [Security]
         if body.password != "testemail"
             && body.password.len() < 8
-            && !PASSWORD.is_match(&body.password)
+            && !crate::router::create::PASSWORD.is_match(&body.password)
         {
             return "Invalid password";
         }
@@ -182,15 +175,4 @@ pub async fn login(
         }),
         warp::http::StatusCode::OK,
     ))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_regex() {
-        assert!(EMAIL.is_match("foo@🏹.to"));
-        assert!(PASSWORD.is_match("Test1234_"));
-    }
 }
