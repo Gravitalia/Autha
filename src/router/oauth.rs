@@ -22,15 +22,13 @@ pub async fn post(
     body: crate::model::body::OAuth,
     token: String,
 ) -> Result<WithStatus<Json>> {
-    let vanity: String;
-
     let middelware_res =
         crate::router::middleware(Arc::clone(&scylla), Some(token), "Invalid")
             .await
             .unwrap_or_else(|_| "Invalid".to_string());
 
-    if middelware_res != "Invalid" && middelware_res != "Suspended" {
-        vanity = middelware_res.to_lowercase();
+        let vanity = if middelware_res != "Invalid" && middelware_res != "Suspended" {
+        middelware_res.to_lowercase()
     } else {
         return Ok(warp::reply::with_status(
             warp::reply::json(&crate::model::error::Error {
@@ -39,7 +37,7 @@ pub async fn post(
             }),
             warp::http::StatusCode::UNAUTHORIZED,
         ));
-    }
+    };
 
     let bot = query(Arc::clone(&scylla), GET_BOT, vec![body.bot_id.clone()])
         .await?
