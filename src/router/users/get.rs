@@ -87,7 +87,7 @@ pub async fn get(
     // Get user
     let (from_mem, user) = match get_user(
         scylla,
-        Arc::clone(&memcached),
+        Some(Arc::clone(&memcached)),
         vanity.clone(),
         requester.clone(),
     )
