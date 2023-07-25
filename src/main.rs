@@ -183,7 +183,7 @@ async fn delete_user(
     }
 }
 
-/// Get JWT code via the 5-minute code
+/// Route to update user data (email, username...)
 async fn update_user(
     scylla: Arc<Session>,
     memcached: Arc<Client>,
@@ -191,6 +191,18 @@ async fn update_user(
     token: String,
 ) -> Result<impl Reply, Rejection> {
     match router::users::patch::patch(scylla, memcached, token, body).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Get JWT code via the 5-minute code
+async fn get_data(
+    scylla: Arc<Session>,
+    body: model::body::Gdrp,
+    token: String,
+) -> Result<impl Reply, Rejection> {
+    match router::users::data::get_data(scylla, token, body).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -268,6 +280,8 @@ async fn main() {
 
     let update_scylla = Arc::clone(&scylla);
     let update_mem = Arc::clone(&memcached);
+
+    let get_data_scylla = Arc::clone(&scylla);
 
     // Create tables
     database::scylla::create_tables(Arc::clone(&scylla)).await;
@@ -358,6 +372,14 @@ async fn main() {
         .and(warp::header("authorization"))
         .and_then(update_user);
 
+    let get_user_data = warp::path("account").
+        and(warp::path("data"))
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&get_data_scylla)))
+        .and(warp::body::json())
+        .and(warp::header("authorization"))
+        .and_then(get_data);
+
     let routes = create_route
         .or(login_route)
         .or(recuperate_account_route)
@@ -367,6 +389,7 @@ async fn main() {
         .or(get_jwt_code)
         .or(delete_user)
         .or(update_user)
+        .or(get_user_data)
         .recover(handle_rejection);
 
     let port = std::env::var("PORT")
