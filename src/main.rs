@@ -171,13 +171,26 @@ async fn get_oauth(
     }
 }
 
-/// Get JWT code via the 5-minute code
+/// Delete a user from gravitalia (30 days retention)
 async fn delete_user(
     scylla: Arc<Session>,
     body: model::body::Gdrp,
-    token: String
+    token: String,
 ) -> Result<impl Reply, Rejection> {
     match router::users::delete::delete(scylla, token, body).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Get JWT code via the 5-minute code
+async fn update_user(
+    scylla: Arc<Session>,
+    memcached: Arc<Client>,
+    body: model::body::UserPatch,
+    token: String,
+) -> Result<impl Reply, Rejection> {
+    match router::users::patch::patch(scylla, memcached, token, body).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -252,6 +265,9 @@ async fn main() {
     let get_jwt_mem = Arc::clone(&memcached);
 
     let delete_scylla = Arc::clone(&scylla);
+
+    let update_scylla = Arc::clone(&scylla);
+    let update_mem = Arc::clone(&memcached);
 
     // Create tables
     database::scylla::create_tables(Arc::clone(&scylla)).await;
@@ -333,6 +349,15 @@ async fn main() {
         .and(warp::header("authorization"))
         .and_then(delete_user);
 
+    let update_user = warp::path("users")
+        .and(warp::path("@me"))
+        .and(warp::patch())
+        .and(warp::any().map(move || Arc::clone(&update_scylla)))
+        .and(warp::any().map(move || Arc::clone(&update_mem)))
+        .and(warp::body::json())
+        .and(warp::header("authorization"))
+        .and_then(update_user);
+
     let routes = create_route
         .or(login_route)
         .or(recuperate_account_route)
@@ -341,6 +366,7 @@ async fn main() {
         .or(oauth_code)
         .or(get_jwt_code)
         .or(delete_user)
+        .or(update_user)
         .recover(handle_rejection);
 
     let port = std::env::var("PORT")
