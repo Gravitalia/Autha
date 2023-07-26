@@ -63,6 +63,7 @@ pub async fn login(
         mem::SetValue::Number(rate_limit + 1),
     );
 
+println!("check token");
     // Check if provided security header is ok
     match helpers::request::check_turnstile(token).await {
         Ok(res) => {
@@ -79,6 +80,7 @@ pub async fn login(
     let hashed_email =
         helpers::crypto::fpe_encrypt(data.email.encode_utf16().collect())?;
 
+        println!("query 1");
     // Check if account exists
     let query_res =
         query(Arc::clone(&scylla), GET_LOGIN_DATA, vec![hashed_email])
@@ -92,6 +94,7 @@ pub async fn login(
         return Ok(crate::router::err("Invalid password".to_string()));
     }
 
+    println!("vanity");
     // Set vanity
     let vanity = query_res[0].columns[0]
         .as_ref()
@@ -99,18 +102,21 @@ pub async fn login(
         .as_text()
         .ok_or_else(|| anyhow!("Can't convert to string"))?;
 
+    println!("expire");
     let expire = query_res[0].columns[4]
         .as_ref()
         .ok_or_else(|| anyhow!("No reference"))?
         .as_bigint()
         .ok_or_else(|| anyhow!("Can't convert to int"))?;
 
+    println!("del");
     let deleted = query_res[0].columns[2]
         .as_ref()
         .ok_or_else(|| anyhow!("No reference"))?
         .as_boolean()
         .ok_or_else(|| anyhow!("Can't convert to bool"))?;
 
+    println!("check time");
     // Check if account is deleted
     let timestamp_ms: i64 = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -118,6 +124,7 @@ pub async fn login(
         .as_millis()
         .try_into()?;
 
+    println!("check del");
     if deleted && expire == 0 {
         return Ok(crate::router::err("Account suspended".to_string()));
     } else if deleted && expire >= timestamp_ms {
@@ -135,6 +142,7 @@ pub async fn login(
         return Ok(crate::router::err("Invalid email".to_string()));
     }
 
+    println!("check pass");
     // Check if password is same
     if !helpers::crypto::hash_test(
         query_res[0].columns[1]
