@@ -16,7 +16,7 @@ const CREATE_OAUTH_INDEX_USER_ID: &str =
     "CREATE INDEX IF NOT EXISTS ON accounts.oauth ( user_id );";
 const CREATE_TOKENS_INDEX_USER_ID: &str =
     "CREATE INDEX IF NOT EXISTS ON accounts.tokens ( user_id );";
-const CREATE_USER: &str = "INSERT INTO accounts.users ( vanity, email, username, password, phone, birthdate, avatar, bio, flags, deleted, verified ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, false, false);";
+const CREATE_USER: &str = "INSERT INTO accounts.users ( vanity, email, username, password, phone, birthdate, avatar, bio, flags, deleted, verified, expire_at ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, false, false, 0);";
 const CREATE_OAUTH: &str = "INSERT INTO accounts.oauth ( id, user_id, bot_id, scope, deleted ) VALUES (?, ?, ?, ?, ?)";
 const CREATE_SALT: &str =
     "INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?);";
