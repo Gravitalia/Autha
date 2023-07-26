@@ -107,7 +107,8 @@ println!("check token");
         .as_ref()
         .ok_or_else(|| anyhow!("No reference"))?
         .as_bigint()
-        .ok_or_else(|| anyhow!("Can't convert to int"))?;
+        .ok_or_else(|| anyhow!("Can't convert to int"))
+        .unwrap();
 
     println!("del");
     let deleted = query_res[0].columns[2]
