@@ -106,9 +106,11 @@ println!("check token");
     let expire = query_res[0].columns[4]
         .as_ref()
         .ok_or_else(|| anyhow!("No reference"))?
-        .as_bigint()
-        .ok_or_else(|| anyhow!("Can't convert to int"))
-        .unwrap();
+        .as_date()
+        .ok_or_else(|| anyhow!("Can't convert to int"))?
+        .and_hms_opt(0, 0, 0)
+        .unwrap_or_default()
+        .timestamp_millis();
 
     println!("del");
     let deleted = query_res[0].columns[2]
