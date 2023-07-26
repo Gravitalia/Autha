@@ -93,26 +93,7 @@ println!("check token");
     } else if data.password == "testemail" {
         return Ok(crate::router::err("Invalid password".to_string()));
     }
-
-    /*
-        let mut vanity: String;
-    let mut expire: i64;
-    let mut deleted: bool;
-    let mut mfa: String;
-
-    for row in query_res.into_typed::<(String, String, bool, String, Duration)>() {
-        let row_data = row?;
-
-        // Set vanity
-        vanity = row_data.0;
-        // Set expire
-        expire = row_data.4.num_milliseconds();
-        // Set deleted
-        deleted = row_data.2;
-        mfa = row_data.3;
-    }
-     */
-
+    
     println!("vanity");
     // Set vanity
     let vanity = query_res[0].columns[0]
@@ -122,12 +103,13 @@ println!("check token");
         .ok_or_else(|| anyhow!("Can't convert to string"))?;
 
     println!("expire");
-    let expire = query_res[0].columns[4]
-        .as_ref()
-        .ok_or_else(|| anyhow!("No reference"))?
-        .as_duration()
+    let expire = if let Some(d) = query_res[0].columns[3].as_ref() {
+        d.as_duration()
         .unwrap()
-        .num_milliseconds();
+        .num_milliseconds()
+    } else {
+        0
+    };
 
     println!("del");
     let deleted = query_res[0].columns[2]
