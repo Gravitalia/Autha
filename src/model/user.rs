@@ -34,3 +34,13 @@ pub struct UserData {
     pub user: User,
     pub tokens: Vec<Token>,
 }
+
+// Smaller User struct to represents user update
+#[derive(Serialize, Debug, Default)]
+pub struct UpdatedUser {
+    pub username: String,
+    // Required to know which user is affected
+    pub vanity: String,
+    pub avatar: Option<String>,
+    pub bio: Option<String>,
+}
