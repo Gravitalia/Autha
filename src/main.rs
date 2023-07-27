@@ -189,14 +189,32 @@ async fn update_user(
     scylla: Arc<Session>,
     memcached: Arc<Client>,
     nats: Option<Context>,
+    limiter: Arc<Mutex<RateLimiter>>,
     body: model::body::UserPatch,
     token: String,
+    forwarded: Option<String>,
+    ip: Option<SocketAddr>,
 ) -> Result<impl Reply, Rejection> {
-    match router::users::patch::patch(scylla, memcached, nats, token, body)
-        .await
-    {
-        Ok(r) => Ok(r),
-        Err(_) => Err(warp::reject::custom(UnknownError)),
+    let ip = forwarded.unwrap_or_else(|| {
+        ip.unwrap_or_else(|| {
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
+        })
+        .ip()
+        .to_string()
+    });
+
+    match rate_limit(limiter, ip.clone()).await {
+        Ok(_) => {
+            match router::users::patch::patch(
+                scylla, memcached, nats, token, body,
+            )
+            .await
+            {
+                Ok(r) => Ok(r),
+                Err(_) => Err(warp::reject::custom(UnknownError)),
+            }
+        }
+        Err(e) => Err(e),
     }
 }
 
@@ -295,7 +313,9 @@ async fn main() {
     helpers::remove_deleted_account(Arc::clone(&scylla)).await;
 
     // Add middleware to rate-limit
-    let rate_limiter = Arc::new(Mutex::new(RateLimiter::new()));
+    let rate_limiter = Arc::new(Mutex::new(RateLimiter::new(None, None)));
+    let patch_limiter =
+        Arc::new(Mutex::new(RateLimiter::new(Some(60), Some(60))));
 
     let create_route = warp::path("create")
         .and(warp::post())
@@ -330,7 +350,7 @@ async fn main() {
         .and(warp::get())
         .and(warp::any().map(move || Arc::clone(&get_scylla)))
         .and(warp::any().map(move || Arc::clone(&get_mem)))
-        .and(warp::any().map(move || rate_limiter.clone()))
+        .and(warp::any().map(move || Arc::clone(&rate_limiter)))
         .and(warp::header::optional::<String>("authorization"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
         .and(warp::addr::remote())
@@ -374,8 +394,11 @@ async fn main() {
         .and(warp::any().map(move || Arc::clone(&update_scylla)))
         .and(warp::any().map(move || Arc::clone(&update_mem)))
         .and(warp::any().map(move || nats.clone()))
+        .and(warp::any().map(move || Arc::clone(&patch_limiter)))
         .and(warp::body::json())
         .and(warp::header("authorization"))
+        .and(warp::header::optional::<String>("X-Forwarded-For"))
+        .and(warp::addr::remote())
         .and_then(update_user);
 
     let get_user_data = warp::path("account")
