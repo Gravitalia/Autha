@@ -2,7 +2,7 @@ use crate::helpers::crypto::{encrypt, hash};
 use crate::model::error::Error;
 use crate::router::suspend::suspend_user;
 use crate::{
-    database::{mem::del, scylla::query},
+    database::{mem::del, nats::publish, scylla::query},
     helpers,
 };
 use anyhow::{anyhow, Result};
@@ -21,6 +21,7 @@ const UPDATE_PASSWORD: &str =
 pub async fn patch(
     scylla: Arc<scylla::Session>,
     memcached: Arc<memcache::Client>,
+    nats: Option<async_nats::jetstream::Context>,
     token: String,
     body: crate::model::body::UserPatch,
 ) -> Result<WithStatus<Json>> {
@@ -148,7 +149,7 @@ pub async fn patch(
             avatar = Some(helpers::grpc::upload_avatar(a).await?);
         }
     }
-    
+
     // Change email
     if let Some(e) = body.email {
         if !is_psw_valid || !crate::router::create::EMAIL.is_match(&e) {
@@ -245,9 +246,9 @@ pub async fn patch(
         scylla,
         "UPDATE accounts.users SET username = ?, avatar = ?, bio = ?, birthdate = ?, phone = ?, email = ? WHERE vanity = ?;",
         (
-            username,
-            avatar,
-            bio,
+            username.clone(),
+            avatar.clone(),
+            bio.clone(),
             birthdate,
             phone,
             email,
@@ -255,6 +256,20 @@ pub async fn patch(
         )
     ).await {
         Ok(_) => {
+            if let Some(conn) = nats {
+                match publish(conn, crate::model::user::UpdatedUser {
+                    username,
+                    vanity: vanity.clone(),
+                    avatar,
+                    bio
+                }).await {
+                    Ok(_) => {},
+                    Err(e) => {
+                        eprintln!("(patch) cannot send modified user: {}", e);
+                    }
+                }
+            }
+
             let _ = del(memcached, vanity);
             Ok(warp::reply::with_status(
                 warp::reply::json(&Error {
