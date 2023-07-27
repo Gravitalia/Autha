@@ -1,47 +1,176 @@
-pub mod cassandra;
 pub mod mem;
+pub mod nats;
+pub mod scylla;
 
-use crate::helpers::crypto::{fpe_decrypt, decrypt};
-use anyhow::Result;
+use crate::helpers::crypto::{decrypt, fpe_decrypt};
+use anyhow::{anyhow, Result};
+use std::sync::Arc;
 
-/// Tries to find a user in cache or use Cassandra database
-pub fn get_user(vanity: String, requester: String) -> Result<crate::model::user::User> {
-    let data = mem::get(vanity.clone())?.unwrap_or_default();
-    if !data.is_empty() && requester != vanity {
-        Ok(serde_json::from_str(&data[..])?)
-    } else {
-        let mut is_bot = false;
-        let mut cassandra = cassandra::query("SELECT username, avatar, bio, deleted, flags, email, birthdate, verified FROM accounts.users WHERE vanity = ?", vec![vanity.clone()])?.get_body()?.as_cols().unwrap().rows_content.clone();
+// Define queries to get user or bot
+const GET_USER: &str = "SELECT username, avatar, bio, deleted, flags, email, birthdate, verified FROM accounts.users WHERE vanity = ?;";
+const GET_BOT: &str = "SELECT username, avatar, bio, deleted, flags FROM accounts.bots WHERE id = ?;";
 
-        if cassandra.is_empty() {
-            is_bot = true;
-            cassandra = cassandra::query("SELECT username, avatar, bio, deleted, flags FROM accounts.bots WHERE id = ?", vec![vanity.clone()])?.get_body()?.as_cols().unwrap().rows_content.clone();
-        }
-
-        if cassandra.is_empty() {
-            Ok(crate::model::user::User {
-                username: "".to_string(),
-                vanity:  "".to_string(),
-                avatar: None,
-                bio: None,
-                email: None,
-                birthdate: None,
-                deleted: false,
-                flags: 0,
-                verified: false,
-            })
+/// Tries to find a user in cache or use database
+pub async fn get_user(
+    scylla_conn: Arc<crate::Session>,
+    memcached: Option<Arc<memcache::Client>>,
+    vanity: String,
+    requester: String,
+) -> Result<(bool, crate::model::user::User)> {
+    if let Some(mem_conn) = memcached {
+        let data = mem::get(mem_conn, vanity.clone())?.unwrap_or_default();
+        if !data.is_empty() && requester != vanity {
+            Ok((
+                true,
+                serde_json::from_str::<crate::model::user::User>(&data[..])?,
+            ))
         } else {
-            Ok(crate::model::user::User {
-                username: std::str::from_utf8(&cassandra[0][0].clone().into_plain().unwrap()[..])?.to_string(),
-                avatar: if cassandra[0][1].clone().into_plain().is_none() { None } else { let res = std::str::from_utf8(&cassandra[0][1].clone().into_plain().unwrap()[..]).unwrap_or("").to_string(); if res.is_empty() { None } else { Some(res) } },
-                bio: if cassandra[0][2].clone().into_plain().is_none() { None } else { let res = std::str::from_utf8(&cassandra[0][2].clone().into_plain().unwrap()[..]).unwrap_or("").to_string(); if res.is_empty() { None } else { Some(res) } },
-                email: if vanity == requester && !is_bot { Some(fpe_decrypt(std::str::from_utf8(&cassandra[0][5].clone().into_plain().unwrap()[..])?.to_string())?) } else { None },
-                birthdate: if vanity != requester || is_bot || cassandra[0][6].clone().into_plain().is_none() { None } else { let res = std::str::from_utf8(&cassandra[0][6].clone().into_plain().unwrap()[..])?.to_string(); if res.is_empty() { None } else { Some(decrypt(res)?) } },
-                deleted: cassandra[0][3].clone().into_plain().unwrap_or_default()[..] != [0],
-                flags: u32::from_be_bytes((&cassandra[0][4].clone().into_plain().unwrap_or_default()[..])[..4].try_into()?),
-                verified: false,
-                vanity,
-            })
+            Ok((
+                false,
+                fallback_scylla(scylla_conn, vanity, requester).await?,
+            ))
         }
+    } else {
+        Ok((
+            false,
+            fallback_scylla(scylla_conn, vanity, requester).await?,
+        ))
+    }
+}
+
+// Get user via ScyllaDB (or cassandra) without using cache
+async fn fallback_scylla(
+    scylla_conn: Arc<crate::Session>,
+    vanity: String,
+    requester: String,
+) -> Result<crate::model::user::User> {
+    let mut is_bot = false;
+    let mut query_result =
+        scylla::query(Arc::clone(&scylla_conn), GET_USER, vec![vanity.clone()])
+            .await?
+            .rows
+            .unwrap_or_default();
+
+    if query_result.is_empty() {
+        is_bot = true;
+        query_result = scylla::query(
+            Arc::clone(&scylla_conn),
+            GET_BOT,
+            vec![vanity.clone()],
+        )
+        .await?
+        .rows
+        .unwrap_or_default();
+    }
+
+    if query_result.is_empty() {
+        Ok(crate::model::user::User {
+            username: "".to_string(),
+            vanity: "".to_string(),
+            avatar: None,
+            bio: None,
+            email: None,
+            birthdate: None,
+            deleted: false,
+            flags: 0,
+            verified: false,
+            phone: None,
+            password: None,
+        })
+    } else {
+        Ok(crate::model::user::User {
+            username: query_result[0].columns[0]
+                .as_ref()
+                .ok_or_else(|| anyhow!("No reference"))?
+                .as_text()
+                .ok_or_else(|| anyhow!("Can't convert to string"))?
+                .to_string(),
+            avatar: if query_result[0].columns[1].is_none() {
+                None
+            } else {
+                let avatar = query_result[0].columns[1]
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("No reference"))?
+                    .as_text()
+                    .ok_or_else(|| anyhow!("Can't convert to string"))?
+                    .to_string();
+                if avatar.is_empty() {
+                    None
+                } else {
+                    Some(avatar)
+                }
+            },
+            bio: if query_result[0].columns[2].is_none() {
+                None
+            } else {
+                let bio = query_result[0].columns[2]
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("No reference"))?
+                    .as_text()
+                    .ok_or_else(|| anyhow!("Can't convert to string"))?
+                    .to_string();
+                if bio.is_empty() {
+                    None
+                } else {
+                    Some(bio)
+                }
+            },
+            email: if vanity == requester && !is_bot {
+                Some(fpe_decrypt(
+                    query_result[0].columns[5]
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("No reference"))?
+                        .as_text()
+                        .ok_or_else(|| anyhow!("Can't convert to string"))?
+                        .to_string(),
+                )?)
+            } else {
+                None
+            },
+            birthdate: if vanity != requester
+                || is_bot
+                || query_result[0].columns[6].is_none()
+            {
+                None
+            } else {
+                let birth = query_result[0].columns[6]
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("No reference"))?
+                    .as_text()
+                    .ok_or_else(|| anyhow!("Can't convert to string"))?
+                    .to_string();
+                if birth.is_empty() {
+                    None
+                } else {
+                    Some(decrypt(scylla_conn, birth).await?)
+                }
+            },
+            deleted: query_result[0].columns[3]
+                .as_ref()
+                .ok_or_else(|| anyhow!("No reference"))?
+                .as_boolean()
+                .ok_or_else(|| anyhow!("Can't convert to bool"))?,
+            flags: u8::try_from(
+                query_result[0].columns[4]
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("No reference"))?
+                    .as_int()
+                    .ok_or_else(|| anyhow!("Can't convert to int"))?,
+            )
+            .ok()
+            .unwrap_or_default(),
+            verified: if is_bot {
+                true
+            } else {
+                query_result[0].columns[7]
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("No reference"))?
+                    .as_boolean()
+                    .ok_or_else(|| anyhow!("Can't convert to bool"))?
+            },
+            vanity,
+            phone: None,
+            password: None,
+        })
     }
 }

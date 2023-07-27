@@ -4,5 +4,5 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 pub struct Suspend {
     pub vanity: String,
-    pub suspend: Option<bool>
+    pub suspend: Option<bool>,
 }

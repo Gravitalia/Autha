@@ -1,6 +1,8 @@
+use scylla::macros::FromRow;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+// Represents user as saved in database
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct User {
     pub username: String,
     pub vanity: String,
@@ -10,5 +12,35 @@ pub struct User {
     pub birthdate: Option<String>,
     pub verified: bool,
     pub deleted: bool,
-    pub flags: u32
+    pub flags: u8,
+    #[serde(skip_serializing)]
+    pub(crate) password: Option<String>,
+    #[serde(skip_serializing)]
+    pub(crate) phone: Option<String>,
+}
+
+// Represents tokens required to connect
+#[derive(Serialize, Debug, Default, FromRow)]
+pub struct Token {
+    pub ip: String,
+    pub date: i64,
+    pub expire_at: i64,
+    pub deleted: bool,
+}
+
+// Represents all datas that can be sent to users
+#[derive(Serialize)]
+pub struct UserData {
+    pub user: User,
+    pub tokens: Vec<Token>,
+}
+
+// Smaller User struct to represents user update
+#[derive(Serialize, Debug, Default)]
+pub struct UpdatedUser {
+    pub username: String,
+    // Required to know which user is affected
+    pub vanity: String,
+    pub avatar: Option<String>,
+    pub bio: Option<String>,
 }

@@ -1,4 +1,5 @@
-pub mod error;
 pub mod body;
-pub mod user;
+pub mod config;
+pub mod error;
 pub mod query;
+pub mod user;

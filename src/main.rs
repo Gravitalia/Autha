@@ -1,41 +1,257 @@
+mod database;
+mod helpers;
 mod model;
 mod router;
-mod helpers;
-mod database;
 
-#[macro_use] extern crate lazy_static;
-use warp::{Filter, reject::Reject, http::StatusCode, Reply, Rejection};
-use std::{net::{IpAddr, Ipv4Addr, SocketAddr}, fmt::Debug};
-use std::time::{SystemTime, UNIX_EPOCH};
+#[macro_use]
+extern crate lazy_static;
+use async_nats::jetstream::Context;
+use helpers::ratelimiter::RateLimiter;
+use memcache::Client;
+use scylla::Session;
 use std::error::Error;
-use regex::Regex;
+use std::sync::{Arc, Mutex};
+use std::{
+    fmt::Debug,
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+};
+use warp::{http::StatusCode, Filter, Rejection, Reply};
 
-lazy_static! {
-    static ref TOKEN: Regex = Regex::new(r"(^[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*\.[A-Za-z0-9-_]*$)").unwrap();
-}
-
+// Define errors
 #[derive(Debug)]
 struct UnknownError;
-impl Reject for UnknownError {}
+impl warp::reject::Reject for UnknownError {}
+
+#[derive(Debug)]
+struct RateLimitExceeded;
+impl warp::reject::Reject for RateLimitExceeded {}
 
 #[derive(Debug)]
 struct InvalidAuthorization;
-impl Reject for InvalidAuthorization {}
+impl warp::reject::Reject for InvalidAuthorization {}
 
-// This function receives a `Rejection` and tries to return a custom
-// value, otherwise simply passes the rejection along.
-async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::Infallible> {
+/// Handle requests and verify limits per IP
+async fn rate_limit(
+    rate_limiter: Arc<Mutex<RateLimiter>>,
+    ip: String,
+) -> Result<(), Rejection> {
+    let mut rate_limiter = rate_limiter.lock().unwrap();
+    if rate_limiter.check_rate(&ip) {
+        Ok(())
+    } else {
+        // Reject the request if the rate limit is exceeded
+        Err(warp::reject::custom(RateLimitExceeded))
+    }
+}
+
+/// Create a new user
+async fn create_user(
+    scylla: Arc<Session>,
+    memcached: Arc<Client>,
+    body: model::body::Create,
+    cf_token: String,
+    forwarded: Option<String>,
+    ip: Option<SocketAddr>,
+) -> Result<impl Reply, Rejection> {
+    let ip = forwarded.unwrap_or_else(|| {
+        ip.unwrap_or_else(|| {
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
+        })
+        .ip()
+        .to_string()
+    });
+
+    match router::create::create(scylla, memcached, body, ip, cf_token).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Login to an account
+async fn login(
+    scylla: Arc<Session>,
+    memcached: Arc<Client>,
+    body: model::body::Login,
+    cf_token: String,
+    forwarded: Option<String>,
+    ip: Option<SocketAddr>,
+) -> Result<impl Reply, Rejection> {
+    let ip = forwarded.unwrap_or_else(|| {
+        ip.unwrap_or_else(|| {
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
+        })
+        .ip()
+        .to_string()
+    });
+
+    match router::login::main::login(scylla, memcached, body, ip, cf_token)
+        .await
+    {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Route to recuperate a deleted account after 30 days maximum
+async fn recuperate_account(
+    scylla: Arc<Session>,
+    memcached: Arc<Client>,
+    code: String,
+    cf_token: String,
+) -> Result<impl Reply, Rejection> {
+    match router::login::recuperate::recuperate_account(
+        scylla, memcached, code, cf_token,
+    )
+    .await
+    {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Get user by ID
+async fn get_user(
+    id: String,
+    scylla: Arc<Session>,
+    memcached: Arc<Client>,
+    limiter: Arc<Mutex<RateLimiter>>,
+    token: Option<String>,
+    forwarded: Option<String>,
+    ip: Option<SocketAddr>,
+) -> Result<impl Reply, Rejection> {
+    let ip = forwarded.unwrap_or_else(|| {
+        ip.unwrap_or_else(|| {
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
+        })
+        .ip()
+        .to_string()
+    });
+
+    match rate_limit(limiter, ip.clone()).await {
+        Ok(_) => {
+            Ok(router::users::get::get(scylla, memcached, id, token).await)
+        }
+        Err(e) => Err(e),
+    }
+}
+
+/// Suspend user from all services
+async fn suspend_user(
+    scylla: Arc<Session>,
+    query: model::query::Suspend,
+    token: String,
+) -> Result<impl Reply, Rejection> {
+    match router::suspend::suspend(scylla, query, token).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Returns 5-minute code to get JWT
+async fn post_oauth(
+    scylla: Arc<Session>,
+    memcached: Arc<Client>,
+    body: model::body::OAuth,
+    token: String,
+) -> Result<impl Reply, Rejection> {
+    match router::oauth::post(scylla, memcached, body, token).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Get JWT code via the 5-minute code
+async fn get_oauth(
+    scylla: Arc<Session>,
+    memcached: Arc<Client>,
+    body: model::body::GetOAuth,
+) -> Result<impl Reply, Rejection> {
+    match router::oauth::get_oauth_code(scylla, memcached, body).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Delete a user from gravitalia (30 days retention)
+async fn delete_user(
+    scylla: Arc<Session>,
+    body: model::body::Gdrp,
+    token: String,
+) -> Result<impl Reply, Rejection> {
+    match router::users::delete::delete(scylla, token, body).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Route to update user data (email, username...)
+async fn update_user(
+    scylla: Arc<Session>,
+    memcached: Arc<Client>,
+    nats: Option<Context>,
+    limiter: Arc<Mutex<RateLimiter>>,
+    body: model::body::UserPatch,
+    token: String,
+    forwarded: Option<String>,
+    ip: Option<SocketAddr>,
+) -> Result<impl Reply, Rejection> {
+    let ip = forwarded.unwrap_or_else(|| {
+        ip.unwrap_or_else(|| {
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
+        })
+        .ip()
+        .to_string()
+    });
+
+    match rate_limit(limiter, ip.clone()).await {
+        Ok(_) => {
+            match router::users::patch::patch(
+                scylla, memcached, nats, token, body,
+            )
+            .await
+            {
+                Ok(r) => Ok(r),
+                Err(_) => Err(warp::reject::custom(UnknownError)),
+            }
+        }
+        Err(e) => Err(e),
+    }
+}
+
+/// Get JWT code via the 5-minute code
+async fn get_data(
+    scylla: Arc<Session>,
+    body: model::body::Gdrp,
+    token: String,
+) -> Result<impl Reply, Rejection> {
+    match router::users::data::get_data(scylla, token, body).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// This function receives a `Rejection` and tries to return a custom
+/// value, otherwise simply passes the rejection along.
+async fn handle_rejection(
+    err: Rejection,
+) -> Result<impl Reply, std::convert::Infallible> {
     let code;
     let message: String;
 
     if err.is_not_found() {
         code = StatusCode::NOT_FOUND;
         message = "Not found".to_string();
-    } else if let Some(e) = err.find::<warp::filters::body::BodyDeserializeError>() {
+    } else if err.find::<RateLimitExceeded>().is_some() {
+        message = "Rate limit exceeded".to_string();
+        code = StatusCode::TOO_MANY_REQUESTS;
+    } else if err.find::<InvalidAuthorization>().is_some() {
+        message = "Invalid token".to_string();
+        code = StatusCode::UNAUTHORIZED;
+    } else if let Some(e) =
+        err.find::<warp::filters::body::BodyDeserializeError>()
+    {
         message = match e.source() {
-            Some(cause) => {
-                cause.to_string()
-            }
+            Some(cause) => cause.to_string(),
             None => "Invalid body".to_string(),
         };
         code = StatusCode::BAD_REQUEST;
@@ -48,246 +264,168 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, std::convert::In
         message = "Internal server error".to_string();
     }
 
-    Ok(warp::reply::with_status(warp::reply::json(&model::error::Error {
-        error: true,
-        message,
-    }), code))
-}
-
-/// Check if a token is valid and if have a real user behind (not suspended)
-fn middleware(token: Option<String>, fallback: &str) -> anyhow::Result<String> {
-    match token {
-        Some(ntoken) if fallback == "@me" => {
-            match helpers::token::check(ntoken) {
-                Ok(data) => {
-                    return Ok(data);
-                },
-                Err(e) => {
-                    if e.to_string() == *"revoked" {
-                        return Ok("Suspended".to_string());
-                    } else if e.to_string() == *"expired" {
-                        return Ok("Invalid".to_string());
-                    }
-                }
-            }
-            Ok("Invalid".to_string())
-        }
-        None if fallback == "@me" => Ok("Invalid".to_string()),
-        _ => Ok(fallback.to_string()),
-    }
+    Ok(warp::reply::with_status(
+        warp::reply::json(&model::error::Error {
+            error: true,
+            message,
+        }),
+        code,
+    ))
 }
 
 #[tokio::main]
 async fn main() {
-    dotenv::dotenv().ok();
     println!("Starting server...");
 
-    database::cassandra::init();
-    database::cassandra::create_tables();
-    let _ = database::mem::init();
-    helpers::remove_deleted_account().await;
+    // Starts database
+    let scylla = Arc::new(database::scylla::init().await.unwrap());
+    let memcached = Arc::new(database::mem::init().unwrap());
+    let nats = database::nats::init().await.unwrap();
 
-    let routes = warp::path("create").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::header::optional::<String>("X-Forwarded-For")).and(warp::addr::remote()).and_then(|body: model::body::Create, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>| async move {
-        match router::create::create(body, forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string()), cf_token).await {
-            Ok(r) => {
-                Ok(r)
-            },
-            Err(_) => {
-                Err(warp::reject::custom(UnknownError))
-            }
-        }
-    })
-    .or(warp::path("login").and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::header::optional::<String>("X-Forwarded-For")).and(warp::addr::remote()).and_then(|body: model::body::Login, cf_token: String, forwarded: Option<String>, ip: Option<SocketAddr>| async move {
-        match router::login::main::login(body, forwarded.unwrap_or_else(|| ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip().to_string()), cf_token).await {
-            Ok(r) => {
-                Ok(r)
-            },
-            Err(_) => {
-                Err(warp::reject::custom(UnknownError))
-            }
-        }
-    }))
-    .or(warp::path("account").and(warp::path("suspend").and(warp::post()).and(warp::query::<model::query::Suspend>()).and(warp::header("authorization")).and_then(|query: model::query::Suspend, token: String| async {
-        match router::suspend::suspend(query, token) {
-            Ok(res) => {
-                Ok(res)
-            },
-            Err(_) => {
-                Err(warp::reject::custom(UnknownError))
-            }
-        }
-    })))
-    .or(warp::path!("users" / String).and(warp::get()).and(warp::header::optional::<String>("authorization")).and_then(|id: String, token: Option<String>| async move {
-        if id == "@me" && token.is_some() && TOKEN.is_match(token.as_deref().unwrap_or_default()) {
-            let oauth = match helpers::jwt::get_jwt(token.unwrap_or_default()) {
-                Ok(d) => {
-                    if d.claims.exp <= SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() {
-                        return Err(warp::reject::custom(InvalidAuthorization));
-                    }
+    let login_scylla = Arc::clone(&scylla);
+    let login_mem = Arc::clone(&memcached);
 
-                    d.claims
-                },
-                Err(_) => {
-                    return Err(warp::reject::custom(InvalidAuthorization));
-                }
-            };
+    let recuperate_scylla = Arc::clone(&scylla);
+    let recuperate_mem = Arc::clone(&memcached);
 
-            Ok(router::users::get(oauth.sub.clone(), if oauth.scope.contains(&"private".to_string()) { oauth.sub } else { "".to_string() }))
-        } else {
-            let middelware_res = middleware(token, &id).unwrap_or_else(|_| "Invalid".to_string());
-            if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
-                Ok(router::users::get(middelware_res.to_lowercase(), "".to_string()))
-            } else if middelware_res == *"Suspended" {
-                Ok(warp::reply::with_status(warp::reply::json(
-                    &model::error::Error{
-                        error: true,
-                        message: "Account suspended".to_string(),
-                    }
-                ),
-                warp::http::StatusCode::FORBIDDEN))
-            } else {
-                Err(warp::reject::custom(UnknownError))
-            }
-        }
-    }))
-    .or(warp::path("users").and(warp::path("@me")).and(warp::patch()).and(warp::body::json()).and(warp::header::<String>("authorization")).and_then(|body: model::body::UserPatch, token: String| async {
-        let middelware_res: String = middleware(Some(token), "@me").unwrap_or_else(|_| "Invalid".to_string());
-        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
-            match router::users::patch(middelware_res.to_lowercase(), body).await {
-                Ok(r) => {
-                    Ok(r)
-                },
-                Err(_) => {
-                    Err(warp::reject::custom(UnknownError))
-                }
-            }
-        } else if middelware_res == *"Suspended" {
-            Ok(warp::reply::with_status(warp::reply::json(
-                &model::error::Error{
-                    error: true,
-                    message: "Account suspended".to_string(),
-                }
-            ),
-            warp::http::StatusCode::FORBIDDEN))
-        } else {
-            Err(warp::reject::custom(UnknownError))
-        }
-    }))
-    .or(warp::path("oauth2").and(warp::path("token")).and(warp::post()).and(warp::body::json()).map(router::oauth::get_oauth_code))
-    .or(warp::path("oauth2").and(warp::post()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: model::body::OAuth, token: String| async {
-        let middelware_res: String = middleware(Some(token), "@me").unwrap_or_else(|_| "Invalid".to_string());
-        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
-            Ok(router::oauth::post(body, middelware_res))
-        } else if middelware_res == "Suspended" {
-            Ok(warp::reply::with_status(warp::reply::json(
-                &model::error::Error{
-                    error: true,
-                    message: "Account suspended".to_string(),
-                }
-            ),
-            warp::http::StatusCode::FORBIDDEN))
-        } else {
-            Err(warp::reject::custom(UnknownError))
-        }
-    }))
-    .or(warp::path("users").and(warp::path("@me")).and(warp::delete()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: model::body::Gdrp, token: String| async {
-        let middelware_res: String = middleware(Some(token), "@me").unwrap_or_else(|_| "Invalid".to_string());
-        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
-            match  router::users::delete(middelware_res, body).await {
-                Ok(r) => {
-                    Ok(r)
-                },
-                Err(_) => {
-                    Err(warp::reject::custom(UnknownError))
-                }
-            }
-        } else if middelware_res == "Suspended" {
-            Ok(warp::reply::with_status(warp::reply::json(
-                &model::error::Error{
-                    error: true,
-                    message: "Account suspended".to_string(),
-                }
-            ),
-            warp::http::StatusCode::FORBIDDEN))
-        } else {
-            Err(warp::reject::custom(UnknownError))
-        }
-    }))
-    .or(warp::path("login").and(warp::path("recuperate")).and(warp::get()).and(warp::header("code")).and(warp::header("cf-turnstile-token")).and_then(|code: String, cf_token: String| async move {
-        match router::login::recuperate::recuperate_account(code, cf_token).await {
-            Ok(r) => {
-                Ok(r)
-            },
-            Err(_) => {
-                Err(warp::reject::custom(UnknownError))
-            }
-        }
-    }))
-    .or(warp::path("login").and(warp::path("security_token")).and(warp::post()).and(warp::body::json()).and(warp::header("cf-turnstile-token")).and(warp::addr::remote()).and(warp::header("authorization")).and_then(|body: model::body::TempToken, cf_token: String, ip: Option<SocketAddr>, token: String| async move {
-        let middelware_res: String = middleware(Some(token), "@me").unwrap_or_else(|_| "Invalid".to_string());
-        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
-            match router::login::token::temp_token(body, ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)).ip(), cf_token, "t".to_string()).await {
-                Ok(r) => {
-                    Ok(r)
-                },
-                Err(_) => {
-                    Err(warp::reject::custom(UnknownError))
-                }
-            }
-        } else if middelware_res == "Suspended" {
-            Ok(warp::reply::with_status(warp::reply::json(
-                &model::error::Error{
-                    error: true,
-                    message: "Account suspended".to_string(),
-                }
-            ),
-            warp::http::StatusCode::FORBIDDEN))
-        } else {
-            Err(warp::reject::custom(UnknownError))
-        }
-    }))
-    .or(warp::path("account").and(warp::path("data")).and(warp::post()).and(warp::body::json()).and(warp::header("authorization")).and_then(|body: model::body::Gdrp, token: String| async {
-        let middelware_res: String = middleware(Some(token), "@me").unwrap_or_else(|_| "Invalid".to_string());
-        if middelware_res != *"Invalid" && middelware_res != *"Suspended" {
-            match  router::users::get_data(middelware_res, body).await {
-                Ok(r) => {
-                    Ok(r)
-                },
-                Err(_) => {
-                    Err(warp::reject::custom(UnknownError))
-                }
-            }
-        } else if middelware_res == "Suspended" {
-            Ok(warp::reply::with_status(warp::reply::json(
-                &model::error::Error{
-                    error: true,
-                    message: "Account suspended".to_string(),
-                }
-            ),
-            warp::http::StatusCode::FORBIDDEN))
-        } else {
-            Err(warp::reject::custom(UnknownError))
-        }
-    }))
-    .recover(handle_rejection);
+    let get_scylla = Arc::clone(&scylla);
+    let get_mem = Arc::clone(&memcached);
 
-    let port: u16 = dotenv::var("PORT").expect("Missing env `PORT`").parse::<u16>().unwrap();
+    let suspend_scylla = Arc::clone(&scylla);
+
+    let get_code_scylla = Arc::clone(&scylla);
+    let get_code_mem = Arc::clone(&memcached);
+
+    let get_jwt_scylla = Arc::clone(&scylla);
+    let get_jwt_mem = Arc::clone(&memcached);
+
+    let delete_scylla = Arc::clone(&scylla);
+
+    let update_scylla = Arc::clone(&scylla);
+    let update_mem = Arc::clone(&memcached);
+
+    let get_data_scylla = Arc::clone(&scylla);
+
+    // Create tables
+    database::scylla::create_tables(Arc::clone(&scylla)).await;
+
+    // Delete all old accounts
+    helpers::remove_deleted_account(Arc::clone(&scylla)).await;
+
+    // Add middleware to rate-limit
+    let rate_limiter = Arc::new(Mutex::new(RateLimiter::new(None, None)));
+    let patch_limiter =
+        Arc::new(Mutex::new(RateLimiter::new(Some(60), Some(60))));
+
+    let create_route = warp::path("create")
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&scylla)))
+        .and(warp::any().map(move || Arc::clone(&memcached)))
+        .and(warp::body::json())
+        .and(warp::header("cf-turnstile-token"))
+        .and(warp::header::optional::<String>("X-Forwarded-For"))
+        .and(warp::addr::remote())
+        .and_then(create_user);
+
+    let login_route = warp::path("login")
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&login_scylla)))
+        .and(warp::any().map(move || Arc::clone(&login_mem)))
+        .and(warp::body::json())
+        .and(warp::header("cf-turnstile-token"))
+        .and(warp::header::optional::<String>("X-Forwarded-For"))
+        .and(warp::addr::remote())
+        .and_then(login);
+
+    let recuperate_account_route = warp::path("login")
+        .and(warp::path("recuperate"))
+        .and(warp::get())
+        .and(warp::any().map(move || Arc::clone(&recuperate_scylla)))
+        .and(warp::any().map(move || Arc::clone(&recuperate_mem)))
+        .and(warp::header("code"))
+        .and(warp::header("cf-turnstile-token"))
+        .and_then(recuperate_account);
+
+    let get_user_route = warp::path!("users" / String)
+        .and(warp::get())
+        .and(warp::any().map(move || Arc::clone(&get_scylla)))
+        .and(warp::any().map(move || Arc::clone(&get_mem)))
+        .and(warp::any().map(move || Arc::clone(&rate_limiter)))
+        .and(warp::header::optional::<String>("authorization"))
+        .and(warp::header::optional::<String>("X-Forwarded-For"))
+        .and(warp::addr::remote())
+        .and_then(get_user);
+
+    let suspend_user_route = warp::path("account")
+        .and(warp::path("suspend"))
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&suspend_scylla)))
+        .and(warp::query::<model::query::Suspend>())
+        .and(warp::header("authorization"))
+        .and_then(suspend_user);
+
+    let oauth_code = warp::path("oauth2")
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&get_code_scylla)))
+        .and(warp::any().map(move || Arc::clone(&get_code_mem)))
+        .and(warp::body::json())
+        .and(warp::header("authorization"))
+        .and_then(post_oauth);
+
+    let get_jwt_code = warp::path("oauth2")
+        .and(warp::path("token"))
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&get_jwt_scylla)))
+        .and(warp::any().map(move || Arc::clone(&get_jwt_mem)))
+        .and(warp::body::json())
+        .and_then(get_oauth);
+
+    let delete_user = warp::path("users")
+        .and(warp::path("@me"))
+        .and(warp::delete())
+        .and(warp::any().map(move || Arc::clone(&delete_scylla)))
+        .and(warp::body::json())
+        .and(warp::header("authorization"))
+        .and_then(delete_user);
+
+    let update_user = warp::path("users")
+        .and(warp::path("@me"))
+        .and(warp::patch())
+        .and(warp::any().map(move || Arc::clone(&update_scylla)))
+        .and(warp::any().map(move || Arc::clone(&update_mem)))
+        .and(warp::any().map(move || nats.clone()))
+        .and(warp::any().map(move || Arc::clone(&patch_limiter)))
+        .and(warp::body::json())
+        .and(warp::header("authorization"))
+        .and(warp::header::optional::<String>("X-Forwarded-For"))
+        .and(warp::addr::remote())
+        .and_then(update_user);
+
+    let get_user_data = warp::path("account")
+        .and(warp::path("data"))
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&get_data_scylla)))
+        .and(warp::body::json())
+        .and(warp::header("authorization"))
+        .and_then(get_data);
+
+    let routes = create_route
+        .or(login_route)
+        .or(recuperate_account_route)
+        .or(get_user_route)
+        .or(suspend_user_route)
+        .or(oauth_code)
+        .or(get_jwt_code)
+        .or(delete_user)
+        .or(update_user)
+        .or(get_user_data)
+        .recover(handle_rejection);
+
+    let port = std::env::var("PORT")
+        .unwrap_or_else(|_| "1111".to_string())
+        .parse::<u16>()
+        .unwrap();
     println!("Server started on port {}", port);
 
-    warp::serve(warp::any().and(warp::options()).map(|| "OK").or(warp::head().map(|| "OK")).or(routes))
-    .run((
-        [0, 0, 0, 0],
-        port
-    ))
-    .await;
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_regex() {
-        assert!(TOKEN.is_match("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"));
-    }
+    warp::serve(routes).run(([0, 0, 0, 0], port)).await;
 }

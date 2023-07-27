@@ -1,32 +1,48 @@
-use crate::database::cassandra::query;
-use warp::reply::{WithStatus, Json};
-use anyhow::{Result, Context};
+use crate::database::scylla::query;
+use anyhow::{anyhow, Context, Result};
+use std::sync::Arc;
+use warp::reply::{Json, WithStatus};
 
-const SELECT_USER_TOKENS_QUERY: &str = "SELECT id FROM accounts.tokens WHERE user_id = ?";
-const UPDATE_TOKEN_QUERY: &str = "UPDATE accounts.tokens SET deleted = true WHERE id = ?";
+const UPDATE_USER_DELETED: &str =
+    "UPDATE accounts.users SET deleted = ? WHERE vanity = ?;";
+const SELECT_USER_TOKENS_QUERY: &str =
+    "SELECT id FROM accounts.tokens WHERE user_id = ?;";
+const UPDATE_TOKEN_QUERY: &str =
+    "UPDATE accounts.tokens SET deleted = true WHERE id = ?;";
 
 /// Suspend a user and block each tokens in database
-pub fn suspend_user(vanity: String, deleted: bool) -> Result<()> {
-    query(format!("UPDATE accounts.users SET deleted = {} WHERE vanity = ?", deleted), vec![vanity.clone()])
-        .context("Failed to update user")?;
+pub async fn suspend_user(
+    scylla: Arc<scylla::Session>,
+    vanity: String,
+    deleted: bool,
+) -> Result<()> {
+    query(
+        Arc::clone(&scylla),
+        UPDATE_USER_DELETED,
+        (deleted, vanity.clone()),
+    )
+    .await
+    .context("Failed to update user")?;
 
     if deleted {
-        let tokens_res = query(SELECT_USER_TOKENS_QUERY, vec![vanity])
-            .context("Failed to select user tokens")?
-            .get_body()
-            .context("Failed to get response body")?
-            .as_cols()
-            .unwrap()
-            .rows_content
-            .clone();
+        let tokens_res =
+            query(Arc::clone(&scylla), SELECT_USER_TOKENS_QUERY, vec![vanity])
+                .await?
+                .rows
+                .unwrap_or_default();
 
         for data in tokens_res {
-            let token_id = std::str::from_utf8(&data[0].clone().into_plain().unwrap()[..])
-                .context("Failed to convert token ID to string")?
-                .to_string();
-
-            query(UPDATE_TOKEN_QUERY, vec![token_id])
-                .context("Failed to update token")?;
+            query(
+                Arc::clone(&scylla),
+                UPDATE_TOKEN_QUERY,
+                vec![data.columns[0]
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("No reference"))?
+                    .as_text()
+                    .ok_or_else(|| anyhow!("Can't convert to string"))?],
+            )
+            .await
+            .context("Failed to update token")?;
         }
     }
 
@@ -34,14 +50,19 @@ pub fn suspend_user(vanity: String, deleted: bool) -> Result<()> {
 }
 
 /// Route to suspend a user
-pub fn suspend(query: crate::model::query::Suspend, token: String) -> Result<WithStatus<Json>> {
+pub async fn suspend(
+    scylla: Arc<scylla::Session>,
+    query: crate::model::query::Suspend,
+    token: String,
+) -> Result<WithStatus<Json>> {
     // Check if token is valid
-    if token != dotenv::var("GLOBAL_AUTH")? {
+    if token != std::env::var("GLOBAL_AUTH")? {
         return Ok(super::err("Invalid user".to_string()));
     }
 
     // Suspend user and all active connections
-    suspend_user(query.vanity, query.suspend.unwrap_or_default())?;
+    suspend_user(scylla, query.vanity, query.suspend.unwrap_or_default())
+        .await?;
 
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {
