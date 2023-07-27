@@ -9,18 +9,30 @@ const MAX_REQUESTS: u64 = 100; // Maximum allowed requests within the window
 #[derive(Default, Clone)]
 pub struct RateLimiter {
     counters: HashMap<String, Vec<Instant>>,
+    window_size: u64,
+    max_requests: u64,
 }
 
 impl RateLimiter {
-    pub fn new() -> Self {
+    pub fn new(window_size: Option<u64>, max_requests: Option<u64>) -> Self {
         RateLimiter {
             counters: HashMap::new(),
+            window_size: if let Some(num) = window_size {
+                num
+            } else {
+                WINDOW_SIZE
+            },
+            max_requests: if let Some(num) = max_requests {
+                num
+            } else {
+                MAX_REQUESTS
+            },
         }
     }
 
     pub fn check_rate(&mut self, ip: &str) -> bool {
         let now = Instant::now();
-        let window_start = now - Duration::from_secs(WINDOW_SIZE);
+        let window_start = now - Duration::from_secs(self.window_size);
 
         // Remove old entries from the sliding window
         if let Some(counter) = self.counters.get_mut(ip) {
@@ -29,7 +41,7 @@ impl RateLimiter {
 
         // Check if the number of requests in the window has exceeded the limit
         if let Some(counter) = self.counters.get(ip) {
-            if counter.len() as u64 >= MAX_REQUESTS {
+            if counter.len() as u64 >= self.max_requests {
                 return false;
             }
         }
