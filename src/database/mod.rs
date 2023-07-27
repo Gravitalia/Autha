@@ -1,4 +1,5 @@
 pub mod mem;
+pub mod nats;
 pub mod scylla;
 
 use crate::helpers::crypto::{decrypt, fpe_decrypt};
