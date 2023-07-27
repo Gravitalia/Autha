@@ -5,6 +5,7 @@ mod router;
 
 #[macro_use]
 extern crate lazy_static;
+use async_nats::jetstream::Context;
 use helpers::ratelimiter::RateLimiter;
 use memcache::Client;
 use scylla::Session;
@@ -187,10 +188,13 @@ async fn delete_user(
 async fn update_user(
     scylla: Arc<Session>,
     memcached: Arc<Client>,
+    nats: Option<Context>,
     body: model::body::UserPatch,
     token: String,
 ) -> Result<impl Reply, Rejection> {
-    match router::users::patch::patch(scylla, memcached, token, body).await {
+    match router::users::patch::patch(scylla, memcached, nats, token, body)
+        .await
+    {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -258,6 +262,7 @@ async fn main() {
     // Starts database
     let scylla = Arc::new(database::scylla::init().await.unwrap());
     let memcached = Arc::new(database::mem::init().unwrap());
+    let nats = database::nats::init().await.unwrap();
 
     let login_scylla = Arc::clone(&scylla);
     let login_mem = Arc::clone(&memcached);
@@ -368,12 +373,13 @@ async fn main() {
         .and(warp::patch())
         .and(warp::any().map(move || Arc::clone(&update_scylla)))
         .and(warp::any().map(move || Arc::clone(&update_mem)))
+        .and(warp::any().map(move || nats.clone()))
         .and(warp::body::json())
         .and(warp::header("authorization"))
         .and_then(update_user);
 
-    let get_user_data = warp::path("account").
-        and(warp::path("data"))
+    let get_user_data = warp::path("account")
+        .and(warp::path("data"))
         .and(warp::post())
         .and(warp::any().map(move || Arc::clone(&get_data_scylla)))
         .and(warp::body::json())
