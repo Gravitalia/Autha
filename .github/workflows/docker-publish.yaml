@@ -41,7 +41,7 @@ jobs:
         
     - name: Build the Docker image
       run: |
-            docker build . --tag ghcr.io/gravitalia/autha-dev:latest
-            docker push ghcr.io/gravitalia/autha-dev:latest
-            docker tag ghcr.io/gravitalia/autha-dev:latest ghcr.io/gravitalia/autha-dev:${{ steps.get-tag.outputs.PKG_VERSION }}
-            docker push ghcr.io/gravitalia/autha-dev:${{ steps.get-tag.outputs.PKG_VERSION }}
+            docker build . --tag ghcr.io/gravitalia/autha:latest
+            docker push ghcr.io/gravitalia/autha:latest
+            docker tag ghcr.io/gravitalia/autha:latest ghcr.io/gravitalia/autha:${{ steps.get-tag.outputs.PKG_VERSION }}
+            docker push ghcr.io/gravitalia/autha:${{ steps.get-tag.outputs.PKG_VERSION }}
