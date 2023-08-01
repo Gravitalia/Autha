@@ -8,7 +8,7 @@ const UPDATE_USER_DELETED: &str =
 const SELECT_USER_TOKENS_QUERY: &str =
     "SELECT id FROM accounts.tokens WHERE user_id = ?;";
 const UPDATE_TOKEN_QUERY: &str =
-    "UPDATE accounts.tokens SET deleted = true WHERE id = ?;";
+    "UPDATE accounts.tokens SET deleted = true, ip = '' WHERE id = ?;";
 
 /// Suspend a user and block each tokens in database
 pub async fn suspend_user(
