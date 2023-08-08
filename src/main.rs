@@ -427,5 +427,13 @@ async fn main() {
         .unwrap();
     println!("Server started on port {}", port);
 
-    warp::serve(routes).run(([0, 0, 0, 0], port)).await;
+    warp::serve(
+        warp::any()
+            .and(warp::options())
+            .map(|| "OK")
+            .or(warp::head().map(|| "OK"))
+            .or(routes),
+    )
+    .run(([0, 0, 0, 0], port))
+    .await;
 }
