@@ -19,6 +19,8 @@ pub async fn get_data(
             .await
             .unwrap_or_else(|_| "Invalid".to_string());
 
+    println!("{}", middelware_res);
+
     let vanity: String =
         if middelware_res != "Invalid" && middelware_res != "Suspended" {
             middelware_res.to_lowercase()
