@@ -132,7 +132,7 @@ pub async fn get(
             warp::http::StatusCode::OK,
         )
     } else {
-        if !from_mem && vanity != requester {
+        if !from_mem && vanity != requester && user.email.is_none() {
             let _ = set(
                 memcached,
                 vanity,
