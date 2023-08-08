@@ -20,24 +20,24 @@ async fn middleware(
     fallback: &str,
 ) -> anyhow::Result<String> {
     match token {
-        Some(ntoken) if fallback == "@me" => {
+        Some(ntoken) => {
+            println!("Middleware token: {}", ntoken);
             match crate::helpers::token::check(scylla, ntoken).await {
                 Ok(data) => {
-                    eprintln!("data: {}", data);
-                    return Ok(data);
+                    println!("midd res: {}", data);
+                    Ok(data)
                 }
                 Err(e) => {
-                    eprintln!("errror: {}", e);
                     if e.to_string() == *"revoked" {
-                        return Ok("Suspended".to_string());
+                        Ok("Suspended".to_string())
                     } else if e.to_string() == *"expired" {
-                        return Ok("Invalid".to_string());
+                        Ok("Invalid".to_string())
+                    } else {
+                        Ok(fallback.to_string())
                     }
                 }
             }
-            Ok("Invalid".to_string())
         }
-        None if fallback == "@me" => Ok("Invalid".to_string()),
         _ => Ok(fallback.to_string()),
     }
 }
