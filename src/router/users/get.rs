@@ -20,6 +20,8 @@ pub async fn get(
         && token.is_some()
         && crate::router::TOKEN.is_match(token.as_deref().unwrap_or_default())
     {
+        println!("Jwt TOKEN");
+
         let oauth = match helpers::jwt::get_jwt(token.unwrap_or_default()) {
             Ok(d) => {
                 if d.claims.exp
@@ -58,6 +60,8 @@ pub async fn get(
 
         oauth.sub
     } else {
+        println!("intern TOKEN");
+        
         let middelware_res =
             crate::router::middleware(Arc::clone(&scylla), token, &id)
                 .await
