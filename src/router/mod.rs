@@ -23,9 +23,11 @@ async fn middleware(
         Some(ntoken) if fallback == "@me" => {
             match crate::helpers::token::check(scylla, ntoken).await {
                 Ok(data) => {
+                    eprintln!("data: {}", data);
                     return Ok(data);
                 }
                 Err(e) => {
+                    eprintln!("errror: {}", e);
                     if e.to_string() == *"revoked" {
                         return Ok("Suspended".to_string());
                     } else if e.to_string() == *"expired" {
