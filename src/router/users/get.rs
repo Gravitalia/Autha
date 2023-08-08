@@ -14,6 +14,20 @@ pub async fn get(
     id: String,
     token: Option<String>,
 ) -> WithStatus<Json> {
+    println!("{}", id == "@me");
+    println!("{}", token.is_some());
+    println!(
+        "{}",
+        crate::router::TOKEN.is_match(token.as_deref().unwrap_or_default())
+    );
+    println!(
+        "{}",
+        id == "@me"
+            && token.is_some()
+            && crate::router::TOKEN
+                .is_match(token.as_deref().unwrap_or_default())
+    );
+
     // Check authorization
     let requester: String;
     let vanity = if id == "@me"
@@ -63,12 +77,10 @@ pub async fn get(
                 .await
                 .unwrap_or_else(|_| "Invalid".to_string());
 
-        println!("{:?}", middelware_res);
-
         if middelware_res != "Invalid" && middelware_res != "Suspended" {
             let vanity = middelware_res.to_lowercase();
 
-            requester = if id == "@me" || id == vanity {
+            requester = if id == "@me" {
                 vanity.clone()
             } else {
                 "".to_string()
