@@ -20,8 +20,6 @@ pub async fn get(
         && token.is_some()
         && crate::router::TOKEN.is_match(token.as_deref().unwrap_or_default())
     {
-        println!("Jwt TOKEN");
-
         let oauth = match helpers::jwt::get_jwt(token.unwrap_or_default()) {
             Ok(d) => {
                 if d.claims.exp
@@ -60,12 +58,12 @@ pub async fn get(
 
         oauth.sub
     } else {
-        println!("intern TOKEN");
-        
         let middelware_res =
             crate::router::middleware(Arc::clone(&scylla), token, &id)
                 .await
                 .unwrap_or_else(|_| "Invalid".to_string());
+
+        println!("{:?}", middelware_res);
 
         if middelware_res != "Invalid" && middelware_res != "Suspended" {
             let vanity = middelware_res.to_lowercase();
