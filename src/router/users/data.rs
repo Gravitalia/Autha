@@ -7,6 +7,8 @@ use warp::reply::{Json, WithStatus};
 
 // Define query
 const GET_TOKENS: &str = "SELECT ip, date, expire_at, deleted FROM accounts.tokens WHERE user_id = ?;";
+const GET_PASSWORD: &str =
+    "SELECT password FROM accounts.users WHERE vanity = ?;";
 
 /// This route allows to obtain every data saved by Autha
 pub async fn get_data(
@@ -18,8 +20,6 @@ pub async fn get_data(
         crate::router::middleware(Arc::clone(&scylla), Some(token), "Invalid")
             .await
             .unwrap_or_else(|_| "Invalid".to_string());
-
-    println!("{}", middelware_res);
 
     let vanity: String =
         if middelware_res != "Invalid" && middelware_res != "Suspended" {
@@ -48,24 +48,23 @@ pub async fn get_data(
         }
     }
 
-    let query_res = query(
-        Arc::clone(&scylla),
-        crate::router::login::main::GET_LOGIN_DATA,
-        vec![vanity.clone()],
-    )
-    .await?
-    .rows
-    .unwrap_or_default();
+    let query_res =
+        query(Arc::clone(&scylla), GET_PASSWORD, vec![vanity.clone()])
+            .await?
+            .rows
+            .unwrap_or_default();
 
     // Check password
-    if !crate::helpers::crypto::hash_test(
-        query_res[0].columns[1]
-            .as_ref()
-            .ok_or_else(|| anyhow!("No reference"))?
-            .as_text()
-            .ok_or_else(|| anyhow!("Can't convert to string"))?,
-        body.password.as_ref(),
-    ) {
+    if !query_res.is_empty()
+        && !crate::helpers::crypto::hash_test(
+            query_res[0].columns[0]
+                .as_ref()
+                .ok_or_else(|| anyhow!("No reference"))?
+                .as_text()
+                .ok_or_else(|| anyhow!("Can't convert to string"))?,
+            body.password.as_ref(),
+        )
+    {
         return Ok(crate::router::err("Invalid password".to_string()));
     }
 
