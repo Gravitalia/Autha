@@ -20,6 +20,12 @@ pub async fn create(
 ) -> Result<String> {
     let id = random_string(65);
 
+    // Get actual timestamp (since 1st Jan. 1970)
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_millis() as i64;
+
     query(
         scylla.clone(),
         CREATE_TOKEN,
@@ -27,8 +33,8 @@ pub async fn create(
             id.clone(),
             user_id,
             encrypt(scylla, ip.as_bytes()).await,
-            chrono::Utc::now().timestamp(),
-            (chrono::Utc::now() + chrono::Duration::days(90)).timestamp(),
+            timestamp,
+            timestamp + 777600000, // 90 days in milliseconds
         ),
     )
     .await?;
@@ -47,17 +53,23 @@ pub async fn check(scylla: Arc<Session>, token: String) -> Result<String> {
         return Err(anyhow::Error::msg("not exists"));
     }
 
-    println!("Expire: {}", query_response[0].columns[0]
-    .as_ref()
-    .ok_or_else(|| anyhow!("No reference"))?
-    .as_bigint()
-    .ok_or_else(|| anyhow!("Can't convert to bigint"))? as u128);
+    println!(
+        "Expire: {}",
+        query_response[0].columns[0]
+            .as_ref()
+            .ok_or_else(|| anyhow!("No reference"))?
+            .as_bigint()
+            .ok_or_else(|| anyhow!("Can't convert to bigint"))? as u128
+    );
 
-    println!("Deleted: {}", query_response[0].columns[2]
-    .as_ref()
-    .ok_or_else(|| anyhow!("No reference"))?
-    .as_boolean()
-    .ok_or_else(|| anyhow!("Can't convert to bool"))?);
+    println!(
+        "Deleted: {}",
+        query_response[0].columns[2]
+            .as_ref()
+            .ok_or_else(|| anyhow!("No reference"))?
+            .as_boolean()
+            .ok_or_else(|| anyhow!("Can't convert to bool"))?
+    );
 
     if query_response[0].columns[0]
         .as_ref()
