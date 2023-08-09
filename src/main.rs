@@ -184,6 +184,7 @@ async fn delete_user(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 /// Route to update user data (email, username...)
 async fn update_user(
     scylla: Arc<Session>,
