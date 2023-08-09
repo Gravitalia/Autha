@@ -147,18 +147,6 @@ async fn suspend_user(
     }
 }
 
-/// Get JWT code via the 5-minute code
-async fn get_oauth(
-    scylla: Arc<Session>,
-    memcached: Arc<Client>,
-    body: model::body::GetOAuth,
-) -> Result<impl Reply, Rejection> {
-    match router::oauth::get_oauth_code(scylla, memcached, body).await {
-        Ok(r) => Ok(r),
-        Err(_) => Err(warp::reject::custom(UnknownError)),
-    }
-}
-
 /// Returns 5-minute code to get JWT
 async fn post_oauth(
     scylla: Arc<Session>,
@@ -166,7 +154,21 @@ async fn post_oauth(
     body: model::body::OAuth,
     token: String,
 ) -> Result<impl Reply, Rejection> {
+    println!("Post oauth");
     match router::oauth::post(scylla, memcached, body, token).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Get JWT code via the 5-minute code
+async fn get_oauth(
+    scylla: Arc<Session>,
+    memcached: Arc<Client>,
+    body: model::body::GetOAuth,
+) -> Result<impl Reply, Rejection> {
+    println!("Get oauth");
+    match router::oauth::get_oauth_code(scylla, memcached, body).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -365,14 +367,6 @@ async fn main() {
         .and(warp::header("authorization"))
         .and_then(suspend_user);
 
-    let get_jwt_code = warp::path("oauth2")
-        .and(warp::path("token"))
-        .and(warp::post())
-        .and(warp::any().map(move || Arc::clone(&get_jwt_scylla)))
-        .and(warp::any().map(move || Arc::clone(&get_jwt_mem)))
-        .and(warp::body::json())
-        .and_then(get_oauth);
-
     let oauth_code = warp::path("oauth2")
         .and(warp::post())
         .and(warp::any().map(move || Arc::clone(&get_code_scylla)))
@@ -380,6 +374,14 @@ async fn main() {
         .and(warp::body::json())
         .and(warp::header("authorization"))
         .and_then(post_oauth);
+
+    let get_jwt_code = warp::path("oauth2")
+        .and(warp::path("token"))
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&get_jwt_scylla)))
+        .and(warp::any().map(move || Arc::clone(&get_jwt_mem)))
+        .and(warp::body::json())
+        .and_then(get_oauth);
 
     let delete_user = warp::path("users")
         .and(warp::path("@me"))
