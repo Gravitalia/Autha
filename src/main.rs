@@ -367,14 +367,6 @@ async fn main() {
         .and(warp::header("authorization"))
         .and_then(suspend_user);
 
-    let oauth_code = warp::path("oauth2")
-        .and(warp::post())
-        .and(warp::any().map(move || Arc::clone(&get_code_scylla)))
-        .and(warp::any().map(move || Arc::clone(&get_code_mem)))
-        .and(warp::body::json())
-        .and(warp::header("authorization"))
-        .and_then(post_oauth);
-
     let get_jwt_code = warp::path("oauth2")
         .and(warp::path("token"))
         .and(warp::post())
@@ -382,6 +374,14 @@ async fn main() {
         .and(warp::any().map(move || Arc::clone(&get_jwt_mem)))
         .and(warp::body::json())
         .and_then(get_oauth);
+
+    let oauth_code = warp::path("oauth2")
+        .and(warp::post())
+        .and(warp::any().map(move || Arc::clone(&get_code_scylla)))
+        .and(warp::any().map(move || Arc::clone(&get_code_mem)))
+        .and(warp::body::json())
+        .and(warp::header("authorization"))
+        .and_then(post_oauth);
 
     let delete_user = warp::path("users")
         .and(warp::path("@me"))
@@ -417,8 +417,8 @@ async fn main() {
         .or(recuperate_account_route)
         .or(get_user_route)
         .or(suspend_user_route)
-        .or(oauth_code)
         .or(get_jwt_code)
+        .or(oauth_code)
         .or(delete_user)
         .or(update_user)
         .or(get_user_data)
