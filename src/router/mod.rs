@@ -21,10 +21,8 @@ async fn middleware(
 ) -> anyhow::Result<String> {
     match token {
         Some(ntoken) => {
-            println!("Middleware token: {}", ntoken);
             match crate::helpers::token::check(scylla, ntoken).await {
                 Ok(data) => {
-                    println!("midd res: {}", data);
                     Ok(data)
                 }
                 Err(e) => {
