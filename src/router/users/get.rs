@@ -14,14 +14,6 @@ pub async fn get(
     id: String,
     token: Option<String>,
 ) -> WithStatus<Json> {
-    println!("{:?} : {}", token, crate::router::TOKEN.is_match(token.as_deref().unwrap_or_default()));
-
-    println!("check 1: {}", id == "@me");
-    println!("check 2: {}", token.is_some());
-    println!("check 3: {}", id == "@me"
-    && token.is_some()
-    && crate::router::TOKEN.is_match(token.as_deref().unwrap_or_default()));
-
     // Check authorization
     let requester: String;
     let vanity = if id == "@me"
@@ -36,6 +28,14 @@ pub async fn get(
                         .unwrap_or_default()
                         .as_secs()
                 {
+                    println!(
+                        "Time: {} vs {}",
+                        d.claims.exp,
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap_or_default()
+                            .as_secs()
+                    );
                     return warp::reply::with_status(
                         warp::reply::json(&Error {
                             error: true,
@@ -47,7 +47,8 @@ pub async fn get(
 
                 d.claims
             }
-            Err(_) => {
+            Err(e) => {
+                eprintln!("(get) Cannot get JWT: {}", e);
                 return warp::reply::with_status(
                     warp::reply::json(&Error {
                         error: true,
