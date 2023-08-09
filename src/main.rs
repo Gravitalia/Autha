@@ -154,7 +154,6 @@ async fn post_oauth(
     body: model::body::OAuth,
     token: String,
 ) -> Result<impl Reply, Rejection> {
-    println!("Post oauth");
     match router::oauth::post(scylla, memcached, body, token).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
@@ -167,7 +166,6 @@ async fn get_oauth(
     memcached: Arc<Client>,
     body: model::body::GetOAuth,
 ) -> Result<impl Reply, Rejection> {
-    println!("Get oauth");
     match router::oauth::get_oauth_code(scylla, memcached, body).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
