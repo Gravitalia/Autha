@@ -53,24 +53,6 @@ pub async fn check(scylla: Arc<Session>, token: String) -> Result<String> {
         return Err(anyhow::Error::msg("not exists"));
     }
 
-    println!(
-        "Expire: {}",
-        query_response[0].columns[0]
-            .as_ref()
-            .ok_or_else(|| anyhow!("No reference"))?
-            .as_bigint()
-            .ok_or_else(|| anyhow!("Can't convert to bigint"))? as u128
-    );
-
-    println!(
-        "Deleted: {}",
-        query_response[0].columns[2]
-            .as_ref()
-            .ok_or_else(|| anyhow!("No reference"))?
-            .as_boolean()
-            .ok_or_else(|| anyhow!("Can't convert to bool"))?
-    );
-
     if query_response[0].columns[0]
         .as_ref()
         .ok_or_else(|| anyhow!("No reference"))?
