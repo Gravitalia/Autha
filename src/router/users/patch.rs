@@ -6,7 +6,6 @@ use crate::{
     helpers,
 };
 use anyhow::{anyhow, Result};
-use std::sync::Arc;
 use warp::reply::{Json, WithStatus};
 
 // Define queries
@@ -19,16 +18,13 @@ const UPDATE_PASSWORD: &str =
 
 /// Handle PATCH users route and let users modifie their profile
 pub async fn patch(
-    scylla: Arc<scylla::Session>,
-    memcached: Arc<memcache::Client>,
     nats: Option<async_nats::jetstream::Context>,
     token: String,
     body: crate::model::body::UserPatch,
 ) -> Result<WithStatus<Json>> {
-    let middelware_res =
-        crate::router::middleware(Arc::clone(&scylla), Some(token), "Invalid")
-            .await
-            .unwrap_or_else(|_| "Invalid".to_string());
+    let middelware_res = crate::router::middleware(Some(token), "Invalid")
+        .await
+        .unwrap_or_else(|_| "Invalid".to_string());
 
     let vanity: String =
         if middelware_res != "Invalid" && middelware_res != "Suspended" {
@@ -43,14 +39,10 @@ pub async fn patch(
             ));
         };
 
-    let query_res = query(
-        Arc::clone(&scylla),
-        GET_MUTABLE_VALUES,
-        vec![vanity.clone()],
-    )
-    .await?
-    .rows
-    .unwrap_or_default();
+    let query_res = query(GET_MUTABLE_VALUES, vec![vanity.clone()])
+        .await?
+        .rows
+        .unwrap_or_default();
 
     let mut is_psw_valid: bool = false;
     if body.password.is_some() {
@@ -160,14 +152,10 @@ pub async fn patch(
                 helpers::crypto::fpe_encrypt(e.encode_utf16().collect())?;
 
             // Check if email is already used
-            let query_res = query(
-                Arc::clone(&scylla),
-                CHECK_EMAIL,
-                vec![hashed_email.clone()],
-            )
-            .await?
-            .rows
-            .unwrap_or_default();
+            let query_res = query(CHECK_EMAIL, vec![hashed_email.clone()])
+                .await?
+                .rows
+                .unwrap_or_default();
 
             if !query_res.is_empty() {
                 return Ok(crate::router::err(
@@ -193,13 +181,12 @@ pub async fn patch(
                     dates[2].parse::<u32>()?,
                 ) as i32
             {
-                suspend_user(Arc::clone(&scylla), vanity, true).await?;
+                suspend_user(vanity, true).await?;
                 return Ok(crate::router::err(
                     "Your account has been suspended: age".to_string(),
                 ));
             } else {
-                birthdate =
-                    Some(encrypt(Arc::clone(&scylla), b.as_bytes()).await);
+                birthdate = Some(encrypt(b.as_bytes()).await);
             }
         }
     }
@@ -217,12 +204,8 @@ pub async fn patch(
             return Ok(crate::router::err("Invalid MFA".to_string()));
         } else {
             query(
-                Arc::clone(&scylla),
                 UPDATE_MFA,
-                vec![
-                    encrypt(Arc::clone(&scylla), m.as_bytes()).await,
-                    vanity.clone(),
-                ],
+                vec![encrypt(m.as_bytes()).await, vanity.clone()],
             )
             .await?;
         }
@@ -233,17 +216,12 @@ pub async fn patch(
         if !is_psw_valid || !crate::router::create::PASSWORD.is_match(&np) {
             return Ok(crate::router::err("Invalid password".to_string()));
         } else {
-            query(
-                Arc::clone(&scylla),
-                UPDATE_PASSWORD,
-                vec![hash(np.as_ref()), vanity.clone()],
-            )
-            .await?;
+            query(UPDATE_PASSWORD, vec![hash(np.as_ref()), vanity.clone()])
+                .await?;
         }
     }
 
     match query(
-        scylla,
         "UPDATE accounts.users SET username = ?, avatar = ?, bio = ?, birthdate = ?, phone = ?, email = ? WHERE vanity = ?;",
         (
             username.clone(),
@@ -270,7 +248,7 @@ pub async fn patch(
                 }
             }
 
-            let _ = del(memcached, vanity);
+            let _ = del(vanity);
             Ok(warp::reply::with_status(
                 warp::reply::json(&Error {
                     error: false,

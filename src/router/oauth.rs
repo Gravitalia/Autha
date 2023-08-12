@@ -7,7 +7,6 @@ use crate::{
     helpers,
 };
 use anyhow::{anyhow, Result};
-use std::sync::Arc;
 use warp::reply::{Json, WithStatus};
 
 // Set rust queries
@@ -17,17 +16,15 @@ const GET_OAUTH: &str =
 
 /// Handle post request for /oauth
 pub async fn post(
-    scylla: Arc<scylla::Session>,
-    memcached: Arc<memcache::Client>,
     body: crate::model::body::OAuth,
     token: String,
 ) -> Result<WithStatus<Json>> {
-    let middelware_res =
-        crate::router::middleware(Arc::clone(&scylla), Some(token), "Invalid")
-            .await
-            .unwrap_or_else(|_| "Invalid".to_string());
+    let middelware_res = crate::router::middleware(Some(token), "Invalid")
+        .await
+        .unwrap_or_else(|_| "Invalid".to_string());
 
-        let vanity = if middelware_res != "Invalid" && middelware_res != "Suspended" {
+    let vanity = if middelware_res != "Invalid" && middelware_res != "Suspended"
+    {
         middelware_res.to_lowercase()
     } else {
         return Ok(warp::reply::with_status(
@@ -39,7 +36,7 @@ pub async fn post(
         ));
     };
 
-    let bot = query(Arc::clone(&scylla), GET_BOT, vec![body.bot_id.clone()])
+    let bot = query(GET_BOT, vec![body.bot_id.clone()])
         .await?
         .rows
         .unwrap_or_default();
@@ -76,7 +73,7 @@ pub async fn post(
 
     // If empty, tries to find a valid code
     if body.response_type.is_empty() {
-        let res = query(scylla, GET_OAUTH, vec![vanity.clone()])
+        let res = query(GET_OAUTH, vec![vanity.clone()])
             .await?
             .rows
             .unwrap_or_default();
@@ -114,7 +111,6 @@ pub async fn post(
 
             let id = random_string(24);
             let _ = set(
-                Arc::clone(&memcached),
                 id.clone(),
                 Characters(format!(
                     "{}+{}+{}",
@@ -140,7 +136,6 @@ pub async fn post(
     } else {
         let id = random_string(24);
         let _ = set(
-            memcached,
             id.clone(),
             Characters(format!(
                 "{}+{}+{}+{}",
@@ -160,11 +155,9 @@ pub async fn post(
 
 /// Handle JWT creation, code deletation
 pub async fn get_oauth_code(
-    scylla: Arc<scylla::Session>,
-    memcached: Arc<memcache::Client>,
     body: crate::model::body::GetOAuth,
 ) -> Result<WithStatus<Json>> {
-    let data = match get(Arc::clone(&memcached), body.code.clone()).unwrap() {
+    let data = match get(body.code.clone()).unwrap() {
         Some(r) => Vec::from_iter(r.split('+').map(|x| x.to_string())),
         None => vec![],
     };
@@ -185,7 +178,7 @@ pub async fn get_oauth_code(
         return Ok(super::err("Invalid scope".to_string()));
     }
 
-    let bot = query(Arc::clone(&scylla), GET_BOT, vec![body.client_id.clone()])
+    let bot = query(GET_BOT, vec![body.client_id.clone()])
         .await?
         .rows
         .unwrap_or_default();
@@ -230,7 +223,7 @@ pub async fn get_oauth_code(
     }
 
     // Delete used key
-    let _ = del(memcached, body.code);
+    let _ = del(body.code);
 
     // Create JWT & OAuth
     let jwt = helpers::jwt::create_jwt(
@@ -238,7 +231,6 @@ pub async fn get_oauth_code(
         data[3].split_whitespace().map(|x| x.to_string()).collect(),
     );
     create_oauth(
-        scylla,
         jwt.clone(),
         user_id.to_string(),
         body.client_id.clone(),

@@ -4,7 +4,6 @@ pub mod scylla;
 
 use crate::helpers::crypto::{decrypt, fpe_decrypt};
 use anyhow::{anyhow, Result};
-use std::sync::Arc;
 
 // Define queries to get user or bot
 const GET_USER: &str = "SELECT username, avatar, bio, deleted, flags, email, birthdate, verified FROM accounts.users WHERE vanity = ?;";
@@ -12,57 +11,46 @@ const GET_BOT: &str = "SELECT username, avatar, bio, deleted, flags FROM account
 
 /// Tries to find a user in cache or use database
 pub async fn get_user(
-    scylla_conn: Arc<crate::Session>,
-    memcached: Option<Arc<memcache::Client>>,
+    use_memcached: bool,
     vanity: String,
     requester: String,
 ) -> Result<(bool, crate::model::user::User)> {
-    if let Some(mem_conn) = memcached {
-        let data = mem::get(mem_conn, vanity.clone())?.unwrap_or_default();
+    if use_memcached {
+        let data = mem::get(vanity.clone())?.unwrap_or_default();
         if !data.is_empty() && requester != vanity {
             Ok((
                 true,
                 serde_json::from_str::<crate::model::user::User>(&data[..])?,
             ))
         } else {
-            Ok((
-                false,
-                fallback_scylla(scylla_conn, vanity, requester).await?,
-            ))
+            Ok((false, fallback_scylla(vanity, requester).await?))
         }
     } else {
-        Ok((
-            false,
-            fallback_scylla(scylla_conn, vanity, requester).await?,
-        ))
+        Ok((false, fallback_scylla(vanity, requester).await?))
     }
 }
 
 // Get user via ScyllaDB (or cassandra) without using cache
 async fn fallback_scylla(
-    scylla_conn: Arc<crate::Session>,
     vanity: String,
     requester: String,
 ) -> Result<crate::model::user::User> {
     let mut is_bot = false;
-    let mut query_result =
-        scylla::query(Arc::clone(&scylla_conn), GET_USER, vec![vanity.clone()])
-            .await?
-            .rows
-            .unwrap_or_default();
-
-    if query_result.is_empty() {
-        is_bot = true;
-        query_result = scylla::query(
-            Arc::clone(&scylla_conn),
-            GET_BOT,
-            vec![vanity.clone()],
-        )
+    let mut query_result = scylla::query(GET_USER, vec![vanity.clone()])
         .await?
         .rows
         .unwrap_or_default();
+
+    // If no user found, try to get bots
+    if query_result.is_empty() {
+        is_bot = true;
+        query_result = scylla::query(GET_BOT, vec![vanity.clone()])
+            .await?
+            .rows
+            .unwrap_or_default();
     }
 
+    // If no bot and user found, return empty struct
     if query_result.is_empty() {
         Ok(crate::model::user::User {
             username: "".to_string(),
@@ -142,7 +130,7 @@ async fn fallback_scylla(
                 if birth.is_empty() {
                     None
                 } else {
-                    Some(decrypt(scylla_conn, birth).await?)
+                    Some(decrypt(birth).await?)
                 }
             },
             deleted: query_result[0].columns[3]
