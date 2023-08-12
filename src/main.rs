@@ -243,7 +243,6 @@ async fn handle_rejection(
 
 #[tokio::main]
 async fn main() {
-    dotenv::dotenv().ok();
     println!("Starting server...");
 
     // Starts database
