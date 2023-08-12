@@ -14,7 +14,7 @@ pub enum SetValue {
 /// Inits memcached database connection
 pub fn init() -> Result<MemPool> {
     let manager = r2d2_memcache::MemcacheConnectionManager::new(format!(
-        "memcache://{}?timeout=2&use_udp=true&hash=crc&libketama_compatible=false",
+        "memcache://{}?timeout=2&use_udp=true",
         std::env::var("MEMCACHED_HOST")
             .unwrap_or_else(|_| "127.0.0.1:11211".to_string())
     ));
