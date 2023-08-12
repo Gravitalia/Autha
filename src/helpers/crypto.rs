@@ -1,6 +1,6 @@
 use crate::database::scylla::{create_salt, query};
 use anyhow::{anyhow, Result};
-use argon2::{Config, ThreadMode, Variant, Version};
+use argon2::{Config, Variant, Version};
 use chacha20poly1305::{
     aead::{Aead, AeadCore, KeyInit, OsRng},
     XChaCha20Poly1305,
@@ -8,6 +8,7 @@ use chacha20poly1305::{
 use fpe::ff1::{FlexibleNumeralString, Operations, FF1};
 use generic_array::GenericArray;
 
+// Define query to get salt from database
 const GET_SALT: &str = "SELECT salt FROM accounts.salts WHERE id = ?;";
 
 /// Hash data in bytes using Argon2id
@@ -27,7 +28,6 @@ pub fn hash(data: &[u8]) -> String {
                 .parse::<u32>()
                 .unwrap_or(1),
             lanes: 8,
-            thread_mode: ThreadMode::Parallel,
             secret: std::env::var("KEY")
                 .unwrap_or_else(|_| "KEY".to_string())
                 .as_bytes(),
