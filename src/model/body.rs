@@ -1,5 +1,6 @@
 use serde::Deserialize;
 
+/// Represents the request body structure for the "create" route.
 #[derive(Deserialize, Clone)]
 pub struct Create {
     pub username: String,
@@ -10,6 +11,7 @@ pub struct Create {
     pub phone: Option<String>,
 }
 
+/// Represents the request body structure for the login route.
 #[derive(Deserialize, Clone)]
 pub struct Login {
     pub email: String,
@@ -17,6 +19,7 @@ pub struct Login {
     pub mfa: Option<String>,
 }
 
+/// Represents the possible modifications for a user in the "UserPatch" context.
 #[derive(Deserialize)]
 pub struct UserPatch {
     pub username: Option<String>,
@@ -30,12 +33,14 @@ pub struct UserPatch {
     pub mfa: Option<String>,
 }
 
+/// Represents the information required for GDPR compliance ("Gdrp").
 #[derive(Deserialize)]
 pub struct Gdrp {
     pub password: String,
     pub security_token: String,
 }
 
+/// Represents the parameters for OAuth authentication.
 #[derive(Deserialize)]
 pub struct OAuth {
     pub response_type: String,
@@ -44,6 +49,7 @@ pub struct OAuth {
     pub scope: String,
 }
 
+/// Represents the information to obtain an OAuth authentication token.
 #[derive(Deserialize)]
 pub struct GetOAuth {
     pub client_id: String,
@@ -52,6 +58,7 @@ pub struct GetOAuth {
     pub redirect_uri: String,
 }
 
+/// Represents a temporary token with optional password and MFA fields.
 #[derive(Deserialize)]
 pub struct TempToken {
     pub password: Option<String>,
