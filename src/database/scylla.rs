@@ -1,5 +1,7 @@
+use core::num::NonZeroUsize;
 use once_cell::sync::OnceCell;
 use scylla::transport::errors::QueryError;
+use scylla::transport::session::PoolSize;
 use scylla::{Session, SessionBuilder};
 
 /// SESSION represents Scylla active session
@@ -50,8 +52,9 @@ pub async fn init() -> Result<(), scylla::transport::errors::NewSessionError> {
 
     let _ = SESSION.set(
         SessionBuilder::new()
-            .known_node(config.host)
+            .known_nodes([config.host])
             .user(config.username, config.password)
+            .pool_size(PoolSize::PerShard(NonZeroUsize::new(1).unwrap()))
             .build()
             .await?,
     );
