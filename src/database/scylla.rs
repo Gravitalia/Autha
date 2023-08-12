@@ -1,6 +1,9 @@
+use once_cell::sync::OnceCell;
 use scylla::transport::errors::QueryError;
 use scylla::{Session, SessionBuilder};
-use std::sync::Arc;
+
+/// SESSION represents Scylla active session
+static SESSION: OnceCell<Session> = OnceCell::new();
 
 // Define constants for table creation and queries
 const CREATE_USERS_TABLE: &str = "CREATE TABLE IF NOT EXISTS accounts.users ( vanity TEXT, email TEXT, username TEXT, avatar TEXT, banner TEXT, bio TEXT, verified BOOLEAN, flags INT, phone TEXT, password TEXT, birthdate TEXT, deleted BOOLEAN, mfa_code TEXT, expire_at TIMESTAMP, PRIMARY KEY (vanity) );";
@@ -21,6 +24,7 @@ const CREATE_OAUTH: &str = "INSERT INTO accounts.oauth ( id, user_id, bot_id, sc
 const CREATE_SALT: &str =
     "INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?);";
 
+/// DatabaseConfig defines Scylla authentification
 struct DatabaseConfig {
     host: String,
     username: String,
@@ -41,20 +45,25 @@ impl DatabaseConfig {
 }
 
 /// Inits scylla (or cassandra) database connection
-pub async fn init(
-) -> Result<Session, scylla::transport::errors::NewSessionError> {
+pub async fn init() -> Result<(), scylla::transport::errors::NewSessionError> {
     let config = DatabaseConfig::new();
 
-    SessionBuilder::new()
-        .known_node(config.host)
-        .user(config.username, config.password)
-        .build()
-        .await
+    let _ = SESSION.set(
+        SessionBuilder::new()
+            .known_node(config.host)
+            .user(config.username, config.password)
+            .build()
+            .await?,
+    );
+
+    Ok(())
 }
 
 /// This function allows to create every needed tables
 /// to work properly with the program
-pub async fn create_tables(client: Arc<Session>) {
+pub async fn create_tables() {
+    let client = SESSION.get().unwrap();
+
     client
         .query(CREATE_USERS_TABLE, &[])
         .await
@@ -95,16 +104,14 @@ pub async fn create_tables(client: Arc<Session>) {
 
 /// Make a query to scylla (or cassandra)
 pub async fn query(
-    client: Arc<Session>,
     query: impl Into<scylla::query::Query>,
     params: impl scylla::frame::value::ValueList,
 ) -> Result<scylla::QueryResult, QueryError> {
-    client.query(query, params).await
+    SESSION.get().unwrap().query(query, params).await
 }
 
 /// Create a user into the database
 pub async fn create_user(
-    client: Arc<Session>,
     vanity: &String,
     email: String,
     username: String,
@@ -127,7 +134,9 @@ pub async fn create_user(
     };
 
     // Use parameterized query to prevent SQL injection
-    client
+    SESSION
+        .get()
+        .unwrap()
         .query(
             CREATE_USER,
             (
@@ -148,22 +157,27 @@ pub async fn create_user(
 
 /// Create a OAuth2 code
 pub async fn create_oauth(
-    client: Arc<Session>,
     id: String,
     vanity: String,
     bot_id: String,
     scope: Vec<String>,
 ) {
-    let _ = client
+    let _ = SESSION
+        .get()
+        .unwrap()
         .query(CREATE_OAUTH, (id, vanity, bot_id, scope, false))
         .await;
 }
 
 /// Create a new salt to split it and secure it
-pub async fn create_salt(client: Arc<Session>, salt: String) -> String {
+pub async fn create_salt(salt: String) -> String {
     let id = uuid::Uuid::new_v4().to_string();
 
-    let _ = client.query(CREATE_SALT, (id.to_string(), salt)).await;
+    let _ = SESSION
+        .get()
+        .unwrap()
+        .query(CREATE_SALT, (id.to_string(), salt))
+        .await;
 
     id
 }
