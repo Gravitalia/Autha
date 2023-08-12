@@ -15,15 +15,17 @@ use std::{
 };
 use warp::{http::StatusCode, Filter, Rejection, Reply};
 
-// Define errors
+/// Define errors
 #[derive(Debug)]
 struct UnknownError;
 impl warp::reject::Reject for UnknownError {}
 
+/// Define a ratelimit error
 #[derive(Debug)]
 struct RateLimitExceeded;
 impl warp::reject::Reject for RateLimitExceeded {}
 
+/// Define an invalid token present in header
 #[derive(Debug)]
 struct InvalidAuthorization;
 impl warp::reject::Reject for InvalidAuthorization {}
