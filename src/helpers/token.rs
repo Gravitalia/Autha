@@ -1,11 +1,7 @@
 use super::{crypto::encrypt, random_string};
 use crate::database::scylla::query;
 use anyhow::{anyhow, Result};
-use scylla::Session;
-use std::{
-    sync::Arc,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 // Set CQL queries
 const CREATE_TOKEN: &str = "INSERT INTO accounts.tokens (id, user_id, ip, date, expire_at, deleted) VALUES (?, ?, ?, ?, ?, false);";
@@ -13,11 +9,7 @@ const CHECK_TOKEN: &str =
     "SELECT expire_at, user_id, deleted FROM accounts.tokens WHERE id = ?";
 
 /// create allows to add a token into database
-pub async fn create(
-    scylla: Arc<Session>,
-    user_id: String,
-    ip: String,
-) -> Result<String> {
+pub async fn create(user_id: String, ip: String) -> Result<String> {
     let id = random_string(65);
 
     // Get actual timestamp (since 1st Jan. 1970)
@@ -27,12 +19,11 @@ pub async fn create(
         .as_millis() as i64;
 
     query(
-        scylla.clone(),
         CREATE_TOKEN,
         (
             id.clone(),
             user_id,
-            encrypt(scylla, ip.as_bytes()).await,
+            encrypt(ip.as_bytes()).await,
             timestamp,
             timestamp + 777600000, // 90 days in milliseconds
         ),
@@ -43,8 +34,8 @@ pub async fn create(
 }
 
 /// check allows to verify if token is valid and not expired
-pub async fn check(scylla: Arc<Session>, token: String) -> Result<String> {
-    let query_response = query(scylla, CHECK_TOKEN, vec![token])
+pub async fn check(token: String) -> Result<String> {
+    let query_response = query(CHECK_TOKEN, vec![token])
         .await?
         .rows
         .unwrap_or_default();

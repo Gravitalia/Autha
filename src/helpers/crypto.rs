@@ -7,8 +7,6 @@ use chacha20poly1305::{
 };
 use fpe::ff1::{FlexibleNumeralString, Operations, FF1};
 use generic_array::GenericArray;
-use scylla::Session;
-use std::sync::Arc;
 
 const GET_SALT: &str = "SELECT salt FROM accounts.salts WHERE id = ?;";
 
@@ -57,7 +55,7 @@ pub fn hash_test(hash: &str, pwd: &[u8]) -> bool {
 }
 
 /// Encrypt data as bytes into String with ChaCha20 (Salsa20) and Poly1305
-pub async fn encrypt(scylla: Arc<Session>, data: &[u8]) -> String {
+pub async fn encrypt(data: &[u8]) -> String {
     match hex::decode(std::env::var("CHA_KEY").expect("Missing env `CHA_KEY`"))
     {
         Ok(v) => {
@@ -67,7 +65,7 @@ pub async fn encrypt(scylla: Arc<Session>, data: &[u8]) -> String {
             match XChaCha20Poly1305::new(&bytes).encrypt(&nonce, data) {
                 Ok(y) => format!(
                     "{}//{}",
-                    create_salt(scylla, hex::encode(nonce)).await,
+                    create_salt(hex::encode(nonce)).await,
                     hex::encode(y)
                 ),
                 Err(_) => "Error".to_string(),
@@ -78,13 +76,13 @@ pub async fn encrypt(scylla: Arc<Session>, data: &[u8]) -> String {
 }
 
 /// Decrypt a string with ChaCha20 (Salsa20) and Poly1305
-pub async fn decrypt(scylla: Arc<Session>, data: String) -> Result<String> {
+pub async fn decrypt(data: String) -> Result<String> {
     let (salt, cypher) = data.split_once("//").unwrap_or(("", ""));
 
     let bytes = GenericArray::clone_from_slice(&hex::decode(
         std::env::var("CHA_KEY").expect("Missing env `CHA_KEY`"),
     )?);
-    let query_res = query(scylla, GET_SALT, vec![salt.to_string()])
+    let query_res = query(GET_SALT, vec![salt.to_string()])
         .await?
         .rows
         .unwrap_or_default();

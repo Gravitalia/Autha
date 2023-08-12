@@ -8,10 +8,7 @@ pub mod token;
 
 use chrono::{Duration as ChronoDuration, NaiveDate, Utc};
 use rand::RngCore;
-use std::{
-    sync::Arc,
-    time::{Duration, SystemTime, UNIX_EPOCH},
-};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 /// Generate a random string
 ///
@@ -56,7 +53,7 @@ pub fn get_age(year: i32, month: u32, day: u32) -> f64 {
 }
 
 /// Check every day at 00h00 if users need to be deleted
-pub async fn remove_deleted_account(scylla: std::sync::Arc<scylla::Session>) {
+pub async fn remove_deleted_account() {
     tokio::task::spawn(async move {
         loop {
             let now = Utc::now();
@@ -66,11 +63,11 @@ pub async fn remove_deleted_account(scylla: std::sync::Arc<scylla::Session>) {
                 - now.timestamp();
             std::thread::sleep(Duration::from_secs(time as u64));
 
-            if let Ok(x) = crate::database::scylla::query(Arc::clone(&scylla), format!("SELECT vanity FROM accounts.users WHERE expire_at >= '{}' ALLOW FILTERING", now.format("%Y-%m-%d+0000")), []).await {
+            if let Ok(x) = crate::database::scylla::query(format!("SELECT vanity FROM accounts.users WHERE expire_at >= '{}' ALLOW FILTERING", now.format("%Y-%m-%d+0000")), []).await {
                 let res = x.rows.unwrap_or_default();
 
                 for acc in res.iter() {
-                    let _ = crate::database::scylla::query(Arc::clone(&scylla), "UPDATE accounts.users SET email = '', password = '', phone = '', birthdate = '', avatar = '', bio = '', banner = '', mfa_code = '', username = '' WHERE vanity = ?", vec![acc.columns[0].as_ref().unwrap().as_text().unwrap()]).await;
+                    let _ = crate::database::scylla::query("UPDATE accounts.users SET email = '', password = '', phone = '', birthdate = '', avatar = '', bio = '', banner = '', mfa_code = '', username = '' WHERE vanity = ?", vec![acc.columns[0].as_ref().unwrap().as_text().unwrap()]).await;
                 }
             };
         }
