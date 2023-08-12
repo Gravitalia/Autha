@@ -13,12 +13,12 @@ const GET_BOT: &str = "SELECT username, avatar, bio, deleted, flags FROM account
 /// Tries to find a user in cache or use database
 pub async fn get_user(
     scylla_conn: Arc<crate::Session>,
-    memcached: Option<Arc<memcache::Client>>,
+    use_memcached: bool,
     vanity: String,
     requester: String,
 ) -> Result<(bool, crate::model::user::User)> {
-    if let Some(mem_conn) = memcached {
-        let data = mem::get(mem_conn, vanity.clone())?.unwrap_or_default();
+    if use_memcached {
+        let data = mem::get(vanity.clone())?.unwrap_or_default();
         if !data.is_empty() && requester != vanity {
             Ok((
                 true,
@@ -51,6 +51,7 @@ async fn fallback_scylla(
             .rows
             .unwrap_or_default();
 
+    // If no user found, try to get bots
     if query_result.is_empty() {
         is_bot = true;
         query_result = scylla::query(
@@ -63,6 +64,7 @@ async fn fallback_scylla(
         .unwrap_or_default();
     }
 
+    // If no bot and user found, return empty struct
     if query_result.is_empty() {
         Ok(crate::model::user::User {
             username: "".to_string(),
