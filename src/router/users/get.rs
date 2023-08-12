@@ -4,15 +4,10 @@ use crate::database::{
 };
 use crate::helpers;
 use crate::model::{error::Error, user::User};
-use std::sync::Arc;
 use warp::reply::{Json, WithStatus};
 
 /// Handle GET users route
-pub async fn get(
-    scylla: Arc<scylla::Session>,
-    id: String,
-    token: Option<String>,
-) -> WithStatus<Json> {
+pub async fn get(id: String, token: Option<String>) -> WithStatus<Json> {
     // Check authorization
     let requester: String;
     let vanity = if id == "@me"
@@ -66,10 +61,9 @@ pub async fn get(
 
         oauth.sub
     } else {
-        let middelware_res =
-            crate::router::middleware(Arc::clone(&scylla), token, &id)
-                .await
-                .unwrap_or_else(|_| "Invalid".to_string());
+        let middelware_res = crate::router::middleware(token, &id)
+            .await
+            .unwrap_or_else(|_| "Invalid".to_string());
 
         if middelware_res != "Invalid" && middelware_res != "Suspended" {
             let vanity = middelware_res.to_lowercase();
@@ -94,7 +88,7 @@ pub async fn get(
 
     // Get user
     let (from_mem, user) =
-        match get_user(scylla, true, vanity.clone(), requester.clone()).await {
+        match get_user(true, vanity.clone(), requester.clone()).await {
             Ok(d) => d,
             Err(e) => {
                 eprintln!("(get) Cannot get user: {e}");

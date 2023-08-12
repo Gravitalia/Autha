@@ -2,7 +2,6 @@ use crate::database::mem;
 use crate::{database::scylla::query, helpers};
 use anyhow::{anyhow, Result};
 use sha3::{Digest, Keccak256};
-use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::task;
 use totp_lite::{totp_custom, Sha1};
@@ -13,7 +12,6 @@ pub const GET_LOGIN_DATA: &str = "SELECT vanity, password, deleted, mfa_code, ex
 
 /// Handle login route and check if everything is valid
 pub async fn login(
-    scylla: Arc<scylla::Session>,
     body: crate::model::body::Login,
     ip: String,
     token: String,
@@ -73,11 +71,10 @@ pub async fn login(
         helpers::crypto::fpe_encrypt(data.email.encode_utf16().collect())?;
 
     // Check if account exists
-    let query_res =
-        query(Arc::clone(&scylla), GET_LOGIN_DATA, vec![hashed_email])
-            .await?
-            .rows
-            .unwrap_or_default();
+    let query_res = query(GET_LOGIN_DATA, vec![hashed_email])
+        .await?
+        .rows
+        .unwrap_or_default();
 
     if query_res.is_empty() {
         return Ok(crate::router::err("Invalid user".to_string()));
@@ -156,9 +153,7 @@ pub async fn login(
             if totp_custom::<Sha1>(
                 30,
                 6,
-                helpers::crypto::decrypt(Arc::clone(&scylla), mfa.to_string())
-                    .await?
-                    .as_ref(),
+                helpers::crypto::decrypt(mfa.to_string()).await?.as_ref(),
                 SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
             ) != body.mfa.unwrap_or_default()
             {
@@ -171,8 +166,7 @@ pub async fn login(
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {
             error: false,
-            message: helpers::token::create(scylla, vanity.to_string(), ip)
-                .await?,
+            message: helpers::token::create(vanity.to_string(), ip).await?,
         }),
         warp::http::StatusCode::OK,
     ))

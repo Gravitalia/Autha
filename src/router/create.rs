@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::database::mem;
 use crate::database::scylla::{create_user, query};
 use crate::helpers;
@@ -19,7 +17,6 @@ lazy_static! {
 
 /// Handle create route and check if everything is valid
 pub async fn create(
-    scylla: Arc<scylla::Session>,
     body: crate::model::body::Create,
     ip: String,
     token: String,
@@ -87,7 +84,6 @@ pub async fn create(
     let mut query_res: Vec<scylla::_macro_internal::Row>;
     // Check if account with this email and vanity already exists
     query_res = query(
-        Arc::clone(&scylla),
         "SELECT vanity FROM accounts.users WHERE email = ?;",
         vec![hashed_email.clone()],
     )
@@ -101,7 +97,6 @@ pub async fn create(
 
     // Check if vanity is already used
     query_res = query(
-        Arc::clone(&scylla),
         "SELECT vanity FROM accounts.users WHERE vanity = ?;",
         vec![data.vanity.clone()],
     )
@@ -112,7 +107,6 @@ pub async fn create(
     // Check if bot id is already used
     if query_res.is_empty() {
         query_res = query(
-            Arc::clone(&scylla),
             "SELECT id FROM accounts.bots WHERE id = ?",
             vec![data.vanity.clone()],
         )
@@ -151,7 +145,6 @@ pub async fn create(
         } else {
             phone = Some(
                 helpers::crypto::encrypt(
-                    Arc::clone(&scylla),
                     body.phone.unwrap_or_default().as_bytes(),
                 )
                 .await,
@@ -178,7 +171,6 @@ pub async fn create(
         } else {
             birth = Some(
                 helpers::crypto::encrypt(
-                    Arc::clone(&scylla),
                     body.birthdate.unwrap_or_default().as_bytes(),
                 )
                 .await,
@@ -188,7 +180,6 @@ pub async fn create(
 
     // Create account
     match create_user(
-        Arc::clone(&scylla),
         &data.vanity,
         hashed_email,
         data.username,
@@ -214,7 +205,7 @@ pub async fn create(
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {
             error: false,
-            message: helpers::token::create(scylla, data.vanity, ip).await?,
+            message: helpers::token::create(data.vanity, ip).await?,
         }),
         warp::http::StatusCode::CREATED,
     ))

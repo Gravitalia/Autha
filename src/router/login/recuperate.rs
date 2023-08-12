@@ -1,7 +1,6 @@
 use crate::database::mem::{del, get};
 use crate::{database::scylla::query, helpers};
 use anyhow::Result;
-use std::sync::Arc;
 use warp::reply::{Json, WithStatus};
 
 // Define query
@@ -10,7 +9,6 @@ const REINTEGRATE_ACCOUNT: &str = "UPDATE accounts.users SET deleted = false, ex
 /// Handle a route to restore a deleted account based on a token
 /// generated via the login route
 pub async fn recuperate_account(
-    scylla: Arc<scylla::Session>,
     code: String,
     token: String,
 ) -> Result<WithStatus<Json>> {
@@ -38,7 +36,7 @@ pub async fn recuperate_account(
     del(code)?;
 
     // Restore account
-    query(scylla, REINTEGRATE_ACCOUNT, vec![vanity.clone()]).await?;
+    query(REINTEGRATE_ACCOUNT, vec![vanity.clone()]).await?;
 
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {

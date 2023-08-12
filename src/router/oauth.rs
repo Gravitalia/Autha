@@ -7,7 +7,6 @@ use crate::{
     helpers,
 };
 use anyhow::{anyhow, Result};
-use std::sync::Arc;
 use warp::reply::{Json, WithStatus};
 
 // Set rust queries
@@ -17,14 +16,12 @@ const GET_OAUTH: &str =
 
 /// Handle post request for /oauth
 pub async fn post(
-    scylla: Arc<scylla::Session>,
     body: crate::model::body::OAuth,
     token: String,
 ) -> Result<WithStatus<Json>> {
-    let middelware_res =
-        crate::router::middleware(Arc::clone(&scylla), Some(token), "Invalid")
-            .await
-            .unwrap_or_else(|_| "Invalid".to_string());
+    let middelware_res = crate::router::middleware(Some(token), "Invalid")
+        .await
+        .unwrap_or_else(|_| "Invalid".to_string());
 
     let vanity = if middelware_res != "Invalid" && middelware_res != "Suspended"
     {
@@ -39,7 +36,7 @@ pub async fn post(
         ));
     };
 
-    let bot = query(Arc::clone(&scylla), GET_BOT, vec![body.bot_id.clone()])
+    let bot = query(GET_BOT, vec![body.bot_id.clone()])
         .await?
         .rows
         .unwrap_or_default();
@@ -76,7 +73,7 @@ pub async fn post(
 
     // If empty, tries to find a valid code
     if body.response_type.is_empty() {
-        let res = query(scylla, GET_OAUTH, vec![vanity.clone()])
+        let res = query(GET_OAUTH, vec![vanity.clone()])
             .await?
             .rows
             .unwrap_or_default();
@@ -158,7 +155,6 @@ pub async fn post(
 
 /// Handle JWT creation, code deletation
 pub async fn get_oauth_code(
-    scylla: Arc<scylla::Session>,
     body: crate::model::body::GetOAuth,
 ) -> Result<WithStatus<Json>> {
     let data = match get(body.code.clone()).unwrap() {
@@ -182,7 +178,7 @@ pub async fn get_oauth_code(
         return Ok(super::err("Invalid scope".to_string()));
     }
 
-    let bot = query(Arc::clone(&scylla), GET_BOT, vec![body.client_id.clone()])
+    let bot = query(GET_BOT, vec![body.client_id.clone()])
         .await?
         .rows
         .unwrap_or_default();
@@ -235,7 +231,6 @@ pub async fn get_oauth_code(
         data[3].split_whitespace().map(|x| x.to_string()).collect(),
     );
     create_oauth(
-        scylla,
         jwt.clone(),
         user_id.to_string(),
         body.client_id.clone(),
