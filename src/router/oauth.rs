@@ -1,7 +1,7 @@
 use crate::helpers::random_string;
 use crate::{
     database::{
-        mem::{del, get, set, SetValue::Characters},
+        mem::{del, get, set, MemPool, SetValue::Characters},
         scylla::{create_oauth, query},
     },
     helpers,
@@ -16,6 +16,7 @@ const GET_OAUTH: &str =
 
 /// Handle post request for /oauth
 pub async fn post(
+    memcached: MemPool,
     body: crate::model::body::OAuth,
     token: String,
 ) -> Result<WithStatus<Json>> {
@@ -111,6 +112,7 @@ pub async fn post(
 
             let id = random_string(24);
             let _ = set(
+                &memcached,
                 id.clone(),
                 Characters(format!(
                     "{}+{}+{}",
@@ -136,6 +138,7 @@ pub async fn post(
     } else {
         let id = random_string(24);
         let _ = set(
+            &memcached,
             id.clone(),
             Characters(format!(
                 "{}+{}+{}+{}",
@@ -155,9 +158,10 @@ pub async fn post(
 
 /// Handle JWT creation, code deletation
 pub async fn get_oauth_code(
+    memcached: MemPool,
     body: crate::model::body::GetOAuth,
 ) -> Result<WithStatus<Json>> {
-    let data = match get(body.code.clone()).unwrap() {
+    let data = match get(&memcached, body.code.clone()).unwrap() {
         Some(r) => Vec::from_iter(r.split('+').map(|x| x.to_string())),
         None => vec![],
     };
@@ -223,7 +227,7 @@ pub async fn get_oauth_code(
     }
 
     // Delete used key
-    let _ = del(body.code);
+    let _ = del(&memcached, body.code);
 
     // Create JWT & OAuth
     let jwt = helpers::jwt::create_jwt(

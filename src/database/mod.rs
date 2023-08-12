@@ -11,12 +11,12 @@ const GET_BOT: &str = "SELECT username, avatar, bio, deleted, flags FROM account
 
 /// Tries to find a user in cache or use database
 pub async fn get_user(
-    use_memcached: bool,
+    use_memcached: Option<&mem::MemPool>,
     vanity: String,
     requester: String,
 ) -> Result<(bool, crate::model::user::User)> {
-    if use_memcached {
-        let data = mem::get(vanity.clone())?.unwrap_or_default();
+    if let Some(pool) = use_memcached {
+        let data = mem::get(pool, vanity.clone())?.unwrap_or_default();
         if !data.is_empty() && requester != vanity {
             Ok((
                 true,

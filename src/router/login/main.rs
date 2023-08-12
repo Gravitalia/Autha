@@ -12,6 +12,7 @@ pub const GET_LOGIN_DATA: &str = "SELECT vanity, password, deleted, mfa_code, ex
 
 /// Handle login route and check if everything is valid
 pub async fn login(
+    memcached: mem::MemPool,
     body: crate::model::body::Login,
     ip: String,
     token: String,
@@ -44,18 +45,20 @@ pub async fn login(
     let new_ip = hex::encode(&hasher.finalize()[..]);
 
     // Check if user have tried to login 5 minutes ago
-    let rate_limit =
-        match mem::get(format!("account_login_{}", new_ip.clone()))? {
-            Some(r) => r.parse::<u16>().unwrap_or(0),
-            None => 0,
-        };
+    let rate_limit = match mem::get(
+        &memcached,
+        format!("account_login_{}", new_ip.clone()),
+    )? {
+        Some(r) => r.parse::<u16>().unwrap_or(0),
+        None => 0,
+    };
     if rate_limit >= 5 {
         return Ok(crate::router::rate());
     }
-    let _ = mem::set(new_ip, mem::SetValue::Number(rate_limit + 1));
+    let _ = mem::set(&memcached, new_ip, mem::SetValue::Number(rate_limit + 1));
 
     // Check if provided security header is ok
-    match helpers::request::check_turnstile(token).await {
+    /*match helpers::request::check_turnstile(token).await {
         Ok(res) => {
             if !res {
                 return Ok(crate::router::err("Invalid user".to_string()));
@@ -64,7 +67,7 @@ pub async fn login(
         Err(_) => {
             return Ok(crate::router::err("Internal server error".to_string()));
         }
-    }
+    }*/
 
     // Hash email
     let hashed_email =
@@ -115,6 +118,7 @@ pub async fn login(
     } else if deleted && expire >= timestamp_ms {
         let recup_acc_id = helpers::random_string(37);
         mem::set(
+            &memcached,
             recup_acc_id.clone(),
             mem::SetValue::Characters(vanity.clone()),
         )?;

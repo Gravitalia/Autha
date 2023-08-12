@@ -65,7 +65,7 @@ pub async fn get_data(
     }
 
     // User data
-    let user = get_user(false, vanity.clone(), vanity.clone()).await?.1;
+    let user = get_user(None, vanity.clone(), vanity.clone()).await?.1;
 
     // Connection data
     let mut tokens: Vec<crate::model::user::Token> = vec![];
