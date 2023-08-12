@@ -7,7 +7,6 @@ mod router;
 extern crate lazy_static;
 use async_nats::jetstream::Context;
 use helpers::ratelimiter::RateLimiter;
-use scylla::Session;
 use std::error::Error;
 use std::sync::{Arc, Mutex};
 use std::{
@@ -45,7 +44,6 @@ async fn rate_limit(
 
 /// Create a new user
 async fn create_user(
-    scylla: Arc<Session>,
     body: model::body::Create,
     cf_token: String,
     forwarded: Option<String>,
@@ -59,7 +57,7 @@ async fn create_user(
         .to_string()
     });
 
-    match router::create::create(scylla, body, ip, cf_token).await {
+    match router::create::create(body, ip, cf_token).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -67,7 +65,6 @@ async fn create_user(
 
 /// Login to an account
 async fn login(
-    scylla: Arc<Session>,
     body: model::body::Login,
     cf_token: String,
     forwarded: Option<String>,
@@ -81,7 +78,7 @@ async fn login(
         .to_string()
     });
 
-    match router::login::main::login(scylla, body, ip, cf_token).await {
+    match router::login::main::login(body, ip, cf_token).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -89,13 +86,10 @@ async fn login(
 
 /// Route to recuperate a deleted account after 30 days maximum
 async fn recuperate_account(
-    scylla: Arc<Session>,
     code: String,
     cf_token: String,
 ) -> Result<impl Reply, Rejection> {
-    match router::login::recuperate::recuperate_account(scylla, code, cf_token)
-        .await
-    {
+    match router::login::recuperate::recuperate_account(code, cf_token).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -104,7 +98,6 @@ async fn recuperate_account(
 /// Get user by ID
 async fn get_user(
     id: String,
-    scylla: Arc<Session>,
     limiter: Arc<Mutex<RateLimiter>>,
     token: Option<String>,
     forwarded: Option<String>,
@@ -119,18 +112,17 @@ async fn get_user(
     });
 
     match rate_limit(limiter, ip.clone()).await {
-        Ok(_) => Ok(router::users::get::get(scylla, id, token).await),
+        Ok(_) => Ok(router::users::get::get(id, token).await),
         Err(e) => Err(e),
     }
 }
 
 /// Suspend user from all services
 async fn suspend_user(
-    scylla: Arc<Session>,
     query: model::query::Suspend,
     token: String,
 ) -> Result<impl Reply, Rejection> {
-    match router::suspend::suspend(scylla, query, token).await {
+    match router::suspend::suspend(query, token).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -138,11 +130,10 @@ async fn suspend_user(
 
 /// Returns 5-minute code to get JWT
 async fn post_oauth(
-    scylla: Arc<Session>,
     body: model::body::OAuth,
     token: String,
 ) -> Result<impl Reply, Rejection> {
-    match router::oauth::post(scylla, body, token).await {
+    match router::oauth::post(body, token).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -150,10 +141,9 @@ async fn post_oauth(
 
 /// Get JWT code via the 5-minute code
 async fn get_oauth(
-    scylla: Arc<Session>,
     body: model::body::GetOAuth,
 ) -> Result<impl Reply, Rejection> {
-    match router::oauth::get_oauth_code(scylla, body).await {
+    match router::oauth::get_oauth_code(body).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -161,11 +151,10 @@ async fn get_oauth(
 
 /// Delete a user from gravitalia (30 days retention)
 async fn delete_user(
-    scylla: Arc<Session>,
     body: model::body::Gdrp,
     token: String,
 ) -> Result<impl Reply, Rejection> {
-    match router::users::delete::delete(scylla, token, body).await {
+    match router::users::delete::delete(token, body).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -174,7 +163,6 @@ async fn delete_user(
 #[allow(clippy::too_many_arguments)]
 /// Route to update user data (email, username...)
 async fn update_user(
-    scylla: Arc<Session>,
     nats: Option<Context>,
     limiter: Arc<Mutex<RateLimiter>>,
     body: model::body::UserPatch,
@@ -191,23 +179,20 @@ async fn update_user(
     });
 
     match rate_limit(limiter, ip.clone()).await {
-        Ok(_) => {
-            match router::users::patch::patch(scylla, nats, token, body).await {
-                Ok(r) => Ok(r),
-                Err(_) => Err(warp::reject::custom(UnknownError)),
-            }
-        }
+        Ok(_) => match router::users::patch::patch(nats, token, body).await {
+            Ok(r) => Ok(r),
+            Err(_) => Err(warp::reject::custom(UnknownError)),
+        },
         Err(e) => Err(e),
     }
 }
 
 /// Get JWT code via the 5-minute code
 async fn get_data(
-    scylla: Arc<Session>,
     body: model::body::Gdrp,
     token: String,
 ) -> Result<impl Reply, Rejection> {
-    match router::users::data::get_data(scylla, token, body).await {
+    match router::users::data::get_data(token, body).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
@@ -258,36 +243,19 @@ async fn handle_rejection(
 
 #[tokio::main]
 async fn main() {
+    dotenv::dotenv().ok();
     println!("Starting server...");
 
     // Starts database
-    let scylla = Arc::new(database::scylla::init().await.unwrap());
-    let _ = database::mem::init();
+    database::scylla::init().await.unwrap();
+    database::mem::init().unwrap();
     let nats = database::nats::init().await.unwrap();
 
-    let login_scylla = Arc::clone(&scylla);
-
-    let recuperate_scylla = Arc::clone(&scylla);
-
-    let get_scylla = Arc::clone(&scylla);
-
-    let suspend_scylla = Arc::clone(&scylla);
-
-    let get_code_scylla = Arc::clone(&scylla);
-
-    let get_jwt_scylla = Arc::clone(&scylla);
-
-    let delete_scylla = Arc::clone(&scylla);
-
-    let update_scylla = Arc::clone(&scylla);
-
-    let get_data_scylla = Arc::clone(&scylla);
-
     // Create tables
-    database::scylla::create_tables(Arc::clone(&scylla)).await;
+    database::scylla::create_tables().await;
 
     // Delete all old accounts
-    helpers::remove_deleted_account(Arc::clone(&scylla)).await;
+    helpers::remove_deleted_account().await;
 
     // Add middleware to rate-limit
     let rate_limiter = Arc::new(Mutex::new(RateLimiter::new(None, None)));
@@ -296,7 +264,6 @@ async fn main() {
 
     let create_route = warp::path("create")
         .and(warp::post())
-        .and(warp::any().map(move || Arc::clone(&scylla)))
         .and(warp::body::json())
         .and(warp::header("cf-turnstile-token"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
@@ -305,7 +272,6 @@ async fn main() {
 
     let login_route = warp::path("login")
         .and(warp::post())
-        .and(warp::any().map(move || Arc::clone(&login_scylla)))
         .and(warp::body::json())
         .and(warp::header("cf-turnstile-token"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
@@ -315,14 +281,12 @@ async fn main() {
     let recuperate_account_route = warp::path("login")
         .and(warp::path("recuperate"))
         .and(warp::get())
-        .and(warp::any().map(move || Arc::clone(&recuperate_scylla)))
         .and(warp::header("code"))
         .and(warp::header("cf-turnstile-token"))
         .and_then(recuperate_account);
 
     let get_user_route = warp::path!("users" / String)
         .and(warp::get())
-        .and(warp::any().map(move || Arc::clone(&get_scylla)))
         .and(warp::any().map(move || Arc::clone(&rate_limiter)))
         .and(warp::header::optional::<String>("authorization"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
@@ -332,7 +296,6 @@ async fn main() {
     let suspend_user_route = warp::path("account")
         .and(warp::path("suspend"))
         .and(warp::post())
-        .and(warp::any().map(move || Arc::clone(&suspend_scylla)))
         .and(warp::query::<model::query::Suspend>())
         .and(warp::header("authorization"))
         .and_then(suspend_user);
@@ -340,13 +303,11 @@ async fn main() {
     let get_jwt_code = warp::path("oauth2")
         .and(warp::path("token"))
         .and(warp::post())
-        .and(warp::any().map(move || Arc::clone(&get_jwt_scylla)))
         .and(warp::body::json())
         .and_then(get_oauth);
 
     let oauth_code = warp::path("oauth2")
         .and(warp::post())
-        .and(warp::any().map(move || Arc::clone(&get_code_scylla)))
         .and(warp::body::json())
         .and(warp::header("authorization"))
         .and_then(post_oauth);
@@ -354,7 +315,6 @@ async fn main() {
     let delete_user = warp::path("users")
         .and(warp::path("@me"))
         .and(warp::delete())
-        .and(warp::any().map(move || Arc::clone(&delete_scylla)))
         .and(warp::body::json())
         .and(warp::header("authorization"))
         .and_then(delete_user);
@@ -362,7 +322,6 @@ async fn main() {
     let update_user = warp::path("users")
         .and(warp::path("@me"))
         .and(warp::patch())
-        .and(warp::any().map(move || Arc::clone(&update_scylla)))
         .and(warp::any().map(move || nats.clone()))
         .and(warp::any().map(move || Arc::clone(&patch_limiter)))
         .and(warp::body::json())
@@ -374,7 +333,6 @@ async fn main() {
     let get_user_data = warp::path("account")
         .and(warp::path("data"))
         .and(warp::post())
-        .and(warp::any().map(move || Arc::clone(&get_data_scylla)))
         .and(warp::body::json())
         .and(warp::header("authorization"))
         .and_then(get_data);
