@@ -259,6 +259,7 @@ async fn handle_rejection(
     ))
 }
 
+/// Transfer database connection to the handler
 fn with_db(
     db_pool: MemPool,
 ) -> impl Filter<Extract = (MemPool,), Error = std::convert::Infallible> + Clone
