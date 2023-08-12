@@ -20,7 +20,6 @@ const UPDATE_PASSWORD: &str =
 /// Handle PATCH users route and let users modifie their profile
 pub async fn patch(
     scylla: Arc<scylla::Session>,
-    memcached: Arc<memcache::Client>,
     nats: Option<async_nats::jetstream::Context>,
     token: String,
     body: crate::model::body::UserPatch,
@@ -139,7 +138,7 @@ pub async fn patch(
 
     // Change avatar
     if let Some(a) = body.avatar {
-        if a.is_empty() {
+        /*if a.is_empty() {
             avatar = None;
         } else if helpers::grpc::check_avatar(a.clone()).await? {
             return Ok(crate::router::err(
@@ -147,7 +146,7 @@ pub async fn patch(
             ));
         } else {
             avatar = Some(helpers::grpc::upload_avatar(a).await?);
-        }
+        }*/
     }
 
     // Change email
@@ -270,7 +269,7 @@ pub async fn patch(
                 }
             }
 
-            let _ = del(memcached, vanity);
+            let _ = del(vanity);
             Ok(warp::reply::with_status(
                 warp::reply::json(&Error {
                     error: false,

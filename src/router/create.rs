@@ -20,7 +20,6 @@ lazy_static! {
 /// Handle create route and check if everything is valid
 pub async fn create(
     scylla: Arc<scylla::Session>,
-    memcached: Arc<memcache::Client>,
     body: crate::model::body::Create,
     ip: String,
     token: String,
@@ -60,13 +59,11 @@ pub async fn create(
     let new_ip = hex::encode(&hasher.finalize()[..]);
 
     // Check if user have already created account 5 minutes ago
-    let rate_limit = match mem::get(
-        Arc::clone(&memcached),
-        format!("account_create_{}", new_ip.clone()),
-    )? {
-        Some(r) => r.parse::<u16>().unwrap_or(0),
-        None => 0,
-    };
+    let rate_limit =
+        match mem::get(format!("account_create_{}", new_ip.clone()))? {
+            Some(r) => r.parse::<u16>().unwrap_or(0),
+            None => 0,
+        };
     if rate_limit >= 1 {
         return Ok(super::rate());
     }
@@ -209,7 +206,6 @@ pub async fn create(
     }
 
     let _ = mem::set(
-        memcached,
         format!("account_create_{}", new_ip),
         mem::SetValue::Number(1),
     );

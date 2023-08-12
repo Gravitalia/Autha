@@ -11,12 +11,11 @@ const REINTEGRATE_ACCOUNT: &str = "UPDATE accounts.users SET deleted = false, ex
 /// generated via the login route
 pub async fn recuperate_account(
     scylla: Arc<scylla::Session>,
-    memcached: Arc<memcache::Client>,
     code: String,
     token: String,
 ) -> Result<WithStatus<Json>> {
     // Get user vanity
-    let vanity = match get(Arc::clone(&memcached), code.clone())? {
+    let vanity = match get(code.clone())? {
         Some(v) => v,
         None => {
             return Ok(crate::router::err("Invalid code header".to_string()));
@@ -36,7 +35,7 @@ pub async fn recuperate_account(
     }
 
     // Delete code
-    del(memcached, code)?;
+    del(code)?;
 
     // Restore account
     query(scylla, REINTEGRATE_ACCOUNT, vec![vanity.clone()]).await?;

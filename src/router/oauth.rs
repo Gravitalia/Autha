@@ -18,7 +18,6 @@ const GET_OAUTH: &str =
 /// Handle post request for /oauth
 pub async fn post(
     scylla: Arc<scylla::Session>,
-    memcached: Arc<memcache::Client>,
     body: crate::model::body::OAuth,
     token: String,
 ) -> Result<WithStatus<Json>> {
@@ -27,7 +26,8 @@ pub async fn post(
             .await
             .unwrap_or_else(|_| "Invalid".to_string());
 
-        let vanity = if middelware_res != "Invalid" && middelware_res != "Suspended" {
+    let vanity = if middelware_res != "Invalid" && middelware_res != "Suspended"
+    {
         middelware_res.to_lowercase()
     } else {
         return Ok(warp::reply::with_status(
@@ -114,7 +114,6 @@ pub async fn post(
 
             let id = random_string(24);
             let _ = set(
-                Arc::clone(&memcached),
                 id.clone(),
                 Characters(format!(
                     "{}+{}+{}",
@@ -140,7 +139,6 @@ pub async fn post(
     } else {
         let id = random_string(24);
         let _ = set(
-            memcached,
             id.clone(),
             Characters(format!(
                 "{}+{}+{}+{}",
@@ -161,10 +159,9 @@ pub async fn post(
 /// Handle JWT creation, code deletation
 pub async fn get_oauth_code(
     scylla: Arc<scylla::Session>,
-    memcached: Arc<memcache::Client>,
     body: crate::model::body::GetOAuth,
 ) -> Result<WithStatus<Json>> {
-    let data = match get(Arc::clone(&memcached), body.code.clone()).unwrap() {
+    let data = match get(body.code.clone()).unwrap() {
         Some(r) => Vec::from_iter(r.split('+').map(|x| x.to_string())),
         None => vec![],
     };
@@ -230,7 +227,7 @@ pub async fn get_oauth_code(
     }
 
     // Delete used key
-    let _ = del(memcached, body.code);
+    let _ = del(body.code);
 
     // Create JWT & OAuth
     let jwt = helpers::jwt::create_jwt(

@@ -22,9 +22,7 @@ async fn middleware(
     match token {
         Some(ntoken) => {
             match crate::helpers::token::check(scylla, ntoken).await {
-                Ok(data) => {
-                    Ok(data)
-                }
+                Ok(data) => Ok(data),
                 Err(e) => {
                     if e.to_string() == *"revoked" {
                         Ok("Suspended".to_string())

@@ -21,7 +21,8 @@ pub async fn delete(
             .await
             .unwrap_or_else(|_| "Invalid".to_string());
 
-    let vanity = if middelware_res != "Invalid" && middelware_res != "Suspended" {
+    let vanity = if middelware_res != "Invalid" && middelware_res != "Suspended"
+    {
         middelware_res.to_lowercase()
     } else {
         return Ok(warp::reply::with_status(

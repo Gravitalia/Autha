@@ -70,7 +70,7 @@ pub async fn get_data(
 
     // User data
     let user =
-        get_user(Arc::clone(&scylla), None, vanity.clone(), vanity.clone())
+        get_user(Arc::clone(&scylla), false, vanity.clone(), vanity.clone())
             .await?
             .1;
 
