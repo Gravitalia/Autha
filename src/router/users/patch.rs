@@ -135,7 +135,7 @@ pub async fn patch(
     }
 
     // Change avatar
-    /*if let Some(a) = body.avatar {
+    if let Some(a) = body.avatar {
         if a.is_empty() {
             avatar = None;
         } else if helpers::grpc::check_avatar(a.clone()).await? {
@@ -145,7 +145,7 @@ pub async fn patch(
         } else {
             avatar = Some(helpers::grpc::upload_avatar(a).await?);
         }
-    }*/
+    }
 
     // Change email
     if let Some(e) = body.email {
