@@ -1,4 +1,4 @@
-use crate::database::mem::{del, get};
+use crate::database::mem::{del, get, MemPool};
 use crate::{database::scylla::query, helpers};
 use anyhow::Result;
 use warp::reply::{Json, WithStatus};
@@ -9,11 +9,12 @@ const REINTEGRATE_ACCOUNT: &str = "UPDATE accounts.users SET deleted = false, ex
 /// Handle a route to restore a deleted account based on a token
 /// generated via the login route
 pub async fn recuperate_account(
+    memcached: MemPool,
     code: String,
     token: String,
 ) -> Result<WithStatus<Json>> {
     // Get user vanity
-    let vanity = match get(code.clone())? {
+    let vanity = match get(&memcached, code.clone())? {
         Some(v) => v,
         None => {
             return Ok(crate::router::err("Invalid code header".to_string()));
@@ -33,7 +34,7 @@ pub async fn recuperate_account(
     }
 
     // Delete code
-    del(code)?;
+    del(&memcached, code)?;
 
     // Restore account
     query(REINTEGRATE_ACCOUNT, vec![vanity.clone()]).await?;

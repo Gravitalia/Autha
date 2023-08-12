@@ -1,13 +1,17 @@
 use crate::database::{
     get_user,
-    mem::{set, SetValue},
+    mem::{set, MemPool, SetValue},
 };
 use crate::helpers;
 use crate::model::{error::Error, user::User};
 use warp::reply::{Json, WithStatus};
 
 /// Handle GET users route
-pub async fn get(id: String, token: Option<String>) -> WithStatus<Json> {
+pub async fn get(
+    memcached: MemPool,
+    id: String,
+    token: Option<String>,
+) -> WithStatus<Json> {
     // Check authorization
     let requester: String;
     let vanity = if id == "@me"
@@ -88,7 +92,9 @@ pub async fn get(id: String, token: Option<String>) -> WithStatus<Json> {
 
     // Get user
     let (from_mem, user) =
-        match get_user(true, vanity.clone(), requester.clone()).await {
+        match get_user(Some(&memcached), vanity.clone(), requester.clone())
+            .await
+        {
             Ok(d) => d,
             Err(e) => {
                 eprintln!("(get) Cannot get user: {e}");
@@ -130,6 +136,7 @@ pub async fn get(id: String, token: Option<String>) -> WithStatus<Json> {
     } else {
         if !from_mem && vanity != requester && user.email.is_none() {
             let _ = set(
+                &memcached,
                 vanity,
                 SetValue::Characters(
                     serde_json::to_string(&user).unwrap_or_default(),

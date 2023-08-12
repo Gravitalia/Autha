@@ -2,7 +2,11 @@ use crate::helpers::crypto::{encrypt, hash};
 use crate::model::error::Error;
 use crate::router::suspend::suspend_user;
 use crate::{
-    database::{mem::del, nats::publish, scylla::query},
+    database::{
+        mem::{del, MemPool},
+        nats::publish,
+        scylla::query,
+    },
     helpers,
 };
 use anyhow::{anyhow, Result};
@@ -18,6 +22,7 @@ const UPDATE_PASSWORD: &str =
 
 /// Handle PATCH users route and let users modifie their profile
 pub async fn patch(
+    memcached: MemPool,
     nats: Option<async_nats::jetstream::Context>,
     token: String,
     body: crate::model::body::UserPatch,
@@ -130,7 +135,7 @@ pub async fn patch(
     }
 
     // Change avatar
-    if let Some(a) = body.avatar {
+    /*if let Some(a) = body.avatar {
         if a.is_empty() {
             avatar = None;
         } else if helpers::grpc::check_avatar(a.clone()).await? {
@@ -140,7 +145,7 @@ pub async fn patch(
         } else {
             avatar = Some(helpers::grpc::upload_avatar(a).await?);
         }
-    }
+    }*/
 
     // Change email
     if let Some(e) = body.email {
@@ -248,7 +253,7 @@ pub async fn patch(
                 }
             }
 
-            let _ = del(vanity);
+            let _ = del(&memcached, vanity);
             Ok(warp::reply::with_status(
                 warp::reply::json(&Error {
                     error: false,
