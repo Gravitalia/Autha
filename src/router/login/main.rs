@@ -58,7 +58,7 @@ pub async fn login(
     let _ = mem::set(&memcached, new_ip, mem::SetValue::Number(rate_limit + 1));
 
     // Check if provided security header is ok
-    /*match helpers::request::check_turnstile(token).await {
+    match helpers::request::check_turnstile(token).await {
         Ok(res) => {
             if !res {
                 return Ok(crate::router::err("Invalid user".to_string()));
@@ -67,7 +67,7 @@ pub async fn login(
         Err(_) => {
             return Ok(crate::router::err("Internal server error".to_string()));
         }
-    }*/
+    }
 
     // Hash email
     let hashed_email =
