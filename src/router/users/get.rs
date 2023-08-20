@@ -8,6 +8,7 @@ use warp::reply::{Json, WithStatus};
 
 /// Handle GET users route
 pub async fn get(
+    scylla_conn: std::sync::Arc<scylla::Session>,
     memcached: MemPool,
     id: String,
     token: Option<String>,
@@ -65,9 +66,10 @@ pub async fn get(
 
         oauth.sub
     } else {
-        let middelware_res = crate::router::middleware(token, &id)
-            .await
-            .unwrap_or_else(|_| "Invalid".to_string());
+        let middelware_res =
+            crate::router::middleware(&scylla_conn, token, &id)
+                .await
+                .unwrap_or_else(|_| "Invalid".to_string());
 
         if middelware_res != "Invalid" && middelware_res != "Suspended" {
             let vanity = middelware_res.to_lowercase();
@@ -91,22 +93,26 @@ pub async fn get(
     };
 
     // Get user
-    let (from_mem, user) =
-        match get_user(Some(&memcached), vanity.clone(), requester.clone())
-            .await
-        {
-            Ok(d) => d,
-            Err(e) => {
-                eprintln!("(get) Cannot get user: {e}");
-                return warp::reply::with_status(
-                    warp::reply::json(&Error {
-                        error: true,
-                        message: "Unknown user".to_string(),
-                    }),
-                    warp::http::StatusCode::NOT_FOUND,
-                );
-            }
-        };
+    let (from_mem, user) = match get_user(
+        &scylla_conn,
+        Some(&memcached),
+        vanity.clone(),
+        requester.clone(),
+    )
+    .await
+    {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("(get) Cannot get user: {e}");
+            return warp::reply::with_status(
+                warp::reply::json(&Error {
+                    error: true,
+                    message: "Unknown user".to_string(),
+                }),
+                warp::http::StatusCode::NOT_FOUND,
+            );
+        }
+    };
 
     if user.vanity.is_empty() {
         warp::reply::with_status(

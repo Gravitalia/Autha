@@ -9,7 +9,11 @@ const CHECK_TOKEN: &str =
     "SELECT expire_at, user_id, deleted FROM accounts.tokens WHERE id = ?";
 
 /// create allows to add a token into database
-pub async fn create(user_id: String, ip: String) -> Result<String> {
+pub async fn create(
+    scylla: &std::sync::Arc<scylla::Session>,
+    user_id: String,
+    ip: String,
+) -> Result<String> {
     let id = random_string(65);
 
     // Get actual timestamp (since 1st Jan. 1970)
@@ -19,11 +23,12 @@ pub async fn create(user_id: String, ip: String) -> Result<String> {
         .as_millis() as i64;
 
     query(
+        scylla,
         CREATE_TOKEN,
         (
             id.clone(),
             user_id,
-            encrypt(ip.as_bytes()).await,
+            encrypt(scylla, ip.as_bytes()).await,
             timestamp,
             timestamp + 777600000, // 90 days in milliseconds
         ),
@@ -34,8 +39,11 @@ pub async fn create(user_id: String, ip: String) -> Result<String> {
 }
 
 /// check allows to verify if token is valid and not expired
-pub async fn check(token: String) -> Result<String> {
-    let query_response = query(CHECK_TOKEN, vec![token])
+pub async fn check(
+    scylla: &std::sync::Arc<scylla::Session>,
+    token: String,
+) -> Result<String> {
+    let query_response = query(scylla, CHECK_TOKEN, vec![token])
         .await?
         .rows
         .unwrap_or_default();

@@ -1,9 +1,6 @@
-use once_cell::sync::OnceCell;
 use scylla::transport::errors::QueryError;
 use scylla::{Session, SessionBuilder};
-
-/// SESSION represents Scylla active session
-static SESSION: OnceCell<Session> = OnceCell::new();
+use std::sync::Arc;
 
 // Define constants for table creation and queries
 const CREATE_USERS_TABLE: &str = "CREATE TABLE IF NOT EXISTS accounts.users ( vanity TEXT, email TEXT, username TEXT, avatar TEXT, banner TEXT, bio TEXT, verified BOOLEAN, flags INT, phone TEXT, password TEXT, birthdate TEXT, deleted BOOLEAN, mfa_code TEXT, expire_at TIMESTAMP, PRIMARY KEY (vanity) );";
@@ -35,9 +32,15 @@ impl DatabaseConfig {
     fn new(config: crate::model::config::Config) -> Self {
         Self {
             host: config.database.scylla.hosts[0].clone(),
-            username: config.database.scylla.username
+            username: config
+                .database
+                .scylla
+                .username
                 .unwrap_or_else(|| "cassandra".to_string()),
-            password: config.database.scylla.password
+            password: config
+                .database
+                .scylla
+                .password
                 .unwrap_or_else(|| "cassandra".to_string()),
         }
     }
@@ -45,7 +48,7 @@ impl DatabaseConfig {
 
 /// Inits scylla (or cassandra) database connection
 pub async fn init(
-    config: crate::model::config::Config
+    config: crate::model::config::Config,
 ) -> Result<Session, scylla::transport::errors::NewSessionError> {
     let config = DatabaseConfig::new(config);
 
@@ -90,14 +93,16 @@ pub async fn create_tables(conn: &Session) {
 
 /// Make a query to scylla (or cassandra)
 pub async fn query(
+    conn: &Arc<Session>,
     query: impl Into<scylla::query::Query>,
     params: impl scylla::frame::value::ValueList,
 ) -> Result<scylla::QueryResult, QueryError> {
-    SESSION.get().unwrap().query(query, params).await
+    conn.query(query, params).await
 }
 
 /// Create a user into the database
 pub async fn create_user(
+    conn: &Arc<Session>,
     vanity: &String,
     email: String,
     username: String,
@@ -120,50 +125,42 @@ pub async fn create_user(
     };
 
     // Use parameterized query to prevent SQL injection
-    SESSION
-        .get()
-        .unwrap()
-        .query(
-            CREATE_USER,
-            (
-                user.vanity,
-                user.email,
-                user.username,
-                user.password,
-                user.phone,
-                user.birthdate,
-                user.avatar,
-                user.bio,
-            ),
-        )
-        .await?;
+    conn.query(
+        CREATE_USER,
+        (
+            user.vanity,
+            user.email,
+            user.username,
+            user.password,
+            user.phone,
+            user.birthdate,
+            user.avatar,
+            user.bio,
+        ),
+    )
+    .await?;
 
     Ok(())
 }
 
 /// Create a OAuth2 code
 pub async fn create_oauth(
+    conn: &Arc<Session>,
     id: String,
     vanity: String,
     bot_id: String,
     scope: Vec<String>,
 ) {
-    let _ = SESSION
-        .get()
-        .unwrap()
+    let _ = conn
         .query(CREATE_OAUTH, (id, vanity, bot_id, scope, false))
         .await;
 }
 
 /// Create a new salt to split it and secure it
-pub async fn create_salt(salt: String) -> String {
+pub async fn create_salt(conn: &Arc<Session>, salt: String) -> String {
     let id = uuid::Uuid::new_v4().to_string();
 
-    let _ = SESSION
-        .get()
-        .unwrap()
-        .query(CREATE_SALT, (id.to_string(), salt))
-        .await;
+    let _ = conn.query(CREATE_SALT, (id.to_string(), salt)).await;
 
     id
 }

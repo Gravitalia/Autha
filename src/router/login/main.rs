@@ -12,6 +12,7 @@ pub const GET_LOGIN_DATA: &str = "SELECT vanity, password, deleted, mfa_code, ex
 
 /// Handle login route and check if everything is valid
 pub async fn login(
+    scylla: std::sync::Arc<scylla::Session>,
     memcached: mem::MemPool,
     body: crate::model::body::Login,
     ip: String,
@@ -74,7 +75,7 @@ pub async fn login(
         helpers::crypto::fpe_encrypt(data.email.encode_utf16().collect())?;
 
     // Check if account exists
-    let query_res = query(GET_LOGIN_DATA, vec![hashed_email])
+    let query_res = query(&scylla, GET_LOGIN_DATA, vec![hashed_email])
         .await?
         .rows
         .unwrap_or_default();
@@ -157,7 +158,9 @@ pub async fn login(
             if totp_custom::<Sha1>(
                 30,
                 6,
-                helpers::crypto::decrypt(mfa.to_string()).await?.as_ref(),
+                helpers::crypto::decrypt(&scylla, mfa.to_string())
+                    .await?
+                    .as_ref(),
                 SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
             ) != body.mfa.unwrap_or_default()
             {
@@ -170,7 +173,8 @@ pub async fn login(
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {
             error: false,
-            message: helpers::token::create(vanity.to_string(), ip).await?,
+            message: helpers::token::create(&scylla, vanity.to_string(), ip)
+                .await?,
         }),
         warp::http::StatusCode::OK,
     ))

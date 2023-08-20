@@ -11,12 +11,14 @@ const GET_PASSWORD: &str =
 
 /// This route allows to obtain every data saved by Autha
 pub async fn get_data(
+    scylla: std::sync::Arc<scylla::Session>,
     token: String,
     body: crate::model::body::Gdrp,
 ) -> Result<WithStatus<Json>> {
-    let middelware_res = crate::router::middleware(Some(token), "Invalid")
-        .await
-        .unwrap_or_else(|_| "Invalid".to_string());
+    let middelware_res =
+        crate::router::middleware(&scylla, Some(token), "Invalid")
+            .await
+            .unwrap_or_else(|_| "Invalid".to_string());
 
     let vanity: String =
         if middelware_res != "Invalid" && middelware_res != "Suspended" {
@@ -45,7 +47,7 @@ pub async fn get_data(
         }
     }
 
-    let query_res = query(GET_PASSWORD, vec![vanity.clone()])
+    let query_res = query(&scylla, GET_PASSWORD, vec![vanity.clone()])
         .await?
         .rows
         .unwrap_or_default();
@@ -65,17 +67,19 @@ pub async fn get_data(
     }
 
     // User data
-    let user = get_user(None, vanity.clone(), vanity.clone()).await?.1;
+    let user = get_user(&scylla, None, vanity.clone(), vanity.clone())
+        .await?
+        .1;
 
     // Connection data
     let mut tokens: Vec<crate::model::user::Token> = vec![];
 
-    if let Some(rows) = query(GET_TOKENS, vec![vanity]).await?.rows {
+    if let Some(rows) = query(&scylla, GET_TOKENS, vec![vanity]).await?.rows {
         for row_data in rows.into_typed::<crate::model::user::Token>() {
             let row_data = row_data?;
 
             tokens.push(crate::model::user::Token {
-                ip: decrypt(row_data.ip).await?,
+                ip: decrypt(&scylla, row_data.ip).await?,
                 date: row_data.date,
                 expire_at: row_data.expire_at,
                 deleted: row_data.deleted,

@@ -11,12 +11,14 @@ const DELETE_USER: &str =
 
 /// Delete route for remove account from database
 pub async fn delete(
+    scylla: std::sync::Arc<scylla::Session>,
     token: String,
     body: crate::model::body::Gdrp,
 ) -> Result<WithStatus<Json>> {
-    let middelware_res = crate::router::middleware(Some(token), "Invalid")
-        .await
-        .unwrap_or_else(|_| "Invalid".to_string());
+    let middelware_res =
+        crate::router::middleware(&scylla, Some(token), "Invalid")
+            .await
+            .unwrap_or_else(|_| "Invalid".to_string());
 
     let vanity = if middelware_res != "Invalid" && middelware_res != "Suspended"
     {
@@ -31,7 +33,7 @@ pub async fn delete(
         ));
     };
 
-    let res = query(GET_USER_PASSWORD, vec![vanity.clone()])
+    let res = query(&scylla, GET_USER_PASSWORD, vec![vanity.clone()])
         .await?
         .rows
         .unwrap_or_default();
@@ -80,6 +82,7 @@ pub async fn delete(
     }
 
     query(
+        &scylla,
         DELETE_USER,
         (
             (chrono::Utc::now() + chrono::Duration::days(30)).timestamp(),

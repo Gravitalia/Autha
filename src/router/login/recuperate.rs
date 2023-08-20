@@ -9,6 +9,7 @@ const REINTEGRATE_ACCOUNT: &str = "UPDATE accounts.users SET deleted = false, ex
 /// Handle a route to restore a deleted account based on a token
 /// generated via the login route
 pub async fn recuperate_account(
+    scylla: std::sync::Arc<scylla::Session>,
     memcached: MemPool,
     code: String,
     token: String,
@@ -37,7 +38,7 @@ pub async fn recuperate_account(
     del(&memcached, code)?;
 
     // Restore account
-    query(REINTEGRATE_ACCOUNT, vec![vanity.clone()]).await?;
+    query(&scylla, REINTEGRATE_ACCOUNT, vec![vanity.clone()]).await?;
 
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {

@@ -10,19 +10,24 @@ const UPDATE_TOKEN_QUERY: &str =
     "UPDATE accounts.tokens SET deleted = true, ip = '' WHERE id = ?;";
 
 /// Suspend a user and block each tokens in database
-pub async fn suspend_user(vanity: String, deleted: bool) -> Result<()> {
-    query(UPDATE_USER_DELETED, (deleted, vanity.clone()))
+pub async fn suspend_user(
+    scylla: &std::sync::Arc<scylla::Session>,
+    vanity: String,
+    deleted: bool,
+) -> Result<()> {
+    query(scylla, UPDATE_USER_DELETED, (deleted, vanity.clone()))
         .await
         .context("Failed to update user")?;
 
     if deleted {
-        let tokens_res = query(SELECT_USER_TOKENS_QUERY, vec![vanity])
+        let tokens_res = query(scylla, SELECT_USER_TOKENS_QUERY, vec![vanity])
             .await?
             .rows
             .unwrap_or_default();
 
         for data in tokens_res {
             query(
+                scylla,
                 UPDATE_TOKEN_QUERY,
                 vec![data.columns[0]
                     .as_ref()
@@ -40,6 +45,7 @@ pub async fn suspend_user(vanity: String, deleted: bool) -> Result<()> {
 
 /// Route to suspend a user
 pub async fn suspend(
+    scylla: std::sync::Arc<scylla::Session>,
     query: crate::model::query::Suspend,
     token: String,
 ) -> Result<WithStatus<Json>> {
@@ -49,7 +55,8 @@ pub async fn suspend(
     }
 
     // Suspend user and all active connections
-    suspend_user(query.vanity, query.suspend.unwrap_or_default()).await?;
+    suspend_user(&scylla, query.vanity, query.suspend.unwrap_or_default())
+        .await?;
 
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {

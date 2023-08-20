@@ -16,13 +16,15 @@ const GET_OAUTH: &str =
 
 /// Handle post request for /oauth
 pub async fn post(
+    scylla: std::sync::Arc<scylla::Session>,
     memcached: MemPool,
     body: crate::model::body::OAuth,
     token: String,
 ) -> Result<WithStatus<Json>> {
-    let middelware_res = crate::router::middleware(Some(token), "Invalid")
-        .await
-        .unwrap_or_else(|_| "Invalid".to_string());
+    let middelware_res =
+        crate::router::middleware(&scylla, Some(token), "Invalid")
+            .await
+            .unwrap_or_else(|_| "Invalid".to_string());
 
     let vanity = if middelware_res != "Invalid" && middelware_res != "Suspended"
     {
@@ -37,7 +39,7 @@ pub async fn post(
         ));
     };
 
-    let bot = query(GET_BOT, vec![body.bot_id.clone()])
+    let bot = query(&scylla, GET_BOT, vec![body.bot_id.clone()])
         .await?
         .rows
         .unwrap_or_default();
@@ -74,7 +76,7 @@ pub async fn post(
 
     // If empty, tries to find a valid code
     if body.response_type.is_empty() {
-        let res = query(GET_OAUTH, vec![vanity.clone()])
+        let res = query(&scylla, GET_OAUTH, vec![vanity.clone()])
             .await?
             .rows
             .unwrap_or_default();
@@ -158,6 +160,7 @@ pub async fn post(
 
 /// Handle JWT creation, code deletation
 pub async fn get_oauth_code(
+    scylla: std::sync::Arc<scylla::Session>,
     memcached: MemPool,
     body: crate::model::body::GetOAuth,
 ) -> Result<WithStatus<Json>> {
@@ -182,7 +185,7 @@ pub async fn get_oauth_code(
         return Ok(super::err("Invalid scope".to_string()));
     }
 
-    let bot = query(GET_BOT, vec![body.client_id.clone()])
+    let bot = query(&scylla, GET_BOT, vec![body.client_id.clone()])
         .await?
         .rows
         .unwrap_or_default();
@@ -235,6 +238,7 @@ pub async fn get_oauth_code(
         data[3].split_whitespace().map(|x| x.to_string()).collect(),
     );
     create_oauth(
+        &scylla,
         jwt.clone(),
         user_id.to_string(),
         body.client_id.clone(),

@@ -3,6 +3,7 @@ pub mod nats;
 pub mod scylla;
 
 use crate::helpers::crypto::{decrypt, fpe_decrypt};
+use crate::Session;
 use anyhow::{anyhow, Result};
 
 // Define queries to get user or bot
@@ -11,6 +12,7 @@ const GET_BOT: &str = "SELECT username, avatar, bio, deleted, flags FROM account
 
 /// Tries to find a user in cache or use database
 pub async fn get_user(
+    scylla_conn: &std::sync::Arc<Session>,
     use_memcached: Option<&mem::MemPool>,
     vanity: String,
     requester: String,
@@ -23,31 +25,40 @@ pub async fn get_user(
                 serde_json::from_str::<crate::model::user::User>(&data[..])?,
             ))
         } else {
-            Ok((false, fallback_scylla(vanity, requester).await?))
+            Ok((
+                false,
+                fallback_scylla(scylla_conn, vanity, requester).await?,
+            ))
         }
     } else {
-        Ok((false, fallback_scylla(vanity, requester).await?))
+        Ok((
+            false,
+            fallback_scylla(scylla_conn, vanity, requester).await?,
+        ))
     }
 }
 
 // Get user via ScyllaDB (or cassandra) without using cache
 async fn fallback_scylla(
+    scylla_conn: &std::sync::Arc<Session>,
     vanity: String,
     requester: String,
 ) -> Result<crate::model::user::User> {
     let mut is_bot = false;
-    let mut query_result = scylla::query(GET_USER, vec![vanity.clone()])
-        .await?
-        .rows
-        .unwrap_or_default();
+    let mut query_result =
+        scylla::query(scylla_conn, GET_USER, vec![vanity.clone()])
+            .await?
+            .rows
+            .unwrap_or_default();
 
     // If no user found, try to get bots
     if query_result.is_empty() {
         is_bot = true;
-        query_result = scylla::query(GET_BOT, vec![vanity.clone()])
-            .await?
-            .rows
-            .unwrap_or_default();
+        query_result =
+            scylla::query(scylla_conn, GET_BOT, vec![vanity.clone()])
+                .await?
+                .rows
+                .unwrap_or_default();
     }
 
     // If no bot and user found, return empty struct
@@ -130,7 +141,7 @@ async fn fallback_scylla(
                 if birth.is_empty() {
                     None
                 } else {
-                    Some(decrypt(birth).await?)
+                    Some(decrypt(scylla_conn, birth).await?)
                 }
             },
             deleted: query_result[0].columns[3]
