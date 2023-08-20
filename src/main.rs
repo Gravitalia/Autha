@@ -8,6 +8,7 @@ extern crate lazy_static;
 use async_nats::jetstream::Context;
 use database::mem::MemPool;
 use helpers::ratelimiter::RateLimiter;
+use log::info;
 use std::error::Error;
 use std::sync::{Arc, Mutex};
 use std::{
@@ -262,7 +263,7 @@ async fn handle_rejection(
 /// Creates a Warp filter that extracts a reference to the provided MemPool.
 /// This filter is used to inject a reference to the MemPool (Memcached database pool) into Warp routes.
 /// The MemPool reference is cloned and returned as an outcome of this filter.
-fn with_db(
+fn with_memcached(
     db_pool: MemPool,
 ) -> impl Filter<Extract = (MemPool,), Error = std::convert::Infallible> + Clone
 {
@@ -271,15 +272,39 @@ fn with_db(
 
 #[tokio::main]
 async fn main() {
-    println!("Starting server...");
+    // Configure logging
+    fern::Dispatch::new()
+        // Perform allocation-free log formatting
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "[{} {}] {}",
+                helpers::format_rfc3339(
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .expect("Time went backwards")
+                        .as_secs()
+                ),
+                record.level(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Info)
+        .level_for("hyper", log::LevelFilter::Error)
+        // Output to stdout
+        .chain(std::io::stdout())
+        // Apply globally
+        .apply()
+        .unwrap();
+
+    info!("Starting server...");
 
     // Starts database
-    database::scylla::init().await.unwrap();
+    let scylla = database::scylla::init().await.unwrap();
     let memcached_pool = database::mem::init().unwrap();
     let nats = database::nats::init().await.unwrap();
 
     // Create tables
-    database::scylla::create_tables().await;
+    database::scylla::create_tables(&scylla).await;
 
     // Delete all old accounts
     helpers::remove_deleted_account().await;
@@ -291,7 +316,7 @@ async fn main() {
 
     let create_route = warp::path("create")
         .and(warp::post())
-        .and(with_db(memcached_pool.clone()))
+        .and(with_memcached(memcached_pool.clone()))
         .and(warp::body::json())
         .and(warp::header("cf-turnstile-token"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
@@ -300,7 +325,7 @@ async fn main() {
 
     let login_route = warp::path("login")
         .and(warp::post())
-        .and(with_db(memcached_pool.clone()))
+        .and(with_memcached(memcached_pool.clone()))
         .and(warp::body::json())
         .and(warp::header("cf-turnstile-token"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
@@ -310,7 +335,7 @@ async fn main() {
     let recuperate_account_route = warp::path("login")
         .and(warp::path("recuperate"))
         .and(warp::get())
-        .and(with_db(memcached_pool.clone()))
+        .and(with_memcached(memcached_pool.clone()))
         .and(warp::header("code"))
         .and(warp::header("cf-turnstile-token"))
         .and_then(recuperate_account);
@@ -318,7 +343,7 @@ async fn main() {
     let get_user_route = warp::path!("users" / String)
         .and(warp::get())
         .and(warp::any().map(move || Arc::clone(&rate_limiter)))
-        .and(with_db(memcached_pool.clone()))
+        .and(with_memcached(memcached_pool.clone()))
         .and(warp::header::optional::<String>("authorization"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
         .and(warp::addr::remote())
@@ -334,13 +359,13 @@ async fn main() {
     let get_jwt_code = warp::path("oauth2")
         .and(warp::path("token"))
         .and(warp::post())
-        .and(with_db(memcached_pool.clone()))
+        .and(with_memcached(memcached_pool.clone()))
         .and(warp::body::json())
         .and_then(get_oauth);
 
     let oauth_code = warp::path("oauth2")
         .and(warp::post())
-        .and(with_db(memcached_pool.clone()))
+        .and(with_memcached(memcached_pool.clone()))
         .and(warp::body::json())
         .and(warp::header("authorization"))
         .and_then(post_oauth);
@@ -357,7 +382,7 @@ async fn main() {
         .and(warp::patch())
         .and(warp::any().map(move || Arc::clone(&patch_limiter)))
         .and(warp::any().map(move || nats.clone()))
-        .and(with_db(memcached_pool.clone()))
+        .and(with_memcached(memcached_pool.clone()))
         .and(warp::body::json())
         .and(warp::header("authorization"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
@@ -387,7 +412,7 @@ async fn main() {
         .unwrap_or_else(|_| "1111".to_string())
         .parse::<u16>()
         .unwrap();
-    println!("Server started on port {}", port);
+    info!("Server started on port {}", port);
 
     warp::serve(
         warp::any()
