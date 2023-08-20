@@ -41,26 +41,25 @@ pub fn get_age(year: i16, month: i8, day: i8) -> i32 {
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards");
 
-    // Converting time into seconds since the UNIX era
-    let seconds_since_epoch = duration_since_epoch.as_secs();
-
     // Calculate the number of days spent
-    let days_since_epoch = seconds_since_epoch / (60 * 60 * 24);
+    let days_since_epoch = duration_since_epoch.as_secs() / 86_400 - 12;
 
     // Calculate the year, month and day based on the number of days past
     let years_since_epoch: i16 = (1970 + days_since_epoch / 365)
         .try_into()
         .unwrap_or_default();
-    let days_in_year = days_since_epoch % 365;
-    let mut current_month: i8 = 0;
-    let mut current_day: i8 = 0;
+    let mut days_in_year = days_since_epoch % 365;
+    let mut current_month = 0;
+    let mut current_day = 0;
     let days_in_months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
     // Find the current month and day based on days passed in the year
     for (i, &days_in_month) in days_in_months.iter().enumerate() {
-        if days_in_year < days_in_month {
-            current_month = i as i8 + 1;
-            current_day = days_in_year as i8 + 1;
+        days_in_year -= days_in_month;
+
+        if days_in_year <= days_in_month {
+            current_month = i as i8 + 2;
+            current_day = days_in_year.try_into().unwrap();
             break;
         }
     }
