@@ -9,13 +9,13 @@ use async_nats::jetstream::Context;
 use database::mem::MemPool;
 use helpers::ratelimiter::RateLimiter;
 use log::info;
+use scylla::Session;
 use std::error::Error;
 use std::sync::{Arc, Mutex};
 use std::{
     fmt::Debug,
     net::{IpAddr, Ipv4Addr, SocketAddr},
 };
-use scylla::Session;
 use warp::{http::StatusCode, Filter, Rejection, Reply};
 
 /// Define errors
@@ -311,8 +311,9 @@ async fn main() {
     let config = helpers::config_reader::read();
 
     // Starts database
-    let scylla = Arc::new(database::scylla::init(config.clone()).await.unwrap());
-    let memcached_pool = database::mem::init(config.clone()).unwrap();
+    let scylla =
+        Arc::new(database::scylla::init(config.clone()).await.unwrap());
+    let memcached_pool = database::mem::init(&config).unwrap();
     let nats = database::nats::init().await.unwrap();
 
     // Create tables
