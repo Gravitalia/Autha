@@ -169,7 +169,6 @@ dependencies = [
  "jsonwebtoken",
  "lazy_static",
  "log",
- "once_cell",
  "prost",
  "prost-types",
  "r2d2",
