@@ -23,7 +23,7 @@ const CREATE_SALT: &str =
 
 /// DatabaseConfig defines Scylla authentification
 struct DatabaseConfig {
-    host: String,
+    host: Vec<String>,
     username: String,
     password: String,
 }
@@ -31,7 +31,7 @@ struct DatabaseConfig {
 impl DatabaseConfig {
     fn new(config: crate::model::config::Config) -> Self {
         Self {
-            host: config.database.scylla.hosts[0].clone(),
+            host: config.database.scylla.hosts,
             username: config
                 .database
                 .scylla
@@ -53,7 +53,7 @@ pub async fn init(
     let config = DatabaseConfig::new(config);
 
     SessionBuilder::new()
-        .known_node(config.host)
+        .known_nodes(config.host)
         .user(config.username, config.password)
         .build()
         .await
