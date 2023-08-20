@@ -16,6 +16,8 @@ pub async fn init() -> Result<Option<Context>> {
 
         Ok(Some(jetstream::new(client)))
     } else {
+        log::warn!("NATS not started: missing PUBLISH_UPDATES boolean key.");
+
         Ok(None)
     }
 }
