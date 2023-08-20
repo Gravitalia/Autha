@@ -12,11 +12,10 @@ pub enum SetValue {
 }
 
 /// Inits memcached database connection
-pub fn init() -> Result<MemPool> {
+pub fn init(config: crate::model::config::Config) -> Result<MemPool> {
     let manager = r2d2_memcache::MemcacheConnectionManager::new(format!(
         "memcache://{}?timeout=2&use_udp=true",
-        std::env::var("MEMCACHED_HOST")
-            .unwrap_or_else(|_| "127.0.0.1:11211".to_string())
+        config.database.memcached.hosts[0]
     ));
 
     Ok(r2d2_memcache::r2d2::Pool::builder()

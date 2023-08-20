@@ -32,22 +32,22 @@ struct DatabaseConfig {
 }
 
 impl DatabaseConfig {
-    fn new() -> Self {
+    fn new(config: crate::model::config::Config) -> Self {
         Self {
-            host: std::env::var("SCYLLA_HOST")
-                .unwrap_or_else(|_| "127.0.0.1:9042".to_string()),
-            username: std::env::var("SCYLLA_USER")
-                .unwrap_or_else(|_| "cassandra".to_string()),
-            password: std::env::var("SCYLLA_PASSWORD")
-                .unwrap_or_else(|_| "cassandra".to_string()),
+            host: config.database.scylla.hosts[0].clone(),
+            username: config.database.scylla.username
+                .unwrap_or_else(|| "cassandra".to_string()),
+            password: config.database.scylla.password
+                .unwrap_or_else(|| "cassandra".to_string()),
         }
     }
 }
 
 /// Inits scylla (or cassandra) database connection
 pub async fn init(
+    config: crate::model::config::Config
 ) -> Result<Session, scylla::transport::errors::NewSessionError> {
-    let config = DatabaseConfig::new();
+    let config = DatabaseConfig::new(config);
 
     SessionBuilder::new()
         .known_node(config.host)
