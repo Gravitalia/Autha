@@ -1,7 +1,5 @@
-use core::num::NonZeroUsize;
 use once_cell::sync::OnceCell;
 use scylla::transport::errors::QueryError;
-use scylla::transport::session::PoolSize;
 use scylla::{Session, SessionBuilder};
 
 /// SESSION represents Scylla active session
@@ -47,60 +45,45 @@ impl DatabaseConfig {
 }
 
 /// Inits scylla (or cassandra) database connection
-pub async fn init() -> Result<(), scylla::transport::errors::NewSessionError> {
+pub async fn init(
+) -> Result<Session, scylla::transport::errors::NewSessionError> {
     let config = DatabaseConfig::new();
 
-    let _ = SESSION.set(
-        SessionBuilder::new()
-            .known_nodes([config.host])
-            .user(config.username, config.password)
-            .pool_size(PoolSize::PerShard(NonZeroUsize::new(1).unwrap()))
-            .build()
-            .await?,
-    );
-
-    Ok(())
+    SessionBuilder::new()
+        .known_node(config.host)
+        .user(config.username, config.password)
+        .build()
+        .await
 }
 
 /// This function allows to create every needed tables
 /// to work properly with the program
-pub async fn create_tables() {
-    let client = SESSION.get().unwrap();
-
-    client
-        .query(CREATE_USERS_TABLE, &[])
+pub async fn create_tables(conn: &Session) {
+    conn.query(CREATE_USERS_TABLE, &[])
         .await
         .expect("accounts.users creation error");
-    client
-        .query(CREATE_BOTS_TABLE, &[])
+    conn.query(CREATE_BOTS_TABLE, &[])
         .await
         .expect("accounts.bots creation error");
-    client
-        .query(CREATE_OAUTH_TABLE, &[])
+    conn.query(CREATE_OAUTH_TABLE, &[])
         .await
         .expect("accounts.oauth creation error");
-    client
-        .query(CREATE_TOKENS_TABLE, &[])
+    conn.query(CREATE_TOKENS_TABLE, &[])
         .await
         .expect("accounts.tokens creation error");
-    client
-        .query(CREATE_SALTS_TABLE, &[])
+    conn.query(CREATE_SALTS_TABLE, &[])
         .await
         .expect("accounts.slats creation error");
-    client
-        .query(CREATE_USERS_INDEX_EMAIL, &[])
+    conn.query(CREATE_USERS_INDEX_EMAIL, &[])
         .await
         .expect("second index (email");
-    client
-        .query(CREATE_USERS_INDEX_EXPIRE_AT, &[])
+    conn.query(CREATE_USERS_INDEX_EXPIRE_AT, &[])
         .await
         .expect("second index (expire_at");
-    client
-        .query(CREATE_OAUTH_INDEX_USER_ID, &[])
+    conn.query(CREATE_OAUTH_INDEX_USER_ID, &[])
         .await
         .expect("second index (user_id");
-    client
-        .query(CREATE_TOKENS_INDEX_USER_ID, &[])
+    conn.query(CREATE_TOKENS_INDEX_USER_ID, &[])
         .await
         .expect("second index (user_id");
 }
