@@ -170,10 +170,10 @@ pub async fn create(
                 .is_match(body.birthdate.as_ref().unwrap_or(&"".to_string()))
                 || 13
                     > helpers::get_age(
-                        dates[0].parse::<i32>().unwrap_or_default(),
-                        dates[1].parse::<u32>().unwrap_or_default(),
-                        dates[2].parse::<u32>().unwrap_or_default(),
-                    ) as i32)
+                        dates[0].parse::<i16>().unwrap_or_default(),
+                        dates[1].parse::<i8>().unwrap_or_default(),
+                        dates[2].parse::<i8>().unwrap_or_default(),
+                    ))
         {
             return Ok(super::err("Invalid birthdate".to_string()));
         } else {

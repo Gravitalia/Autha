@@ -1,6 +1,7 @@
 use crate::helpers::request::delete_account;
 use crate::{database::scylla::query, helpers};
 use anyhow::{anyhow, Result};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use warp::reply::{Json, WithStatus};
 
 // Define query
@@ -81,11 +82,17 @@ pub async fn delete(
         let _ = delete_account(url, vanity.clone()).await;
     }
 
+    let now = SystemTime::now();
+
     query(
         &scylla,
         DELETE_USER,
         (
-            (chrono::Utc::now() + chrono::Duration::days(30)).timestamp(),
+            now.checked_add(Duration::from_secs(30 * 24 * 60 * 60))
+                .unwrap_or(now)
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs() as i64,
             vanity,
         ),
     )

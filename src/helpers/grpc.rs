@@ -1,4 +1,4 @@
-use anyhow::Result;
+/*use anyhow::Result;
 
 use spinoza::spinoza_client::SpinozaClient;
 use spinoza::UploadRequest;
@@ -48,3 +48,4 @@ pub async fn upload_avatar(avatar: Vec<u8>) -> Result<String> {
 
     Ok(response.into_inner().message)
 }
+*/

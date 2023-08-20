@@ -184,10 +184,10 @@ pub async fn patch(
 
             if 13
                 > helpers::get_age(
-                    dates[0].parse::<i32>()?,
-                    dates[1].parse::<u32>()?,
-                    dates[2].parse::<u32>()?,
-                ) as i32
+                    dates[0].parse::<i16>()?,
+                    dates[1].parse::<i8>()?,
+                    dates[2].parse::<i8>()?,
+                )
             {
                 suspend_user(&scylla, vanity, true).await?;
                 return Ok(crate::router::err(
