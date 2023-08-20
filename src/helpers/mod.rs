@@ -74,6 +74,21 @@ pub async fn remove_deleted_account() {
     });
 }
 
+/// Set a certain timestamp to a human readble one using RFC3339
+pub fn format_rfc3339(timestamp: u64) -> String {
+    let formatted = format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
+        1970 + timestamp / 31556926, // Years (approximate number of seconds in a year)
+        (timestamp / 2629743) % 12 + 1, // Months (approximate number of seconds in a month)
+        (timestamp / 86400) % 30 + 1, // Days (approximate number of seconds in a day)
+        (timestamp / 3600) % 24,      // Hours
+        (timestamp / 60) % 60,        // Minutes
+        timestamp % 60                // Seconds
+    );
+
+    formatted
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
