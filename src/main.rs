@@ -15,6 +15,7 @@ use std::{
     fmt::Debug,
     net::{IpAddr, Ipv4Addr, SocketAddr},
 };
+use scylla::Session;
 use warp::{http::StatusCode, Filter, Rejection, Reply};
 
 /// Define errors
@@ -48,6 +49,7 @@ async fn rate_limit(
 
 /// Create a new user
 async fn create_user(
+    scylla: Arc<Session>,
     memcached: MemPool,
     body: model::body::Create,
     cf_token: String,
@@ -270,6 +272,13 @@ fn with_memcached(
     warp::any().map(move || db_pool.clone())
 }
 
+fn with_scylla(
+    db: Arc<Session>,
+) -> impl Filter<Extract = (Arc<Session>,), Error = std::convert::Infallible> + Clone
+{
+    warp::any().map(move || Arc::clone(&db))
+}
+
 #[tokio::main]
 async fn main() {
     // Configure logging
@@ -298,9 +307,12 @@ async fn main() {
 
     info!("Starting server...");
 
+    // Read configuration file
+    let config = helpers::config_reader::read();
+
     // Starts database
-    let scylla = database::scylla::init().await.unwrap();
-    let memcached_pool = database::mem::init().unwrap();
+    let scylla = Arc::new(database::scylla::init(config.clone()).await.unwrap());
+    let memcached_pool = database::mem::init(config.clone()).unwrap();
     let nats = database::nats::init().await.unwrap();
 
     // Create tables
@@ -316,6 +328,7 @@ async fn main() {
 
     let create_route = warp::path("create")
         .and(warp::post())
+        .and(with_scylla(Arc::clone(&scylla)))
         .and(with_memcached(memcached_pool.clone()))
         .and(warp::body::json())
         .and(warp::header("cf-turnstile-token"))
@@ -408,11 +421,7 @@ async fn main() {
         .or(get_user_data)
         .recover(handle_rejection);
 
-    let port = std::env::var("PORT")
-        .unwrap_or_else(|_| "1111".to_string())
-        .parse::<u16>()
-        .unwrap();
-    info!("Server started on port {}", port);
+    info!("Server started on port {}", config.port);
 
     warp::serve(
         warp::any()
@@ -421,6 +430,6 @@ async fn main() {
             .or(warp::head().map(|| "OK"))
             .or(routes),
     )
-    .run(([0, 0, 0, 0], port))
+    .run(([0, 0, 0, 0], config.port))
     .await;
 }
