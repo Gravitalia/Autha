@@ -17,6 +17,7 @@ lazy_static! {
 
 /// Handle create route and check if everything is valid
 pub async fn create(
+    scylla: std::sync::Arc<scylla::Session>,
     memcached: mem::MemPool,
     body: crate::model::body::Create,
     ip: String,
@@ -87,6 +88,7 @@ pub async fn create(
     let mut query_res: Vec<scylla::_macro_internal::Row>;
     // Check if account with this email and vanity already exists
     query_res = query(
+        &scylla,
         "SELECT vanity FROM accounts.users WHERE email = ?;",
         vec![hashed_email.clone()],
     )
@@ -100,6 +102,7 @@ pub async fn create(
 
     // Check if vanity is already used
     query_res = query(
+        &scylla,
         "SELECT vanity FROM accounts.users WHERE vanity = ?;",
         vec![data.vanity.clone()],
     )
@@ -110,6 +113,7 @@ pub async fn create(
     // Check if bot id is already used
     if query_res.is_empty() {
         query_res = query(
+            &scylla,
             "SELECT id FROM accounts.bots WHERE id = ?",
             vec![data.vanity.clone()],
         )
@@ -148,6 +152,7 @@ pub async fn create(
         } else {
             phone = Some(
                 helpers::crypto::encrypt(
+                    &scylla,
                     body.phone.unwrap_or_default().as_bytes(),
                 )
                 .await,
@@ -165,15 +170,16 @@ pub async fn create(
                 .is_match(body.birthdate.as_ref().unwrap_or(&"".to_string()))
                 || 13
                     > helpers::get_age(
-                        dates[0].parse::<i32>().unwrap_or_default(),
-                        dates[1].parse::<u32>().unwrap_or_default(),
-                        dates[2].parse::<u32>().unwrap_or_default(),
-                    ) as i32)
+                        dates[0].parse::<i16>().unwrap_or_default(),
+                        dates[1].parse::<i8>().unwrap_or_default(),
+                        dates[2].parse::<i8>().unwrap_or_default(),
+                    ))
         {
             return Ok(super::err("Invalid birthdate".to_string()));
         } else {
             birth = Some(
                 helpers::crypto::encrypt(
+                    &scylla,
                     body.birthdate.unwrap_or_default().as_bytes(),
                 )
                 .await,
@@ -183,6 +189,7 @@ pub async fn create(
 
     // Create account
     match create_user(
+        &scylla,
         &data.vanity,
         hashed_email,
         data.username,
@@ -209,7 +216,7 @@ pub async fn create(
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {
             error: false,
-            message: helpers::token::create(data.vanity, ip).await?,
+            message: helpers::token::create(&scylla, data.vanity, ip).await?,
         }),
         warp::http::StatusCode::CREATED,
     ))

@@ -2,20 +2,17 @@ use anyhow::Result;
 use async_nats::jetstream::{self, Context};
 
 /// Inits NATS (jetstream) connection
-pub async fn init() -> Result<Option<Context>> {
-    if std::env::var("PUBLISH_UPDATES")
-        .unwrap_or_else(|_| false.to_string())
-        .parse::<bool>()
-        .unwrap()
-    {
-        let client = async_nats::connect(
-            std::env::var("NATS_URL")
-                .unwrap_or_else(|_| "nats://localhost:4222".to_string()),
-        )
-        .await?;
+pub async fn init(
+    config: &crate::model::config::Config,
+) -> Result<Option<Context>> {
+    if config.database.nats.publish {
+        let client =
+            async_nats::connect(config.database.nats.host.clone()).await?;
 
         Ok(Some(jetstream::new(client)))
     } else {
+        log::warn!("NATS not started: publish is not activated");
+
         Ok(None)
     }
 }

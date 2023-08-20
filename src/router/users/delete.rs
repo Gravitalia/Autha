@@ -1,6 +1,7 @@
 use crate::helpers::request::delete_account;
 use crate::{database::scylla::query, helpers};
 use anyhow::{anyhow, Result};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use warp::reply::{Json, WithStatus};
 
 // Define query
@@ -11,12 +12,14 @@ const DELETE_USER: &str =
 
 /// Delete route for remove account from database
 pub async fn delete(
+    scylla: std::sync::Arc<scylla::Session>,
     token: String,
     body: crate::model::body::Gdrp,
 ) -> Result<WithStatus<Json>> {
-    let middelware_res = crate::router::middleware(Some(token), "Invalid")
-        .await
-        .unwrap_or_else(|_| "Invalid".to_string());
+    let middelware_res =
+        crate::router::middleware(&scylla, Some(token), "Invalid")
+            .await
+            .unwrap_or_else(|_| "Invalid".to_string());
 
     let vanity = if middelware_res != "Invalid" && middelware_res != "Suspended"
     {
@@ -31,7 +34,7 @@ pub async fn delete(
         ));
     };
 
-    let res = query(GET_USER_PASSWORD, vec![vanity.clone()])
+    let res = query(&scylla, GET_USER_PASSWORD, vec![vanity.clone()])
         .await?
         .rows
         .unwrap_or_default();
@@ -79,10 +82,17 @@ pub async fn delete(
         let _ = delete_account(url, vanity.clone()).await;
     }
 
+    let now = SystemTime::now();
+
     query(
+        &scylla,
         DELETE_USER,
         (
-            (chrono::Utc::now() + chrono::Duration::days(30)).timestamp(),
+            now.checked_add(Duration::from_secs(30 * 24 * 60 * 60))
+                .unwrap_or(now)
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs() as i64,
             vanity,
         ),
     )

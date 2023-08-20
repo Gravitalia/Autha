@@ -22,14 +22,16 @@ const UPDATE_PASSWORD: &str =
 
 /// Handle PATCH users route and let users modifie their profile
 pub async fn patch(
+    scylla: std::sync::Arc<scylla::Session>,
     memcached: MemPool,
     nats: Option<async_nats::jetstream::Context>,
     token: String,
     body: crate::model::body::UserPatch,
 ) -> Result<WithStatus<Json>> {
-    let middelware_res = crate::router::middleware(Some(token), "Invalid")
-        .await
-        .unwrap_or_else(|_| "Invalid".to_string());
+    let middelware_res =
+        crate::router::middleware(&scylla, Some(token), "Invalid")
+            .await
+            .unwrap_or_else(|_| "Invalid".to_string());
 
     let vanity: String =
         if middelware_res != "Invalid" && middelware_res != "Suspended" {
@@ -44,7 +46,7 @@ pub async fn patch(
             ));
         };
 
-    let query_res = query(GET_MUTABLE_VALUES, vec![vanity.clone()])
+    let query_res = query(&scylla, GET_MUTABLE_VALUES, vec![vanity.clone()])
         .await?
         .rows
         .unwrap_or_default();
@@ -157,10 +159,11 @@ pub async fn patch(
                 helpers::crypto::fpe_encrypt(e.encode_utf16().collect())?;
 
             // Check if email is already used
-            let query_res = query(CHECK_EMAIL, vec![hashed_email.clone()])
-                .await?
-                .rows
-                .unwrap_or_default();
+            let query_res =
+                query(&scylla, CHECK_EMAIL, vec![hashed_email.clone()])
+                    .await?
+                    .rows
+                    .unwrap_or_default();
 
             if !query_res.is_empty() {
                 return Ok(crate::router::err(
@@ -181,17 +184,17 @@ pub async fn patch(
 
             if 13
                 > helpers::get_age(
-                    dates[0].parse::<i32>()?,
-                    dates[1].parse::<u32>()?,
-                    dates[2].parse::<u32>()?,
-                ) as i32
+                    dates[0].parse::<i16>()?,
+                    dates[1].parse::<i8>()?,
+                    dates[2].parse::<i8>()?,
+                )
             {
-                suspend_user(vanity, true).await?;
+                suspend_user(&scylla, vanity, true).await?;
                 return Ok(crate::router::err(
                     "Your account has been suspended: age".to_string(),
                 ));
             } else {
-                birthdate = Some(encrypt(b.as_bytes()).await);
+                birthdate = Some(encrypt(&scylla, b.as_bytes()).await);
             }
         }
     }
@@ -209,8 +212,9 @@ pub async fn patch(
             return Ok(crate::router::err("Invalid MFA".to_string()));
         } else {
             query(
+                &scylla,
                 UPDATE_MFA,
-                vec![encrypt(m.as_bytes()).await, vanity.clone()],
+                vec![encrypt(&scylla, m.as_bytes()).await, vanity.clone()],
             )
             .await?;
         }
@@ -221,12 +225,17 @@ pub async fn patch(
         if !is_psw_valid || !crate::router::create::PASSWORD.is_match(&np) {
             return Ok(crate::router::err("Invalid password".to_string()));
         } else {
-            query(UPDATE_PASSWORD, vec![hash(np.as_ref()), vanity.clone()])
-                .await?;
+            query(
+                &scylla,
+                UPDATE_PASSWORD,
+                vec![hash(np.as_ref()), vanity.clone()],
+            )
+            .await?;
         }
     }
 
     match query(
+        &scylla,
         "UPDATE accounts.users SET username = ?, avatar = ?, bio = ?, birthdate = ?, phone = ?, email = ? WHERE vanity = ?;",
         (
             username.clone(),

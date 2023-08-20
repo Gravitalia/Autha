@@ -15,22 +15,25 @@ lazy_static! {
 
 /// Check if a token is valid and if have a real user behind (not suspended)
 async fn middleware(
+    scylla: &std::sync::Arc<scylla::Session>,
     token: Option<String>,
     fallback: &str,
 ) -> anyhow::Result<String> {
     match token {
-        Some(ntoken) => match crate::helpers::token::check(ntoken).await {
-            Ok(data) => Ok(data),
-            Err(e) => {
-                if e.to_string() == *"revoked" {
-                    Ok("Suspended".to_string())
-                } else if e.to_string() == *"expired" {
-                    Ok("Invalid".to_string())
-                } else {
-                    Ok(fallback.to_string())
+        Some(ntoken) => {
+            match crate::helpers::token::check(scylla, ntoken).await {
+                Ok(data) => Ok(data),
+                Err(e) => {
+                    if e.to_string() == *"revoked" {
+                        Ok("Suspended".to_string())
+                    } else if e.to_string() == *"expired" {
+                        Ok("Invalid".to_string())
+                    } else {
+                        Ok(fallback.to_string())
+                    }
                 }
             }
-        },
+        }
         _ => Ok(fallback.to_string()),
     }
 }

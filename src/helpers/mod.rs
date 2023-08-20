@@ -6,7 +6,6 @@ pub mod ratelimiter;
 pub mod request;
 pub mod token;
 
-use chrono::{Duration as ChronoDuration, NaiveDate, Utc};
 use rand::RngCore;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -36,42 +35,95 @@ pub fn random_string(length: usize) -> String {
 /// ```rust
 /// assert_eq!(get_age(2000, 01, 29), 23f64);
 /// ```
-pub fn get_age(year: i32, month: u32, day: u32) -> f64 {
-    match SystemTime::now().duration_since(UNIX_EPOCH) {
-        Ok(date) => (((date.as_millis()
-            - NaiveDate::from_ymd_opt(year, month, day)
-                .unwrap()
-                .and_hms_milli_opt(0, 0, 0, 0)
-                .unwrap()
-                .and_local_timezone(Utc)
-                .unwrap()
-                .timestamp_millis() as u128)
-            / 31540000000) as f64)
-            .floor(),
-        Err(_) => 0.0,
+pub fn get_age(year: i16, month: i8, day: i8) -> i32 {
+    // Calculating duration since the UNIX era
+    let duration_since_epoch = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+
+    // Calculate the number of days spent
+    let days_since_epoch = duration_since_epoch.as_secs() / 86_400 - 12;
+
+    // Calculate the year, month and day based on the number of days past
+    let years_since_epoch: i16 = (1970 + days_since_epoch / 365)
+        .try_into()
+        .unwrap_or_default();
+    let mut days_in_year = days_since_epoch % 365;
+    let mut current_month = 0;
+    let mut current_day = 0;
+    let days_in_months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    // Find the current month and day based on days passed in the year
+    for (i, &days_in_month) in days_in_months.iter().enumerate() {
+        days_in_year -= days_in_month;
+
+        if days_in_year <= days_in_month {
+            current_month = i as i8 + 2;
+            current_day = days_in_year.try_into().unwrap();
+            break;
+        }
+    }
+
+    // Compare birthdate with current date
+    if year > years_since_epoch
+        || (year == years_since_epoch && month > current_month)
+        || (year == years_since_epoch
+            && month == current_month
+            && day > current_day)
+    {
+        0
+    } else {
+        let mut age = years_since_epoch - year;
+
+        if month > current_month
+            || (month == current_month && day > current_day)
+        {
+            age -= 1;
+        }
+
+        age.into()
     }
 }
 
 /// Check every day at 00h00 if users need to be deleted
-pub async fn remove_deleted_account() {
+pub async fn remove_deleted_account(scylla: std::sync::Arc<scylla::Session>) {
     tokio::task::spawn(async move {
         loop {
-            let now = Utc::now();
-            let time = (now.naive_utc().date().and_hms_opt(0, 0, 0).unwrap()
-                + ChronoDuration::days(1))
-            .timestamp()
-                - now.timestamp();
-            std::thread::sleep(Duration::from_secs(time as u64));
+            let now = SystemTime::now();
 
-            if let Ok(x) = crate::database::scylla::query(format!("SELECT vanity FROM accounts.users WHERE expire_at >= '{}' ALLOW FILTERING", now.format("%Y-%m-%d+0000")), []).await {
+            std::thread::sleep(Duration::from_secs(
+                86400
+                    - (now
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs()
+                        % 86400),
+            ));
+
+            if let Ok(x) = crate::database::scylla::query(&scylla.clone(), format!("SELECT vanity FROM accounts.users WHERE expire_at >= '{}' ALLOW FILTERING", now.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs()), []).await {
                 let res = x.rows.unwrap_or_default();
 
                 for acc in res.iter() {
-                    let _ = crate::database::scylla::query("UPDATE accounts.users SET email = '', password = '', phone = '', birthdate = '', avatar = '', bio = '', banner = '', mfa_code = '', username = '' WHERE vanity = ?", vec![acc.columns[0].as_ref().unwrap().as_text().unwrap()]).await;
+                    let _ = crate::database::scylla::query(&scylla, "UPDATE accounts.users SET email = '', password = '', phone = '', birthdate = '', avatar = '', bio = '', banner = '', mfa_code = '', username = '' WHERE vanity = ?", vec![acc.columns[0].as_ref().unwrap().as_text().unwrap()]).await;
                 }
             };
         }
     });
+}
+
+/// Set a certain timestamp to a human readble one using RFC3339
+pub fn format_rfc3339(timestamp: u64) -> String {
+    let formatted = format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
+        1970 + timestamp / 31556926, // Years (approximate number of seconds in a year)
+        (timestamp / 2629743) % 12 + 1, // Months (approximate number of seconds in a month)
+        (timestamp / 86400) % 30 + 1, // Days (approximate number of seconds in a day)
+        (timestamp / 3600) % 24,      // Hours
+        (timestamp / 60) % 60,        // Minutes
+        timestamp % 60                // Seconds
+    );
+
+    formatted
 }
 
 #[cfg(test)]
@@ -85,6 +137,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_age() {
-        assert_eq!(get_age(2000, 1, 29), 23f64);
+        assert_eq!(get_age(2000, 1, 29), 23);
     }
 }
