@@ -329,7 +329,7 @@ async fn main() {
     let scylla =
         Arc::new(database::scylla::init(config.clone()).await.unwrap());
     let memcached_pool = database::mem::init(&config).unwrap();
-    let nats = database::nats::init().await.unwrap();
+    let nats = database::nats::init(&config).await.unwrap();
 
     // Create tables
     database::scylla::create_tables(&scylla).await;
