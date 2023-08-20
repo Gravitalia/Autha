@@ -12,7 +12,7 @@ pub enum SetValue {
 }
 
 /// Inits memcached database connection
-pub fn init(config: crate::model::config::Config) -> Result<MemPool> {
+pub fn init(config: &crate::model::config::Config) -> Result<MemPool> {
     let manager = r2d2_memcache::MemcacheConnectionManager::new(format!(
         "memcache://{}?timeout=2&use_udp=true",
         config.database.memcached.hosts[0]
