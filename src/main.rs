@@ -259,7 +259,9 @@ async fn handle_rejection(
     ))
 }
 
-/// Transfer database connection to the handler
+/// Creates a Warp filter that extracts a reference to the provided MemPool.
+/// This filter is used to inject a reference to the MemPool (Memcached database pool) into Warp routes.
+/// The MemPool reference is cloned and returned as an outcome of this filter.
 fn with_db(
     db_pool: MemPool,
 ) -> impl Filter<Extract = (MemPool,), Error = std::convert::Infallible> + Clone
