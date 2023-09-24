@@ -1,0 +1,53 @@
+[package]
+name = "autha"
+version = "3.0.0"
+repository = "https://github.com/Gravitalia/autha"
+edition = "2021"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+debug = false
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[dependencies]
+tokio = { version = "1.32", features = ["macros", "rt-multi-thread"] }
+warp = { version = "0.3", features = ["tls"] }
+serde = { version = "1", features = ["derive"] }
+tonic = { version = "0.10", features = [ "tls", "gzip" ] }
+
+r2d2 = "0.8"
+r2d2-memcache = "0.6"
+scylla = "0.9"
+async-nats = "0.32"
+
+rust-argon2 = "2"
+sha3 = "0.10"
+fpe = "0.6"
+aes = "0.8"
+
+regex = "1"
+jsonwebtoken = "8.3"
+lazy_static = "1"
+hex = "0.4"
+serde_json = "1"
+rand = "0.8"
+totp-lite = "2"
+reqwest = { version = "0.11", features = ["json"] }
+anyhow = "1"
+serde_yaml = "0.9"
+uuid = { version = "1.4", features = ["v4"] }
+prost = "0.12"
+prost-types = "0.12"
+
+log = "0.4"
+fern = "0.6"
+
+[build-dependencies]
+tonic-build = { version = "0.10", features = [ "prost" ] }
