@@ -24,7 +24,7 @@ tonic = { version = "0.9.2", features = [ "tls", "gzip" ] }
 r2d2 = "0.8.10"
 r2d2-memcache = "0.6.0"
 scylla = "0.9.0"
-async-nats = "0.31.0"
+async-nats = "0.32.0"
 
 chacha20poly1305 = "0.10.1"
 rust-argon2 = "2.0.0"
