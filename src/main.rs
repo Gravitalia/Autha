@@ -4,6 +4,28 @@ mod model;
 
 use crate::database::scylla::ScyllaManager;
 use warp::Filter;
+use std::sync::Arc;
+use scylla::Session;
+use database::memcached::MemcachePool;
+
+/// Creates a Warp filter that extracts a reference to the provided MemPool.
+/// This filter is used to inject a reference to the MemPool (Memcached database pool) into Warp routes.
+/// The MemPool is cloned and returned as an outcome of this filter.
+fn with_memcached(
+    db_pool: MemcachePool,
+) -> impl Filter<Extract = (MemcachePool,), Error = std::convert::Infallible> + Clone
+{
+    warp::any().map(move || db_pool.clone())
+}
+
+/// Also creates a Warp filter to inject Scylla into Warp routes.
+/// The atomic Session is cloned and returned as an outcome of this filter.
+fn with_scylla(
+    db: Arc<Session>,
+) -> impl Filter<Extract = (Arc<Session>,), Error = std::convert::Infallible> + Clone
+{
+    warp::any().map(move || Arc::clone(&db))
+}
 
 #[tokio::main]
 async fn main() {
@@ -41,7 +63,7 @@ async fn main() {
         Ok(pool) => {
             log::info!("Cassandra/ScyllaDB connection created successfully.");
 
-            database::scylla::Scylla { connection: pool }
+            Arc::new(database::scylla::Scylla { connection: pool })
         }
         Err(error) => {
             // A connection failure renders the entire API unstable and unusable.
@@ -57,7 +79,7 @@ async fn main() {
         Ok(pool) => {
             log::info!("Memcached pool connection created successfully.");
 
-            database::memcached::MemPool {
+            database::memcached::MemcachePool {
                 connection: Some(pool),
             }
         }
@@ -70,7 +92,7 @@ async fn main() {
                 error
             );
 
-            database::memcached::MemPool { connection: None }
+            database::memcached::MemcachePool { connection: None }
         }
     };
 
