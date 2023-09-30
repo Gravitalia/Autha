@@ -14,7 +14,7 @@ pub enum SetValue {
 
 /// Define a structure to manage the Memcached connection pool.
 #[derive(Clone, Debug)]
-pub struct MemPool {
+pub struct MemcachePool {
     /// Optional pool of Memcached connections.
     pub connection: Option<Pool<MemcacheConnectionManager>>,
 }
@@ -29,7 +29,7 @@ pub trait MemcacheManager {
     fn delete<T: ToString>(&self, key: T) -> Result<()>;
 }
 
-impl MemcacheManager for MemPool {
+impl MemcacheManager for MemcachePool {
     /// Retrieve data from Memcached based on the key.
     fn get<T: ToString>(&self, key: T) -> Result<Option<String>> {
         let connection = self
