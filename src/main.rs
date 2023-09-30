@@ -2,11 +2,12 @@ mod database;
 mod helpers;
 mod model;
 
+use crate::database::scylla::ScyllaManager;
 use warp::Filter;
 
 #[tokio::main]
 async fn main() {
-    // Set logger with Fern
+    // Set logger with Fern.
     fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
@@ -32,10 +33,10 @@ async fn main() {
         .apply()
         .unwrap();
 
-    // Read configuration file
+    // Read configuration file.
     let config = helpers::config::read();
 
-    // Initialize databases
+    // Initialize databases.
     let scylladb = match database::scylla::init(config.clone()).await {
         Ok(pool) => {
             log::info!("Cassandra/ScyllaDB connection created successfully.");
@@ -70,6 +71,16 @@ async fn main() {
             );
 
             database::memcached::MemPool { connection: None }
+        }
+    };
+
+    // Create needed tables.
+    match scylladb.create_tables().await {
+        Ok(_) => {
+            log::trace!("Successfully created tables, if they didn't exist.");
+        }
+        Err(error) => {
+            log::error!("Failed to create tables: {}", error)
         }
     };
 
