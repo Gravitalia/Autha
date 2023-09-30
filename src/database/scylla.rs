@@ -1,9 +1,9 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use async_trait::async_trait;
 use scylla::{frame::Compression, transport::session::PoolSize, Session, SessionBuilder};
 use std::num::NonZeroUsize;
 
-// Define constants for table creation and queries
+// Define constants for table creation and queries.
 const CREATE_USERS_TABLE: &str = r#"
     CREATE TABLE IF NOT EXISTS users (
         vanity TEXT,
@@ -72,6 +72,23 @@ const CREATE_OAUTH_INDEX_USER_ID: &str =
 const CREATE_TOKENS_INDEX_USER_ID: &str =
     "CREATE INDEX IF NOT EXISTS ON accounts.tokens ( user_id );";
 
+/// Define all the CQL queries for creating tables.
+const TABLES_TO_CREATE: [&str; 5] = [
+    CREATE_USERS_TABLE,
+    CREATE_BOTS_TABLE,
+    CREATE_OAUTH_TABLE,
+    CREATE_TOKENS_TABLE,
+    CREATE_SALTS_TABLE,
+];
+
+/// Define all the CQL queries for creating indexes.
+const INDICES_TO_CREATE: [&str; 4] = [
+    CREATE_USERS_INDEX_EMAIL,
+    CREATE_USERS_INDEX_EXPIRE_AT,
+    CREATE_OAUTH_INDEX_USER_ID,
+    CREATE_TOKENS_INDEX_USER_ID,
+];
+
 /// Define a structure to manage the Scylla connections.
 #[derive(Debug)]
 pub struct Scylla {
@@ -87,43 +104,21 @@ pub trait ScyllaManager {
 
 #[async_trait]
 impl ScyllaManager for Scylla {
+    /// Create tables on "accounts" keyspace.
     async fn create_tables(&self) -> Result<()> {
-        self.connection
-            .query(CREATE_USERS_TABLE, &[])
-            .await
-            .expect("accounts.users creation error");
-        self.connection
-            .query(CREATE_BOTS_TABLE, &[])
-            .await
-            .expect("accounts.bots creation error");
-        self.connection
-            .query(CREATE_OAUTH_TABLE, &[])
-            .await
-            .expect("accounts.oauth creation error");
-        self.connection
-            .query(CREATE_TOKENS_TABLE, &[])
-            .await
-            .expect("accounts.tokens creation error");
-        self.connection
-            .query(CREATE_SALTS_TABLE, &[])
-            .await
-            .expect("accounts.slats creation error");
-        self.connection
-            .query(CREATE_USERS_INDEX_EMAIL, &[])
-            .await
-            .expect("second index (email");
-        self.connection
-            .query(CREATE_USERS_INDEX_EXPIRE_AT, &[])
-            .await
-            .expect("second index (expire_at");
-        self.connection
-            .query(CREATE_OAUTH_INDEX_USER_ID, &[])
-            .await
-            .expect("second index (user_id");
-        self.connection
-            .query(CREATE_TOKENS_INDEX_USER_ID, &[])
-            .await
-            .expect("second index (user_id");
+        for table in TABLES_TO_CREATE.iter() {
+            self.connection
+                .query(table.to_string(), &[])
+                .await
+                .context(format!("Failed to create table: {}", table))?;
+        }
+
+        for index in INDICES_TO_CREATE.iter() {
+            self.connection
+                .query(index.to_string(), &[])
+                .await
+                .context(format!("Failed to create index: {}", index))?;
+        }
 
         Ok(())
     }
