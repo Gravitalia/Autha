@@ -1,3 +1,4 @@
+use anyhow::Result;
 use argon2::{Config, Variant, Version};
 use rand::rngs::OsRng;
 use rand::Rng;
@@ -19,7 +20,7 @@ pub fn random_string(length: usize) -> String {
 
 /// Hash plaintext using Argon2, mostly used for passwords.
 /// It uses the two version, Argon2d for GPU attacks and Argon2i for auxiliary channel attacks.
-pub fn hash(data: &[u8]) -> String {
+pub fn hash(data: &[u8], vanity: &[u8]) -> String {
     argon2::hash_encoded(
         data,
         random_string(16).as_bytes(),
@@ -38,7 +39,7 @@ pub fn hash(data: &[u8]) -> String {
             secret: std::env::var("KEY")
                 .unwrap_or_else(|_| "KEY".to_string())
                 .as_bytes(),
-            ad: &[],
+            ad: vanity,
             hash_length: std::env::var("HASH_LENGTH")
                 .unwrap_or_default()
                 .parse::<u32>()
@@ -46,6 +47,19 @@ pub fn hash(data: &[u8]) -> String {
         },
     )
     .unwrap()
+}
+
+/// Verify if provided hash is matching with the plaintext password.
+/// Using Argon2 to provide checking.
+pub fn check_hash(hash: String, password: &[u8], vanity: &[u8]) -> Result<bool> {
+    Ok(argon2::verify_encoded_ext(
+        &hash,
+        password,
+        std::env::var("KEY")
+            .unwrap_or_else(|_| "KEY".to_string())
+            .as_bytes(),
+        vanity,
+    )?)
 }
 
 #[cfg(test)]
@@ -69,12 +83,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_hash() {
-        let pwd = &hash(b"password");
+        let pwd = hash(b"password", b"test");
         assert!(regex::Regex::new(
             r"[$]argon2(i)?(d)?[$]v=[0-9]{1,2}[$]m=[0-9]+,t=[0-9]{1,},p=[0-9]{1,}[$].*"
         )
         .unwrap()
-        .is_match(pwd));
-        //assert!(verify_hash(pwd, b"password"));
+        .is_match(&pwd));
+        assert!(check_hash(pwd, b"password", b"test").unwrap_or(false));
     }
 }
