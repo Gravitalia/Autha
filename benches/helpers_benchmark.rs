@@ -10,5 +10,14 @@ fn random_string_benchmark(c: &mut Criterion) {
     );
 }
 
-criterion_group!(benches, random_string_benchmark);
+fn hash_benchmark(c: &mut Criterion) {
+    c.bench_function(
+        "hash",
+        |b| b.iter(|| {
+            hash("password".as_bytes(), b"test")
+        })
+    );
+}
+
+criterion_group!(benches, random_string_benchmark, hash_benchmark);
 criterion_main!(benches);
