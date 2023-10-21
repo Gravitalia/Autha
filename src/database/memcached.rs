@@ -12,6 +12,20 @@ pub enum SetValue {
     Number(u16),
 }
 
+impl From<String> for SetValue {
+    /// Implements conversion from a String to SetValue, storing the value as a string of characters.
+    fn from(s: String) -> Self {
+        SetValue::Characters(s)
+    }
+}
+
+impl From<u16> for SetValue {
+    /// Implements conversion from a 16-bit unsigned number to SetValue, storing the value as a Number.
+    fn from(n: u16) -> Self {
+        SetValue::Number(n)
+    }
+}
+
 /// Define a structure to manage the Memcached connection pool.
 #[derive(Clone, Debug)]
 pub struct MemcachePool {
@@ -24,7 +38,7 @@ pub trait MemcacheManager {
     /// Get data from a given key.
     fn get<T: ToString>(&self, key: T) -> Result<Option<String>>;
     /// Set data in Memcached and return the key.
-    fn set<T: ToString>(&self, key: T, value: SetValue) -> Result<String>;
+    fn set<T: ToString, V: Into<SetValue> + Clone>(&self, key: T, value: V) -> Result<String>;
     /// Delete data based on the key.
     fn delete<T: ToString>(&self, key: T) -> Result<()>;
 }
@@ -55,7 +69,7 @@ impl MemcacheManager for MemcachePool {
     }
 
     /// Store data in Memcached and return the key.
-    fn set<T: ToString>(&self, key: T, value: SetValue) -> Result<String> {
+    fn set<T: ToString, V: Into<SetValue> + Clone>(&self, key: T, value: V) -> Result<String> {
         let connection = self
             .connection
             .as_ref()
@@ -66,7 +80,7 @@ impl MemcacheManager for MemcachePool {
                 error
             })?;
 
-        let result = match value.clone() {
+        let result = match value.clone().into() {
             SetValue::Characters(data) => connection.set(&key.to_string(), data, 300),
             SetValue::Number(data) => connection.set(&key.to_string(), data, 300),
         };
@@ -76,7 +90,7 @@ impl MemcacheManager for MemcachePool {
                 log::trace!(
                     "Cache data set with key {} and content as {:?}",
                     key.to_string(),
-                    value
+                    value.into()
                 );
                 key.to_string()
             })
