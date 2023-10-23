@@ -6,7 +6,7 @@ use warp::reply::{Json, WithStatus};
 pub async fn handle(
     scylla: std::sync::Arc<Scylla>,
     memcached: MemcachePool,
-    //body: crate::model::body::Create,
+    body: crate::model::body::Create,
     ip: String,
     token: Option<String>,
 ) -> Result<WithStatus<Json>> {
