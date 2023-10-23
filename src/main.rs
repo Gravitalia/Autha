@@ -1,31 +1,11 @@
 mod database;
 mod helpers;
 mod model;
+mod router;
 
-use crate::database::scylla::ScyllaManager;
-use warp::Filter;
+use database::scylla::ScyllaManager;
 use std::sync::Arc;
-use scylla::Session;
-use database::memcached::MemcachePool;
-
-/// Creates a Warp filter that extracts a reference to the provided MemPool.
-/// This filter is used to inject a reference to the MemPool (Memcached database pool) into Warp routes.
-/// The MemPool is cloned and returned as an outcome of this filter.
-fn with_memcached(
-    db_pool: MemcachePool,
-) -> impl Filter<Extract = (MemcachePool,), Error = std::convert::Infallible> + Clone
-{
-    warp::any().map(move || db_pool.clone())
-}
-
-/// Also creates a Warp filter to inject Scylla into Warp routes.
-/// The atomic Session is cloned and returned as an outcome of this filter.
-fn with_scylla(
-    db: Arc<Session>,
-) -> impl Filter<Extract = (Arc<Session>,), Error = std::convert::Infallible> + Clone
-{
-    warp::any().map(move || Arc::clone(&db))
-}
+use warp::Filter;
 
 #[tokio::main]
 async fn main() {
@@ -102,15 +82,26 @@ async fn main() {
             log::trace!("Successfully created tables, if they didn't exist.");
         }
         Err(error) => {
-            log::error!("Failed to create tables: {}", error)
+            log::error!("Failed to create tables: {}", error);
         }
     };
+
+    let create_route = warp::path("create")
+        .and(warp::post())
+        .and(router::with_scylla(Arc::clone(&scylladb)))
+        .and(router::with_memcached(memcached_pool.clone()))
+        .and(warp::body::json())
+        .and(warp::header::optional::<String>("cf-turnstile-token"))
+        .and(warp::header::optional::<String>("X-Forwarded-For"))
+        .and(warp::addr::remote())
+        .and_then(router::create_user);
 
     warp::serve(
         warp::any()
             .and(warp::options())
             .map(|| "OK")
-            .or(warp::head().map(|| "OK")),
+            .or(warp::head().map(|| "OK")
+        .or(create_route)),
     )
     .run(([0, 0, 0, 0], config.port))
     .await;
