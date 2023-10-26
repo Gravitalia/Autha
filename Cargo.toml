@@ -33,7 +33,7 @@ fpe = "0.6.1"
 aes = "0.8.3"
 
 regex = "1.9.5"
-jsonwebtoken = "8.3.0"
+jsonwebtoken = "9.1.0"
 lazy_static = "1.4.0"
 hex = "0.4.3"
 generic-array = "0.14.7"
