@@ -28,7 +28,7 @@ scylla = "0.9"
 async-nats = "0.32"
 
 rust-argon2 = "2"
-sha3 = "0.10"
+ring = "0.17"
 fpe = "0.6"
 aes = "0.8"
 
