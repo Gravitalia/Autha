@@ -38,9 +38,9 @@ jobs:
     - name: Install cargo-audit
       run: cargo install cargo-audit
     - name: Build
-      run: cargo build --verbose
+      run: cargo build
     - name: Test
-      run: cargo test
+      run: cargo test --bins
     - name: Benchmark
       run: cargo bench
     - name: Audit
