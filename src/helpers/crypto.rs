@@ -2,6 +2,7 @@ use anyhow::Result;
 use argon2::{Config, Variant, Version};
 use rand::rngs::OsRng;
 use rand::Rng;
+use ring::digest::{Context, SHA256};
 
 /// Generate random string with thread-local cryptographically-secure PRNG seeded from the system's entropy pool.
 pub fn random_string(length: usize) -> String {
@@ -62,6 +63,15 @@ pub fn check_hash(hash: String, password: &[u8], vanity: &[u8]) -> Result<bool> 
     )?)
 }
 
+/// Compute the SHA256 digest for the bytes data.
+pub fn sha256_digest(data: &[u8]) -> Result<String> {
+    let mut context = Context::new(&SHA256);
+
+    context.update(data);
+
+    Ok(hex::encode(context.finish()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -90,5 +100,15 @@ mod tests {
         .unwrap()
         .is_match(&pwd));
         assert!(check_hash(pwd, b"password", b"test").unwrap_or(false));
+    }
+
+    #[tokio::test]
+    async fn test_sha256_digest() {
+        let hash = sha256_digest(b"rainbow");
+
+        assert_eq!(
+            hash.unwrap(),
+            "8fced00b6ce281456d69daef5f2b33eaf1a4a29b5923ebe5f1f2c54f5886c7a3".to_string()
+        );
     }
 }
