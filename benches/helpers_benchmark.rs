@@ -18,10 +18,19 @@ fn sha256_digest_benchmark(c: &mut Criterion) {
     group.finish();
 }
 
+fn chacha20_poly1305_encrypt_benchmark(c: &mut Criterion) {
+    let mut group = c.benchmark_group("throughput");
+    group.throughput(Throughput::Bytes(116));
+    group.bench_function("chacha20_poly1305_encrypt", |b| {
+        b.iter(|| chacha20_poly1305_encrypt(b"Sensitive data such as birthdate or phone.".to_vec()))
+    });
+    group.finish();
+}
+
 criterion_group! {
     name = basics;
     config = Criterion::default().significance_level(0.1).sample_size(500);
-    targets = random_string_benchmark, sha256_digest_benchmark
+    targets = random_string_benchmark, sha256_digest_benchmark, chacha20_poly1305_encrypt_benchmark
 }
 criterion_group! {
     name = consumers;
