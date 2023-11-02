@@ -24,9 +24,9 @@ pub fn chacha20_poly1305(
     match opening_key.open_in_place(Aad::empty(), &mut data) {
         Ok(res) => String::from_utf8(res.to_vec()),
         Err(_) => {
-            /*log::error!(
+            log::error!(
                 "Cannot decrypt ChaCha20-Poly1205 data, got an error during opening. Have you decoded hex before call the function?"
-            );*/
+            );
 
             Ok("".to_string())
         }
