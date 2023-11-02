@@ -15,10 +15,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
-    - name: Install Protoc
-      uses: arduino/setup-protoc@v1
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    #- name: Install Protoc
+    #  uses: arduino/setup-protoc@v1
+    #  with:
+    #    repo-token: ${{ secrets.GITHUB_TOKEN }}
     - run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
       if: runner.os == 'Windows'
     - run: vcpkg install openssl:x64-windows-static-md
@@ -40,7 +40,7 @@ jobs:
     - name: Build
       run: cargo build
     - name: Test
-      run: cargo test --bins
+      run: cargo test
     - name: Benchmark
       run: cargo bench
     - name: Audit
