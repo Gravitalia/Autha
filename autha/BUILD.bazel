@@ -1,0 +1,35 @@
+load("@crate_index//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+CUSTOM_CRATES = [
+    "//crypto",
+    "//db",
+]
+
+rust_binary(
+    name = "autha",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    deps = CUSTOM_CRATES + all_crate_deps(
+        normal = True,
+    ),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "autha_test",
+    crate = ":autha",
+    deps = CUSTOM_CRATES + all_crate_deps(
+        normal = True,
+    ),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    size = "medium",
+    timeout = "short",
+)
