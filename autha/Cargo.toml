@@ -3,18 +3,6 @@ name = "autha"
 version = "3.0.0"
 edition = "2021"
 
-[profile.release]
-opt-level = "s"
-lto = true
-codegen-units = 1
-panic = "abort"
-strip = true
-debug = false
-
-[profile.dev]
-opt-level = 0
-debug = true
-
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 tonic = { version = "0.10", features = [ "tls", "gzip" ] }
