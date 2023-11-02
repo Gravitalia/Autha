@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.gravitalia.torresix.torresix";
+option java_outer_classname = "TorresixProto";
+
+package torresix;
+
+// The service definition
+service Torre {
+    // Sends a a request to predict a result of AI
+    rpc TorrePredict (TorreRequest) returns (TorreReply) {}
+}
+
+// The request message containing the model ID and the required data
+message TorreRequest {
+    int32 model = 1;
+    bytes data = 2;
+}
+
+// The response message containing the model ID, the response and if there were an error
+message TorreReply {
+    int32 model = 1;
+    string message = 2;
+    bool error = 3;
+}
