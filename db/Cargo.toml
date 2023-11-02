@@ -1,0 +1,20 @@
+[package]
+name = "db"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 64 # 1
+panic = "unwind"
+strip = true
+debug = false
+
+[dependencies]
+anyhow = "1"
+async-trait = "0.1"
+log = "0.4"
+r2d2 = "0.8"
+r2d2-memcache = "0.6"
+scylla = "0.9"
