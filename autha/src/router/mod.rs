@@ -5,10 +5,25 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 use warp::{Filter, Rejection, Reply};
 
+// Error constants.
+const ERROR_RATE_LIMITED: &str = "You are being rate limited.";
+
 /// Define errors
 #[derive(Debug)]
 struct UnknownError;
 impl warp::reject::Reject for UnknownError {}
+
+/// Create a Warp response for errors messages.
+/// Should be used in routes.
+fn err<T: ToString>(message: T) -> warp::reply::WithStatus<warp::reply::Json> {
+    warp::reply::with_status(
+        warp::reply::json(&crate::model::error::Error {
+            error: true,
+            message: message.to_string(),
+        }),
+        warp::http::StatusCode::BAD_REQUEST,
+    )
+}
 
 /// Creates a Warp filter that extracts a reference to the provided MemPool.
 /// This filter is used to inject a reference to the MemPool (Memcached database pool) into Warp routes.
