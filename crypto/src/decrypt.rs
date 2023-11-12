@@ -17,7 +17,7 @@ pub fn chacha20_poly1305(
 
     let mut opening_key = {
         let key = UnboundKey::new(&CHACHA20_POLY1305, key_bytes).unwrap();
-        let nonce_gen = crate::encrpt::NonceGen::new(nonce);
+        let nonce_gen = crate::encrypt::NonceGen::new(nonce);
         OpeningKey::new(key, nonce_gen)
     };
 
