@@ -1,4 +1,6 @@
+use crate::random_string;
 use anyhow::Result;
+use fpe::ff1::{FlexibleNumeralString, Operations, FF1};
 use rand::{rngs::OsRng, RngCore};
 use ring::aead::*;
 use std::num::Wrapping;
@@ -67,6 +69,29 @@ pub fn chacha20_poly1305(mut data: Vec<u8>) -> Result<(String, String)> {
         .unwrap();
 
     Ok((hex::encode(nonce_seed), hex::encode(data)))
+}
+
+/// Encrypts data the provided data using (Format-preserving encryption)
+/// and FF1 (Feistel-based Encryption Mode) with AES256.
+pub fn format_preserving_encryption(data: Vec<u16>) -> Result<String> {
+    // Get encryption key. The key MUST be 32 bytes (256 bits), otherwise it panics.
+    let mut key = std::env::var("CHACHA20_KEY").unwrap_or_default();
+    if key.is_empty() {
+        // Generate random key. Must not be used in production.
+        // If used in production, users won't be able to login or create account.
+        key = random_string(32);
+    }
+
+    let length = data.len();
+
+    let ff = FF1::<aes::Aes256>::new(
+        &hex::decode(std::env::var("CHACHA20_KEY").expect("Missing env `CHACHA20_KEY`"))?,
+        256,
+    )?;
+    Ok(hex::encode(
+        ff.encrypt(&[], &FlexibleNumeralString::from(data))?
+            .to_be_bytes(256, length),
+    ))
 }
 
 #[cfg(test)]
