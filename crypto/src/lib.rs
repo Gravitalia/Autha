@@ -1,5 +1,5 @@
 pub mod decrypt;
-pub mod encrpt;
+pub mod encrypt;
 pub mod hash;
 
 use rand::rngs::OsRng;
