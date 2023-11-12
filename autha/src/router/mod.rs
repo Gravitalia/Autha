@@ -44,7 +44,6 @@ pub fn with_scylla(
 
 pub async fn create_user(
     scylla: Arc<Scylla>,
-    memcached: MemcachePool,
     body: crate::model::body::Create,
     cf_token: Option<String>,
     forwarded: Option<String>,
@@ -56,7 +55,7 @@ pub async fn create_user(
             .to_string()
     });
 
-    match create::handle(scylla, memcached, body, ip, cf_token).await {
+    match create::handle(scylla, body, ip, cf_token).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }

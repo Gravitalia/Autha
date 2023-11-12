@@ -1,9 +1,6 @@
 use anyhow::Result;
 use crypto::{hash::sha256, random_string};
-use db::{
-    memcache::{MemcacheManager, MemcachePool},
-    scylla::Scylla,
-};
+use db::scylla::Scylla;
 use regex::Regex;
 use warp::reply::{Json, WithStatus};
 
@@ -22,7 +19,6 @@ lazy_static! {
 /// Handle create route and check if everything is valid.
 pub async fn handle(
     scylla: std::sync::Arc<Scylla>,
-    memcached: MemcachePool,
     body: crate::model::body::Create,
     ip: String,
     token: Option<String>,
@@ -53,27 +49,9 @@ pub async fn handle(
         );
     }
 
-    // Check if user have already created account 5 minutes ago.
-    let rate_limit = match memcached.get(format!("account_create_{}", hashed_ip))? {
-        Some(r) => r.parse::<u16>().unwrap_or(0),
-        None => 0,
-    };
-    if rate_limit >= 1 {
-        return Ok(warp::reply::with_status(
-            warp::reply::json(&crate::model::error::Error {
-                error: true,
-                message: super::ERROR_RATE_LIMITED.into(),
-            }),
-            warp::http::StatusCode::TOO_MANY_REQUESTS,
-        ));
-    }
-
-    // Set to one to the global rate limit.
-    // One because it can only create ONE account each five minutes.
-    memcached.set(
-        format!("account_create_{}", hashed_ip),
-        1,
-    )?;
+    // Hash email
+    let hashed_email =
+        crypto::encrypt::format_preserving_encryption(body.email.encode_utf16().collect())?;
 
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {
