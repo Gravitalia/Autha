@@ -1,5 +1,4 @@
 use anyhow::Result;
-use crypto::{hash::sha256, random_string};
 use db::scylla::Scylla;
 use regex::Regex;
 use warp::reply::{Json, WithStatus};
@@ -41,17 +40,24 @@ pub async fn handle(
         return Ok(super::err("Invalid username"));
     }
 
-    // Hash IP.
-    let hashed_ip = sha256(ip.as_bytes()).unwrap_or_default();
-    if hashed_ip.is_empty() {
-        log::warn!(
-            "The IP could not be hashed. This can result in the uncontrolled creation of accounts."
-        );
-    }
-
     // Hash email
     let hashed_email =
         crypto::encrypt::format_preserving_encryption(body.email.encode_utf16().collect())?;
+
+    // Verifiy if account with provided email not exists.
+    if !scylla
+        .connection
+        .query(
+            "SELECT vanity FROM accounts.users WHERE email = ?;",
+            vec![hashed_email],
+        )
+        .await?
+        .rows
+        .unwrap_or_default()
+        .is_empty()
+    {
+        return Ok(super::err("Email already used".to_string()));
+    }
 
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {
