@@ -113,7 +113,40 @@ pub async fn handle(
                 )
                 .await?;
 
+            // Set primary key (to get nonce) and encrypted phone.
             phone = Some(format!("{}//{}", uuid, encrypted));
+        }
+    }
+
+    let mut birthdate: Option<String> = None;
+    if let Some(birth) = body.birthdate {
+        let dates: Vec<&str> = birth.split('-').collect();
+
+        // Check if user is 13 years old at least.
+        if !BIRTH.is_match(&birth)
+            || 13
+                > crate::helpers::get_age(
+                    dates[0].parse::<i16>().unwrap_or_default(),
+                    dates[1].parse::<i8>().unwrap_or_default(),
+                    dates[2].parse::<i8>().unwrap_or_default(),
+                )?
+        {
+            return Ok(super::err("Too young".to_string()));
+        } else {
+            let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(birth.as_bytes().to_vec())?;
+
+            let uuid = uuid::Uuid::new_v4().to_string();
+
+            scylla
+                .connection
+                .query(
+                    "INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?);",
+                    vec![uuid.clone(), nonce],
+                )
+                .await?;
+
+            // Set primary key (to get nonce) and encrypted birthdate.
+            birthdate = Some(format!("{}//{}", uuid, encrypted));
         }
     }
 
