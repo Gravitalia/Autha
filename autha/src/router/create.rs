@@ -40,15 +40,14 @@ pub async fn handle(
         return Ok(super::err("Invalid username"));
     }
 
-    // Hash email
     let hashed_email =
         crypto::encrypt::format_preserving_encryption(body.email.encode_utf16().collect())?;
 
-    // Verifiy if account with provided email not exists.
+    // Check if account with this email already exists.
     if !scylla
         .connection
         .query(
-            "SELECT vanity FROM accounts.users WHERE email = ?;",
+            "SELECT vanity FROM accounts.users WHERE email = ?",
             vec![hashed_email],
         )
         .await?
@@ -57,6 +56,65 @@ pub async fn handle(
         .is_empty()
     {
         return Ok(super::err("Email already used".to_string()));
+    }
+
+    // Check if account with this vanity already exists.
+    if !scylla
+        .connection
+        .query(
+            "SELECT vanity FROM accounts.users WHERE vanity = ?",
+            vec![body.vanity.clone()],
+        )
+        .await?
+        .rows
+        .unwrap_or_default()
+        .is_empty()
+    {
+        return Ok(super::err("Vanity already used".to_string()));
+    }
+
+    // Also check if user is not trying to use a protected vanity.
+    if [
+        "explore",
+        "callback",
+        "home",
+        "blogs",
+        "blog",
+        "gravitalia",
+        "suba",
+        "support",
+        "oauth",
+        "upload",
+        "new",
+        "settings",
+        "parameters",
+        "fallback",
+    ]
+    .contains(&body.vanity.as_str())
+    {
+        return Ok(super::err("Vanity already used".to_string()));
+    }
+
+    let mut phone: Option<String> = None;
+    if let Some(number) = body.phone {
+        if !PHONE.is_match(&number) {
+            return Ok(super::err("Invalid phone".to_string()));
+        } else {
+            let (nonce, encrypted) =
+                crypto::encrypt::chacha20_poly1305(number.as_bytes().to_vec())?;
+
+            let uuid = uuid::Uuid::new_v4().to_string();
+
+            scylla
+                .connection
+                .query(
+                    "INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?);",
+                    vec![uuid.clone(), nonce],
+                )
+                .await?;
+
+            phone = Some(format!("{}//{}", uuid, encrypted));
+        }
     }
 
     Ok(warp::reply::with_status(
