@@ -3,6 +3,8 @@ use db::scylla::Scylla;
 use regex::Regex;
 use warp::reply::{Json, WithStatus};
 
+const INSERT_SALT: &str = "INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?)";
+
 lazy_static! {
     pub static ref EMAIL: Regex = Regex::new(r".+@.+.([a-zA-Z]{2,7})$").unwrap();
     pub static ref PASSWORD: Regex = Regex::new(r"([0-9|*|]|[$&+,:;=?@#|'<>.^*()%!-])+").unwrap();
@@ -108,8 +110,8 @@ pub async fn handle(
             scylla
                 .connection
                 .query(
-                    "INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?);",
-                    vec![uuid.clone(), nonce],
+                    INSERT_SALT,
+                    (uuid.clone(), nonce),
                 )
                 .await?;
 
@@ -140,8 +142,8 @@ pub async fn handle(
             scylla
                 .connection
                 .query(
-                    "INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?);",
-                    vec![uuid.clone(), nonce],
+                    INSERT_SALT,
+                    (uuid.clone(), nonce),
                 )
                 .await?;
 
@@ -149,6 +151,15 @@ pub async fn handle(
             birthdate = Some(format!("{}//{}", uuid, encrypted));
         }
     }
+
+    // Create user on database.
+    scylla
+                .connection
+                .query(
+                    "",
+                    (),
+                )
+                .await?;
 
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {
