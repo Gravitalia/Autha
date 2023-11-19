@@ -5,9 +5,6 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 use warp::{Filter, Rejection, Reply};
 
-// Error constants.
-const ERROR_RATE_LIMITED: &str = "You are being rate limited.";
-
 /// Define errors
 #[derive(Debug)]
 struct UnknownError;
@@ -46,16 +43,8 @@ pub async fn create_user(
     scylla: Arc<Scylla>,
     body: crate::model::body::Create,
     cf_token: Option<String>,
-    forwarded: Option<String>,
-    ip: Option<SocketAddr>,
 ) -> Result<impl Reply, Rejection> {
-    let ip = forwarded.unwrap_or_else(|| {
-        ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80))
-            .ip()
-            .to_string()
-    });
-
-    match create::handle(scylla, body, ip, cf_token).await {
+    match create::handle(scylla, body, cf_token).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
