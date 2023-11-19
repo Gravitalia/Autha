@@ -3,8 +3,6 @@ use db::scylla::Scylla;
 use regex::Regex;
 use warp::reply::{Json, WithStatus};
 
-const INSERT_SALT: &str = "INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?)";
-
 lazy_static! {
     pub static ref EMAIL: Regex = Regex::new(r".+@.+.([a-zA-Z]{2,7})$").unwrap();
     pub static ref PASSWORD: Regex = Regex::new(r"([0-9|*|]|[$&+,:;=?@#|'<>.^*()%!-])+").unwrap();
@@ -21,7 +19,6 @@ lazy_static! {
 pub async fn handle(
     scylla: std::sync::Arc<Scylla>,
     body: crate::model::body::Create,
-    ip: String,
     token: Option<String>,
 ) -> Result<WithStatus<Json>> {
     // Use tokio task if async do not work.
@@ -50,7 +47,7 @@ pub async fn handle(
         .connection
         .query(
             "SELECT vanity FROM accounts.users WHERE email = ?",
-            vec![hashed_email],
+            vec![hashed_email.clone()],
         )
         .await?
         .rows
@@ -97,6 +94,13 @@ pub async fn handle(
         return Ok(super::err("Vanity already used".to_string()));
     }
 
+    // Prepare the query to be faster if user set both phone and birthdate.
+    // It will avoid database to make a query pasing.
+    let insert_salt_query = scylla
+        .connection
+        .prepare("INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?)")
+        .await?;
+
     let mut phone: Option<String> = None;
     if let Some(number) = body.phone {
         if !PHONE.is_match(&number) {
@@ -109,10 +113,7 @@ pub async fn handle(
 
             scylla
                 .connection
-                .query(
-                    INSERT_SALT,
-                    (uuid.clone(), nonce),
-                )
+                .execute(&insert_salt_query, (uuid.clone(), nonce))
                 .await?;
 
             // Set primary key (to get nonce) and encrypted phone.
@@ -141,10 +142,7 @@ pub async fn handle(
 
             scylla
                 .connection
-                .query(
-                    INSERT_SALT,
-                    (uuid.clone(), nonce),
-                )
+                .execute(&insert_salt_query, (uuid.clone(), nonce))
                 .await?;
 
             // Set primary key (to get nonce) and encrypted birthdate.
@@ -152,14 +150,29 @@ pub async fn handle(
         }
     }
 
+    // Use prepared query to properly balance.
+    let insert_user_query = scylla
+    .connection
+    .prepare(
+        "INSERT INTO accounts.users ( vanity, email, username, password, phone, birthdate, avatar, bio, flags, deleted, verified, expire_at ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, false, false, 0)"
+    )
+    .await?;
+
     // Create user on database.
     scylla
-                .connection
-                .query(
-                    "",
-                    (),
-                )
-                .await?;
+        .connection
+        .execute(
+            &insert_user_query,
+            (
+                body.vanity.clone(),
+                hashed_email,
+                body.username,
+                crypto::hash::argon2(body.password.as_bytes(), body.vanity.as_bytes()),
+                phone,
+                birthdate,
+            ),
+        )
+        .await?;
 
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {
