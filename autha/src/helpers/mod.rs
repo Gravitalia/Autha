@@ -1,5 +1,6 @@
 pub mod config;
 pub mod format;
+pub mod request;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
