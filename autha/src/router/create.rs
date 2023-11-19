@@ -39,6 +39,34 @@ pub async fn handle(
         return Ok(super::err("Invalid username"));
     }
 
+    // Check if Cloudflare Turnstile token is valid.
+    // If no Cloudflare Turnstile key is provided in environnement, don't check.
+    if !std::env::var("TURNSTILE_SECRET")
+        .unwrap_or_default()
+        .is_empty()
+    {
+        if let Some(cf_token) = token {
+            match crate::helpers::request::check_turnstile(
+                std::env::var("TURNSTILE_SECRET").unwrap_or_default(),
+                cf_token,
+            )
+            .await
+            {
+                Ok(res) => {
+                    if !res {
+                        return Ok(super::err("Invalid turnstile token".to_string()));
+                    }
+                }
+                Err(error) => {
+                    log::error!("Cannot make Cloudflare Turnstile request: {}", error);
+                    return Ok(super::err("Internal server error".to_string()));
+                }
+            }
+        } else {
+            return Ok(super::err("Invalid turnstile token".to_string()));
+        }
+    }
+
     let hashed_email =
         crypto::encrypt::format_preserving_encryption(body.email.encode_utf16().collect())?;
 
