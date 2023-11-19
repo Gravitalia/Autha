@@ -1,7 +1,6 @@
 pub mod create;
 
 use db::{memcache::MemcachePool, scylla::Scylla};
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 use warp::{Filter, Rejection, Reply};
 
@@ -39,6 +38,7 @@ pub fn with_scylla(
     warp::any().map(move || Arc::clone(&db))
 }
 
+/// Handler of route to create a user.
 pub async fn create_user(
     scylla: Arc<Scylla>,
     body: crate::model::body::Create,
