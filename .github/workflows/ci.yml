@@ -1,0 +1,31 @@
+name: Autha/bazel
+
+permissions:
+  contents: read
+
+on: push
+
+jobs:
+  bazel:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - target: ubuntu-latest
+          name: Linux Ubuntu
+    name: Build (${{ matrix.name || matrix.target }})
+    runs-on: ${{ matrix.target }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: bazelbuild/setup-bazelisk@v2
+    - name: Mount bazel cache
+      uses: actions/cache@v3
+      with:
+        path: "~/.cache/bazel"
+        key: ${{ runner.os }}-bazel
+    - name: Run builds
+      run: bazel build //...
+      shell: bash
+    - name: Run tests
+      run: bazel test //...
+      shell: bash

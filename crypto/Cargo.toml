@@ -1,0 +1,26 @@
+[package]
+name = "crypto"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+aes = "0.8"
+fpe = "0.6"
+hex = "0"
+log = "0.4"
+rand = "0.8"
+regex = "1"
+ring = "0.17"
+rust-argon2 = "2"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "hash_benchmark"
+harness = false
+
+[[bench]]
+name = "encryption_benchmark"
+harness = false

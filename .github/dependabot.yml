@@ -4,3 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    reviewers:
+      - "realhinome"
+    labels:
+      - "dependencies"

@@ -8,7 +8,7 @@ It implements an account creation, connection and authorization delegation syste
 
 **Status**:
 
-[![Rust build](https://github.com/Gravitalia/Autha/actions/workflows/rust.yml/badge.svg)](https://github.com/Gravitalia/Autha/actions/workflows/rust.yml) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FGravitalia%2FAutha.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FGravitalia%2FAutha?ref=badge_shield)
+[![Autha/bazel](https://github.com/Gravitalia/Autha/actions/workflows/ci.yml/badge.svg?branch=v3&event=push)](https://github.com/Gravitalia/Autha/actions/workflows/ci.yml) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FGravitalia%2FAutha.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FGravitalia%2FAutha?ref=badge_shield)
 
 ## Security
 > We want to guarantee our users **increased security**. This way, all users can see how we store data and also help us to improve the cryptographic systems.
@@ -38,6 +38,8 @@ To achieve encryption, we use [AES](https://en.wikipedia.org/wiki/Advanced_Encry
 - Apache Cassandra
 - Memcached
 
+We are also working on implementing a possibility to use `PostgreSQL` instead of `Apache Cassandra`.
+
 #### Casssandra
 Apache [Cassandra](https://en.wikipedia.org/wiki/Apache_Cassandra) is a fast, fault-tolerant and ultra-scalable distributed database optimized for mass writing.<br />
 We use Cassandra to manage user accounts and security; every *significant* action taken by the user is logged.
@@ -47,4 +49,4 @@ We use Cassandra to manage user accounts and security; every *significant* actio
 Used to cache public user data and redistribute it quickly as well as to unclog requests to Cassandra.
 
 ## License
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FGravitalia%2FAutha.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FGravitalia%2FAutha?ref=badge_large)
+[Mozilla Public License](https://github.com/Gravitalia/Autha/blob/master/LICENSE)
