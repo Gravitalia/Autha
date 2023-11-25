@@ -52,7 +52,6 @@ const CREATE_TOKENS_TABLE: &str = r#"
         user_id TEXT,
         ip TEXT,
         date TIMESTAMP,
-        expire_at TIMESTAMP,
         deleted BOOLEAN,
         PRIMARY KEY (id) )
         WITH default_time_to_live = 1210000
@@ -125,17 +124,17 @@ impl ScyllaManager for Scylla {
 }
 
 /// Initialize the connection for ScyllaDB or Apache Cassandra.
-pub async fn init(hosts: Vec<String>, username: Option<String>, password: Option<String>, pool_size: usize) -> Result<Session> {
+pub async fn init(
+    hosts: Vec<String>,
+    username: Option<String>,
+    password: Option<String>,
+    pool_size: usize,
+) -> Result<Session> {
     let session = SessionBuilder::new()
         .known_nodes(hosts)
-        .user(
-            username.unwrap_or_default(),
-            password.unwrap_or_default(),
-        )
+        .user(username.unwrap_or_default(), password.unwrap_or_default())
         .use_keyspace("accounts", true)
-        .pool_size(PoolSize::PerHost(
-            NonZeroUsize::new(pool_size).unwrap(),
-        ))
+        .pool_size(PoolSize::PerHost(NonZeroUsize::new(pool_size).unwrap()))
         .compression(Some(Compression::Lz4))
         // Activate (true) if the application becomes bigger.
         // It should reduce latency if false, and increase write/read throughput if true.
