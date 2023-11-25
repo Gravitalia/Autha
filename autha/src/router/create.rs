@@ -1,7 +1,10 @@
 use anyhow::Result;
+use db::memcache::{MemcacheManager, MemcachePool};
 use db::scylla::Scylla;
 use regex::Regex;
 use warp::reply::{Json, WithStatus};
+
+use crate::helpers;
 
 const MAX_USERNAME_LENGTH: u8 = 25;
 const MIN_PASSWORD_LENGTH: u8 = 25;
@@ -37,8 +40,10 @@ lazy_static! {
 /// Handle create route and check if everything is valid.
 pub async fn handle(
     scylla: std::sync::Arc<Scylla>,
+    memcached: MemcachePool,
     body: crate::model::body::Create,
     token: Option<String>,
+    ip: String,
 ) -> Result<WithStatus<Json>> {
     // Use tokio task if async do not work.
     // Email verification via regex.
@@ -59,6 +64,28 @@ pub async fn handle(
     // Username length check.
     if body.username.len() as u8 > MAX_USERNAME_LENGTH || body.username.is_empty() {
         return Ok(super::err("Invalid username"));
+    }
+
+    // Check if user have already created account 5 minutes ago.
+    let hashed_ip = crypto::hash::sha256(ip.as_bytes()).unwrap_or_default();
+    if hashed_ip.is_empty() {
+        log::warn!(
+            "The IP could not be hashed. This can result in the uncontrolled creation of accounts."
+        );
+    }
+
+    let rate_limit = match memcached.get(format!("account_create_{}", hashed_ip))? {
+        Some(r) => r.parse::<u16>().unwrap_or(0),
+        None => 0,
+    };
+    if rate_limit >= 1 {
+        return Ok(warp::reply::with_status(
+            warp::reply::json(&crate::model::error::Error {
+                error: true,
+                message: super::ERROR_RATE_LIMITED.into(),
+            }),
+            warp::http::StatusCode::TOO_MANY_REQUESTS,
+        ));
     }
 
     // Check if Cloudflare Turnstile token is valid.
@@ -212,7 +239,7 @@ pub async fn handle(
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::error::Error {
             error: false,
-            message: "OK".to_string(),
+            message: helpers::token::create(&scylla, body.vanity, ip).await?,
         }),
         warp::http::StatusCode::CREATED,
     ))

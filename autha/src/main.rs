@@ -105,8 +105,11 @@ async fn main() {
     let create_route = warp::path("create")
         .and(warp::post())
         .and(router::with_scylla(Arc::clone(&scylladb)))
+        .and(router::with_memcached(memcached_pool.clone()))
         .and(warp::body::json())
         .and(warp::header::optional::<String>("cf-turnstile-token"))
+        .and(warp::header::optional::<String>("X-Forwarded-For"))
+        .and(warp::addr::remote())
         .and_then(router::create_user);
 
     warp::serve(
