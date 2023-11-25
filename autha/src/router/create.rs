@@ -3,6 +3,25 @@ use db::scylla::Scylla;
 use regex::Regex;
 use warp::reply::{Json, WithStatus};
 
+const MAX_USERNAME_LENGTH: u8 = 25;
+const MIN_PASSWORD_LENGTH: u8 = 25;
+const INVALID_VANITY: [&str; 14] = [
+    "explore",
+    "callback",
+    "home",
+    "blogs",
+    "blog",
+    "gravitalia",
+    "suba",
+    "support",
+    "oauth",
+    "upload",
+    "new",
+    "settings",
+    "parameters",
+    "fallback",
+];
+
 lazy_static! {
     pub static ref EMAIL: Regex = Regex::new(r".+@.+.([a-zA-Z]{2,7})$").unwrap();
     pub static ref PASSWORD: Regex = Regex::new(r"([0-9|*|]|[$&+,:;=?@#|'<>.^*()%!-])+").unwrap();
@@ -26,16 +45,19 @@ pub async fn handle(
     if !EMAIL.is_match(&body.email) {
         return Ok(super::err("Invalid email"));
     }
+
     // Check password length and its reliability.
-    if body.password.len() < 8 && !PASSWORD.is_match(&body.password) {
+    if (body.password.len() as u8) < MIN_PASSWORD_LENGTH && !PASSWORD.is_match(&body.password) {
         return Ok(super::err("Invalid password"));
     }
+
     // Vanity verification.
     if !VANITY.is_match(&body.vanity) || body.vanity.chars().all(|c| c.is_ascii_digit()) {
         return Ok(super::err("Invalid vanity"));
     }
+
     // Username length check.
-    if body.username.len() > 25 {
+    if body.username.len() as u8 > MAX_USERNAME_LENGTH || body.username.is_empty() {
         return Ok(super::err("Invalid username"));
     }
 
@@ -101,24 +123,7 @@ pub async fn handle(
     }
 
     // Also check if user is not trying to use a protected vanity.
-    if [
-        "explore",
-        "callback",
-        "home",
-        "blogs",
-        "blog",
-        "gravitalia",
-        "suba",
-        "support",
-        "oauth",
-        "upload",
-        "new",
-        "settings",
-        "parameters",
-        "fallback",
-    ]
-    .contains(&body.vanity.as_str())
-    {
+    if INVALID_VANITY.contains(&body.vanity.as_str()) {
         return Ok(super::err("Vanity already used".to_string()));
     }
 
@@ -179,10 +184,12 @@ pub async fn handle(
     }
 
     // Use prepared query to properly balance.
+    // The values of not set (avatar, banner and bio) columns will be set as null
+    // but would not create tombestone unless they are set directly as null values.
     let insert_user_query = scylla
     .connection
     .prepare(
-        "INSERT INTO accounts.users ( vanity, email, username, password, phone, birthdate, avatar, bio, flags, deleted, verified, expire_at ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, false, false, 0)"
+        "INSERT INTO accounts.users ( vanity, email, username, password, phone, birthdate, flags, deleted, verified, expire_at ) VALUES (?, ?, ?, ?, ?, ?, 0, false, false, 0)"
     )
     .await?;
 
@@ -196,8 +203,8 @@ pub async fn handle(
                 hashed_email,
                 body.username,
                 crypto::hash::argon2(body.password.as_bytes(), body.vanity.as_bytes()),
-                phone,
-                birthdate,
+                phone.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
+                birthdate.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
             ),
         )
         .await?;
