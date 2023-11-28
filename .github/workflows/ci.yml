@@ -23,10 +23,8 @@ jobs:
       with:
         path: "~/.cache/bazel"
         key: ${{ runner.os }}-bazel
-    - name: Test log
-      run: echo ${{ github.actor }}
     - name: Update lockefile
-      if: ${{ github.actor == 'dependabot' }}
+      if: ${{ github.actor == 'dependabot[bot]' }}
       run: CARGO_BAZEL_REPIN=1 bazel sync --only=crate_index
     - name: Run builds
       run: bazel build //...
