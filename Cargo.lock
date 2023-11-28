@@ -1958,9 +1958,9 @@ dependencies = [
 
 [[package]]
 name = "scylla"
-version = "0.9.1"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8338911f1c2a7bf8ba4036997196e49e9eda8d4414af10548e9420e23a5dbd6f"
+checksum = "7b30067d0d0313a0bbcda9c31a503678f18dacd5426dd8a63c3f581cf80f5c30"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -1992,9 +1992,9 @@ dependencies = [
 
 [[package]]
 name = "scylla-cql"
-version = "0.0.8"
+version = "0.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "048bdf0be96308ec0f5aeed2847bb2270f53355425b3afd67e64efc99d70b3e3"
+checksum = "c9642864295085ef2fe62493eec405a109fbaae9f3a9b80ea087556af4a97df2"
 dependencies = [
  "async-trait",
  "bigdecimal",
