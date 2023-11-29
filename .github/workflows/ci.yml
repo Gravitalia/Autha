@@ -26,6 +26,12 @@ jobs:
     - name: Update lockefile
       if: ${{ github.actor == 'dependabot[bot]' }}
       run: CARGO_BAZEL_REPIN=1 bazel sync --only=crate_index
+    - name: Save lockefile
+      uses: stefanzweifel/git-auto-commit-action@v4
+      if: ${{ github.actor == 'dependabot[bot]' }}
+      with:
+        commit_message: 'chore(deps): Update Bazel lockefile'
+        file_pattern: '*.Bazel.lock'
     - name: Run builds
       run: bazel build //...
       shell: bash
