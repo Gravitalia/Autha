@@ -16,7 +16,7 @@ jobs:
     name: Build (${{ matrix.name || matrix.target }})
     runs-on: ${{ matrix.target }}
     permissions:
-      contents: write
+      contents: write # Allow writing only for this job.
     steps:
     - uses: actions/checkout@v3
     - uses: bazelbuild/setup-bazelisk@v2
@@ -28,12 +28,12 @@ jobs:
     - name: Update lockefile
       if: ${{ github.actor == 'dependabot[bot]' }}
       run: CARGO_BAZEL_REPIN=1 bazel sync --only=crate_index
+      shell: bash
     - name: Save lockefile
       uses: stefanzweifel/git-auto-commit-action@v4
-      if: ${{ github.actor == 'dependabot[bot]' }}
+      if: ${{ github.actor == 'dependabot[bot]' && matrix.target == 'ubuntu-latest' }}
       with:
-        commit_message: 'chore(deps): Update Bazel lockefile'
-        #file_pattern: '*.Bazel.lock'
+        commit_message: 'chore(deps): Update Bazel lockfile'
     - name: Run builds
       run: bazel build //...
       shell: bash
