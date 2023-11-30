@@ -14,6 +14,7 @@ const CREATE_USERS_TABLE: &str = r#"
         bio TEXT,
         verified BOOLEAN,
         flags INT,
+        locale TEXT,
         phone TEXT,
         password TEXT,
         birthdate TEXT,

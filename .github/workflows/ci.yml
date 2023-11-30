@@ -25,11 +25,11 @@ jobs:
       with:
         path: "~/.cache/bazel"
         key: ${{ runner.os }}-bazel
-    - name: Update lockefile
+    - name: Update lockfile
       if: ${{ github.actor == 'dependabot[bot]' }}
       run: CARGO_BAZEL_REPIN=1 bazel sync --only=crate_index
       shell: bash
-    - name: Save lockefile
+    - name: Save lockfile
       uses: stefanzweifel/git-auto-commit-action@v4
       if: ${{ github.actor == 'dependabot[bot]' && matrix.target == 'ubuntu-latest' }}
       with:
