@@ -1,5 +1,5 @@
 {
-  "checksum": "9cb4164701b702d5bfd0dd529d9b3744a9b63eb4ba0aab15d71c9f01fc2cb894",
+  "checksum": "9a921de23165811a084073e9c9e499df2dc0a9e2abfeadbace4604ce58d08d78",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -662,7 +662,7 @@
               "target": "hex"
             },
             {
-              "id": "jsonwebtoken 9.1.0",
+              "id": "jsonwebtoken 9.2.0",
               "target": "jsonwebtoken"
             },
             {
@@ -2621,7 +2621,7 @@
               "target": "regex"
             },
             {
-              "id": "ring 0.17.5",
+              "id": "ring 0.17.6",
               "target": "ring"
             },
             {
@@ -4220,7 +4220,18 @@
           "common": [
             "std"
           ],
-          "selects": {}
+          "selects": {
+            "wasm32-unknown-unknown": [
+              "js",
+              "js-sys",
+              "wasm-bindgen"
+            ],
+            "wasm32-wasi": [
+              "js",
+              "js-sys",
+              "wasm-bindgen"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -4230,6 +4241,16 @@
             }
           ],
           "selects": {
+            "cfg(all(any(target_arch = \"wasm32\", target_arch = \"wasm64\"), target_os = \"unknown\"))": [
+              {
+                "id": "js-sys 0.3.65",
+                "target": "js_sys"
+              },
+              {
+                "id": "wasm-bindgen 0.2.88",
+                "target": "wasm_bindgen"
+              }
+            ],
             "cfg(target_os = \"wasi\")": [
               {
                 "id": "wasi 0.11.0+wasi-snapshot-preview1",
@@ -5816,13 +5837,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "jsonwebtoken 9.1.0": {
+    "jsonwebtoken 9.2.0": {
       "name": "jsonwebtoken",
-      "version": "9.1.0",
+      "version": "9.2.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/jsonwebtoken/9.1.0/download",
-          "sha256": "155c4d7e39ad04c172c5e3a99c434ea3b4a7ba7960b38ecd562b270b097cce09"
+          "url": "https://crates.io/api/v1/crates/jsonwebtoken/9.2.0/download",
+          "sha256": "5c7ea04a7c5c055c175f189b6dc6ba036fd62306b58c66c9f6389036c503a3f4"
         }
       },
       "targets": [
@@ -5861,10 +5882,6 @@
               "target": "pem"
             },
             {
-              "id": "ring 0.17.5",
-              "target": "ring"
-            },
-            {
               "id": "serde 1.0.193",
               "target": "serde"
             },
@@ -5877,10 +5894,27 @@
               "target": "simple_asn1"
             }
           ],
-          "selects": {}
+          "selects": {
+            "cfg(not(target_arch = \"wasm32\"))": [
+              {
+                "id": "ring 0.17.6",
+                "target": "ring"
+              }
+            ],
+            "cfg(target_arch = \"wasm32\")": [
+              {
+                "id": "js-sys 0.3.65",
+                "target": "js_sys"
+              },
+              {
+                "id": "ring 0.17.6",
+                "target": "ring"
+              }
+            ]
+          }
         },
         "edition": "2021",
-        "version": "9.1.0"
+        "version": "9.2.0"
       },
       "license": "MIT"
     },
@@ -9688,13 +9722,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "ring 0.17.5": {
+    "ring 0.17.6": {
       "name": "ring",
-      "version": "0.17.5",
+      "version": "0.17.6",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/ring/0.17.5/download",
-          "sha256": "fb0205304757e5d899b9c2e448b867ffd03ae7f988002e47cd24954391394d0b"
+          "url": "https://crates.io/api/v1/crates/ring/0.17.6/download",
+          "sha256": "684d5e6e18f669ccebf64a92236bb7db9a34f07be010e3627368182027180866"
         }
       },
       "targets": [
@@ -9729,7 +9763,14 @@
             "dev_urandom_fallback",
             "std"
           ],
-          "selects": {}
+          "selects": {
+            "wasm32-unknown-unknown": [
+              "wasm32_unknown_unknown_js"
+            ],
+            "wasm32-wasi": [
+              "wasm32_unknown_unknown_js"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -9738,7 +9779,7 @@
               "target": "getrandom"
             },
             {
-              "id": "ring 0.17.5",
+              "id": "ring 0.17.6",
               "target": "build_script_build"
             },
             {
@@ -9747,6 +9788,12 @@
             }
           ],
           "selects": {
+            "cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(target_arch = \"aarch64\", target_arch = \"arm\")))": [
+              {
+                "id": "libc 0.2.150",
+                "target": "libc"
+              }
+            ],
             "cfg(all(target_arch = \"aarch64\", target_os = \"windows\"))": [
               {
                 "id": "windows-sys 0.48.0",
@@ -9758,17 +9805,11 @@
                 "id": "spin 0.9.8",
                 "target": "spin"
               }
-            ],
-            "cfg(any(target_os = \"android\", target_os = \"linux\"))": [
-              {
-                "id": "libc 0.2.150",
-                "target": "libc"
-              }
             ]
           }
         },
         "edition": "2021",
-        "version": "0.17.5"
+        "version": "0.17.6"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -9783,7 +9824,7 @@
           ],
           "selects": {}
         },
-        "links": "ring_core_0_17_5"
+        "links": "ring_core_0_17_6"
       },
       "license": null
     },
@@ -10103,7 +10144,7 @@
               "target": "log"
             },
             {
-              "id": "ring 0.17.5",
+              "id": "ring 0.17.6",
               "target": "ring"
             },
             {
@@ -10131,7 +10172,7 @@
         "link_deps": {
           "common": [
             {
-              "id": "ring 0.17.5",
+              "id": "ring 0.17.6",
               "target": "ring"
             }
           ],
@@ -10215,7 +10256,7 @@
         "deps": {
           "common": [
             {
-              "id": "ring 0.17.5",
+              "id": "ring 0.17.6",
               "target": "ring"
             },
             {
@@ -10520,7 +10561,7 @@
         "deps": {
           "common": [
             {
-              "id": "ring 0.17.5",
+              "id": "ring 0.17.6",
               "target": "ring"
             },
             {
@@ -16127,6 +16168,9 @@
     "armv7-unknown-linux-gnueabi": [
       "armv7-unknown-linux-gnueabi"
     ],
+    "cfg(all(any(target_arch = \"wasm32\", target_arch = \"wasm64\"), target_os = \"unknown\"))": [
+      "wasm32-unknown-unknown"
+    ],
     "cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(rustix_use_libc, miri, not(all(target_os = \"linux\", target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\")))))))": [
       "aarch64-linux-android",
       "armv7-linux-androideabi",
@@ -16134,6 +16178,13 @@
       "powerpc-unknown-linux-gnu",
       "s390x-unknown-linux-gnu",
       "x86_64-linux-android"
+    ],
+    "cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(target_arch = \"aarch64\", target_arch = \"arm\")))": [
+      "aarch64-linux-android",
+      "aarch64-unknown-linux-gnu",
+      "arm-unknown-linux-gnueabi",
+      "armv7-linux-androideabi",
+      "armv7-unknown-linux-gnueabi"
     ],
     "cfg(all(not(rustix_use_libc), not(miri), target_os = \"linux\", target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\"))))": [
       "aarch64-unknown-linux-gnu",
@@ -16262,19 +16313,6 @@
       "x86_64-unknown-freebsd",
       "x86_64-unknown-linux-gnu",
       "x86_64-unknown-none"
-    ],
-    "cfg(any(target_os = \"android\", target_os = \"linux\"))": [
-      "aarch64-linux-android",
-      "aarch64-unknown-linux-gnu",
-      "arm-unknown-linux-gnueabi",
-      "armv7-linux-androideabi",
-      "armv7-unknown-linux-gnueabi",
-      "i686-linux-android",
-      "i686-unknown-linux-gnu",
-      "powerpc-unknown-linux-gnu",
-      "s390x-unknown-linux-gnu",
-      "x86_64-linux-android",
-      "x86_64-unknown-linux-gnu"
     ],
     "cfg(any(target_os = \"macos\", target_os = \"ios\"))": [
       "aarch64-apple-darwin",
