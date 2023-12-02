@@ -35,7 +35,6 @@ lazy_static! {
     .unwrap();
     pub static ref BIRTH: Regex =
         Regex::new(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$").unwrap();
-    pub static ref LOCALE: Regex = Regex::new(r"^[a-z]{2}$").unwrap();
 }
 
 /// Handle create route and check if everything is valid.
@@ -68,7 +67,7 @@ pub async fn handle(
     }
 
     // Check if locale respects ISO 639-1.
-    if !LOCALE.is_match(&body.locale) {
+    if isolang::Language::from_639_1(&body.locale).is_none() {
         return Ok(super::err("Invalid locale"));
     }
 
