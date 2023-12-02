@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// Represents the connection information required to connect to a database.
 #[derive(Deserialize, Debug, Clone)]
@@ -29,4 +29,12 @@ pub struct Config {
     pub port: u16,
     /// The database configuration.
     pub database: Database,
+}
+
+/// Represents non-private informations transmitted on login to make
+/// a global ecosystem on Gravitalia.
+#[derive(Serialize)]
+pub struct UserSettings {
+    /// ISO 639-1 language code.
+    pub locale: String,
 }
