@@ -18,7 +18,7 @@ pub async fn create(scylla: &Arc<Scylla>, user_id: String, ip: String) -> Result
     let insert_token_query = scylla
     .connection
     .prepare(
-        "INSERT INTO accounts.tokens (id, user_id, ip, date, deleted) VALUES (?, ?, ?, ?, ?, false)"
+        "INSERT INTO accounts.tokens (id, user_id, ip, date, deleted) VALUES (?, ?, ?, ?, false)"
     )
     .await?;
 

@@ -11,6 +11,8 @@ pub struct Create {
     pub email: String,
     /// Password to connect later to the account.
     pub password: String,
+    /// ISO 639-1 language code.
+    pub locale: String,
     /// The optional birthdate of the user, if available.
     pub birthdate: Option<String>,
     /// The optional phone number associated with the user, if available.
