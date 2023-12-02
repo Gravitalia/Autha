@@ -35,6 +35,7 @@ lazy_static! {
     .unwrap();
     pub static ref BIRTH: Regex =
         Regex::new(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$").unwrap();
+    pub static ref LOCALE: Regex = Regex::new(r"^[a-z]{2}$").unwrap();
 }
 
 /// Handle create route and check if everything is valid.
@@ -66,26 +67,32 @@ pub async fn handle(
         return Ok(super::err("Invalid username"));
     }
 
+    // Check if locale respects ISO 639-1.
+    if !LOCALE.is_match(&body.locale) {
+        return Ok(super::err("Invalid locale"));
+    }
+
     // Check if user have already created account 5 minutes ago.
     let hashed_ip = crypto::hash::sha256(ip.as_bytes()).unwrap_or_default();
     if hashed_ip.is_empty() {
         log::warn!(
             "The IP could not be hashed. This can result in the uncontrolled creation of accounts."
         );
-    }
+    } else {
+        let rate_limit = match memcached.get(format!("account_create_{}", hashed_ip))? {
+            Some(r) => r.parse::<u16>().unwrap_or(0),
+            None => 0,
+        };
 
-    let rate_limit = match memcached.get(format!("account_create_{}", hashed_ip))? {
-        Some(r) => r.parse::<u16>().unwrap_or(0),
-        None => 0,
-    };
-    if rate_limit >= 1 {
-        return Ok(warp::reply::with_status(
-            warp::reply::json(&crate::model::error::Error {
-                error: true,
-                message: super::ERROR_RATE_LIMITED.into(),
-            }),
-            warp::http::StatusCode::TOO_MANY_REQUESTS,
-        ));
+        if rate_limit >= 1 {
+            return Ok(warp::reply::with_status(
+                warp::reply::json(&crate::model::error::Error {
+                    error: true,
+                    message: super::ERROR_RATE_LIMITED.into(),
+                }),
+                warp::http::StatusCode::TOO_MANY_REQUESTS,
+            ));
+        }
     }
 
     // Check if Cloudflare Turnstile token is valid.
@@ -216,12 +223,12 @@ pub async fn handle(
     let insert_user_query = scylla
     .connection
     .prepare(
-        "INSERT INTO accounts.users ( vanity, email, username, password, phone, birthdate, flags, deleted, verified, expire_at ) VALUES (?, ?, ?, ?, ?, ?, 0, false, false, 0)"
+        "INSERT INTO accounts.users ( vanity, email, username, password, locale, phone, birthdate, flags, deleted, verified, expire_at ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, false, false, 0)"
     )
     .await?;
 
     // Create user on database.
-    scylla
+    if let Err(error) = scylla
         .connection
         .execute(
             &insert_user_query,
@@ -230,16 +237,35 @@ pub async fn handle(
                 hashed_email,
                 body.username,
                 crypto::hash::argon2(body.password.as_bytes(), body.vanity.as_bytes()),
+                body.locale.clone(),
                 phone.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
                 birthdate.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
             ),
         )
-        .await?;
+        .await
+    {
+        log::error!("Cannot create user: {}", error);
+    }
+
+    let token = match helpers::token::create(&scylla, body.vanity.clone(), ip).await {
+        Ok(res) => res,
+        Err(error) => {
+            log::error!("Cannot create user token: {}", error);
+            return Ok(super::err("Cannot create token".to_string()));
+        }
+    };
+
+    if let Err(error) = memcached.set(format!("account_create_{}", hashed_ip), 1) {
+        log::warn!("Cannot set global rate limiter when create. This could lead to massive spam! Error: {}", error)
+    }
 
     Ok(warp::reply::with_status(
-        warp::reply::json(&crate::model::error::Error {
-            error: false,
-            message: helpers::token::create(&scylla, body.vanity, ip).await?,
+        warp::reply::json(&crate::model::response::Token {
+            vanity: body.vanity,
+            token,
+            user_settings: crate::model::config::UserSettings {
+                locale: body.locale,
+            },
         }),
         warp::http::StatusCode::CREATED,
     ))
