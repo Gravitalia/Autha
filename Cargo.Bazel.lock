@@ -1,5 +1,5 @@
 {
-  "checksum": "9a921de23165811a084073e9c9e499df2dc0a9e2abfeadbace4604ce58d08d78",
+  "checksum": "e4444abb25deb09af694d27bf6b248048e6f4643da746cc841262db9b598e611",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -662,7 +662,11 @@
               "target": "hex"
             },
             {
-              "id": "jsonwebtoken 9.2.0",
+              "id": "isolang 2.4.0",
+              "target": "isolang"
+            },
+            {
+              "id": "jsonwebtoken 9.1.0",
               "target": "jsonwebtoken"
             },
             {
@@ -4220,18 +4224,7 @@
           "common": [
             "std"
           ],
-          "selects": {
-            "wasm32-unknown-unknown": [
-              "js",
-              "js-sys",
-              "wasm-bindgen"
-            ],
-            "wasm32-wasi": [
-              "js",
-              "js-sys",
-              "wasm-bindgen"
-            ]
-          }
+          "selects": {}
         },
         "deps": {
           "common": [
@@ -4241,16 +4234,6 @@
             }
           ],
           "selects": {
-            "cfg(all(any(target_arch = \"wasm32\", target_arch = \"wasm64\"), target_os = \"unknown\"))": [
-              {
-                "id": "js-sys 0.3.65",
-                "target": "js_sys"
-              },
-              {
-                "id": "wasm-bindgen 0.2.88",
-                "target": "wasm_bindgen"
-              }
-            ],
             "cfg(target_os = \"wasi\")": [
               {
                 "id": "wasi 0.11.0+wasi-snapshot-preview1",
@@ -5674,6 +5657,52 @@
       },
       "license": "MIT"
     },
+    "isolang 2.4.0": {
+      "name": "isolang",
+      "version": "2.4.0",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/isolang/2.4.0/download",
+          "sha256": "fe50d48c77760c55188549098b9a7f6e37ae980c586a24693d6b01c3b2010c3c"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "isolang",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "isolang",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "english_names"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "phf 0.11.2",
+              "target": "phf"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "2.4.0"
+      },
+      "license": "Apache-2.0"
+    },
     "itertools 0.10.5": {
       "name": "itertools",
       "version": "0.10.5",
@@ -5837,13 +5866,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "jsonwebtoken 9.2.0": {
+    "jsonwebtoken 9.1.0": {
       "name": "jsonwebtoken",
-      "version": "9.2.0",
+      "version": "9.1.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/jsonwebtoken/9.2.0/download",
-          "sha256": "5c7ea04a7c5c055c175f189b6dc6ba036fd62306b58c66c9f6389036c503a3f4"
+          "url": "https://crates.io/api/v1/crates/jsonwebtoken/9.1.0/download",
+          "sha256": "155c4d7e39ad04c172c5e3a99c434ea3b4a7ba7960b38ecd562b270b097cce09"
         }
       },
       "targets": [
@@ -5882,6 +5911,10 @@
               "target": "pem"
             },
             {
+              "id": "ring 0.17.6",
+              "target": "ring"
+            },
+            {
               "id": "serde 1.0.193",
               "target": "serde"
             },
@@ -5894,27 +5927,10 @@
               "target": "simple_asn1"
             }
           ],
-          "selects": {
-            "cfg(not(target_arch = \"wasm32\"))": [
-              {
-                "id": "ring 0.17.6",
-                "target": "ring"
-              }
-            ],
-            "cfg(target_arch = \"wasm32\")": [
-              {
-                "id": "js-sys 0.3.65",
-                "target": "js_sys"
-              },
-              {
-                "id": "ring 0.17.6",
-                "target": "ring"
-              }
-            ]
-          }
+          "selects": {}
         },
         "edition": "2021",
-        "version": "9.2.0"
+        "version": "9.1.0"
       },
       "license": "MIT"
     },
@@ -5985,76 +6001,10 @@
         "crate_features": {
           "common": [
             "default",
+            "extra_traits",
             "std"
           ],
-          "selects": {
-            "aarch64-apple-darwin": [
-              "extra_traits"
-            ],
-            "aarch64-apple-ios": [
-              "extra_traits"
-            ],
-            "aarch64-apple-ios-sim": [
-              "extra_traits"
-            ],
-            "aarch64-fuchsia": [
-              "extra_traits"
-            ],
-            "aarch64-linux-android": [
-              "extra_traits"
-            ],
-            "armv7-linux-androideabi": [
-              "extra_traits"
-            ],
-            "i686-apple-darwin": [
-              "extra_traits"
-            ],
-            "i686-linux-android": [
-              "extra_traits"
-            ],
-            "i686-unknown-freebsd": [
-              "extra_traits"
-            ],
-            "powerpc-unknown-linux-gnu": [
-              "extra_traits"
-            ],
-            "riscv32imc-unknown-none-elf": [
-              "extra_traits"
-            ],
-            "riscv64gc-unknown-none-elf": [
-              "extra_traits"
-            ],
-            "s390x-unknown-linux-gnu": [
-              "extra_traits"
-            ],
-            "thumbv7em-none-eabi": [
-              "extra_traits"
-            ],
-            "thumbv8m.main-none-eabi": [
-              "extra_traits"
-            ],
-            "wasm32-wasi": [
-              "extra_traits"
-            ],
-            "x86_64-apple-darwin": [
-              "extra_traits"
-            ],
-            "x86_64-apple-ios": [
-              "extra_traits"
-            ],
-            "x86_64-fuchsia": [
-              "extra_traits"
-            ],
-            "x86_64-linux-android": [
-              "extra_traits"
-            ],
-            "x86_64-unknown-freebsd": [
-              "extra_traits"
-            ],
-            "x86_64-unknown-none": [
-              "extra_traits"
-            ]
-          }
+          "selects": {}
         },
         "deps": {
           "common": [
@@ -6161,13 +6111,32 @@
         ],
         "crate_features": {
           "common": [
-            "elf",
-            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-unknown-linux-gnu": [
+              "elf",
+              "errno"
+            ],
+            "arm-unknown-linux-gnueabi": [
+              "elf",
+              "errno"
+            ],
+            "armv7-unknown-linux-gnueabi": [
+              "elf",
+              "errno"
+            ],
+            "i686-unknown-linux-gnu": [
+              "elf",
+              "errno"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "elf",
+              "errno"
+            ]
+          }
         },
         "edition": "2021",
         "version": "0.4.11"
@@ -8069,6 +8038,97 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "phf 0.11.2": {
+      "name": "phf",
+      "version": "0.11.2",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/phf/0.11.2/download",
+          "sha256": "ade2d8b8f33c7333b51bcf0428d37e217e9f32192ae4772156f65063b8ce03dc"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "phf",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "phf",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "phf_shared 0.11.2",
+              "target": "phf_shared"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.11.2"
+      },
+      "license": "MIT"
+    },
+    "phf_shared 0.11.2": {
+      "name": "phf_shared",
+      "version": "0.11.2",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/phf_shared/0.11.2/download",
+          "sha256": "90fcb95eef784c2ac79119d1dd819e162b5da872ce6f3c3abe1e8ca1c082f72b"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "phf_shared",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "phf_shared",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "siphasher 0.3.11",
+              "target": "siphasher"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.11.2"
+      },
+      "license": "MIT"
+    },
     "pin-project 1.1.3": {
       "name": "pin-project",
       "version": "1.1.3",
@@ -9763,14 +9823,7 @@
             "dev_urandom_fallback",
             "std"
           ],
-          "selects": {
-            "wasm32-unknown-unknown": [
-              "wasm32_unknown_unknown_js"
-            ],
-            "wasm32-wasi": [
-              "wasm32_unknown_unknown_js"
-            ]
-          }
+          "selects": {}
         },
         "deps": {
           "common": [
@@ -11444,6 +11497,43 @@
         "version": "0.6.2"
       },
       "license": "ISC"
+    },
+    "siphasher 0.3.11": {
+      "name": "siphasher",
+      "version": "0.3.11",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/siphasher/0.3.11/download",
+          "sha256": "38b58827f4464d87d377d175e90bf58eb00fd8716ff0a62f80356b5e61555d0d"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "siphasher",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "siphasher",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.3.11"
+      },
+      "license": "MIT/Apache-2.0"
     },
     "slab 0.4.9": {
       "name": "slab",
@@ -16167,9 +16257,6 @@
     ],
     "armv7-unknown-linux-gnueabi": [
       "armv7-unknown-linux-gnueabi"
-    ],
-    "cfg(all(any(target_arch = \"wasm32\", target_arch = \"wasm64\"), target_os = \"unknown\"))": [
-      "wasm32-unknown-unknown"
     ],
     "cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(rustix_use_libc, miri, not(all(target_os = \"linux\", target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\")))))))": [
       "aarch64-linux-android",
