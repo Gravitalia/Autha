@@ -5,7 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Create a 14-day valid user token into database.
 /// It must be saved securely because of its impact on the data it deserves.
-pub async fn create(scylla: &Arc<Scylla>, user_id: String, ip: String) -> Result<String> {
+pub async fn create(scylla: &Arc<Scylla>, user_id: &String, ip: String) -> Result<String> {
     let id = crypto::random_string(65);
 
     // Get actual timestamp to save exact date of connection.

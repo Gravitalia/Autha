@@ -130,7 +130,7 @@ pub async fn handle(
         .connection
         .query(
             "SELECT vanity FROM accounts.users WHERE email = ?",
-            vec![hashed_email.clone()],
+            vec![&hashed_email],
         )
         .await?
         .rows
@@ -145,7 +145,7 @@ pub async fn handle(
         .connection
         .query(
             "SELECT vanity FROM accounts.users WHERE vanity = ?",
-            vec![body.vanity.clone()],
+            vec![&body.vanity],
         )
         .await?
         .rows
@@ -179,7 +179,7 @@ pub async fn handle(
 
             scylla
                 .connection
-                .execute(&insert_salt_query, (uuid.clone(), nonce))
+                .execute(&insert_salt_query, (&uuid, &nonce))
                 .await?;
 
             // Set primary key (to get nonce) and encrypted phone.
@@ -208,7 +208,7 @@ pub async fn handle(
 
             scylla
                 .connection
-                .execute(&insert_salt_query, (uuid.clone(), nonce))
+                .execute(&insert_salt_query, (&uuid, &nonce))
                 .await?;
 
             // Set primary key (to get nonce) and encrypted birthdate.
@@ -232,13 +232,13 @@ pub async fn handle(
         .execute(
             &insert_user_query,
             (
-                body.vanity.clone(),
-                hashed_email,
-                body.username,
-                crypto::hash::argon2(body.password.as_bytes(), body.vanity.as_bytes()),
-                body.locale.clone(),
-                phone.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
-                birthdate.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
+                &body.vanity,
+                &hashed_email,
+                &body.username,
+                &crypto::hash::argon2(body.password.as_bytes(), body.vanity.as_bytes()),
+                &body.locale,
+                &phone.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
+                &birthdate.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
             ),
         )
         .await
@@ -246,7 +246,7 @@ pub async fn handle(
         log::error!("Cannot create user: {}", error);
     }
 
-    let token = match helpers::token::create(&scylla, body.vanity.clone(), ip).await {
+    let token = match helpers::token::create(&scylla, &body.vanity, ip).await {
         Ok(res) => res,
         Err(error) => {
             log::error!("Cannot create user token: {}", error);
