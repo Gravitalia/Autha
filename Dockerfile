@@ -7,14 +7,12 @@ ENV     RUSTFLAGS="-C target-feature=-crt-static"
 RUN     apk add -q --update-cache --no-cache build-base openssl-dev musl pkgconfig protobuf-dev
 
 COPY ./Cargo.toml ./Cargo.toml
-RUN cargo build --release \
- && rm src/*.rs
+COPY ./autha ./autha
+COPY ./crypto ./crypto
+COPY ./db ./db
+#COPY ./build.rs ./build.rs
 
-COPY ./src ./src
-COPY ./proto ./proto
-COPY ./build.rs ./build.rs
-RUN rm ./target/release/deps/autha* \
- && cargo build --release
+RUN cargo build --release
 
 FROM alpine:3.18 AS runtime
 
