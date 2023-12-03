@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 /// Represents the body structure for creating a new user via HTTP route.
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize)]
 pub struct Create {
     /// The name used for the account.
     pub username: String,
@@ -18,4 +18,15 @@ pub struct Create {
     /// The optional phone number associated with the user, if available.
     /// Can be used to recover the account if the 2FA is forgotten.
     pub phone: Option<String>,
+}
+
+/// Represents the body structure for login via HTTP route.
+#[derive(Deserialize)]
+pub struct Login {
+    /// Email address associated with the user.
+    pub email: String,
+    /// Personal account password.
+    pub password: String,
+    /// 6-digit multifactor authentication code.
+    pub mfa: Option<String>,
 }
