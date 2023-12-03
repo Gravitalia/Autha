@@ -82,14 +82,14 @@ pub async fn handle(
         crypto::encrypt::format_preserving_encryption(body.email.encode_utf16().collect())?;
 
     let rows = scylla
-    .connection
-    .query(
-        "SELECT vanity, password, deleted, mfa_code, expire_at, locale FROM accounts.users WHERE email = ?",
-        vec![&hashed_email],
-    )
-    .await?
-    .rows_typed::<(String, String, bool, Option<String>, i64, String)>()?
-    .collect::<Vec<_>>();
+        .connection
+        .query(
+            "SELECT vanity, password, deleted, mfa_code, expire_at, locale FROM accounts.users WHERE email = ?",
+            vec![&hashed_email],
+        )
+        .await?
+        .rows_typed::<(String, String, bool, Option<String>, i64, String)>()?
+        .collect::<Vec<_>>();
 
     // Check if email is in use. Otherwise return error.
     if rows.is_empty() {
