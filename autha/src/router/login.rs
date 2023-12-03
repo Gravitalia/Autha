@@ -177,6 +177,6 @@ pub async fn handle(
             token,
             user_settings: crate::model::config::UserSettings { locale },
         }),
-        warp::http::StatusCode::CREATED,
+        warp::http::StatusCode::OK,
     ))
 }
