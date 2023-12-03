@@ -112,11 +112,21 @@ async fn main() {
         .and(warp::addr::remote())
         .and_then(router::create_user);
 
+    let login_route = warp::path("login")
+        .and(warp::post())
+        .and(router::with_scylla(Arc::clone(&scylladb)))
+        .and(router::with_memcached(memcached_pool.clone()))
+        .and(warp::body::json())
+        .and(warp::header::optional::<String>("cf-turnstile-token"))
+        .and(warp::header::optional::<String>("X-Forwarded-For"))
+        .and(warp::addr::remote())
+        .and_then(router::login_user);
+
     warp::serve(
         warp::any()
             .and(warp::options())
             .map(|| "OK")
-            .or(warp::head().map(|| "OK").or(create_route)),
+            .or(warp::head().map(|| "OK").or(create_route).or(login_route)),
     )
     .run(([0, 0, 0, 0], config.port))
     .await;
