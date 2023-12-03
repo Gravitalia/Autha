@@ -48,12 +48,12 @@ pub async fn handle(
     // Use tokio task if async do not work.
     // Email verification via regex.
     if !EMAIL.is_match(&body.email) {
-        return Ok(super::err("Invalid email"));
+        return Ok(super::err(super::INVALID_EMAIL));
     }
 
     // Check password length and its reliability.
     if (body.password.len() as u8) < MIN_PASSWORD_LENGTH && !PASSWORD.is_match(&body.password) {
-        return Ok(super::err("Invalid password"));
+        return Ok(super::err(super::INVALID_PASSWORD));
     }
 
     // Vanity verification.
@@ -109,16 +109,16 @@ pub async fn handle(
             {
                 Ok(res) => {
                     if !res {
-                        return Ok(super::err("Invalid turnstile token"));
+                        return Ok(super::err(super::INVALID_TURNSTILE));
                     }
                 }
                 Err(error) => {
                     log::error!("Cannot make Cloudflare Turnstile request: {}", error);
-                    return Ok(super::err("Internal server error"));
+                    return Ok(super::err(super::INTERNAL_SERVER_ERROR));
                 }
             }
         } else {
-            return Ok(super::err("Invalid turnstile token"));
+            return Ok(super::err(super::INVALID_TURNSTILE));
         }
     }
 

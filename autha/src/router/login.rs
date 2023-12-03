@@ -15,11 +15,11 @@ pub async fn handle(
 ) -> Result<WithStatus<Json>> {
     // Make pre-check to avoid unnecessary requests.
     if !EMAIL.is_match(&body.email) {
-        return Ok(super::err("Invalid email"));
+        return Ok(super::err(super::INVALID_EMAIL));
     }
 
     if (body.password.len() as u8) < MIN_PASSWORD_LENGTH && !PASSWORD.is_match(&body.password) {
-        return Ok(super::err("Invalid password"));
+        return Ok(super::err(super::INVALID_PASSWORD));
     }
 
     // Check that the user has not tried to connect 5 times in the last 5 minutes.
@@ -65,16 +65,16 @@ pub async fn handle(
             {
                 Ok(res) => {
                     if !res {
-                        return Ok(super::err("Invalid turnstile token"));
+                        return Ok(super::err(super::INVALID_TURNSTILE));
                     }
                 }
                 Err(error) => {
                     log::error!("Cannot make Cloudflare Turnstile request: {}", error);
-                    return Ok(super::err("Internal server error"));
+                    return Ok(super::err(super::INTERNAL_SERVER_ERROR));
                 }
             }
         } else {
-            return Ok(super::err("Invalid turnstile token"));
+            return Ok(super::err(super::INVALID_TURNSTILE));
         }
     }
 
@@ -93,7 +93,7 @@ pub async fn handle(
 
     // Check if email is in use. Otherwise return error.
     if rows.is_empty() {
-        return Ok(super::err("Invalid email"));
+        return Ok(super::err(super::INVALID_EMAIL));
     }
 
     let (vanity, password, deleted, mfa, expire, locale) = rows[0].clone().unwrap();
@@ -113,12 +113,12 @@ pub async fn handle(
         return Ok(crate::router::err("Deleted account: recoverable"));
     } else if deleted && expire <= timestamp_ms {
         // Account is totaly deleted, only email and vanity are kept.
-        return Ok(crate::router::err("Invalid email"));
+        return Ok(crate::router::err(super::INVALID_EMAIL));
     }
 
     // Check if passwords are matching.
     if !crypto::hash::check_argon2(password, body.password.as_bytes(), vanity.as_bytes())? {
-        return Ok(crate::router::err("Invalid password"));
+        return Ok(crate::router::err(super::INVALID_PASSWORD));
     }
 
     // Check multifactor authentification.
@@ -138,7 +138,7 @@ pub async fn handle(
 
         if res.is_empty() {
             log::error!("Cannot get salt for decrypt MFA code.");
-            return Ok(super::err("Internal server error"));
+            return Ok(super::err(super::INTERNAL_SERVER_ERROR));
         }
 
         let nonce: [u8; 12] = hex::decode(

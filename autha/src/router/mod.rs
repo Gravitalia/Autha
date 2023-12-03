@@ -8,6 +8,10 @@ use warp::{Filter, Rejection, Reply};
 
 // Error constants.
 const ERROR_RATE_LIMITED: &str = "You are being rate limited.";
+const INTERNAL_SERVER_ERROR: &str = "Internal server error";
+const INVALID_TURNSTILE: &str = "Invalid turnstile token";
+const INVALID_EMAIL: &str = "Invalid email";
+const INVALID_PASSWORD: &str = "Invalid password";
 
 /// Define errors
 #[derive(Debug)]
