@@ -30,7 +30,7 @@ pub async fn create(scylla: &Arc<Scylla>, user_id: &String, ip: String) -> Resul
         .connection
         .query(
             "INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?)",
-            (uuid.clone(), nonce),
+            (&uuid, &nonce),
         )
         .await?;
 
@@ -39,10 +39,10 @@ pub async fn create(scylla: &Arc<Scylla>, user_id: &String, ip: String) -> Resul
         .execute(
             &insert_token_query,
             (
-                id.clone(),
-                user_id,
-                format!("{}//{}", uuid, encrypted),
-                timestamp,
+                &id,
+                &user_id,
+                &format!("{}//{}", uuid, encrypted),
+                &timestamp,
             ),
         )
         .await?;
