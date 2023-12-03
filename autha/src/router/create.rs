@@ -7,7 +7,7 @@ use warp::reply::{Json, WithStatus};
 use crate::helpers;
 
 const MAX_USERNAME_LENGTH: u8 = 25;
-const MIN_PASSWORD_LENGTH: u8 = 25;
+pub(super) const MIN_PASSWORD_LENGTH: u8 = 25;
 const INVALID_VANITY: [&str; 14] = [
     "explore",
     "callback",
@@ -28,12 +28,12 @@ const INVALID_VANITY: [&str; 14] = [
 lazy_static! {
     pub static ref EMAIL: Regex = Regex::new(r".+@.+.([a-zA-Z]{2,7})$").unwrap();
     pub static ref PASSWORD: Regex = Regex::new(r"([0-9|*|]|[$&+,:;=?@#|'<>.^*()%!-])+").unwrap();
-    pub static ref VANITY: Regex = Regex::new(r"[A-z|0-9|_]{3,16}$").unwrap();
-    pub static ref PHONE: Regex = Regex::new(
+    static ref VANITY: Regex = Regex::new(r"[A-z|0-9|_]{3,16}$").unwrap();
+    static ref PHONE: Regex = Regex::new(
         r"^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$"
     )
     .unwrap();
-    pub static ref BIRTH: Regex =
+    static ref BIRTH: Regex =
         Regex::new(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$").unwrap();
 }
 
@@ -109,16 +109,16 @@ pub async fn handle(
             {
                 Ok(res) => {
                     if !res {
-                        return Ok(super::err("Invalid turnstile token".to_string()));
+                        return Ok(super::err("Invalid turnstile token"));
                     }
                 }
                 Err(error) => {
                     log::error!("Cannot make Cloudflare Turnstile request: {}", error);
-                    return Ok(super::err("Internal server error".to_string()));
+                    return Ok(super::err("Internal server error"));
                 }
             }
         } else {
-            return Ok(super::err("Invalid turnstile token".to_string()));
+            return Ok(super::err("Invalid turnstile token"));
         }
     }
 
@@ -137,7 +137,7 @@ pub async fn handle(
         .unwrap_or_default()
         .is_empty()
     {
-        return Ok(super::err("Email already used".to_string()));
+        return Ok(super::err("Email already used"));
     }
 
     // Check if account with this vanity already exists.
@@ -152,12 +152,12 @@ pub async fn handle(
         .unwrap_or_default()
         .is_empty()
     {
-        return Ok(super::err("Vanity already used".to_string()));
+        return Ok(super::err("Vanity already used"));
     }
 
     // Also check if user is not trying to use a protected vanity.
     if INVALID_VANITY.contains(&body.vanity.as_str()) {
-        return Ok(super::err("Vanity already used".to_string()));
+        return Ok(super::err("Vanity already used"));
     }
 
     // Prepare the query to be faster if user set both phone and birthdate.
@@ -170,12 +170,12 @@ pub async fn handle(
     let mut phone: Option<String> = None;
     if let Some(number) = body.phone {
         if !PHONE.is_match(&number) {
-            return Ok(super::err("Invalid phone".to_string()));
+            return Ok(super::err("Invalid phone"));
         } else {
             let (nonce, encrypted) =
                 crypto::encrypt::chacha20_poly1305(number.as_bytes().to_vec())?;
 
-            let uuid = uuid::Uuid::new_v4().to_string();
+            let uuid = uuid::Uuid::new_v4();
 
             scylla
                 .connection
@@ -200,7 +200,7 @@ pub async fn handle(
                     dates[2].parse::<i8>().unwrap_or_default(),
                 )?
         {
-            return Ok(super::err("Too young".to_string()));
+            return Ok(super::err("Too young"));
         } else {
             let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(birth.as_bytes().to_vec())?;
 
@@ -250,7 +250,7 @@ pub async fn handle(
         Ok(res) => res,
         Err(error) => {
             log::error!("Cannot create user token: {}", error);
-            return Ok(super::err("Cannot create token".to_string()));
+            return Ok(super::err("Cannot create token"));
         }
     };
 
