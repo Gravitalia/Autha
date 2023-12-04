@@ -48,6 +48,7 @@ pub fn with_scylla(
 }
 
 /// Handler of route to create a user.
+#[inline]
 pub async fn create_user(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
@@ -75,6 +76,7 @@ pub async fn create_user(
 }
 
 /// Handler of route to login a user.
+#[inline]
 pub async fn login_user(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
