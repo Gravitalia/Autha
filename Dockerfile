@@ -14,9 +14,9 @@ COPY ./db ./db
 
 RUN cargo build --release
 
-FROM gcr.io/distroless/cc AS runtime
+FROM alpine:3.18 AS runtime
 
-COPY --from=builder /autha/target/release/autha /
+COPY --from=builder /autha/target/release/autha /bin/autha
 
 EXPOSE 1111/tcp
-CMD     ["./autha"]
+CMD     ["./bin/autha"]
