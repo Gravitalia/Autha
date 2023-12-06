@@ -32,16 +32,9 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: "Get tag"
-      id: "get-tag"
-      shell: "bash"
-      run: |
-        echo PKG_VERSION=$(awk -F ' = ' '$1 ~ /version/ { gsub(/["]/, "", $2); printf("%s",$2) }' Cargo.toml) >> $GITHUB_OUTPUT
+
         
     - name: Build the Docker image
       run: |
-            docker build . --tag ghcr.io/gravitalia/autha:latest
-            docker push ghcr.io/gravitalia/autha:latest
-            docker tag ghcr.io/gravitalia/autha:latest ghcr.io/gravitalia/autha:${{ steps.get-tag.outputs.PKG_VERSION }}
-            docker push ghcr.io/gravitalia/autha:${{ steps.get-tag.outputs.PKG_VERSION }}
+            docker build . --tag ghcr.io/gravitalia/autha:3.0.0
+            docker push ghcr.io/gravitalia/autha:3.0.0
