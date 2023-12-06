@@ -1,5 +1,5 @@
 {
-  "checksum": "e4444abb25deb09af694d27bf6b248048e6f4643da746cc841262db9b598e611",
+  "checksum": "6c917c9f2a6db362ce3a5f483cde9decb57677b425d0bb9f0f9d5a496b49f229",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -666,7 +666,7 @@
               "target": "isolang"
             },
             {
-              "id": "jsonwebtoken 9.1.0",
+              "id": "jsonwebtoken 9.2.0",
               "target": "jsonwebtoken"
             },
             {
@@ -4224,7 +4224,18 @@
           "common": [
             "std"
           ],
-          "selects": {}
+          "selects": {
+            "wasm32-unknown-unknown": [
+              "js",
+              "js-sys",
+              "wasm-bindgen"
+            ],
+            "wasm32-wasi": [
+              "js",
+              "js-sys",
+              "wasm-bindgen"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -4234,6 +4245,16 @@
             }
           ],
           "selects": {
+            "cfg(all(any(target_arch = \"wasm32\", target_arch = \"wasm64\"), target_os = \"unknown\"))": [
+              {
+                "id": "js-sys 0.3.65",
+                "target": "js_sys"
+              },
+              {
+                "id": "wasm-bindgen 0.2.88",
+                "target": "wasm_bindgen"
+              }
+            ],
             "cfg(target_os = \"wasi\")": [
               {
                 "id": "wasi 0.11.0+wasi-snapshot-preview1",
@@ -5866,13 +5887,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "jsonwebtoken 9.1.0": {
+    "jsonwebtoken 9.2.0": {
       "name": "jsonwebtoken",
-      "version": "9.1.0",
+      "version": "9.2.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/jsonwebtoken/9.1.0/download",
-          "sha256": "155c4d7e39ad04c172c5e3a99c434ea3b4a7ba7960b38ecd562b270b097cce09"
+          "url": "https://crates.io/api/v1/crates/jsonwebtoken/9.2.0/download",
+          "sha256": "5c7ea04a7c5c055c175f189b6dc6ba036fd62306b58c66c9f6389036c503a3f4"
         }
       },
       "targets": [
@@ -5911,10 +5932,6 @@
               "target": "pem"
             },
             {
-              "id": "ring 0.17.6",
-              "target": "ring"
-            },
-            {
               "id": "serde 1.0.193",
               "target": "serde"
             },
@@ -5927,10 +5944,27 @@
               "target": "simple_asn1"
             }
           ],
-          "selects": {}
+          "selects": {
+            "cfg(not(target_arch = \"wasm32\"))": [
+              {
+                "id": "ring 0.17.6",
+                "target": "ring"
+              }
+            ],
+            "cfg(target_arch = \"wasm32\")": [
+              {
+                "id": "js-sys 0.3.65",
+                "target": "js_sys"
+              },
+              {
+                "id": "ring 0.17.6",
+                "target": "ring"
+              }
+            ]
+          }
         },
         "edition": "2021",
-        "version": "9.1.0"
+        "version": "9.2.0"
       },
       "license": "MIT"
     },
@@ -6001,10 +6035,76 @@
         "crate_features": {
           "common": [
             "default",
-            "extra_traits",
             "std"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              "extra_traits"
+            ],
+            "aarch64-apple-ios": [
+              "extra_traits"
+            ],
+            "aarch64-apple-ios-sim": [
+              "extra_traits"
+            ],
+            "aarch64-fuchsia": [
+              "extra_traits"
+            ],
+            "aarch64-linux-android": [
+              "extra_traits"
+            ],
+            "armv7-linux-androideabi": [
+              "extra_traits"
+            ],
+            "i686-apple-darwin": [
+              "extra_traits"
+            ],
+            "i686-linux-android": [
+              "extra_traits"
+            ],
+            "i686-unknown-freebsd": [
+              "extra_traits"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "extra_traits"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "extra_traits"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "extra_traits"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "extra_traits"
+            ],
+            "thumbv7em-none-eabi": [
+              "extra_traits"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "extra_traits"
+            ],
+            "wasm32-wasi": [
+              "extra_traits"
+            ],
+            "x86_64-apple-darwin": [
+              "extra_traits"
+            ],
+            "x86_64-apple-ios": [
+              "extra_traits"
+            ],
+            "x86_64-fuchsia": [
+              "extra_traits"
+            ],
+            "x86_64-linux-android": [
+              "extra_traits"
+            ],
+            "x86_64-unknown-freebsd": [
+              "extra_traits"
+            ],
+            "x86_64-unknown-none": [
+              "extra_traits"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -6111,32 +6211,13 @@
         ],
         "crate_features": {
           "common": [
+            "elf",
+            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
-          "selects": {
-            "aarch64-unknown-linux-gnu": [
-              "elf",
-              "errno"
-            ],
-            "arm-unknown-linux-gnueabi": [
-              "elf",
-              "errno"
-            ],
-            "armv7-unknown-linux-gnueabi": [
-              "elf",
-              "errno"
-            ],
-            "i686-unknown-linux-gnu": [
-              "elf",
-              "errno"
-            ],
-            "x86_64-unknown-linux-gnu": [
-              "elf",
-              "errno"
-            ]
-          }
+          "selects": {}
         },
         "edition": "2021",
         "version": "0.4.11"
@@ -9823,7 +9904,14 @@
             "dev_urandom_fallback",
             "std"
           ],
-          "selects": {}
+          "selects": {
+            "wasm32-unknown-unknown": [
+              "wasm32_unknown_unknown_js"
+            ],
+            "wasm32-wasi": [
+              "wasm32_unknown_unknown_js"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -16257,6 +16345,9 @@
     ],
     "armv7-unknown-linux-gnueabi": [
       "armv7-unknown-linux-gnueabi"
+    ],
+    "cfg(all(any(target_arch = \"wasm32\", target_arch = \"wasm64\"), target_os = \"unknown\"))": [
+      "wasm32-unknown-unknown"
     ],
     "cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(rustix_use_libc, miri, not(all(target_os = \"linux\", target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\")))))))": [
       "aarch64-linux-android",
