@@ -1,5 +1,5 @@
 {
-  "checksum": "6c917c9f2a6db362ce3a5f483cde9decb57677b425d0bb9f0f9d5a496b49f229",
+  "checksum": "d926636a9ee4afcfc973996833a969de30417a44a9f5a0b0c26d3ae5f8fef72d",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -2625,7 +2625,7 @@
               "target": "regex"
             },
             {
-              "id": "ring 0.17.6",
+              "id": "ring 0.17.7",
               "target": "ring"
             },
             {
@@ -5947,7 +5947,7 @@
           "selects": {
             "cfg(not(target_arch = \"wasm32\"))": [
               {
-                "id": "ring 0.17.6",
+                "id": "ring 0.17.7",
                 "target": "ring"
               }
             ],
@@ -5957,7 +5957,7 @@
                 "target": "js_sys"
               },
               {
-                "id": "ring 0.17.6",
+                "id": "ring 0.17.7",
                 "target": "ring"
               }
             ]
@@ -9863,13 +9863,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "ring 0.17.6": {
+    "ring 0.17.7": {
       "name": "ring",
-      "version": "0.17.6",
+      "version": "0.17.7",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/ring/0.17.6/download",
-          "sha256": "684d5e6e18f669ccebf64a92236bb7db9a34f07be010e3627368182027180866"
+          "url": "https://crates.io/api/v1/crates/ring/0.17.7/download",
+          "sha256": "688c63d65483050968b2a8937f7995f443e27041a0f7700aa59b0822aedebb74"
         }
       },
       "targets": [
@@ -9920,7 +9920,7 @@
               "target": "getrandom"
             },
             {
-              "id": "ring 0.17.6",
+              "id": "ring 0.17.7",
               "target": "build_script_build"
             },
             {
@@ -9941,7 +9941,7 @@
                 "target": "windows_sys"
               }
             ],
-            "cfg(any(target_arch = \"x86\", target_arch = \"x86_64\", all(any(target_arch = \"aarch64\", target_arch = \"arm\"), any(target_os = \"android\", target_os = \"fuchsia\", target_os = \"linux\", target_os = \"windows\"))))": [
+            "cfg(any(target_arch = \"aarch64\", target_arch = \"arm\", target_arch = \"x86\", target_arch = \"x86_64\"))": [
               {
                 "id": "spin 0.9.8",
                 "target": "spin"
@@ -9950,7 +9950,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.17.6"
+        "version": "0.17.7"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -9965,7 +9965,7 @@
           ],
           "selects": {}
         },
-        "links": "ring_core_0_17_6"
+        "links": "ring_core_0_17_7"
       },
       "license": null
     },
@@ -10285,7 +10285,7 @@
               "target": "log"
             },
             {
-              "id": "ring 0.17.6",
+              "id": "ring 0.17.7",
               "target": "ring"
             },
             {
@@ -10313,7 +10313,7 @@
         "link_deps": {
           "common": [
             {
-              "id": "ring 0.17.6",
+              "id": "ring 0.17.7",
               "target": "ring"
             }
           ],
@@ -10397,7 +10397,7 @@
         "deps": {
           "common": [
             {
-              "id": "ring 0.17.6",
+              "id": "ring 0.17.7",
               "target": "ring"
             },
             {
@@ -10702,7 +10702,7 @@
         "deps": {
           "common": [
             {
-              "id": "ring 0.17.6",
+              "id": "ring 0.17.7",
               "target": "ring"
             },
             {
@@ -11912,6 +11912,15 @@
             "spin_mutex"
           ],
           "selects": {
+            "aarch64-apple-darwin": [
+              "once"
+            ],
+            "aarch64-apple-ios": [
+              "once"
+            ],
+            "aarch64-apple-ios-sim": [
+              "once"
+            ],
             "aarch64-fuchsia": [
               "once"
             ],
@@ -11946,6 +11955,12 @@
               "once"
             ],
             "i686-unknown-linux-gnu": [
+              "once"
+            ],
+            "thumbv7em-none-eabi": [
+              "once"
+            ],
+            "thumbv8m.main-none-eabi": [
               "once"
             ],
             "x86_64-apple-darwin": [
@@ -16426,6 +16441,33 @@
     "cfg(all(target_arch = \"x86_64\", target_env = \"msvc\", not(windows_raw_dylib)))": [
       "x86_64-pc-windows-msvc"
     ],
+    "cfg(any(target_arch = \"aarch64\", target_arch = \"arm\", target_arch = \"x86\", target_arch = \"x86_64\"))": [
+      "aarch64-apple-darwin",
+      "aarch64-apple-ios",
+      "aarch64-apple-ios-sim",
+      "aarch64-fuchsia",
+      "aarch64-linux-android",
+      "aarch64-pc-windows-msvc",
+      "aarch64-unknown-linux-gnu",
+      "arm-unknown-linux-gnueabi",
+      "armv7-linux-androideabi",
+      "armv7-unknown-linux-gnueabi",
+      "i686-apple-darwin",
+      "i686-linux-android",
+      "i686-pc-windows-msvc",
+      "i686-unknown-freebsd",
+      "i686-unknown-linux-gnu",
+      "thumbv7em-none-eabi",
+      "thumbv8m.main-none-eabi",
+      "x86_64-apple-darwin",
+      "x86_64-apple-ios",
+      "x86_64-fuchsia",
+      "x86_64-linux-android",
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-freebsd",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-none"
+    ],
     "cfg(any(target_arch = \"aarch64\", target_arch = \"x86\", target_arch = \"x86_64\"))": [
       "aarch64-apple-darwin",
       "aarch64-apple-ios",
@@ -16456,28 +16498,6 @@
       "aarch64-linux-android",
       "aarch64-pc-windows-msvc",
       "aarch64-unknown-linux-gnu",
-      "i686-apple-darwin",
-      "i686-linux-android",
-      "i686-pc-windows-msvc",
-      "i686-unknown-freebsd",
-      "i686-unknown-linux-gnu",
-      "x86_64-apple-darwin",
-      "x86_64-apple-ios",
-      "x86_64-fuchsia",
-      "x86_64-linux-android",
-      "x86_64-pc-windows-msvc",
-      "x86_64-unknown-freebsd",
-      "x86_64-unknown-linux-gnu",
-      "x86_64-unknown-none"
-    ],
-    "cfg(any(target_arch = \"x86\", target_arch = \"x86_64\", all(any(target_arch = \"aarch64\", target_arch = \"arm\"), any(target_os = \"android\", target_os = \"fuchsia\", target_os = \"linux\", target_os = \"windows\"))))": [
-      "aarch64-fuchsia",
-      "aarch64-linux-android",
-      "aarch64-pc-windows-msvc",
-      "aarch64-unknown-linux-gnu",
-      "arm-unknown-linux-gnueabi",
-      "armv7-linux-androideabi",
-      "armv7-unknown-linux-gnueabi",
       "i686-apple-darwin",
       "i686-linux-android",
       "i686-pc-windows-msvc",
