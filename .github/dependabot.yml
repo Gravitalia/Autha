@@ -8,3 +8,4 @@ updates:
       - "realhinome"
     labels:
       - "dependencies"
+      - "rust"
