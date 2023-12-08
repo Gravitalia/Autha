@@ -35,8 +35,11 @@ jobs:
       with:
         commit_message: 'chore(deps): Update Bazel lockfile'
     - name: Run builds
-      run: bazel build //...
+      run: bazel build //... -c opt
       shell: bash
     - name: Run tests
-      run: bazel test //...
+      run: bazel test //... -c opt
       shell: bash
+    #- name: Upload on docker.io
+    #  run: bazel run //autha:autha_push -c opt
+    #  shell: bash
