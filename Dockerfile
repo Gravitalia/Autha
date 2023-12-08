@@ -16,6 +16,8 @@ RUN cargo build --release
 
 FROM alpine:3.18 AS runtime
 
+RUN apk add --no-cache libgcc
+
 COPY --from=builder /autha/target/release/autha /bin/autha
 
 EXPOSE 1111/tcp
