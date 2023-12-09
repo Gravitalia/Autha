@@ -56,22 +56,20 @@ pub async fn get(scylla: &Arc<Scylla>, token: String) -> Result<String> {
     let rows = scylla
         .connection
         .query(
-            "SELECT expire_at, user_id, deleted FROM accounts.tokens WHERE id = ?",
+            "SELECT user_id, deleted FROM accounts.tokens WHERE id = ?",
             vec![token],
         )
         .await?
-        .rows_typed::<(i64, String, bool)>()?
+        .rows_typed::<(String, bool)>()?
         .collect::<Vec<_>>();
 
     if rows.is_empty() {
         bail!("no token exists")
     }
 
-    let (expire, vanity, deleted) = rows[0].clone().unwrap();
+    let (vanity, deleted) = rows[0].clone().unwrap();
 
-    if expire as u128 <= SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() {
-        bail!("expired token");
-    } else if deleted {
+    if deleted {
         bail!("revoked token")
     }
 
