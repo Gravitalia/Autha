@@ -122,11 +122,18 @@ async fn main() {
         .and(warp::addr::remote())
         .and_then(router::login_user);
 
+    let get_user_route = warp::path!("users" / String)
+        .and(warp::get())
+        .and(router::with_scylla(Arc::clone(&scylladb)))
+        .and(router::with_memcached(memcached_pool.clone()))
+        .and(warp::header::optional::<String>("authorization"))
+        .and_then(router::get_user);
+
     warp::serve(
         warp::any()
             .and(warp::options())
             .map(|| "OK")
-            .or(warp::head().map(|| "OK").or(create_route).or(login_route)),
+            .or(warp::head().map(|| "OK").or(create_route).or(login_route).or(get_user_route)),
     )
     .run(([0, 0, 0, 0], config.port))
     .await;
