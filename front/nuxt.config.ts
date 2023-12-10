@@ -77,6 +77,10 @@ export default defineNuxtConfig({
     },
   },
 
+  pinia: {
+    storesDirs: ["./stores/**"],
+  },
+
   nitro: {
     // preset: "cloudflare_pages",
   },
