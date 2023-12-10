@@ -1,75 +1,37 @@
-# Nuxt 3 Minimal Starter
+<img src="https://avatars.githubusercontent.com/u/81774317?s=200&v=4" width="40" />
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+# Autha front-end
+> No loading time in-site, fast and revelant website. Powered by [Nuxt](https://nuxt.com/).
 
-## Setup
+## Use front
+### Dependencies
+To build and run front, you'll need:
+- git
+- pnpm
+- bazel
 
-Make sure to install the dependencies:
+### Building front-end
+1. Clone this repository with `git`:
+```
+git clone https://github.com/Gravitalia/Autha
+cd Autha
+```
 
-```bash
-# npm
-npm install
-
-# pnpm
+2. Install Node dependencies with `pnpm`:
+```
 pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm run dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+3. Build with bazel:
+```
+bazel build //front:front
 ```
 
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm run build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+### Running front-end
+1. Run with bazel:
+```
+bazel run //front:front
 ```
 
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm run preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+## License
+[Mozilla Public License](https://github.com/Gravitalia/Autha/blob/master/LICENSE)
