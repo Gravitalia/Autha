@@ -41,6 +41,7 @@ export default defineNuxtConfig({
   sourcemap: isDevelopment,
   
   modules: [
+    "@pinia/nuxt",
     "@unocss/nuxt",
     ["@nuxtjs/color-mode", {
       preference: "system",
