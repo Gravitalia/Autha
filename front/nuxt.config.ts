@@ -70,6 +70,12 @@ export default defineNuxtConfig({
   ],
 
   devtools: { enabled: true },
+  runtimeConfig: {
+    public: {
+      CDN_URL:
+        "https://res.cloudinary.com/dimtq5hwr/image/upload/s--4SMIfypA--",
+    },
+  },
 
   nitro: {
     // preset: "cloudflare_pages",
