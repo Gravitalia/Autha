@@ -1,3 +1,9 @@
+<script setup>
+const user = useUser();
+
+await user.fetchUser();
+</script>
+
 <template>
   <p>dd</p>
 
