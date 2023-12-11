@@ -18,6 +18,7 @@
     "@nuxt/devtools": "latest",
     "@nuxt/test-utils": "latest",
     "@nuxtjs/eslint-config-typescript": "^12.1.0",
+    "@nuxtjs/i18n": "^8.0.0-rc.9",
     "@typescript-eslint/parser": "^6.13.2",
     "eslint": "^8.55.0",
     "eslint-config-prettier": "^9.1.0",

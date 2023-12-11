@@ -62,6 +62,37 @@ export default defineNuxtConfig({
         storageKey: "mode",
       },
     ],
+    [
+      "@nuxtjs/i18n",
+      {
+        defaultLocale: "en",
+        strategy: "no_prefix",
+        lazy: false,
+        langDir: "locales",
+        detectBrowserLanguage: {
+          useCookie: true,
+          cookieKey: "locale",
+          redirectOn: "root",
+          fallbackLocale: "en",
+          alwaysRedirect: true,
+        },
+        locales: [
+          {
+            code: "en",
+            iso: "en-US",
+            file: "en-US.json",
+            name: "English",
+          },
+          {
+            code: "fr",
+            iso: "fr-FR",
+            file: "fr-FR.json",
+            name: "Français",
+          },
+        ],
+        baseUrl: "https://www.gravitalia.com",
+      },
+    ],
     "~/modules/purge-comments",
   ],
 
