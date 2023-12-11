@@ -22,5 +22,7 @@ export default defineConfig({
 
     "btn-base":
       "text-sm px-4 py-2 cursor-pointer outline-none border-none rounded bg-primary hover:bg-violet-800 dark:hover:bg-violet-600 font-medium text-white disabled:opacity-75 transition-colors duration-200 disabled:cursor-not-allowed",
+
+    "container": "flex justify-center items-center"
   },
 });
