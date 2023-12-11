@@ -1,28 +1,33 @@
 <script setup></script>
 
 <template>
-  <div
-    absolute
-    rounded-full
-    w-96
-    h-96
-    blur-5xl
-    ml-85rem
-    mt-30rem
-    class="bg-violet-700"
-  ></div>
-  <div
-    absolute
-    rounded-full
-    w-96
-    h-96
-    blur-5xl
-    ml-14
-    class="bg-amber-400"
-  ></div>
+  <div absolute flex justify-between w-98vw>
+    <div
+      rounded-full
+      w-48
+      h-48
+      xl:w-80
+      xl:h-80
+      blur-5xl
+      mt-80
+      xl:mt-30rem
+      bg-primary
+    ></div>
+    <div rounded-full w-48 h-48 xl:w-80 xl:h-80 blur-5xl bg-secondary></div>
+  </div>
 
-  <div h-screen container>
-    <div z-20 bg-zinc-50 border border-gray-900 w-96 h-96 shadow-lg>
+  <div absolute w-96vw h-98vh container>
+    <div
+      bg-zinc-50
+      dark:bg-dark
+      border
+      border-gray-900
+      w-80
+      h-80
+      lg:w-96
+      lg:h-96
+      shadow-lg
+    >
       <p>d</p>
     </div>
   </div>
