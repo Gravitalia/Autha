@@ -28,11 +28,7 @@ export default defineNuxtConfig({
           content: "Gravitalia, let us connect you to the Christmas spirit! 🎅",
         },
       ],
-      link: [
-        { rel: "icon", type: "image/webp", href: "/favicon.webp" },
-        { rel: "apple-touch-icon", href: "/favicon.webp" },
-        { rel: "manifest", href: "/manifest.json" },
-      ],
+      link: [{ rel: "manifest", href: "/manifest.json" }],
       script: [
         {
           innerHTML: !isDevelopment
