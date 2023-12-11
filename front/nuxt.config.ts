@@ -28,7 +28,6 @@ export default defineNuxtConfig({
           content: "Gravitalia, let us connect you to the Christmas spirit! 🎅",
         },
       ],
-      link: [{ rel: "manifest", href: "/manifest.json" }],
       script: [
         {
           innerHTML: !isDevelopment
