@@ -21,7 +21,7 @@
     class="bg-amber-400"
   ></div>
 
-  <div h-screen flex justify-center items-center>
+  <div h-screen container>
     <div z-20 bg-zinc-50 border border-gray-900 w-96 h-96 shadow-lg>
       <p>d</p>
     </div>
