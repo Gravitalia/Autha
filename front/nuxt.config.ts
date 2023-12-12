@@ -48,6 +48,7 @@ export default defineNuxtConfig({
   modules: [
     "@pinia/nuxt",
     "@unocss/nuxt",
+    "@nuxt/image",
     [
       "@nuxtjs/color-mode",
       {
