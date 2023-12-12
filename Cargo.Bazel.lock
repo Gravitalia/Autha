@@ -1,5 +1,5 @@
 {
-  "checksum": "d926636a9ee4afcfc973996833a969de30417a44a9f5a0b0c26d3ae5f8fef72d",
+  "checksum": "5faf5d26803047694cef657af6583bf5738cbe849a51e9f61a7f9e316c143084",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -706,7 +706,7 @@
               "target": "serde_yaml"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             },
             {
@@ -4364,7 +4364,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             },
             {
@@ -5116,7 +5116,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             },
             {
@@ -5175,7 +5175,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             },
             {
@@ -5230,7 +5230,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             },
             {
@@ -9818,7 +9818,7 @@
                 "target": "pin_project_lite"
               },
               {
-                "id": "tokio 1.34.0",
+                "id": "tokio 1.35.0",
                 "target": "tokio"
               },
               {
@@ -10831,7 +10831,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             },
             {
@@ -10931,7 +10931,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             },
             {
@@ -12873,13 +12873,13 @@
       },
       "license": "MIT OR Apache-2.0 OR Zlib"
     },
-    "tokio 1.34.0": {
+    "tokio 1.35.0": {
       "name": "tokio",
-      "version": "1.34.0",
+      "version": "1.35.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/tokio/1.34.0/download",
-          "sha256": "d0c014766411e834f7af5b8f4cf46257aab4036ca95e9d2c144a10f59ad6f5b9"
+          "url": "https://crates.io/api/v1/crates/tokio/1.35.0/download",
+          "sha256": "841d45b238a16291a4e1584e61820b8ae57d696cc5015c459c229ccc6990cc1c"
         }
       },
       "targets": [
@@ -12985,7 +12985,7 @@
           ],
           "selects": {}
         },
-        "version": "1.34.0"
+        "version": "1.35.0"
       },
       "license": "MIT"
     },
@@ -13021,7 +13021,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             }
           ],
@@ -13111,7 +13111,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             }
           ],
@@ -13162,7 +13162,7 @@
               "target": "rustls"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             }
           ],
@@ -13216,7 +13216,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             }
           ],
@@ -13272,7 +13272,7 @@
               "target": "log"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             },
             {
@@ -13340,7 +13340,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             },
             {
@@ -13538,7 +13538,7 @@
               "target": "rustls_pemfile"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             },
             {
@@ -13778,7 +13778,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             },
             {
@@ -14889,7 +14889,7 @@
               "target": "serde_urlencoded"
             },
             {
-              "id": "tokio 1.34.0",
+              "id": "tokio 1.35.0",
               "target": "tokio"
             },
             {
