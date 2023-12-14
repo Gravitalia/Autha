@@ -1,0 +1,16 @@
+{
+  "Page not found": "Page non trouvée",
+  "Something went wrong": "Quelque chose n'a pas bien fonctionné",
+  "Return home": "Retour à l'accueil",
+
+  "Sign in": "Se connecter",
+  "Invalid security token, try again in a few seconds.": "Jeton de sécurité invalide, ré-essayez dans quelques secondes.",
+  "You're sending too many requests! Try again in 5 minutes.": "Vous envoyez trop de requêtes ! Ré-essayez dans 5 minutes.",
+  "Write something...": "Ecrivez quelque chose...",
+  "Invalid email address": "Adresse e-mail invalide",
+  "Email address": "Adresse e-mail",
+  "Write down your secret word 🤫": "Ecrivez votre mot secret 🤫",
+  "Invalid password": "Mot de passe invalide",
+  "Password": "Mot de passe",
+  "Create an account": "Créer un compte"
+}
