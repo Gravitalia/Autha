@@ -50,6 +50,12 @@ export default defineNuxtConfig({
     "@unocss/nuxt",
     "@nuxt/image",
     [
+      "@nuxtjs/turnstile",
+      {
+        siteKey: "0x4AAAAAAABG7Pcx4-fniaty",
+      },
+    ],
+    [
       "@nuxtjs/color-mode",
       {
         preference: "system",
@@ -90,7 +96,7 @@ export default defineNuxtConfig({
             name: "Français",
           },
         ],
-        baseUrl: "https://www.gravitalia.com",
+        baseUrl: "https://account.gravitalia.com",
       },
     ],
     "~/modules/purge-comments",
@@ -99,8 +105,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   runtimeConfig: {
     public: {
-      CDN_URL:
-        "https://res.cloudinary.com/dimtq5hwr/image/upload/s--4SMIfypA--",
+      API_URL: "http://localhost:1111",
     },
   },
 
@@ -109,7 +114,7 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    // preset: "cloudflare_pages",
+    preset: "cloudflare",
   },
 
   experimental: {
