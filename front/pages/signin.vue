@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { useUser } from "../stores/user";
 import type { Error, TokenResponse } from "../types/index";
 
 // Define reactive refs for error handling.
@@ -17,6 +18,14 @@ const isError: Record<string, Ref<boolean>> = {
 const token: Ref<any> = ref();
 const email: Ref<string> = ref("");
 const password: Ref<string> = ref("");
+
+// Redirect if user is already connected.
+if (useCookie("session").value !== "") {
+  const user = useUser();
+  user.fetchUser();
+
+  if (user.vanity !== "") await navigateTo("/");
+}
 
 async function signin(): Promise<void> {
   // Set all errors to false before processing the sign-in.
