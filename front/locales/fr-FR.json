@@ -12,5 +12,11 @@
   "Write down your secret word 🤫": "Ecrivez votre mot secret 🤫",
   "Invalid password": "Mot de passe invalide",
   "Password": "Mot de passe",
-  "Create an account": "Créer un compte"
+  "Create an account": "Créer un compte",
+
+  "About": "À propos",
+  "Security": "sécurité",
+  "Data": "Données",
+  "OAuth": "OAuth",
+  "Logout": "Se déconnecter"
 }
