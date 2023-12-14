@@ -25,11 +25,15 @@ jobs:
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
+        working-directory: ./front
       - name: Build Nuxt
         run: npm run build
+        working-directory: ./front
       #- name: Test
       #  run: npm run test
+      #  working-directory: ./front
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: front
