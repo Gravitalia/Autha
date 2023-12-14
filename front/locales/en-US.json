@@ -1,5 +1,16 @@
 {
-    "Page not found": "Page not found",
-    "Something went wrong": "Something went wrong",
-    "Return home": "Return home"
+  "Page not found": "Page not found",
+  "Something went wrong": "Something went wrong",
+  "Return home": "Return home",
+
+  "Sign in": "Sign in",
+  "Invalid security token, try again in a few seconds.": "Invalid security token, try again in a few seconds.",
+  "You're sending too many requests! Try again in 5 minutes.": "You're sending too many requests! Try again in 5 minutes.",
+  "Write something...": "Write something...",
+  "Invalid email address": "Invalid email address",
+  "Email address": "Email address",
+  "Write down your secret word 🤫": "Write down your secret word 🤫",
+  "Invalid password": "Invalid password",
+  "Password": "Password",
+  "Create an account": "Create an account"
 }
