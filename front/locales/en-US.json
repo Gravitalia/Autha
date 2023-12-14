@@ -12,5 +12,11 @@
   "Write down your secret word 🤫": "Write down your secret word 🤫",
   "Invalid password": "Invalid password",
   "Password": "Password",
-  "Create an account": "Create an account"
+  "Create an account": "Create an account",
+
+  "About": "About",
+  "Security": "Security",
+  "Data": "Data",
+  "OAuth": "OAuth",
+  "Logout": "Logout"
 }

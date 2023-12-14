@@ -25,9 +25,9 @@ export default defineConfig({
     "btn-invisible":
       "text-sm px-2 py-2 bg-none border-none outline-none rounded text-violet-500 dark:text-white font-medium hover:bg-violet-50 dark:hover:bg-violet-500 transition-colors duration-200",
 
-    input:
+    "input":
       "w-64 h-7 text-zinc-700 dark:text-zinc-200 dark:placeholder:text-zinc-300 outline-none bg-transparent border border-zinc-400 dark:border-zinc-700 border-b-2 border-x-0 border-t-0",
 
-    container: "flex justify-center items-center",
+    "container": "flex justify-center items-center",
   },
 });
