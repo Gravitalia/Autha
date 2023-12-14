@@ -251,7 +251,13 @@ async function signin(): Promise<void> {
           <NuxtLink to="/signup" btn-invisible no-underline>{{
             $t("Create an account")
           }}</NuxtLink>
-          <button font-sans font-medium btn-base no-underline @click="signin()">
+          <button
+            font-sans
+            font-medium
+            btn-base
+            type="button"
+            @click="signin()"
+          >
             {{ $t("Sign in") }}
           </button>
         </div>
