@@ -1,0 +1,11 @@
+name = "account"
+main = "./.output/server/index.mjs"
+compatibility_date = "2022-09-10"
+route = "account.gravitalia.com"
+
+rules = [
+  { type = "ESModule", globs = ["**/*.js", "**/*.mjs"]},
+]
+
+[site]
+bucket = ".output/public"
