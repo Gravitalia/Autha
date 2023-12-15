@@ -14,10 +14,13 @@ const isError: Record<string, Ref<boolean>> = {
 
 // Define reactive refs for user input.
 const token = ref();
+const firstname = ref("");
+const lastname = ref("");
 const email = ref("");
 const password = ref("");
-const birthdate = ref("");
-const phone = ref("");
+const vanity = ref("");
+const birthdate: Ref<null | string> = ref(null);
+const phone: Ref<null | string> = ref(null);
 
 // Internal variables.
 const step = ref(0);
@@ -69,13 +72,13 @@ async function signup(): Promise<void> {
       dark:bg-dark
       border
       border-gray-900
-      w-80
-      h-80
+      w-22rem
+      h-22rem
       lg:w-96
       lg:h-96
       shadow-lg
     >
-      <div mt-4 lg:mt-8 mb-4 lg:mb-8 flex-col container>
+      <div mt-8 mb-4 flex-col container>
         <NuxtImg
           alt="Gravitalia"
           src="/favicon.webp"
@@ -120,7 +123,78 @@ async function signup(): Promise<void> {
           {{ $t("Something went wrong") }}
         </label>
 
-        <!-- input. -->
+        <!-- 1-step account creation. -->
+        <div v-if="step === 0" flex-col container>
+          <!-- Firstname and name inputs. -->
+          <div flex space-x-2>
+            <input
+              v-model="firstname"
+              input
+              mb-2
+              lg:mb-4
+              w-7.65rem
+              type="text"
+              maxlength="10"
+              :placeholder="$t('Firstname')"
+            />
+
+            <input
+              v-model="lastname"
+              input
+              w-7.65rem
+              type="text"
+              maxlength="15"
+              :placeholder="$t('Lastname')"
+            />
+          </div>
+
+          <!-- Email input. -->
+          <input
+            v-model="email"
+            input
+            mb-2
+            lg:mb-4
+            type="email"
+            :placeholder="$t('Email address')"
+          />
+
+          <!-- Password input. -->
+          <input
+            v-model="password"
+            input
+            type="password"
+            :placeholder="$t('Password')"
+          />
+        </div>
+
+        <!-- 2nd step account creation. -->
+        <div v-else flex-col container>
+          <div mb-2 lg:mb-4 mr-2 flex>
+            <span rounded flex justify-center items-center text-sm font-mono>
+              gravitalia.com/
+            </span>
+            <input
+              v-model="vanity"
+              w-8.35rem
+              input
+              type="text"
+              maxlength="15"
+              minlength="2"
+              :placeholder="$t('Username').toLowerCase()"
+            />
+          </div>
+
+          <input
+            v-model="phone"
+            input
+            type="number"
+            mb-2
+            lg:mb-4
+            :placeholder="$t('Phone')"
+          />
+
+          <input v-model="birthdate" input type="date" />
+        </div>
       </div>
 
       <!-- Links and buttons. -->
