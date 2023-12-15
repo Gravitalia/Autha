@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useUser } from "../stores/user";
 import type { Error, TokenResponse } from "../types/index";
 
 // Define reactive refs for error handling.
@@ -15,9 +13,9 @@ const isError: Record<string, Ref<boolean>> = {
 };
 
 // Define reactive refs for user input.
-const token: Ref<any> = ref();
-const email: Ref<string> = ref("");
-const password: Ref<string> = ref("");
+const token = ref();
+const email = ref("");
+const password = ref("");
 
 // Redirect if user is already connected.
 if (useCookie("session").value !== "") {
@@ -95,7 +93,7 @@ async function signin(): Promise<void> {
 </script>
 
 <template>
-  <!-- Cloudflare Turnstile implementation -->
+  <!-- Cloudflare Turnstile implementation. -->
   <NuxtTurnstile v-model="token" />
 
   <!-- Blurry effect in background. -->
@@ -245,7 +243,7 @@ async function signin(): Promise<void> {
         />
       </div>
 
-      <!-- Links and buttonq. -->
+      <!-- Links and buttons. -->
       <div flex container>
         <div flex justify-between w-16.5rem mt-8>
           <NuxtLink to="/signup" btn-invisible no-underline>{{
