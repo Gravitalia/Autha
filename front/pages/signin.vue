@@ -16,6 +16,7 @@ const isError: Record<string, Ref<boolean>> = {
 const token = ref();
 const email = ref("");
 const password = ref("");
+const isButtonDisable = ref(false);
 
 // Redirect if user is already connected.
 if (useCookie("session").value !== "") {
@@ -26,6 +27,9 @@ if (useCookie("session").value !== "") {
 }
 
 async function signin(): Promise<void> {
+  // Disable button until the end.
+  isButtonDisable.value = true;
+
   // Set all errors to false before processing the sign-in.
   for (const key in isError) {
     isError[key].value = false;
@@ -59,6 +63,9 @@ async function signin(): Promise<void> {
   )
     .then((response) => response.json())
     .catch((_) => (isError.internalServerError.value = true));
+
+  // Re-activate button.
+  isButtonDisable.value = false;
 
   // Handle error process.
   if ("error" in json) {
@@ -255,6 +262,7 @@ async function signin(): Promise<void> {
             btn-base
             type="button"
             @click="signin()"
+            :disabled="isButtonDisable"
           >
             {{ $t("Sign in") }}
           </button>
