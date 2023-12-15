@@ -261,8 +261,8 @@ async function signin(): Promise<void> {
             font-medium
             btn-base
             type="button"
-            @click="signin()"
             :disabled="isButtonDisable"
+            @click="signin()"
           >
             {{ $t("Sign in") }}
           </button>
