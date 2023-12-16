@@ -38,9 +38,11 @@ async function signin(): Promise<void> {
   // Check for missing values in the user input.
   if (email.value === "") {
     isError.missingEmail.value = true;
+    isButtonDisable.value = false;
     return;
   } else if (password.value === "") {
     isError.missingPassword.value = true;
+    isButtonDisable.value = false;
     return;
   }
 
