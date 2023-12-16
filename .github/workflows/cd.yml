@@ -27,7 +27,7 @@ jobs:
         run: npm install
         working-directory: ./front
       - name: Build Nuxt
-        run: npm run build
+        run: NITRO_PRESET=cloudflare npm run build
         working-directory: ./front
       #- name: Test
       #  run: npm run test
