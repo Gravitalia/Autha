@@ -1,4 +1,5 @@
 use anyhow::Result;
+use fpe::ff1::{FlexibleNumeralString, Operations, FF1};
 use ring::aead::*;
 
 /// Decrypts the provided data using the CHACHA20_POLY1305 algorithm.
@@ -31,4 +32,22 @@ pub fn chacha20_poly1305(
             Ok("".to_string())
         }
     }
+}
+
+/// Decrypts the provided data using the Format-preserving encryption
+/// with FF1 and AES256.
+pub fn format_preserving_encryption(data: Vec<u16>) -> Result<String> {
+    // Get encryption key. The key MUST be 32 bytes (256 bits), otherwise it panics.
+    let mut key = std::env::var("AES256_KEY").unwrap_or_default();
+    if key.is_empty() {
+        key = "4D6A514749614D6C74595A50756956446E5673424142524C4F4451736C515233".to_string();
+    }
+
+    let length = data.len();
+
+    let ff = FF1::<aes::Aes256>::new(&hex::decode(key)?, 256)?;
+
+    let decrypt = ff.decrypt(&[], &FlexibleNumeralString::from(data))?;
+
+    Ok(String::from_utf8_lossy(&decrypt.to_be_bytes(256, length)).to_string())
 }
