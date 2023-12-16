@@ -1,0 +1,39 @@
+name: Autha/cloudflare
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    name: Build Nuxt
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - name: Mount npm cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm install
+        working-directory: ./front
+      - name: Build Nuxt
+        run: npm run build
+        working-directory: ./front
+      #- name: Test
+      #  run: npm run test
+      #  working-directory: ./front
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: front
