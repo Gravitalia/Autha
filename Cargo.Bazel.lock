@@ -1,5 +1,5 @@
 {
-  "checksum": "5faf5d26803047694cef657af6583bf5738cbe849a51e9f61a7f9e316c143084",
+  "checksum": "f8a2216983aaa674fdd868fea6f8b3e06e0b229314e5f0f1fbaeaadc50b33bc0",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -706,7 +706,7 @@
               "target": "serde_yaml"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             },
             {
@@ -2832,6 +2832,10 @@
             {
               "id": "scylla 0.10.1",
               "target": "scylla"
+            },
+            {
+              "id": "serde 1.0.193",
+              "target": "serde"
             }
           ],
           "selects": {}
@@ -4364,7 +4368,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             },
             {
@@ -5116,7 +5120,7 @@
               "target": "socket2"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             },
             {
@@ -5175,7 +5179,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             },
             {
@@ -5230,7 +5234,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             },
             {
@@ -6035,76 +6039,10 @@
         "crate_features": {
           "common": [
             "default",
+            "extra_traits",
             "std"
           ],
-          "selects": {
-            "aarch64-apple-darwin": [
-              "extra_traits"
-            ],
-            "aarch64-apple-ios": [
-              "extra_traits"
-            ],
-            "aarch64-apple-ios-sim": [
-              "extra_traits"
-            ],
-            "aarch64-fuchsia": [
-              "extra_traits"
-            ],
-            "aarch64-linux-android": [
-              "extra_traits"
-            ],
-            "armv7-linux-androideabi": [
-              "extra_traits"
-            ],
-            "i686-apple-darwin": [
-              "extra_traits"
-            ],
-            "i686-linux-android": [
-              "extra_traits"
-            ],
-            "i686-unknown-freebsd": [
-              "extra_traits"
-            ],
-            "powerpc-unknown-linux-gnu": [
-              "extra_traits"
-            ],
-            "riscv32imc-unknown-none-elf": [
-              "extra_traits"
-            ],
-            "riscv64gc-unknown-none-elf": [
-              "extra_traits"
-            ],
-            "s390x-unknown-linux-gnu": [
-              "extra_traits"
-            ],
-            "thumbv7em-none-eabi": [
-              "extra_traits"
-            ],
-            "thumbv8m.main-none-eabi": [
-              "extra_traits"
-            ],
-            "wasm32-wasi": [
-              "extra_traits"
-            ],
-            "x86_64-apple-darwin": [
-              "extra_traits"
-            ],
-            "x86_64-apple-ios": [
-              "extra_traits"
-            ],
-            "x86_64-fuchsia": [
-              "extra_traits"
-            ],
-            "x86_64-linux-android": [
-              "extra_traits"
-            ],
-            "x86_64-unknown-freebsd": [
-              "extra_traits"
-            ],
-            "x86_64-unknown-none": [
-              "extra_traits"
-            ]
-          }
+          "selects": {}
         },
         "deps": {
           "common": [
@@ -6211,13 +6149,32 @@
         ],
         "crate_features": {
           "common": [
-            "elf",
-            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-unknown-linux-gnu": [
+              "elf",
+              "errno"
+            ],
+            "arm-unknown-linux-gnueabi": [
+              "elf",
+              "errno"
+            ],
+            "armv7-unknown-linux-gnueabi": [
+              "elf",
+              "errno"
+            ],
+            "i686-unknown-linux-gnu": [
+              "elf",
+              "errno"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "elf",
+              "errno"
+            ]
+          }
         },
         "edition": "2021",
         "version": "0.4.11"
@@ -9818,7 +9775,7 @@
                 "target": "pin_project_lite"
               },
               {
-                "id": "tokio 1.35.0",
+                "id": "tokio 1.34.0",
                 "target": "tokio"
               },
               {
@@ -10831,7 +10788,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             },
             {
@@ -10931,7 +10888,7 @@
               "target": "thiserror"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             },
             {
@@ -12873,13 +12830,13 @@
       },
       "license": "MIT OR Apache-2.0 OR Zlib"
     },
-    "tokio 1.35.0": {
+    "tokio 1.34.0": {
       "name": "tokio",
-      "version": "1.35.0",
+      "version": "1.34.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/tokio/1.35.0/download",
-          "sha256": "841d45b238a16291a4e1584e61820b8ae57d696cc5015c459c229ccc6990cc1c"
+          "url": "https://crates.io/api/v1/crates/tokio/1.34.0/download",
+          "sha256": "d0c014766411e834f7af5b8f4cf46257aab4036ca95e9d2c144a10f59ad6f5b9"
         }
       },
       "targets": [
@@ -12985,7 +12942,7 @@
           ],
           "selects": {}
         },
-        "version": "1.35.0"
+        "version": "1.34.0"
       },
       "license": "MIT"
     },
@@ -13021,7 +12978,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             }
           ],
@@ -13111,7 +13068,7 @@
               "target": "native_tls"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             }
           ],
@@ -13162,7 +13119,7 @@
               "target": "rustls"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             }
           ],
@@ -13216,7 +13173,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             }
           ],
@@ -13272,7 +13229,7 @@
               "target": "log"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             },
             {
@@ -13340,7 +13297,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             },
             {
@@ -13538,7 +13495,7 @@
               "target": "rustls_pemfile"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             },
             {
@@ -13778,7 +13735,7 @@
               "target": "slab"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             },
             {
@@ -14889,7 +14846,7 @@
               "target": "serde_urlencoded"
             },
             {
-              "id": "tokio 1.35.0",
+              "id": "tokio 1.34.0",
               "target": "tokio"
             },
             {
