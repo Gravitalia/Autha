@@ -5,12 +5,18 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// Json Web Token payload as structure.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
+    /// User vanity.
     pub sub: String,
+    /// Scope allowed for the token.
     pub scope: Vec<String>,
+    /// Expiration date.
     pub exp: u64,
+    /// The issuer. Should be gravitalia or autha.
     iss: String,
+    /// Issuing date.
     iat: u64,
 }
 
