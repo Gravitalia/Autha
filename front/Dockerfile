@@ -13,9 +13,11 @@ ENV NODE_ENV production
 
 USER node
 
-COPY --from=builder /autha/.output ./.output
-COPY --from=builder /autha/package.json ./package.json
-COPY --from=builder /autha/node_modules ./node_modules
+WORKDIR /
+
+COPY --from=builder /autha/.output .output
+COPY --from=builder /autha/package.json package.json
+COPY --from=builder /autha/node_modules node_modules
 
 EXPOSE  3000
 CMD     ["yarn", "preview"]
