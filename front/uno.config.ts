@@ -21,7 +21,7 @@ export default defineConfig({
     "bg-secondary": "bg-amber-400 dark:bg-amber-600",
 
     "btn-base":
-      "text-sm px-4 py-2 cursor-pointer outline-none border-none rounded bg-primary hover:shadow hover:bg-violet-800 dark:hover:bg-violet-600 font-medium text-white disabled:opacity-75 transition-all duration-200 disabled:cursor-not-allowed",
+      "text-sm px-4 py-2 cursor-pointer outline-none border-none rounded bg-primary enabled:hover:shadow enabled:hover:bg-violet-800 enabled:dark:hover:bg-violet-600 font-medium text-white disabled:opacity-75 transition-all duration-200 disabled:cursor-not-allowed",
     "btn-invisible":
       "text-sm px-2 py-2 cursor-pointer bg-none border-none outline-none rounded text-violet-500 dark:text-white font-medium hover:bg-violet-50 dark:hover:bg-violet-500 transition-colors duration-200",
 
