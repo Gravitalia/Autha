@@ -18,7 +18,11 @@ FROM alpine:3.18 AS runtime
 
 RUN apk add --no-cache libgcc
 
+RUN addgroup -S appgroup && adduser -S rust -G appgroup
+USER rust
+
 COPY --from=builder /autha/target/release/autha /bin/autha
+COPY ./config.yaml ./config.yaml
 
 EXPOSE 1111/tcp
 CMD     ["./bin/autha"]
