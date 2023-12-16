@@ -1,6 +1,9 @@
-use anyhow::{Context, Result};
+use super::model::User;
+use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
-use scylla::{frame::Compression, transport::session::PoolSize, Session, SessionBuilder};
+use scylla::{
+    frame::Compression, transport::session::PoolSize, IntoTypedRows, Session, SessionBuilder,
+};
 use std::num::NonZeroUsize;
 
 // Define constants for table creation and queries.
@@ -100,6 +103,8 @@ pub struct Scylla {
 pub trait ScyllaManager {
     /// Create every needed tables, if not exists.
     async fn create_tables(&self) -> Result<()>;
+    /// Get a user in the Scylla database without cache.
+    async fn get_user(&self, vanity: &str) -> Result<User>;
 }
 
 #[async_trait]
@@ -121,6 +126,19 @@ impl ScyllaManager for Scylla {
         }
 
         Ok(())
+    }
+
+    /// Get a user in the Scylla database without cache.
+    async fn get_user(&self, vanity: &str) -> Result<User> {
+        if let Some(rows) =
+            self.connection.query(
+                "SELECT username, vanity, avatar, bio, email, birthdate, phone, verified, deleted, flags FROM accounts.users WHERE vanity = ?",
+                vec![vanity]
+            ).await?.rows {
+                Ok(rows.into_typed::<User>().collect::<Vec<_>>()[0].clone()?)
+        } else {
+            bail!("no user found")
+        }
     }
 }
 

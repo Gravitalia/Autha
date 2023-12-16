@@ -10,3 +10,4 @@ log = "0.4"
 r2d2 = "0.8"
 r2d2-memcache = "0.6"
 scylla = "0.10"
+serde = { version = "1", features = ["derive"] }
