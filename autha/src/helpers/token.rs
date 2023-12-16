@@ -1,7 +1,18 @@
 use anyhow::{bail, Result};
 use db::scylla::Scylla;
+use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub sub: String,
+    pub scope: Vec<String>,
+    pub exp: u64,
+    iss: String,
+    iat: u64,
+}
 
 /// Create a 14-day valid user token into database.
 /// It must be saved securely because of its impact on the data it deserves.
@@ -52,7 +63,7 @@ pub async fn create(scylla: &Arc<Scylla>, user_id: &String, ip: String) -> Resul
 
 /// Verify the existence of a user token into database.
 /// Result in error or datas about the token.
-pub async fn get(scylla: &Arc<Scylla>, token: String) -> Result<String> {
+pub async fn get(scylla: &Arc<Scylla>, token: &str) -> Result<String> {
     let rows = scylla
         .connection
         .query(
@@ -74,4 +85,27 @@ pub async fn get(scylla: &Arc<Scylla>, token: String) -> Result<String> {
     }
 
     Ok(vanity)
+}
+
+/// Retrieves JSON data from the JWT and checks whether the token is valid.
+pub fn get_jwt_data(token: &str) -> Result<(String, Vec<String>)> {
+    let public_key = DecodingKey::from_rsa_pem(
+        std::env::var("RSA_PUBLIC_KEY")
+            .expect("Missing env `RSA_PUBLIC_KEY`")
+            .as_bytes(),
+    )
+    .expect("Failed to load public key");
+
+    let claims = decode::<Claims>(token, &public_key, &Validation::new(Algorithm::RS256))?;
+
+    if claims.claims.exp
+        <= std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+    {
+        bail!("expired token")
+    }
+
+    Ok((claims.claims.sub, claims.claims.scope))
 }
