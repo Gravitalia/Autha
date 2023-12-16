@@ -49,6 +49,7 @@ crates_repository(
         "//autha:Cargo.toml",
         "//crypto:Cargo.toml",
         "//db:Cargo.toml",
+        "//image_processor:Cargo.toml",
     ],
 )
 
