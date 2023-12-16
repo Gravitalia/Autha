@@ -1,5 +1,6 @@
 pub mod create;
 pub mod login;
+pub mod users;
 
 use db::{memcache::MemcachePool, scylla::Scylla};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
@@ -12,6 +13,8 @@ const INTERNAL_SERVER_ERROR: &str = "Internal server error";
 const INVALID_TURNSTILE: &str = "Invalid turnstile token";
 const INVALID_EMAIL: &str = "Invalid email";
 const INVALID_PASSWORD: &str = "Invalid password";
+const MISSING_AUTHORIZATION_HEADER: &str = "Missing authorization header";
+const INVALID_TOKEN: &str = "Invalid token";
 
 /// Define errors
 #[derive(Debug)]
@@ -95,6 +98,27 @@ pub async fn login_user(
                 .ip()
                 .to_string()
         }),
+    )
+    .await
+    {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Handler of route to get a user.
+#[inline]
+pub async fn get_user(
+    vanity: String,
+    scylla: Arc<Scylla>,
+    memcached: MemcachePool,
+    token: Option<String>,
+) -> Result<impl Reply, Rejection> {
+    match users::get(
+        scylla,
+        memcached,
+        vanity,
+        token,
     )
     .await
     {
