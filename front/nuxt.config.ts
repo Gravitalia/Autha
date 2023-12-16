@@ -113,10 +113,6 @@ export default defineNuxtConfig({
     storesDirs: ["./stores/**"],
   },
 
-  nitro: {
-    preset: "cloudflare",
-  },
-
   experimental: {
     headNext: true,
     payloadExtraction: false,
