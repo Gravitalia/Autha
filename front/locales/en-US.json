@@ -14,6 +14,13 @@
   "Password": "Password",
   "Create an account": "Create an account",
 
+  "Next": "Next",
+  "Previous": "Previous",
+  "Firstname": "Firstname",
+  "Lastname": "Lastname",
+  "Username": "Username",
+  "Phone": "Phone",
+
   "About": "About",
   "Security": "Security",
   "Data": "Data",

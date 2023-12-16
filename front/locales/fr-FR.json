@@ -14,6 +14,13 @@
   "Password": "Mot de passe",
   "Create an account": "Créer un compte",
 
+  "Next": "Suivant",
+  "Previous": "Précédent",
+  "Firstname": "Prénom",
+  "Lastname": "Nom de famille",
+  "Username": "Nom d'utilisateur",
+  "Phone": "Numéro de téléphone",
+
   "About": "À propos",
   "Security": "sécurité",
   "Data": "Données",
