@@ -15,5 +15,6 @@ members = [
     "autha",
     "crypto",
     "db",
+    "image_processor",
 ]
 resolver = "2"
