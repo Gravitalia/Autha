@@ -15,13 +15,17 @@ use std::num::NonZeroU32;
 ///     Some(256),
 ///     None,
 /// );
-/// 
+///
 /// file.write_all(buff.unwrap().buffer()).unwrap();
 /// file.sync_all().unwrap();
 /// ```
 
 /// ```
-pub fn resize(buffer: &Vec<u8>, mut width: Option<u32>, mut height: Option<u32>) -> Result<BufWriter<Vec<u8>>> {
+pub fn resize(
+    buffer: &[u8],
+    mut width: Option<u32>,
+    mut height: Option<u32>,
+) -> Result<BufWriter<Vec<u8>>> {
     if width.is_none() && height.is_none() {
         bail!("missing width or height")
     }
