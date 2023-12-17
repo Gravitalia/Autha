@@ -1,5 +1,5 @@
 {
-  "checksum": "1c0f7e5b8ca99c6b631f2ebada999809d58db74e926d57fb51aba99ae5595e81",
+  "checksum": "a62a5b34d894ecf3a15055298d28dec176bb645af428da6ec4b851d80ba690a8",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -1628,8 +1628,20 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "jobserver",
+            "parallel"
+          ],
+          "selects": {}
+        },
         "deps": {
-          "common": [],
+          "common": [
+            {
+              "id": "jobserver 0.1.27",
+              "target": "jobserver"
+            }
+          ],
           "selects": {
             "cfg(unix)": [
               {
@@ -4782,6 +4794,36 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "glob 0.3.1": {
+      "name": "glob",
+      "version": "0.3.1",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/glob/0.3.1/download",
+          "sha256": "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "glob",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "glob",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "0.3.1"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
     "h2 0.3.22": {
       "name": "h2",
       "version": "0.3.22",
@@ -6108,6 +6150,10 @@
             {
               "id": "log 0.4.20",
               "target": "log"
+            },
+            {
+              "id": "webp 0.2.6",
+              "target": "webp"
             }
           ],
           "selects": {}
@@ -6579,6 +6625,47 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "jobserver 0.1.27": {
+      "name": "jobserver",
+      "version": "0.1.27",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/jobserver/0.1.27/download",
+          "sha256": "8c37f63953c4c63420ed5fd3d6d398c719489b9f872b9fa683262f8edd363c7d"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "jobserver",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "jobserver",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [],
+          "selects": {
+            "cfg(unix)": [
+              {
+                "id": "libc 0.2.151",
+                "target": "libc"
+              }
+            ]
+          }
+        },
+        "edition": "2018",
+        "version": "0.1.27"
+      },
+      "license": "MIT/Apache-2.0"
+    },
     "jpeg-decoder 0.3.0": {
       "name": "jpeg-decoder",
       "version": "0.3.0",
@@ -6962,6 +7049,81 @@
         ]
       },
       "license": "MIT OR Apache-2.0"
+    },
+    "libwebp-sys 0.9.4": {
+      "name": "libwebp-sys",
+      "version": "0.9.4",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/libwebp-sys/0.9.4/download",
+          "sha256": "3e0df0a0f9444d52aee6335cd724d21a2ee3285f646291799a72be518ec8ee3c"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "libwebp_sys",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        },
+        {
+          "BuildScript": {
+            "crate_name": "build_script_build",
+            "crate_root": "build.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "libwebp_sys",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "neon",
+            "parallel",
+            "std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "libwebp-sys 0.9.4",
+              "target": "build_script_build"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2015",
+        "version": "0.9.4"
+      },
+      "build_script_attrs": {
+        "data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "cc 1.0.83",
+              "target": "cc"
+            },
+            {
+              "id": "glob 0.3.1",
+              "target": "glob"
+            }
+          ],
+          "selects": {}
+        }
+      },
+      "license": "MIT"
     },
     "linux-raw-sys 0.4.12": {
       "name": "linux-raw-sys",
@@ -16501,6 +16663,57 @@
         },
         "edition": "2018",
         "version": "0.3.66"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "webp 0.2.6": {
+      "name": "webp",
+      "version": "0.2.6",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/webp/0.2.6/download",
+          "sha256": "4bb5d8e7814e92297b0e1c773ce43d290bef6c17452dafd9fc49e5edb5beba71"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "webp",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "webp",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "image",
+            "img"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "image 0.24.7",
+              "target": "image"
+            },
+            {
+              "id": "libwebp-sys 0.9.4",
+              "target": "libwebp_sys"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.2.6"
       },
       "license": "MIT OR Apache-2.0"
     },
