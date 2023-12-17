@@ -130,6 +130,7 @@ dependencies = [
  "db",
  "fern",
  "hex",
+ "image_processor",
  "isolang",
  "jsonwebtoken",
  "lazy_static",
@@ -1172,6 +1173,7 @@ dependencies = [
  "fast_image_resize",
  "image",
  "kamadak-exif",
+ "log",
 ]
 
 [[package]]

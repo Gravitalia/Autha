@@ -1,5 +1,5 @@
 {
-  "checksum": "17b397067f85e2732941b834e69c15482c61e56cb68db9451fb514c606047ea0",
+  "checksum": "1c0f7e5b8ca99c6b631f2ebada999809d58db74e926d57fb51aba99ae5595e81",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -6104,6 +6104,10 @@
             {
               "id": "kamadak-exif 0.5.5",
               "target": "exif"
+            },
+            {
+              "id": "log 0.4.20",
+              "target": "log"
             }
           ],
           "selects": {}
