@@ -521,41 +521,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "darling"
-version = "0.20.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0209d94da627ab5605dcccf08bb18afa5009cfbef48d8a8b7d7bdbc79be25c5e"
-dependencies = [
- "darling_core",
- "darling_macro",
-]
-
-[[package]]
-name = "darling_core"
-version = "0.20.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "177e3443818124b357d8e76f53be906d60937f0d3a90773a664fa63fa253e621"
-dependencies = [
- "fnv",
- "ident_case",
- "proc-macro2",
- "quote",
- "strsim",
- "syn 2.0.41",
-]
-
-[[package]]
-name = "darling_macro"
-version = "0.20.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "836a9bbc7ad63342d6d6e7b815ccab164bc77a2d95d84bc3117a8c0d5c98e2d5"
-dependencies = [
- "darling_core",
- "quote",
- "syn 2.0.41",
-]
-
-[[package]]
 name = "dashmap"
 version = "5.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1060,12 +1025,6 @@ checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
 dependencies = [
  "cc",
 ]
-
-[[package]]
-name = "ident_case"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "idna"
@@ -2010,9 +1969,9 @@ dependencies = [
 
 [[package]]
 name = "scylla"
-version = "0.11.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36dbe7a13f2ecd8d9da5003ae1d1df8e731e9130ef2cc331ab518cdbe8088677"
+checksum = "7b30067d0d0313a0bbcda9c31a503678f18dacd5426dd8a63c3f581cf80f5c30"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -2044,14 +2003,15 @@ dependencies = [
 
 [[package]]
 name = "scylla-cql"
-version = "0.0.10"
+version = "0.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58a0e47e526d35612904ff24b6b863ec1c3e18ff10188b1f04b30750f558ed26"
+checksum = "c9642864295085ef2fe62493eec405a109fbaae9f3a9b80ea087556af4a97df2"
 dependencies = [
  "async-trait",
  "bigdecimal",
  "byteorder",
  "bytes",
+ "chrono",
  "lz4_flex",
  "num-bigint 0.3.3",
  "num_enum",
@@ -2064,11 +2024,10 @@ dependencies = [
 
 [[package]]
 name = "scylla-macros"
-version = "0.2.2"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71da9865153917f9ae6e9e2ba2b3dc52edd3ef7487a4efbe93cbcb92841c1cdd"
+checksum = "5757ded3dfb10967ca7d1ff1084d072d565b5e10b2b21c286d5335c245425a7e"
 dependencies = [
- "darling",
  "proc-macro2",
  "quote",
  "syn 2.0.41",
@@ -2245,12 +2204,6 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
-
-[[package]]
-name = "strsim"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "strum"
