@@ -7,9 +7,14 @@ const isError: Record<string, Ref<boolean>> = {
   invalidToken: ref(false),
   invalidPassword: ref(false),
   invalidPhone: ref(false),
+  invalidVanity: ref(false),
   tooYoung: ref(false),
   rateLimited: ref(false),
   internalServerError: ref(false),
+  alreadyUsedEmail: ref(false),
+  missingEmail: ref(false),
+  missingPassword: ref(false),
+  missingFirstname: ref(false),
 };
 
 // Define reactive refs for user input.
@@ -24,6 +29,8 @@ const phone: Ref<null | string> = ref(null);
 
 // Internal variables.
 const step = ref(0);
+const isButtonDisable = ref(false);
+const locale = useI18n().locale.value;
 
 // Redirect if user is already connected.
 if (useCookie("session").value !== "") {
@@ -41,6 +48,109 @@ async function signup(): Promise<void> {
   // Set all errors to false before processing the sign-in.
   for (const key in isError) {
     isError[key].value = false;
+  }
+
+  // Check for missing values in the user input.
+  if (firstname.value === "") {
+    isError.missingFirstname.value = true;
+    if (step.value === 1) --step.value;
+    isButtonDisable.value = false;
+    return;
+  } else if (email.value === "") {
+    isError.missingEmail.value = true;
+    if (step.value === 1) --step.value;
+    isButtonDisable.value = false;
+    return;
+  } else if (password.value === "") {
+    isError.missingPassword.value = true;
+    if (step.value === 1) --step.value;
+    isButtonDisable.value = false;
+    return;
+  } else if (vanity.value === "") {
+    isError.invalidVanity.value = true;
+    if (step.value === 0) ++step.value;
+    isButtonDisable.value = false;
+    return;
+  }
+
+  // Create headers.
+  const headers: Headers = new Headers();
+  headers.append("Content-Type", "application/json");
+  headers.append("CF-Turnstile-Token", token.value);
+
+  // Make request.
+  const json: Error | TokenResponse = await fetch(
+    useRuntimeConfig().public.API_URL + "/create",
+    {
+      method: "post",
+      headers,
+      body: JSON.stringify({
+        username: `${firstname.value}${
+          lastname.value.length !== 0 ? ` ${lastname.value}` : ""
+        }`,
+        vanity: vanity.value,
+        email: email.value,
+        password: password.value,
+        locale,
+        birthdate: birthdate.value,
+        phone: phone.value,
+      }),
+    },
+  )
+    .then((response) => response.json())
+    .catch((_) => (isError.internalServerError.value = true));
+
+  // Re-activate button.
+  isButtonDisable.value = false;
+
+  // Handle error process.
+  if ("error" in json) {
+    switch (json.message) {
+      case "Invalid turnstile token":
+        isError.invalidToken.value = true;
+        break;
+      case "You are being rate limited.":
+        isError.rateLimited.value = true;
+        break;
+      case "Invalid email":
+        isError.invalidEmail.value = true;
+        if (step.value === 1) --step.value;
+        break;
+      case "Invalid password":
+        isError.invalidPassword.value = true;
+        if (step.value === 1) --step.value;
+        break;
+      case "Invalid vanity":
+      case "Vanity already used":
+        isError.invalidVanity.value = true;
+        if (step.value === 0) ++step.value;
+        break;
+      case "Invalid username":
+        isError.missingFirstname.value = true;
+        if (step.value === 1) --step.value;
+        break;
+      case "Email already used":
+        isError.alreadyUsedEmail.value = true;
+        if (step.value === 1) --step.value;
+        break;
+      default:
+        /* eslint-disable no-console */
+        console.error(json.message);
+        isError.internalServerError.value = true;
+    }
+
+    // Re-create Turnstile token.
+    token.value?.reset();
+  } else {
+    useCookie("session", {
+      maxAge: 1200000, // Around two weeks.
+      sameSite: "strict",
+      secure: true,
+    }).value = json.token;
+
+    useI18n().setLocale(json.user_settings.locale);
+
+    await navigateTo("/");
   }
 }
 </script>
@@ -92,7 +202,7 @@ async function signup(): Promise<void> {
         <!-- Generic errors. -->
         <label
           v-if="isError.invalidToken.value"
-          mb-34
+          mb-36
           absolute
           text-sm
           text-red-500
@@ -103,7 +213,7 @@ async function signup(): Promise<void> {
 
         <label
           v-if="isError.rateLimited.value"
-          mb-34
+          mb-36
           absolute
           text-sm
           text-red-500
@@ -114,7 +224,7 @@ async function signup(): Promise<void> {
 
         <label
           v-if="isError.internalServerError.value"
-          mb-34
+          mb-36
           absolute
           text-sm
           text-red-500
@@ -123,8 +233,92 @@ async function signup(): Promise<void> {
           {{ $t("Something went wrong") }}
         </label>
 
+        <!-- Firstname error. -->
+        <label
+          v-if="isError.missingFirstname.value"
+          mb-36
+          absolute
+          text-sm
+          text-red-500
+          w-64
+        >
+          {{ $t("At least add your first name here") }}
+        </label>
+
+        <!-- Email errors. -->
+        <label
+          v-if="isError.missingEmail.value"
+          mb-36
+          absolute
+          text-sm
+          text-red-500
+          w-64
+        >
+          {{ $t("You must enter an e-mail address!") }}
+        </label>
+
+        <label
+          v-if="isError.alreadyUsedEmail.value"
+          mb-36
+          absolute
+          text-sm
+          text-red-500
+          w-64
+        >
+          {{ $t("Email adress already used") }}
+        </label>
+
+        <!-- Password errors. -->
+        <label
+          v-if="isError.missingPassword.value"
+          mb-36
+          absolute
+          text-sm
+          text-red-500
+          w-64
+        >
+          {{ $t("A little one-time password wouldn't hurt") }}
+        </label>
+
+        <label
+          v-if="isError.invalidPassword.value"
+          mb-36
+          absolute
+          text-sm
+          text-red-500
+          w-64
+        >
+          {{
+            $t("Use 8 uppercase and lowercase letters with special characters")
+          }}
+        </label>
+
+        <!-- Vanity errors. -->
+        <label
+          v-if="isError.invalidVanity.value"
+          mb-36
+          absolute
+          text-sm
+          text-red-500
+          w-64
+        >
+          {{ $t("Your username is already in use") }}
+        </label>
+
+        <!-- Birthdate error. -->
+        <label
+          v-if="isError.tooYoung.value"
+          mb-36
+          absolute
+          text-sm
+          text-red-500
+          w-64
+        >
+          {{ $t("You must be at least 13 years old") }}
+        </label>
+
         <!-- 1-step account creation. -->
-        <div v-if="step === 0" flex-col container>
+        <div v-if="step === 0">
           <!-- Firstname and name inputs. -->
           <div flex space-x-2>
             <input
@@ -149,22 +343,24 @@ async function signup(): Promise<void> {
           </div>
 
           <!-- Email input. -->
-          <input
-            v-model="email"
-            input
-            mb-2
-            lg:mb-4
-            type="email"
-            :placeholder="$t('Email address')"
-          />
+          <div flex-col container>
+            <input
+              v-model="email"
+              input
+              mb-2
+              lg:mb-4
+              type="email"
+              :placeholder="$t('Email address')"
+            />
 
-          <!-- Password input. -->
-          <input
-            v-model="password"
-            input
-            type="password"
-            :placeholder="$t('Password')"
-          />
+            <!-- Password input. -->
+            <input
+              v-model="password"
+              input
+              type="password"
+              :placeholder="$t('Password')"
+            />
+          </div>
         </div>
 
         <!-- 2nd step account creation. -->
@@ -187,10 +383,10 @@ async function signup(): Promise<void> {
           <input
             v-model="phone"
             input
-            type="number"
+            type="tel"
             mb-2
             lg:mb-4
-            :placeholder="$t('Phone')"
+            :placeholder="$t('Phone (optional)')"
           />
 
           <input v-model="birthdate" input type="date" />
@@ -233,6 +429,7 @@ async function signup(): Promise<void> {
             font-medium
             btn-base
             type="button"
+            :disabled="isButtonDisable"
             @click="signup()"
           >
             {{ $t("Create an account") }}
