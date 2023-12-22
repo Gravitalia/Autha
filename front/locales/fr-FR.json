@@ -27,9 +27,13 @@
   "Use 8 uppercase and lowercase letters with special characters": "Utiliser 8 lettres majuscules et minuscules avec des caractères spéciaux",
   "Your username is already in use": "Votre nom d'utilisateur est déjà utilisé",
   "You must be at least 13 years old": "Vous devez avoir au moins 15 ans",
+  "You accept our": "Vous acceptez nos",
+  "and our": "et notre",
+  "ToS": "CGU",
+  "privacy policy": "politique de confidentialité",
 
   "About": "À propos",
-  "Security": "sécurité",
+  "Security": "Sécurité",
   "Data": "Données",
   "OAuth": "OAuth",
   "Logout": "Se déconnecter"
