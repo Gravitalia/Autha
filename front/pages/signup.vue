@@ -160,20 +160,7 @@ async function signup(): Promise<void> {
   <NuxtTurnstile v-model="token" />
 
   <!-- Blurry effect in background. -->
-  <div absolute flex justify-between w-98vw>
-    <div
-      rounded-full
-      w-48
-      h-48
-      xl:w-80
-      xl:h-80
-      blur-5xl
-      mt-80
-      xl:mt-30rem
-      bg-primary
-    ></div>
-    <div rounded-full w-48 h-48 xl:w-80 xl:h-80 blur-5xl bg-secondary></div>
-  </div>
+  <FontBubbles />
 
   <!-- Centered card containing inputs to connect. -->
   <div absolute w-96vw h-98vh container>
@@ -188,7 +175,7 @@ async function signup(): Promise<void> {
       lg:h-96
       shadow-lg
     >
-      <div mt-8 mb-4 flex-col container>
+      <div mt-6 mb-4 flex-col container>
         <NuxtImg
           alt="Gravitalia"
           src="/favicon.webp"
@@ -200,122 +187,59 @@ async function signup(): Promise<void> {
 
       <div flex-col container>
         <!-- Generic errors. -->
-        <label
-          v-if="isError.invalidToken.value"
+        <LabelError
           mb-36
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Invalid security token, try again in a few seconds.") }}
-        </label>
-
-        <label
-          v-if="isError.rateLimited.value"
+          text="Invalid security token, try again in a few seconds."
+          :cond="isError.invalidToken.value"
+        />
+        <LabelError
           mb-36
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("You're sending too many requests! Try again in 5 minutes.") }}
-        </label>
-
-        <label
-          v-if="isError.internalServerError.value"
-          mb-36
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Something went wrong") }}
-        </label>
+          text="You're sending too many requests! Try again in 5 minutes."
+          :cond="isError.rateLimited.value"
+        />
 
         <!-- Firstname error. -->
-        <label
-          v-if="isError.missingFirstname.value"
+        <LabelError
           mb-36
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("At least add your first name here") }}
-        </label>
+          text="At least add your first name here"
+          :cond="isError.missingFirstname.value"
+        />
 
         <!-- Email errors. -->
-        <label
-          v-if="isError.missingEmail.value"
+        <LabelError
           mb-36
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("You must enter an e-mail address!") }}
-        </label>
-
-        <label
-          v-if="isError.alreadyUsedEmail.value"
+          text="You must enter an e-mail address!"
+          :cond="isError.missingEmail.value"
+        />
+        <LabelError
           mb-36
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Email adress already used") }}
-        </label>
+          text="Email adress already used"
+          :cond="isError.alreadyUsedEmail.value"
+        />
 
         <!-- Password errors. -->
-        <label
-          v-if="isError.missingPassword.value"
+        <LabelError
           mb-36
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("A little one-time password wouldn't hurt") }}
-        </label>
-
-        <label
-          v-if="isError.invalidPassword.value"
+          text="A little one-time password wouldn't hurt"
+          :cond="isError.missingPassword.value"
+        />
+        <LabelError
           mb-36
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{
-            $t("Use 8 uppercase and lowercase letters with special characters")
-          }}
-        </label>
+          text="Use 8 uppercase and lowercase letters with special characters"
+          :cond="isError.invalidPassword.value"
+        />
 
         <!-- Vanity errors. -->
-        <label
-          v-if="isError.invalidVanity.value"
+        <LabelError
           mb-36
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Your username is already in use") }}
-        </label>
-
-        <!-- Birthdate error. -->
-        <label
-          v-if="isError.tooYoung.value"
+          text="Your username is already in use"
+          :cond="isError.invalidVanity.value"
+        />
+        <LabelError
           mb-36
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("You must be at least 13 years old") }}
-        </label>
+          text="You must be at least 13 years old"
+          :cond="isError.tooYoung.value"
+        />
 
         <!-- 1-step account creation. -->
         <div v-if="step === 0">
@@ -390,12 +314,25 @@ async function signup(): Promise<void> {
           />
 
           <input v-model="birthdate" input type="date" />
+
+          <!-- Terms of Service and Privacy Policy acceptance. -->
+          <p w-64 mt-44 text-xs absolute>
+            {{ $t("You accept our") }}
+            <NuxtLink to="/terms" text-blue-500 hover:text-blue-700>{{
+              $t("ToS")
+            }}</NuxtLink>
+            {{ $t("and our") }}
+            <NuxtLink to="/privacy" text-blue-500 hover:text-blue-700>{{
+              $t("privacy policy")
+            }}</NuxtLink
+            >.
+          </p>
         </div>
       </div>
 
       <!-- Links and buttons. -->
       <div flex container>
-        <div flex justify-between w-16.5rem mt-8>
+        <div flex justify-between w-16.5rem mt-10>
           <!-- Buttons on the left. -->
           <NuxtLink v-if="step === 0" to="/signin" btn-invisible no-underline>{{
             $t("Sign in")
