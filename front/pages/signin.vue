@@ -106,20 +106,7 @@ async function signin(): Promise<void> {
   <NuxtTurnstile v-model="token" />
 
   <!-- Blurry effect in background. -->
-  <div absolute flex justify-between w-98vw>
-    <div
-      rounded-full
-      w-48
-      h-48
-      xl:w-80
-      xl:h-80
-      blur-5xl
-      mt-80
-      xl:mt-30rem
-      bg-primary
-    ></div>
-    <div rounded-full w-48 h-48 xl:w-80 xl:h-80 blur-5xl bg-secondary></div>
-  </div>
+  <FontBubbles />
 
   <!-- Centered card containing inputs to connect. -->
   <div absolute w-96vw h-98vh container>
@@ -146,61 +133,33 @@ async function signin(): Promise<void> {
 
       <div flex-col container>
         <!-- Generic errors. -->
-        <label
-          v-if="isError.invalidToken.value"
+        <LabelError
           mb-34
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Invalid security token, try again in a few seconds.") }}
-        </label>
-
-        <label
-          v-if="isError.rateLimited.value"
+          text="Invalid security token, try again in a few seconds."
+          :cond="isError.invalidToken.value"
+        />
+        <LabelError
           mb-34
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("You're sending too many requests! Try again in 5 minutes.") }}
-        </label>
-
-        <label
-          v-if="isError.internalServerError.value"
+          text="You're sending too many requests! Try again in 5 minutes."
+          :cond="isError.rateLimited.value"
+        />
+        <LabelError
           mb-34
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Something went wrong") }}
-        </label>
+          text="Something went wrong"
+          :cond="isError.internalServerError.value"
+        />
 
         <!-- Email input. -->
-        <label
-          v-if="isError.missingEmail.value"
+        <LabelError
           mb-28
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Write something...") }}
-        </label>
-
-        <label
-          v-if="isError.invalidEmail.value"
+          text="Write something..."
+          :cond="isError.missingEmail.value"
+        />
+        <LabelError
           mb-28
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Invalid email address") }}
-        </label>
+          text="Invalid email address"
+          :cond="isError.invalidEmail.value"
+        />
 
         <input
           v-model="email"
@@ -217,27 +176,16 @@ async function signin(): Promise<void> {
         />
 
         <!-- Password input. -->
-        <label
-          v-if="isError.missingPassword.value"
+        <LabelError
           mt-4
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Write down your secret word 🤫") }}
-        </label>
-
-        <label
-          v-if="isError.invalidPassword.value"
+          text="Write down your secret word 🤫"
+          :cond="isError.missingPassword.value"
+        />
+        <LabelError
           mt-4
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Invalid password") }}
-        </label>
+          text="Invalid password"
+          :cond="isError.invalidPassword.value"
+        />
 
         <input
           v-model="password"

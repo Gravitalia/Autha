@@ -7,6 +7,7 @@ const EMPTY_USER: User = {
   bio: null,
   email: "",
   verified: false,
+  deleted: false,
   flags: 0,
 };
 
@@ -16,17 +17,19 @@ export const useUser = defineStore("user", {
   actions: {
     /**
      * Get user with its session token.
+     * @param forceFetching fetch for user even if cached.
+     * @returns {Promise<void>}
      */
     async fetchUser(forceFetching: boolean = false): Promise<void> {
-      // Get session
+      // Get session cookie.
       const session: string = useCookie("session").value || "";
       if (!forceFetching && (session === "" || this.vanity !== "")) return;
 
-      // Set header
+      // Set header with session cookie.
       const headers = new Headers();
       headers.append("Authorization", session);
 
-      // Set user in data
+      // Set user in data.
       this.$patch(
         (await fetch(
           `${
@@ -41,6 +44,7 @@ export const useUser = defineStore("user", {
 
     /**
      * Logout user by removing cookie and set it to null.
+     * @returns void
      */
     logout(): void {
       useCookie("session").value = null;
