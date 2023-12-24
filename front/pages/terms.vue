@@ -17,7 +17,7 @@ useHead({
         <b>{{ $t("Effective date:") }}</b> 01/04/2023
       </p>
 
-      <p py-2 space-x-4>
+      <p py-2 space-y-4>
         {{
           $t(
             "Welcome on Gravitalia! These terms and conditions govern the use of the services offered, including the programming interfaces (APIs) and the legal obligations of both parties.",
