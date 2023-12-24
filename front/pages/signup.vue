@@ -318,13 +318,20 @@ async function signup(): Promise<void> {
           <!-- Terms of Service and Privacy Policy acceptance. -->
           <p w-64 mt-44 text-xs absolute>
             {{ $t("You accept our") }}
-            <NuxtLink to="/terms" text-blue-500 hover:text-blue-700>{{
-              $t("ToS")
-            }}</NuxtLink>
+            <NuxtLink
+              to="/terms"
+              target="_blank"
+              text-blue-500
+              hover:text-blue-700
+              >{{ $t("ToS") }}</NuxtLink
+            >
             {{ $t("and our") }}
-            <NuxtLink to="/privacy" text-blue-500 hover:text-blue-700>{{
-              $t("privacy policy")
-            }}</NuxtLink
+            <NuxtLink
+              to="/privacy"
+              target="_blank"
+              text-blue-500
+              hover:text-blue-700
+              >{{ $t("privacy policy") }}</NuxtLink
             >.
           </p>
         </div>
