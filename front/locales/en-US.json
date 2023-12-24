@@ -1,36 +1,40 @@
 {
-  "Page not found": "Page not found",
-  "Something went wrong": "Something went wrong",
-  "Return home": "Return home",
+  "page_not_found": "Page not found",
+  "something_went_wrong": "Something went wrong",
+  "return_home": "Return home",
 
-  "Sign in": "Sign in",
-  "Invalid security token, try again in a few seconds.": "Invalid security token, try again in a few seconds.",
-  "You're sending too many requests! Try again in 5 minutes.": "You're sending too many requests! Try again in 5 minutes.",
-  "Write something...": "Write something...",
-  "Invalid email address": "Invalid email address",
-  "Email address": "Email address",
-  "Write down your secret word 🤫": "Write down your secret word 🤫",
-  "Invalid password": "Invalid password",
-  "Password": "Password",
-  "Create an account": "Create an account",
+  "sign_in": "Sign in",
 
-  "Next": "Next",
-  "Previous": "Previous",
-  "Firstname": "Firstname",
-  "Lastname": "Lastname",
-  "Username": "Username",
-  "Phone (optional)": "Phone (optional)",
-  "At least add your first name here": "At least add your first name here",
-  "You must enter an e-mail address!": "You must enter an e-mail address!",
-  "A little one-time password wouldn't hurt": "A little one-time password wouldn't hurt",
-  "Email adress already used": "Email adress already used",
-  "Use 8 uppercase and lowercase letters with special characters": "Use 8 uppercase and lowercase letters with special characters",
-  "Your username is already in use": "Your username is already in use",
-  "You must be at least 13 years old": "You must be at least 13 years old",
-  "You accept our": "You accept our",
-  "and our": "and our",
-  "ToS": "ToS",
-  "privacy policy": "privacy policy",
+  "error": {
+    "security_token": "Invalid security token, try again in a few seconds.",
+    "rate_limit": "You're sending too many requests! Try again in 5 minutes.",
+    "write_something": "Write something...",
+    "missing_password": "Write down your secret word 🤫",
+    "invalid_email": "Invalid email address",
+    "invalid_password": "Invalid password",
+    "password_advices": "Use 8 uppercase and lowercase letters with special characters",
+    "missing_firstname": "At least add your first name here",
+    "missing_email": "You must enter an e-mail address!",
+    "missing_password_sign_up": "A little one-time password wouldn't hurt",
+    "vanity_used": "Your username is already in use",
+    "email_used": "Email adress already used",
+    "too_young": "You must be at least 13 years old"
+  },
+
+  "email": "Email address",
+  "password": "Password",
+  "create_account": "Create an account",
+
+  "next": "Next",
+  "previous": "Previous",
+  "firstname": "Firstname",
+  "lastname": "Lastname",
+  "username": "Username",
+  "phone": "Phone (optional)",
+  "accept_our": "You accept our",
+  "and_our": "and our",
+  "tos": "ToS",
+  "privacy_policy": "privacy policy",
 
   "About": "About",
   "Security": "Security",
@@ -77,15 +81,14 @@
 
   "In case of refusal to comply with these rules, sanctions may be applied against you such as the suspension of your application, your User account or even recourse to the competent courts.": "In case of refusal to comply with these rules, sanctions may be applied against you such as the suspension of your application, your User account or even recourse to the competent courts.",
 
-  "To enjoy the Services continuously, without interruption or blocking, you may need to have an account. The security of this account is your responsibility, you must provide a strong password, check if your information has been compromised, etc. In case of loss, theft or damage related to your account, we cannot be held responsible." : "To enjoy the Services continuously, without interruption or blocking, you may need to have an account. The security of this account is your responsibility, you must provide a strong password, check if your information has been compromised, etc. In case of loss, theft or damage related to your account, we cannot be held responsible.",
+  "To enjoy the Services continuously, without interruption or blocking, you may need to have an account. The security of this account is your responsibility, you must provide a strong password, check if your information has been compromised, etc. In case of loss, theft or damage related to your account, we cannot be held responsible.": "To enjoy the Services continuously, without interruption or blocking, you may need to have an account. The security of this account is your responsibility, you must provide a strong password, check if your information has been compromised, etc. In case of loss, theft or damage related to your account, we cannot be held responsible.",
   "In addition, you may be asked for contact information (phone number, e-mail address), information aimed at authentication (password) or identification (username); for more information, visit the privacy page.": "In addition, you may be asked for contact information (phone number, e-mail address), information aimed at authentication (password) or identification (username); for more information, visit the privacy page.",
   "You are responsible for keeping your contact details up to date (e-mail address, for example), in the event of an impossibility to reach you, we will assume that all information has indeed been sent; we also assume that the communications made from your account or the contact details thereof have been made by you.": "You are responsible for keeping your contact details up to date (e-mail address, for example), in the event of an impossibility to reach you, we will assume that all information has indeed been sent; we also assume that the communications made from your account or the contact details thereof have been made by you.",
 
-  "Some of our Services give you the possibility to publish content (in written, videographic, photographic or other form), as long as you send this content, you give us full rights to distribute, store, copy and communicate it. In addition, you represent and warrant to us that you have full rights to this work. This license is applicable worldwide, non-exclusive, free of charge and perpetual." : "Some of our Services give you the possibility to publish content (in written, videographic, photographic or other form), as long as you send this content, you give us full rights to distribute, store, copy and communicate it. In addition, you represent and warrant to us that you have full rights to this work. This license is applicable worldwide, non-exclusive, free of charge and perpetual.",
+  "Some of our Services give you the possibility to publish content (in written, videographic, photographic or other form), as long as you send this content, you give us full rights to distribute, store, copy and communicate it. In addition, you represent and warrant to us that you have full rights to this work. This license is applicable worldwide, non-exclusive, free of charge and perpetual.": "Some of our Services give you the possibility to publish content (in written, videographic, photographic or other form), as long as you send this content, you give us full rights to distribute, store, copy and communicate it. In addition, you represent and warrant to us that you have full rights to this work. This license is applicable worldwide, non-exclusive, free of charge and perpetual.",
   "<i>Ad nutum</i>, we reserve the right to temporarily or permanently delete or block your content, if it is contrary to our principles (cf. What we expect from you). When content is blocked, an email will normally be sent to the author, and the author may request a revised procedure by emailing.": "<i>Ad nutum</i>, we reserve the right to temporarily or permanently delete or block your content, if it is contrary to our principles (cf. What we expect from you). When content is blocked, an email will normally be sent to the author, and the author may request a revised procedure by emailing.",
 
   "We may allow our content to be used on third party platforms but we retain all intellectual property rights. You are not permitted to obscure or alter any logos or trademarks.": "We may allow our content to be used on third party platforms but we retain all intellectual property rights. You are not permitted to obscure or alter any logos or trademarks.",
-
 
   "We may make content available that we do not own through multiple Services. We cannot delegate the use of content. The content is not altered and may not reflect the opinion of Gravitalia.": "We may make content available that we do not own through multiple Services. We cannot delegate the use of content. The content is not altered and may not reflect the opinion of Gravitalia.",
 
@@ -211,7 +214,7 @@
 
   "Access right": "Access right",
   "which allows you to download the data collected about you. Please note that the information: banking, password and e-mail address are not provided when downloading the data.": "which allows you to download the data collected about you. Please note that the information: banking, password and e-mail address are not provided when downloading the data.",
-  
+
   "Right to erasure": "Right to erasure",
   "which gives you the possibility to delete your account globally or individually. When this right is applied, your account is deleted within 1 month (recoverable account), except for accounts linked to each Service which is deleted instantly, then the personal data (username, password, IP address... ) excluding email address and \"vanity\".": "which gives you the possibility to delete your account globally or individually. When this right is applied, your account is deleted within 1 month (recoverable account), except for accounts linked to each Service which is deleted instantly, then the personal data (username, password, IP address... ) excluding email address and \"vanity\".",
 

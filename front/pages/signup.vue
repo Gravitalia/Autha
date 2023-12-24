@@ -182,33 +182,33 @@ async function signup(): Promise<void> {
           width="40"
           draggable="false"
         />
-        <h3 font-semibold>{{ $t("Create an account") }}</h3>
+        <h3 font-semibold>{{ $t("create_account") }}</h3>
       </div>
 
       <div flex-col container>
         <!-- Generic errors. -->
         <LabelError
           mb-36
-          text="Invalid security token, try again in a few seconds."
+          text="error.security_token"
           :cond="isError.invalidToken.value"
         />
         <LabelError
           mb-36
-          text="You're sending too many requests! Try again in 5 minutes."
+          text="error.rate_limit"
           :cond="isError.rateLimited.value"
         />
 
         <!-- Firstname error. -->
         <LabelError
           mb-36
-          text="At least add your first name here"
+          text="error.missing_firstname"
           :cond="isError.missingFirstname.value"
         />
 
         <!-- Email errors. -->
         <LabelError
           mb-36
-          text="You must enter an e-mail address!"
+          text="error.missing_email"
           :cond="isError.missingEmail.value"
         />
         <LabelError
@@ -220,24 +220,24 @@ async function signup(): Promise<void> {
         <!-- Password errors. -->
         <LabelError
           mb-36
-          text="A little one-time password wouldn't hurt"
+          text="error.missing_password_sign_up"
           :cond="isError.missingPassword.value"
         />
         <LabelError
           mb-36
-          text="Use 8 uppercase and lowercase letters with special characters"
+          text="error.password_advices"
           :cond="isError.invalidPassword.value"
         />
 
         <!-- Vanity errors. -->
         <LabelError
           mb-36
-          text="Your username is already in use"
+          text="error.vanity_used"
           :cond="isError.invalidVanity.value"
         />
         <LabelError
           mb-36
-          text="You must be at least 13 years old"
+          text="error.too_young"
           :cond="isError.tooYoung.value"
         />
 
@@ -253,7 +253,7 @@ async function signup(): Promise<void> {
               w-7.65rem
               type="text"
               maxlength="10"
-              :placeholder="$t('Firstname')"
+              :placeholder="$t('firstname')"
             />
 
             <input
@@ -262,7 +262,7 @@ async function signup(): Promise<void> {
               w-7.65rem
               type="text"
               maxlength="15"
-              :placeholder="$t('Lastname')"
+              :placeholder="$t('lastname')"
             />
           </div>
 
@@ -274,7 +274,7 @@ async function signup(): Promise<void> {
               mb-2
               lg:mb-4
               type="email"
-              :placeholder="$t('Email address')"
+              :placeholder="$t('email')"
             />
 
             <!-- Password input. -->
@@ -282,7 +282,7 @@ async function signup(): Promise<void> {
               v-model="password"
               input
               type="password"
-              :placeholder="$t('Password')"
+              :placeholder="$t('password')"
             />
           </div>
         </div>
@@ -300,7 +300,7 @@ async function signup(): Promise<void> {
               type="text"
               maxlength="15"
               minlength="2"
-              :placeholder="$t('Username').toLowerCase()"
+              :placeholder="$t('username').toLowerCase()"
             />
           </div>
 
@@ -310,28 +310,28 @@ async function signup(): Promise<void> {
             type="tel"
             mb-2
             lg:mb-4
-            :placeholder="$t('Phone (optional)')"
+            :placeholder="$t('phone')"
           />
 
           <input v-model="birthdate" input type="date" />
 
           <!-- Terms of Service and Privacy Policy acceptance. -->
           <p w-64 mt-44 text-xs absolute>
-            {{ $t("You accept our") }}
+            {{ $t("accept_our") }}
             <NuxtLink
               to="/terms"
               target="_blank"
               text-blue-500
               hover:text-blue-700
-              >{{ $t("ToS") }}</NuxtLink
+              >{{ $t("tos") }}</NuxtLink
             >
-            {{ $t("and our") }}
+            {{ $t("and_our") }}
             <NuxtLink
               to="/privacy"
               target="_blank"
               text-blue-500
               hover:text-blue-700
-              >{{ $t("privacy policy") }}</NuxtLink
+              >{{ $t("privacy_policy") }}</NuxtLink
             >.
           </p>
         </div>
@@ -342,7 +342,7 @@ async function signup(): Promise<void> {
         <div flex justify-between w-16.5rem mt-10>
           <!-- Buttons on the left. -->
           <NuxtLink v-if="step === 0" to="/signin" btn-invisible no-underline>{{
-            $t("Sign in")
+            $t("sign_in")
           }}</NuxtLink>
           <button
             v-else
@@ -353,7 +353,7 @@ async function signup(): Promise<void> {
             type="button"
             @click="--step"
           >
-            {{ $t("Previous") }}
+            {{ $t("previous") }}
           </button>
 
           <!-- Buttons on the right. -->
@@ -365,7 +365,7 @@ async function signup(): Promise<void> {
             type="button"
             @click="next()"
           >
-            {{ $t("Next") }}
+            {{ $t("next") }}
           </button>
           <button
             v-else
@@ -376,7 +376,7 @@ async function signup(): Promise<void> {
             :disabled="isButtonDisable"
             @click="signup()"
           >
-            {{ $t("Create an account") }}
+            {{ $t("create_account") }}
           </button>
         </div>
       </div>
