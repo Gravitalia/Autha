@@ -115,7 +115,7 @@ useHead({
             <div mt-3>
                 <p text-sm>{{ $t("This section may not apply in certain countries or regions such as the EEA.") }}</p>
                 <p>{{ $t("This contract is subject to French law.") }}</p>
-                <p>{{ $t("Translations are given for information purposes only, in the event of a dispute, only the French version of the contracts (General Conditions of Use and Privacy Policy for example) may be used and only the <b>French</b> courts may be seized to settle this dispute.") }}</p>
+                <p>{{ $t("Translations are given for information purposes only, in the event of a dispute, only the French version of the contracts (General Conditions of Use and Privacy Policy for example) may be used and only the French courts may be seized to settle this dispute.") }}</p>
                 <p>{{ $t("Gravitalia cannot be held responsible for the information present on its site; the information disseminated is purely informative and is not intended to have true values.") }}</p>
                 <p>{{ $t("Gravitalia cannot be held responsible for files downloaded by the User. This includes viruses or other computer/server infecting software.") }}</p>
                 <p>{{ $t("Gravitalia cannot guarantee the integrity of the data and will not be liable for any incidental, special, exemplary or consequential damages, loss of profits, revenue, savings, business opportunities or customers, directly or indirectly.") }}</p>
