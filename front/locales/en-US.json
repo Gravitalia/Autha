@@ -36,5 +36,211 @@
   "Security": "Security",
   "Data": "Data",
   "OAuth": "OAuth",
-  "Logout": "Logout"
+  "Logout": "Logout",
+
+  "Terms of Service": "Terms of Use",
+  "Effective date:": "Effective date:",
+  "Welcome on Gravitalia! These terms and conditions govern the use of the services offered, including the programming interfaces (APIs) and the legal obligations of both parties.": "Welcome on Gravitalia! These terms and conditions govern the use of the services offered, including the programming interfaces (APIs) and the legal obligations of both parties.",
+  "Gravitalia offers places to share, to connect but also digital or physical tools to improve privacy.": "Gravitalia offers places to share, to connect but also digital or physical tools to improve privacy.",
+
+  "The use of the terms \"we\", \"us\", \"our\" or \"Gravitalia\" refers to the Gravitalia entity, its subsidiaries and other companies.": "The use of the terms \"we\", \"us\", \"our\" or \"Gravitalia\" refers to the Gravitalia entity, its subsidiaries and other companies.",
+  "The use of the terms \"User\", \"you\", \"your\" refers to you, as an individual or entity, while the use of the term \"Users\" refers to all registrants (including you, if applicable).": "The use of the terms \"User\", \"you\", \"your\" refers to you, as an individual or entity, while the use of the term \"Users\" refers to all registrants (including you, if applicable).",
+  "The use of the term \"Service\" (including \"Services\") refers both to Gravitalia's websites and products, and to the websites, products, and Services of its subsidiaries.": "The use of the term \"Service\" (including \"Services\") refers both to Gravitalia's websites and products, and to the websites, products, and Services of its subsidiaries.",
+
+  "The host of Gravitalia is Contabo at Aschauer Str. 32a, 81549 Munich, Germany.": "The host of Gravitalia is Contabo at Aschauer Str. 32a, 81549 Munich, Germany.",
+  "The content and site host is Cloudflare located at 101 Townsend St, San Francisco, CA 94107, USA.": "The content and site host is Cloudflare located at 101 Townsend St, San Francisco, CA 94107, USA.",
+
+  "tos_us": "In the European Economic Area (<b>EEA</b>), where the registered office is located, this contract is made with:<br />Gravitalia SAS, operating under the laws of France, can be reached at the address X.<br /><span class=\"text-sm\">In case of written contact by e-mail, the response time, even for legal questions, may exceed 1 month.</span>",
+
+  "The Services offered are only available to Users who have approved and signed this contract binding you to Gravitalia; if you do not wish to accept this contract, it is imperative that you request the deletion of account (or that you do not create an account) via the Service provided for this purpose. In any case, the use of our Services must be done in compliance with the laws of your country: you must be 13 years old (or meet the digital majority in force in your country). In the event that you use the Services to represent a state, corporation or other legal entity, you represent that you have the rights and are in agreement with this Agreement.": "The Services offered are only available to Users who have approved and signed this contract binding you to Gravitalia; if you do not wish to accept this contract, it is imperative that you request the deletion of account (or that you do not create an account) via the Service provided for this purpose. In any case, the use of our Services must be done in compliance with the laws of your country: you must be 13 years old (or meet the digital majority in force in your country). In the event that you use the Services to represent a state, corporation or other legal entity, you represent that you have the rights and are in agreement with this Agreement.",
+  "In the event that the User's age is below the numerical age of majority in his/her country (see above for details), the consent of his/her parents (as to the creation of the account and approval of this policy) or legal guardian is required.": "In the event that the User's age is below the numerical age of majority in his/her country (see above for details), the consent of his/her parents (as to the creation of the account and approval of this policy) or legal guardian is required.",
+
+  "We set up multiple Services (websites, social networks, applications...) to satisfy you at best, while improving them, and try to develop new ones. Despite our efforts to avoid breakdowns (of Services, supplies...), we are likely, like any company, not to guarantee a Service without disruptions or even a total integrity of the data; we cannot be held responsible for these problems.": "We set up multiple Services (websites, social networks, applications...) to satisfy you at best, while improving them, and try to develop new ones. Despite our efforts to avoid breakdowns (of Services, supplies...), we are likely, like any company, not to guarantee a Service without disruptions or even a total integrity of the data; we cannot be held responsible for these problems.",
+
+  "We want coexistence between our Users, without vituperation, with respect for others. To do this, you can follow the following principles:": "We want coexistence between our Users, without vituperation, with respect for others. To do this, you can follow the following principles:",
+  "- Comply with the laws in force in your country;": "- Comply with the laws in force in your country;",
+  "- Respect the intellectual property and integrity of authors and persons;": "- Respect the intellectual property and integrity of authors and persons;",
+  "- Do not not attempt to interfere with the proper functioning of the Service;": "- Do not not attempt to interfere with the proper functioning of the Service;",
+  "- Not to defame, insult, defraud, harass or impersonate others;": "- Not to defame, insult, defraud, harass or impersonate others;",
+  "- Not to post content likely to damage the image of those present;": "- Not to post content likely to damage the image of those present;",
+  "- Do not post content disclosing sensitive information (health, etc.) about a person;": "- Do not post content disclosing sensitive information (health, etc.) about a person;",
+  "- Do not post racist, sexist, homophobic or xenophobic content;": "- Do not post racist, sexist, homophobic or xenophobic content;",
+  "Gravitalia reserves the right to anathematize* any User who has not complied with the above rules.": "Gravitalia reserves the right to anathematize* any User who has not complied with the above rules.",
+
+  "Of course, we welcome all developers who want to enrich the experience of our Users on our Services!": "Of course, we welcome all developers who want to enrich the experience of our Users on our Services!",
+  "To perfect your ideas and to guarantee the security of our Users' data (even public), it is important to read these rules.": "To perfect your ideas and to guarantee the security of our Users' data (even public), it is important to read these rules.",
+
+  "You shall not attempt to: (a) perform analysis for the purpose of tracking and/or profiting from and commercially exploiting such data, (b) attempt to reverse engineer to derive private (non-<b>FOSS</b>) source code, know-how or trade secrets, (c) reproduce, redistribute, rent or sell access to the API, (d) access prohibited endpoints (oauth.gravitalia.com).": "You shall not attempt to: (a) perform analysis for the purpose of tracking and/or profiting from and commercially exploiting such data, (b) attempt to reverse engineer to derive private (non-<b>FOSS</b>) source code, know-how or trade secrets, (c) reproduce, redistribute, rent or sell access to the API, (d) access prohibited endpoints (oauth.gravitalia.com).",
+
+  "In order to improve privacy, we expressly request the encryption of confidential data (email address, phone number...) when shared WITH EXPRESS USER AGREEMENT or even in cases where this data does not serve an explicit reading frame, the hashing of it.": "In order to improve privacy, we expressly request the encryption of confidential data (email address, phone number...) when shared WITH EXPRESS USER AGREEMENT or even in cases where this data does not serve an explicit reading frame, the hashing of it.",
+  "In addition, we recommend that you comply with GDPR, CCPA/CCRA and LGPD. In the case of large applications or heavy usage, you will be required to provide a privacy policy, but also, and not limited to, proof of compliance, a comprehensive list of saved data, and proof of identity.": "In addition, we recommend that you comply with GDPR, CCPA/CCRA and LGPD. In the case of large applications or heavy usage, you will be required to provide a privacy policy, but also, and not limited to, proof of compliance, a comprehensive list of saved data, and proof of identity.",
+
+  "In case of refusal to comply with these rules, sanctions may be applied against you such as the suspension of your application, your User account or even recourse to the competent courts.": "In case of refusal to comply with these rules, sanctions may be applied against you such as the suspension of your application, your User account or even recourse to the competent courts.",
+
+  "To enjoy the Services continuously, without interruption or blocking, you may need to have an account. The security of this account is your responsibility, you must provide a strong password, check if your information has been compromised, etc. In case of loss, theft or damage related to your account, we cannot be held responsible." : "To enjoy the Services continuously, without interruption or blocking, you may need to have an account. The security of this account is your responsibility, you must provide a strong password, check if your information has been compromised, etc. In case of loss, theft or damage related to your account, we cannot be held responsible.",
+  "In addition, you may be asked for contact information (phone number, e-mail address), information aimed at authentication (password) or identification (username); for more information, visit the privacy page.": "In addition, you may be asked for contact information (phone number, e-mail address), information aimed at authentication (password) or identification (username); for more information, visit the privacy page.",
+  "You are responsible for keeping your contact details up to date (e-mail address, for example), in the event of an impossibility to reach you, we will assume that all information has indeed been sent; we also assume that the communications made from your account or the contact details thereof have been made by you.": "You are responsible for keeping your contact details up to date (e-mail address, for example), in the event of an impossibility to reach you, we will assume that all information has indeed been sent; we also assume that the communications made from your account or the contact details thereof have been made by you.",
+
+  "Some of our Services give you the possibility to publish content (in written, videographic, photographic or other form), as long as you send this content, you give us full rights to distribute, store, copy and communicate it. In addition, you represent and warrant to us that you have full rights to this work. This license is applicable worldwide, non-exclusive, free of charge and perpetual." : "Some of our Services give you the possibility to publish content (in written, videographic, photographic or other form), as long as you send this content, you give us full rights to distribute, store, copy and communicate it. In addition, you represent and warrant to us that you have full rights to this work. This license is applicable worldwide, non-exclusive, free of charge and perpetual.",
+  "<i>Ad nutum</i>, we reserve the right to temporarily or permanently delete or block your content, if it is contrary to our principles (cf. What we expect from you). When content is blocked, an email will normally be sent to the author, and the author may request a revised procedure by emailing.": "<i>Ad nutum</i>, we reserve the right to temporarily or permanently delete or block your content, if it is contrary to our principles (cf. What we expect from you). When content is blocked, an email will normally be sent to the author, and the author may request a revised procedure by emailing.",
+
+  "We may allow our content to be used on third party platforms but we retain all intellectual property rights. You are not permitted to obscure or alter any logos or trademarks.": "We may allow our content to be used on third party platforms but we retain all intellectual property rights. You are not permitted to obscure or alter any logos or trademarks.",
+
+
+  "We may make content available that we do not own through multiple Services. We cannot delegate the use of content. The content is not altered and may not reflect the opinion of Gravitalia.": "We may make content available that we do not own through multiple Services. We cannot delegate the use of content. The content is not altered and may not reflect the opinion of Gravitalia.",
+
+  "By your will:": "By your will:",
+  "By Gravitalia:": "By Gravitalia:",
+  "you are free to stop using the Services provided at any time without reason. You may delete your account, which will anonymize the data in your account (see Privacy Policy) or deactivate your account, if you are offered the option, which will suspend all processing of your personal information; such deactivation does not result in termination of this Agreement.": "you are free to stop using the Services provided at any time without reason. You may delete your account, which will anonymize the data in your account (see Privacy Policy) or deactivate your account, if you are offered the option, which will suspend all processing of your personal information; such deactivation does not result in termination of this Agreement.",
+  "we reserve the right to suspend* your account or access (to a Service, site, software...) with or without notice if we believe that your account, or content is in violation of our principles.": "we reserve the right to suspend* your account or access (to a Service, site, software...) with or without notice if we believe that your account, or content is in violation of our principles.",
+
+  "The Services are provided “as is”. If you reside outside of the EEA or the UK, you agree that access to the Services is at your own risk.": "The Services are provided “as is”. If you reside outside of the EEA or the UK, you agree that access to the Services is at your own risk.",
+  "WE (COMPANY, AFFILIATES) DISCLAIM, TO THE FULLEST EXTENT PERMITTED BY LAW, ANY EXPRESS OR IMPLIED WARRANTY OF MERCHANTABILITY. THE SERVICES ARE PROVIDED “AS IS”.": "WE (COMPANY, AFFILIATES) DISCLAIM, TO THE FULLEST EXTENT PERMITTED BY LAW, ANY EXPRESS OR IMPLIED WARRANTY OF MERCHANTABILITY. THE SERVICES ARE PROVIDED “AS IS”.",
+  "We disclaim all responsibility and liability for the availability, security and reliability of the Services.": "We disclaim all responsibility and liability for the availability, security and reliability of the Services.",
+
+  "This section may not apply in certain countries or regions such as the EEA.": "This section may not apply in certain countries or regions such as the EEA.",
+  "This contract is subject to French law.": "This contract is subject to French law.",
+  "Translations are given for information purposes only, in the event of a dispute, only the French version of the contracts (General Conditions of Use and Privacy Policy for example) may be used and only the <b>French</b> courts may be seized to settle this dispute.": "Translations are given for information purposes only, in the event of a dispute, only the French version of the contracts (General Conditions of Use and Privacy Policy for example) may be used and only the <b>French</b> courts may be seized to settle this dispute.",
+  "Gravitalia cannot be held responsible for the information present on its site; the information disseminated is purely informative and is not intended to have true values.": "Gravitalia cannot be held responsible for the information present on its site; the information disseminated is purely informative and is not intended to have true values.",
+  "Gravitalia cannot be held responsible for files downloaded by the User. This includes viruses or other computer/server infecting software.": "Gravitalia cannot be held responsible for files downloaded by the User. This includes viruses or other computer/server infecting software.",
+  "Gravitalia cannot guarantee the integrity of the data and will not be liable for any incidental, special, exemplary or consequential damages, loss of profits, revenue, savings, business opportunities or customers, directly or indirectly.": "Gravitalia cannot guarantee the integrity of the data and will not be liable for any incidental, special, exemplary or consequential damages, loss of profits, revenue, savings, business opportunities or customers, directly or indirectly.",
+  "WE CANNOT BE HELD RESPONSIBLE FOR THE CONTENT AND CONDUCT OF USERS OF OUR SERVICES AND THIS OF WAY ONLINE OR OFFLINE.": "WE CANNOT BE HELD RESPONSIBLE FOR THE CONTENT AND CONDUCT OF USERS OF OUR SERVICES AND THIS OF WAY ONLINE OR OFFLINE.",
+  "IN THE EVENT OF A DISPUTE, AN AMICABLE AGREEMENT SHOULD BE UNDERTAKEN PRIOR TO ANY COMPLAINT.": "IN THE EVENT OF A DISPUTE, AN AMICABLE AGREEMENT SHOULD BE UNDERTAKEN PRIOR TO ANY COMPLAINT.",
+
+  "* The anathema employed will be, for example, an indexing on a private account suspension registry.": "* The anathema employed will be, for example, an indexing on a private account suspension registry.",
+  "* The suspension will directly lead to the data anonymization process.": "* The suspension will directly lead to the data anonymization process.",
+
+  "Definitions": "Definitions",
+  "Legal notice": "Legal notice",
+  "Who are we": "Who are we",
+  "Use of our Services": "Use of our Services",
+  "What you can expect from us": "What you can expect from us",
+  "What we expect from you": "What we expect from you",
+  "Conditions of access to the API": "Conditions of access to the API",
+  "a. Introduction": "a. Introduction",
+  "b. Restrictions": "b. Restrictions",
+  "c. Respect for data": "c. Respect for data",
+  "d. Sanctions": "d. Sanctions",
+  "Your account": "Your account",
+  "Our content": "Our content",
+  "Other content": "Other content",
+  "Cancellation": "Cancellation",
+  "Services provided": "Services provided \"AS IS\"",
+  "Limitations and responsibilities": "Limitations and responsibilities",
+  "Your content": "Your content",
+
+  "Privacy Policy": "Privacy Policy",
+  "Welcome to Gravitalia! Before creating an account, it may be interesting to read and know how your data is used and processed.": "Welcome to Gravitalia! Before creating an account, it may be interesting to read and know how your data is used and processed.",
+  "With us, we strive to guarantee: security, reliability and above all respect for private life! We do not resell anything and we do not use any data collected for advertising purposes!": "With us, we strive to guarantee: security, reliability and above all respect for private life! We do not resell anything and we do not use any data collected for advertising purposes!",
+  "The definitions described in the General Conditions of Use also apply here.": "The definitions described in the General Conditions of Use also apply here.",
+
+  "The account": "The account",
+  "when you create a Gravitalia account, you provide us with personal information (e-mail address, password, surname, first name); you may also, optionally, provide a telephone number or a date of birth.": "when you create a Gravitalia account, you provide us with personal information (e-mail address, password, surname, first name); you may also, optionally, provide a telephone number or a date of birth.",
+
+  "The content": "The content",
+  "As soon as you upload a publication (photograph, video, file, messages, written material in draft or non-draft form), the information entered is recorded for redistribution on the platforms. Voice or video calls, on the other hand, are not recorded, although a cover image may be temporarily saved.": "As soon as you upload a publication (photograph, video, file, messages, written material in draft or non-draft form), the information entered is recorded for redistribution on the platforms. Voice or video calls, on the other hand, are not recorded, although a cover image may be temporarily saved.",
+
+  "Payments": "Payments",
+  "when you purchase (or offer) products or services, you may be asked to provide a valid payment method, as well as associated information, such as the holder's first and last name or billing address. In order to secure and facilitate the transaction, third-party services such as PayPal or Stripe will process this payment information. We may store certain payment information, such as invoices or the last four digits of the card number associated with the transaction.": "when you purchase (or offer) products or services, you may be asked to provide a valid payment method, as well as associated information, such as the holder's first and last name or billing address. In order to secure and facilitate the transaction, third-party services such as PayPal or Stripe will process this payment information. We may store certain payment information, such as invoices or the last four digits of the card number associated with the transaction.",
+
+  "Your interactions": "Your interactions",
+  "we also collect data on your interactions. That is to say, platform publications (photography, written posts) liked, subscriptions (when you subscribe to a user), robots/applications you have created or authorized (to access your data), publications created, accounts blocked, groups you join or create, your connections to platforms, your purchases, as well as moderation decisions.": "we also collect data on your interactions. That is to say, platform publications (photography, written posts) liked, subscriptions (when you subscribe to a user), robots/applications you have created or authorized (to access your data), publications created, accounts blocked, groups you join or create, your connections to platforms, your purchases, as well as moderation decisions.",
+
+  "Other information": "Other information",
+  "you may fill out a form or request verification of your account; when this happens, you may be asked to enter additional information about yourself or the organization you represent.": "you may fill out a form or request verification of your account; when this happens, you may be asked to enter additional information about yourself or the organization you represent.",
+
+  "Your device": "Your device",
+  "we may also collect the IP address in order to ensure the security of Users and Services, for example by checking whether they are identical.": "we may also collect the IP address in order to ensure the security of Users and Services, for example by checking whether they are identical.",
+
+  "Cookies": "Cookies",
+  "we use cookies for security purposes, to store configuration information (chosen language, etc.) or connection information; in no case advertising cookies.": "we use cookies for security purposes, to store configuration information (chosen language, etc.) or connection information; in no case advertising cookies.",
+
+  "To provide you with Services": "To provide you with Services",
+  "we use the data you provide to ensure that our Services work the way we want them to. For example, when you write a post, or share a photograph, we need to process it (to check that the content complies with our rules) and store it (to then redistribute it to other Users, and to the Internet). We may also use this data to enhance the functionality of certain Services.": "we use the data you provide to ensure that our Services work the way we want them to. For example, when you write a post, or share a photograph, we need to process it (to check that the content complies with our rules) and store it (to then redistribute it to other Users, and to the Internet). We may also use this data to enhance the functionality of certain Services.",
+
+  "Guarantee security": "Guarantee security",
+  "in order to guarantee the safety of all Users, we are constantly striving to improve security. Some data may be analyzed to prevent misuse or use contrary to our rules/terms and conditions. For instance, the analysis of certain texts or photographs may be carried out by automatic learning.": "in order to guarantee the safety of all Users, we are constantly striving to improve security. Some data may be analyzed to prevent misuse or use contrary to our rules/terms and conditions. For instance, the analysis of certain texts or photographs may be carried out by automatic learning.",
+
+  "To contact you": "To contact you",
+  "we use the information provided to keep in touch with you and inform you of changes that affect you but also to set up a system of double authentication.": "we use the information provided to keep in touch with you and inform you of changes that affect you but also to set up a system of double authentication.",
+
+  "To provide service Customer": "To provide service Customer",
+  "we use the information to answer your questions, investigate bugs, interact with you at convenient times, or otherwise.": "we use the information to answer your questions, investigate bugs, interact with you at convenient times, or otherwise.",
+
+  "Improve our service": "Improve our service",
+  "we use this information to understand the interactions, to improve our visibility as well as the accessibility of our Services.": "we use this information to understand the interactions, to improve our visibility as well as the accessibility of our Services.",
+
+  "Protect vital interests": "Protect vital interests",
+  "we can use, collect and share data if we believe that the physical or psychological integrity of a person is at stake (i.e. a car accident, resolving an emergency medical situation).": "we can use, collect and share data if we believe that the physical or psychological integrity of a person is at stake (i.e. a car accident, resolving an emergency medical situation).",
+
+  "With your consent": "With your consent",
+  "when you authorize us to share your data with a third party or Users. Indeed, when you publish a photograph, or written content, we may, where your settings allow, disclose it to the web, i.e. publicly. In another case, when you purchase a good or service, the information may be transmitted to PayPal or Stripe to satisfy your request.": "when you authorize us to share your data with a third party or Users. Indeed, when you publish a photograph, or written content, we may, where your settings allow, disclose it to the web, i.e. publicly. In another case, when you purchase a good or service, the information may be transmitted to PayPal or Stripe to satisfy your request.",
+
+  "When you share them": "When you share them",
+  "by publishing content online, by providing public data (username, profile picture, etc.).": "by publishing content online, by providing public data (username, profile picture, etc.).",
+
+  "With our suppliers": "With our suppliers",
+  "we delegate certain parts of our Services to trusted third parties, which enable the processing of information (e.g. payment) or the cloud providers that host our data.": "we delegate certain parts of our Services to trusted third parties, which enable the processing of information (e.g. payment) or the cloud providers that host our data.",
+
+  "For legal issues": "For legal issues",
+  "when we believe it is in the interests of Gravitalia and the User, we may transmit data when required by law, for example during an investigation. Although we strive to limit abusive legal requests.": "when we believe it is in the interests of Gravitalia and the User, we may transmit data when required by law, for example during an investigation. Although we strive to limit abusive legal requests.",
+
+  "In case of emergency": "In case of emergency",
+  "if we believe that the physical or psychological integrity of someone is at stake, we can transmit certain data, in good faith to the departments concerned.": "if we believe that the physical or psychological integrity of someone is at stake, we can transmit certain data, in good faith to the departments concerned.",
+
+  "Merger, buyout of Gravitalia": "Merger, buyout of Gravitalia",
+  "in the event that Gravitalia is bought out, the data may be transmitted to its parent company.": "in the event that Gravitalia is bought out, the data may be transmitted to its parent company.",
+
+  "Data is only processed within Europe and more specifically within the European Union. We believe that data should remain in a secure and regulated location, which is why it is processed in Germany (Frankfurt), France (Paris) or Ireland (Dublin). For security reasons, data may be stored at several locations in the European Union (fault tolerance, edge computing), but will remain just as secure.": "Data is only processed within Europe and more specifically within the European Union. We believe that data should remain in a secure and regulated location, which is why it is processed in Germany (Frankfurt), France (Paris) or Ireland (Dublin). For security reasons, data may be stored at several locations in the European Union (fault tolerance, edge computing), but will remain just as secure.",
+
+  "Data is kept for as long as is necessary for the purposes mentioned above. However, when we detect prolonged inactivity (approximately 5 years), an account deletion procedure may be initiated.": "Data is kept for as long as is necessary for the purposes mentioned above. However, when we detect prolonged inactivity (approximately 5 years), an account deletion procedure may be initiated.",
+  "When the account deletion procedure is initiated, access to your account is restricted: you can no longer log in, but your data remains intact. No more Users can access your account information, which appears as deleted.": "When the account deletion procedure is initiated, access to your account is restricted: you can no longer log in, but your data remains intact. No more Users can access your account information, which appears as deleted.",
+  "After 30 days (following the procedure), the data begins to be deleted (username, avatar, biography, etc.), with only the data that is important for security being kept and anonymised (the \"vanity\" to prevent identity theft, and the encrypted e-mail address).": "After 30 days (following the procedure), the data begins to be deleted (username, avatar, biography, etc.), with only the data that is important for security being kept and anonymised (the \"vanity\" to prevent identity theft, and the encrypted e-mail address).",
+
+  "Safety is paramount with us! While no system is foolproof, we have strict standards for securing data.": "Safety is paramount with us! While no system is foolproof, we have strict standards for securing data.",
+  "First, sensitive data is either encrypted (if it must be usable in the future: phone number, email adress, or date of birth, for example) or hashed (if it must be very secure, and non-recoverable : password, for example).": "First, sensitive data is either encrypted (if it must be usable in the future: phone number, email adress, or date of birth, for example) or hashed (if it must be very secure, and non-recoverable : password, for example).",
+  "Secondly, we put a minimum of security on the servers we use (firewalls, limited password attempts...) so that our critical infrastructures are not exposed too strongly.": "Secondly, we put a minimum of security on the servers we use (firewalls, limited password attempts...) so that our critical infrastructures are not exposed too strongly.",
+  "Also remember that all data transmitted between Gravitalia and you (and vice versa) is under the security padlock (HTTPS) which guarantees that the data is encrypted when in transit from your browser, through Cloudflare, and finally, to reach our servers.": "Also remember that all data transmitted between Gravitalia and you (and vice versa) is under the security padlock (HTTPS) which guarantees that the data is encrypted when in transit from your browser, through Cloudflare, and finally, to reach our servers.",
+  "But security is played on several tables! If you haven't already done so, you can add double authentication and even opt for a unique and strong password!": "But security is played on several tables! If you haven't already done so, you can add double authentication and even opt for a unique and strong password!",
+
+  "We do not use your data for profit, nor resell it and even believe that the data must remain with the User.": "We do not use your data for profit, nor resell it and even believe that the data must remain with the User.",
+  "You are free to subscribe or unsubscribe from the various Services, communicate with whoever you want.": "You are free to subscribe or unsubscribe from the various Services, communicate with whoever you want.",
+  "You can choose, in the settings offered by each Service, whether or not to personalize your news feed. The personalization is done, not according to precise analyzes but simply from your “likes” (or button provided with this effigy).": "You can choose, in the settings offered by each Service, whether or not to personalize your news feed. The personalization is done, not according to precise analyzes but simply from your “likes” (or button provided with this effigy).",
+
+  "Each Service offers in the “Settings” a part (generally called “Data”) allowing you to access your:": "Each Service offers in the “Settings” a part (generally called “Data”) allowing you to access your:",
+
+  "Access right": "Access right",
+  "which allows you to download the data collected about you. Please note that the information: banking, password and e-mail address are not provided when downloading the data.": "which allows you to download the data collected about you. Please note that the information: banking, password and e-mail address are not provided when downloading the data.",
+  
+  "Right to erasure": "Right to erasure",
+  "which gives you the possibility to delete your account globally or individually. When this right is applied, your account is deleted within 1 month (recoverable account), except for accounts linked to each Service which is deleted instantly, then the personal data (username, password, IP address... ) excluding email address and \"vanity\".": "which gives you the possibility to delete your account globally or individually. When this right is applied, your account is deleted within 1 month (recoverable account), except for accounts linked to each Service which is deleted instantly, then the personal data (username, password, IP address... ) excluding email address and \"vanity\".",
+
+  "Right of rectification": "Right of rectification",
+  "you can modify at any time, via the “Settings” section, all the information collected about you.": "you can modify at any time, via the “Settings” section, all the information collected about you.",
+
+  "Right to be forgotten": "Right to be forgotten",
+  "this right requires you to contact us by e-mail. Please include the right to be forgotten in the subject line of the e-mail and contact us via our e-mail address (provided below) with your identity card.": "this right requires you to contact us by e-mail. Please include the right to be forgotten in the subject line of the e-mail and contact us via our e-mail address (provided below) with your identity card.",
+
+  "Right of withdrawal": "Right of withdrawal",
+  "when you register, you accept and approve having read the contracts, however, you can decide at any time to stop your commitment. To do this, simply follow the instructions of the right to erasure; you can no longer use our Services if you no longer wish to comply with our contracts.": "when you register, you accept and approve having read the contracts, however, you can decide at any time to stop your commitment. To do this, simply follow the instructions of the right to erasure; you can no longer use our Services if you no longer wish to comply with our contracts.",
+
+  "You can contact us if you have any questions about this Privacy Policy. We look forward to hearing from you and helping you!": "You can contact us if you have any questions about this Privacy Policy. We look forward to hearing from you and helping you!",
+  "You can also contact our DPO at the e-mail address below.": "You can also contact our DPO at the e-mail address below.",
+  "Enjoy using our Services!": "Enjoy using our Services!",
+
+  "Contact us about confidentiality:": "Contact us about confidentiality:",
+  "Contact our DPO:": "Contact our DPO:",
+  "Other forms of contact:": "Other forms of contact:",
+
+  "Data we collect": "Data we collect",
+  "a. What you provide us with": "a. What you provide us with",
+  "b. What we collect": "b. What we collect",
+  "How we use this data": "How we use this data",
+  "How we share your information": "How we share your information",
+  "International Data Transfers": "International Data Transfers",
+  "Data retention time": "Data retention time",
+  "Data protection": "Data protection",
+  "Your choices about how your data is managed": "Your choices about how your data is managed",
+  "Your rights": "Your rights",
+  "Contact us": "Contact us"
 }
