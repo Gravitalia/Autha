@@ -7,7 +7,7 @@ rust_library(
     name = "image_processor",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
-    deps = all_crate_deps(
+    deps = ["//crypto"] + all_crate_deps(
         normal = True,
     ),
     proc_macro_deps = all_crate_deps(
