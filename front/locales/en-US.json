@@ -161,118 +161,172 @@
     }
   },
 
-  "Privacy Policy": "Privacy Policy",
-  "Welcome to Gravitalia! Before creating an account, it may be interesting to read and know how your data is used and processed.": "Welcome to Gravitalia! Before creating an account, it may be interesting to read and know how your data is used and processed.",
-  "With us, we strive to guarantee: security, reliability and above all respect for private life! We do not resell anything and we do not use any data collected for advertising purposes!": "With us, we strive to guarantee: security, reliability and above all respect for private life! We do not resell anything and we do not use any data collected for advertising purposes!",
-  "The definitions described in the General Conditions of Use also apply here.": "The definitions described in the General Conditions of Use also apply here.",
-
-  "The account": "The account",
-  "when you create a Gravitalia account, you provide us with personal information (e-mail address, password, surname, first name); you may also, optionally, provide a telephone number or a date of birth.": "when you create a Gravitalia account, you provide us with personal information (e-mail address, password, surname, first name); you may also, optionally, provide a telephone number or a date of birth.",
-
-  "The content": "The content",
-  "As soon as you upload a publication (photograph, video, file, messages, written material in draft or non-draft form), the information entered is recorded for redistribution on the platforms. Voice or video calls, on the other hand, are not recorded, although a cover image may be temporarily saved.": "As soon as you upload a publication (photograph, video, file, messages, written material in draft or non-draft form), the information entered is recorded for redistribution on the platforms. Voice or video calls, on the other hand, are not recorded, although a cover image may be temporarily saved.",
-
-  "Payments": "Payments",
-  "when you purchase (or offer) products or services, you may be asked to provide a valid payment method, as well as associated information, such as the holder's first and last name or billing address. In order to secure and facilitate the transaction, third-party services such as PayPal or Stripe will process this payment information. We may store certain payment information, such as invoices or the last four digits of the card number associated with the transaction.": "when you purchase (or offer) products or services, you may be asked to provide a valid payment method, as well as associated information, such as the holder's first and last name or billing address. In order to secure and facilitate the transaction, third-party services such as PayPal or Stripe will process this payment information. We may store certain payment information, such as invoices or the last four digits of the card number associated with the transaction.",
-
-  "Your interactions": "Your interactions",
-  "we also collect data on your interactions. That is to say, platform publications (photography, written posts) liked, subscriptions (when you subscribe to a user), robots/applications you have created or authorized (to access your data), publications created, accounts blocked, groups you join or create, your connections to platforms, your purchases, as well as moderation decisions.": "we also collect data on your interactions. That is to say, platform publications (photography, written posts) liked, subscriptions (when you subscribe to a user), robots/applications you have created or authorized (to access your data), publications created, accounts blocked, groups you join or create, your connections to platforms, your purchases, as well as moderation decisions.",
-
-  "Other information": "Other information",
-  "you may fill out a form or request verification of your account; when this happens, you may be asked to enter additional information about yourself or the organization you represent.": "you may fill out a form or request verification of your account; when this happens, you may be asked to enter additional information about yourself or the organization you represent.",
-
-  "Your device": "Your device",
-  "we may also collect the IP address in order to ensure the security of Users and Services, for example by checking whether they are identical.": "we may also collect the IP address in order to ensure the security of Users and Services, for example by checking whether they are identical.",
-
-  "Cookies": "Cookies",
-  "we use cookies for security purposes, to store configuration information (chosen language, etc.) or connection information; in no case advertising cookies.": "we use cookies for security purposes, to store configuration information (chosen language, etc.) or connection information; in no case advertising cookies.",
-
-  "To provide you with Services": "To provide you with Services",
-  "we use the data you provide to ensure that our Services work the way we want them to. For example, when you write a post, or share a photograph, we need to process it (to check that the content complies with our rules) and store it (to then redistribute it to other Users, and to the Internet). We may also use this data to enhance the functionality of certain Services.": "we use the data you provide to ensure that our Services work the way we want them to. For example, when you write a post, or share a photograph, we need to process it (to check that the content complies with our rules) and store it (to then redistribute it to other Users, and to the Internet). We may also use this data to enhance the functionality of certain Services.",
-
-  "Guarantee security": "Guarantee security",
-  "in order to guarantee the safety of all Users, we are constantly striving to improve security. Some data may be analyzed to prevent misuse or use contrary to our rules/terms and conditions. For instance, the analysis of certain texts or photographs may be carried out by automatic learning.": "in order to guarantee the safety of all Users, we are constantly striving to improve security. Some data may be analyzed to prevent misuse or use contrary to our rules/terms and conditions. For instance, the analysis of certain texts or photographs may be carried out by automatic learning.",
-
-  "To contact you": "To contact you",
-  "we use the information provided to keep in touch with you and inform you of changes that affect you but also to set up a system of double authentication.": "we use the information provided to keep in touch with you and inform you of changes that affect you but also to set up a system of double authentication.",
-
-  "To provide service Customer": "To provide service Customer",
-  "we use the information to answer your questions, investigate bugs, interact with you at convenient times, or otherwise.": "we use the information to answer your questions, investigate bugs, interact with you at convenient times, or otherwise.",
-
-  "Improve our service": "Improve our service",
-  "we use this information to understand the interactions, to improve our visibility as well as the accessibility of our Services.": "we use this information to understand the interactions, to improve our visibility as well as the accessibility of our Services.",
-
-  "Protect vital interests": "Protect vital interests",
-  "we can use, collect and share data if we believe that the physical or psychological integrity of a person is at stake (i.e. a car accident, resolving an emergency medical situation).": "we can use, collect and share data if we believe that the physical or psychological integrity of a person is at stake (i.e. a car accident, resolving an emergency medical situation).",
-
-  "With your consent": "With your consent",
-  "when you authorize us to share your data with a third party or Users. Indeed, when you publish a photograph, or written content, we may, where your settings allow, disclose it to the web, i.e. publicly. In another case, when you purchase a good or service, the information may be transmitted to PayPal or Stripe to satisfy your request.": "when you authorize us to share your data with a third party or Users. Indeed, when you publish a photograph, or written content, we may, where your settings allow, disclose it to the web, i.e. publicly. In another case, when you purchase a good or service, the information may be transmitted to PayPal or Stripe to satisfy your request.",
-
-  "When you share them": "When you share them",
-  "by publishing content online, by providing public data (username, profile picture, etc.).": "by publishing content online, by providing public data (username, profile picture, etc.).",
-
-  "With our suppliers": "With our suppliers",
-  "we delegate certain parts of our Services to trusted third parties, which enable the processing of information (e.g. payment) or the cloud providers that host our data.": "we delegate certain parts of our Services to trusted third parties, which enable the processing of information (e.g. payment) or the cloud providers that host our data.",
-
-  "For legal issues": "For legal issues",
-  "when we believe it is in the interests of Gravitalia and the User, we may transmit data when required by law, for example during an investigation. Although we strive to limit abusive legal requests.": "when we believe it is in the interests of Gravitalia and the User, we may transmit data when required by law, for example during an investigation. Although we strive to limit abusive legal requests.",
-
-  "In case of emergency": "In case of emergency",
-  "if we believe that the physical or psychological integrity of someone is at stake, we can transmit certain data, in good faith to the departments concerned.": "if we believe that the physical or psychological integrity of someone is at stake, we can transmit certain data, in good faith to the departments concerned.",
-
-  "Merger, buyout of Gravitalia": "Merger, buyout of Gravitalia",
-  "in the event that Gravitalia is bought out, the data may be transmitted to its parent company.": "in the event that Gravitalia is bought out, the data may be transmitted to its parent company.",
-
-  "Data is only processed within Europe and more specifically within the European Union. We believe that data should remain in a secure and regulated location, which is why it is processed in Germany (Frankfurt), France (Paris) or Ireland (Dublin). For security reasons, data may be stored at several locations in the European Union (fault tolerance, edge computing), but will remain just as secure.": "Data is only processed within Europe and more specifically within the European Union. We believe that data should remain in a secure and regulated location, which is why it is processed in Germany (Frankfurt), France (Paris) or Ireland (Dublin). For security reasons, data may be stored at several locations in the European Union (fault tolerance, edge computing), but will remain just as secure.",
-
-  "Data is kept for as long as is necessary for the purposes mentioned above. However, when we detect prolonged inactivity (approximately 5 years), an account deletion procedure may be initiated.": "Data is kept for as long as is necessary for the purposes mentioned above. However, when we detect prolonged inactivity (approximately 5 years), an account deletion procedure may be initiated.",
-  "When the account deletion procedure is initiated, access to your account is restricted: you can no longer log in, but your data remains intact. No more Users can access your account information, which appears as deleted.": "When the account deletion procedure is initiated, access to your account is restricted: you can no longer log in, but your data remains intact. No more Users can access your account information, which appears as deleted.",
-  "After 30 days (following the procedure), the data begins to be deleted (username, avatar, biography, etc.), with only the data that is important for security being kept and anonymised (the \"vanity\" to prevent identity theft, and the encrypted e-mail address).": "After 30 days (following the procedure), the data begins to be deleted (username, avatar, biography, etc.), with only the data that is important for security being kept and anonymised (the \"vanity\" to prevent identity theft, and the encrypted e-mail address).",
-
-  "Safety is paramount with us! While no system is foolproof, we have strict standards for securing data.": "Safety is paramount with us! While no system is foolproof, we have strict standards for securing data.",
-  "First, sensitive data is either encrypted (if it must be usable in the future: phone number, email adress, or date of birth, for example) or hashed (if it must be very secure, and non-recoverable : password, for example).": "First, sensitive data is either encrypted (if it must be usable in the future: phone number, email adress, or date of birth, for example) or hashed (if it must be very secure, and non-recoverable : password, for example).",
-  "Secondly, we put a minimum of security on the servers we use (firewalls, limited password attempts...) so that our critical infrastructures are not exposed too strongly.": "Secondly, we put a minimum of security on the servers we use (firewalls, limited password attempts...) so that our critical infrastructures are not exposed too strongly.",
-  "Also remember that all data transmitted between Gravitalia and you (and vice versa) is under the security padlock (HTTPS) which guarantees that the data is encrypted when in transit from your browser, through Cloudflare, and finally, to reach our servers.": "Also remember that all data transmitted between Gravitalia and you (and vice versa) is under the security padlock (HTTPS) which guarantees that the data is encrypted when in transit from your browser, through Cloudflare, and finally, to reach our servers.",
-  "But security is played on several tables! If you haven't already done so, you can add double authentication and even opt for a unique and strong password!": "But security is played on several tables! If you haven't already done so, you can add double authentication and even opt for a unique and strong password!",
-
-  "We do not use your data for profit, nor resell it and even believe that the data must remain with the User.": "We do not use your data for profit, nor resell it and even believe that the data must remain with the User.",
-  "You are free to subscribe or unsubscribe from the various Services, communicate with whoever you want.": "You are free to subscribe or unsubscribe from the various Services, communicate with whoever you want.",
-  "You can choose, in the settings offered by each Service, whether or not to personalize your news feed. The personalization is done, not according to precise analyzes but simply from your “likes” (or button provided with this effigy).": "You can choose, in the settings offered by each Service, whether or not to personalize your news feed. The personalization is done, not according to precise analyzes but simply from your “likes” (or button provided with this effigy).",
-
-  "Each Service offers in the “Settings” a part (generally called “Data”) allowing you to access your:": "Each Service offers in the “Settings” a part (generally called “Data”) allowing you to access your:",
-
-  "Access right": "Access right",
-  "which allows you to download the data collected about you. Please note that the information: banking, password and e-mail address are not provided when downloading the data.": "which allows you to download the data collected about you. Please note that the information: banking, password and e-mail address are not provided when downloading the data.",
-
-  "Right to erasure": "Right to erasure",
-  "which gives you the possibility to delete your account globally or individually. When this right is applied, your account is deleted within 1 month (recoverable account), except for accounts linked to each Service which is deleted instantly, then the personal data (username, password, IP address... ) excluding email address and \"vanity\".": "which gives you the possibility to delete your account globally or individually. When this right is applied, your account is deleted within 1 month (recoverable account), except for accounts linked to each Service which is deleted instantly, then the personal data (username, password, IP address... ) excluding email address and \"vanity\".",
-
-  "Right of rectification": "Right of rectification",
-  "you can modify at any time, via the “Settings” section, all the information collected about you.": "you can modify at any time, via the “Settings” section, all the information collected about you.",
-
-  "Right to be forgotten": "Right to be forgotten",
-  "this right requires you to contact us by e-mail. Please include the right to be forgotten in the subject line of the e-mail and contact us via our e-mail address (provided below) with your identity card.": "this right requires you to contact us by e-mail. Please include the right to be forgotten in the subject line of the e-mail and contact us via our e-mail address (provided below) with your identity card.",
-
-  "Right of withdrawal": "Right of withdrawal",
-  "when you register, you accept and approve having read the contracts, however, you can decide at any time to stop your commitment. To do this, simply follow the instructions of the right to erasure; you can no longer use our Services if you no longer wish to comply with our contracts.": "when you register, you accept and approve having read the contracts, however, you can decide at any time to stop your commitment. To do this, simply follow the instructions of the right to erasure; you can no longer use our Services if you no longer wish to comply with our contracts.",
-
-  "You can contact us if you have any questions about this Privacy Policy. We look forward to hearing from you and helping you!": "You can contact us if you have any questions about this Privacy Policy. We look forward to hearing from you and helping you!",
-  "You can also contact our DPO at the e-mail address below.": "You can also contact our DPO at the e-mail address below.",
-  "Enjoy using our Services!": "Enjoy using our Services!",
-
-  "Contact us about confidentiality:": "Contact us about confidentiality:",
-  "Contact our DPO:": "Contact our DPO:",
-  "Other forms of contact:": "Other forms of contact:",
-
-  "Data we collect": "Data we collect",
-  "a. What you provide us with": "a. What you provide us with",
-  "b. What we collect": "b. What we collect",
-  "How we use this data": "How we use this data",
-  "How we share your information": "How we share your information",
-  "International Data Transfers": "International Data Transfers",
-  "Data retention time": "Data retention time",
-  "Data protection": "Data protection",
-  "Your choices about how your data is managed": "Your choices about how your data is managed",
-  "Your rights": "Your rights",
-  "Contact us": "Contact us"
+  "privacy": {
+    "title": "Privacy Policy",
+    "description": [
+      "Welcome to Gravitalia! Before creating an account, it may be interesting to read and know how your data is used and processed.",
+      "With us, we strive to guarantee: security, reliability and above all respect for private life! We do not resell anything and we do not use any data collected for advertising purposes!",
+      "The definitions described in the General Conditions of Use also apply here."
+    ],
+    "data_we_collect": {
+      "title": "Data we collect",
+      "provided": {
+        "title": "a. What you provide us with",
+        "account": {
+          "title": "The account",
+          "description": "when you create a Gravitalia account, you provide us with personal information (e-mail address, password, surname, first name); you may also, optionally, provide a telephone number or a date of birth."
+        },
+        "content": {
+          "title": "The content",
+          "description": "As soon as you upload a publication (photograph, video, file, messages, written material in draft or non-draft form), the information entered is recorded for redistribution on the platforms. Voice or video calls, on the other hand, are not recorded, although a cover image may be temporarily saved."
+        },
+        "payments": {
+          "title": "Payments",
+          "description": "when you purchase (or offer) products or services, you may be asked to provide a valid payment method, as well as associated information, such as the holder's first and last name or billing address. In order to secure and facilitate the transaction, third-party services such as PayPal or Stripe will process this payment information. We may store certain payment information, such as invoices or the last four digits of the card number associated with the transaction."
+        },
+        "interactions": {
+          "title": "Your interactions",
+          "description": "we also collect data on your interactions. That is to say, platform publications (photography, written posts) liked, subscriptions (when you subscribe to a user), robots/applications you have created or authorized (to access your data), publications created, accounts blocked, groups you join or create, your connections to platforms, your purchases, as well as moderation decisions."
+        },
+        "other": {
+          "title": "Other information",
+          "description": "you may fill out a form or request verification of your account; when this happens, you may be asked to enter additional information about yourself or the organization you represent."
+        }
+      },
+      "what": {
+        "title": "b. What we collect",
+        "device": {
+          "title": "Your device",
+          "description": "we may also collect the IP address in order to ensure the security of Users and Services, for example by checking whether they are identical."
+        },
+        "cookies": {
+          "title": "Cookies",
+          "description": "we use cookies for security purposes, to store configuration information (chosen language, etc.) or connection information; in no case advertising cookies."
+        }
+      }
+    },
+    "how": {
+      "title": "How we use this data",
+      "services": {
+        "title": "To provide you with Services",
+        "description": "we use the data you provide to ensure that our Services work the way we want them to. For example, when you write a post, or share a photograph, we need to process it (to check that the content complies with our rules) and store it (to then redistribute it to other Users, and to the Internet). We may also use this data to enhance the functionality of certain Services."
+      },
+      "security": {
+        "title": "Guarantee security",
+        "description": "in order to guarantee the safety of all Users, we are constantly striving to improve security. Some data may be analyzed to prevent misuse or use contrary to our rules/terms and conditions. For instance, the analysis of certain texts or photographs may be carried out by automatic learning."
+      },
+      "contact": {
+        "title": "To contact you",
+        "description": "we use the information provided to keep in touch with you and inform you of changes that affect you but also to set up a system of double authentication."
+      },
+      "service": {
+        "title": "To provide service Customer",
+        "description": "we use the information to answer your questions, investigate bugs, interact with you at convenient times, or otherwise."
+      },
+      "improve_service": {
+        "title": "Improve our service",
+        "description": "we use this information to understand the interactions, to improve our visibility as well as the accessibility of our Services."
+      },
+      "vital": {
+        "title": "Protect vital interests",
+        "description": "we can use, collect and share data if we believe that the physical or psychological integrity of a person is at stake (i.e. a car accident, resolving an emergency medical situation)."
+      }
+    },
+    "share": {
+      "title": "How we share your information",
+      "consent": {
+        "title": "With your consent",
+        "description": "when you authorize us to share your data with a third party or Users. Indeed, when you publish a photograph, or written content, we may, where your settings allow, disclose it to the web, i.e. publicly. In another case, when you purchase a good or service, the information may be transmitted to PayPal or Stripe to satisfy your request."
+      },
+      "when": {
+        "title": "When you share them",
+        "description": "by publishing content online, by providing public data (username, profile picture, etc.)."
+      },
+      "contact": {
+        "title": "To contact you",
+        "description": "e use the information provided to keep in touch with you and inform you of changes that affect you but also to set up a system of double authentication."
+      },
+      "suppliers": {
+        "title": "With our suppliers",
+        "description": "we delegate certain parts of our Services to trusted third parties, which enable the processing of information (e.g. payment) or the cloud providers that host our data."
+      },
+      "legal": {
+        "title": "For legal issues",
+        "description": "when we believe it is in the interests of Gravitalia and the User, we may transmit data when required by law, for example during an investigation. Although we strive to limit abusive legal requests."
+      },
+      "emergency": {
+        "title": "In case of emergency",
+        "description": "if we believe that the physical or psychological integrity of someone is at stake, we can transmit certain data, in good faith to the departments concerned."
+      },
+      "merger": {
+        "title": "Merger, buyout of Gravitalia",
+        "description": "in the event that Gravitalia is bought out, the data may be transmitted to its parent company."
+      }
+    },
+    "international": {
+      "title": "International Data Transfers",
+      "description": "Data is only processed within Europe and more specifically within the European Union. We believe that data should remain in a secure and regulated location, which is why it is processed in Germany (Frankfurt), France (Paris) or Ireland (Dublin). For security reasons, data may be stored at several locations in the European Union (fault tolerance, edge computing), but will remain just as secure."
+    },
+    "time": {
+      "title": "Data retention time",
+      "description": [
+        "Data is kept for as long as is necessary for the purposes mentioned above. However, when we detect prolonged inactivity (approximately 5 years), an account deletion procedure may be initiated.",
+        "When the account deletion procedure is initiated, access to your account is restricted: you can no longer log in, but your data remains intact. No more Users can access your account information, which appears as deleted.",
+        "After 30 days (following the procedure), the data begins to be deleted (username, avatar, biography, etc.), with only the data that is important for security being kept and anonymised (the \"vanity\" to prevent identity theft, and the encrypted e-mail address)."
+      ]
+    },
+    "protection": {
+      "title": "Data protection",
+      "description": [
+        "Safety is paramount with us! While no system is foolproof, we have strict standards for securing data.",
+        "First, sensitive data is either encrypted (if it must be usable in the future: phone number, email adress, or date of birth, for example) or hashed (if it must be very secure, and non-recoverable : password, for example).",
+        "Secondly, we put a minimum of security on the servers we use (firewalls, limited password attempts...) so that our critical infrastructures are not exposed too strongly.",
+        "Also remember that all data transmitted between Gravitalia and you (and vice versa) is under the security padlock (HTTPS) which guarantees that the data is encrypted when in transit from your browser, through Cloudflare, and finally, to reach our servers.",
+        "But security is played on several tables! If you haven't already done so, you can add double authentication and even opt for a unique and strong password!"
+      ]
+    },
+    "choice_data_managed": {
+      "title": "Your choices about how your data is managed",
+      "description": [
+        "We do not use your data for profit, nor resell it and even believe that the data must remain with the User.",
+        "You are free to subscribe or unsubscribe from the various Services, communicate with whoever you want.",
+        "You can choose, in the settings offered by each Service, whether or not to personalize your news feed. The personalization is done, not according to precise analyzes but simply from your “likes” (or button provided with this effigy)."
+      ]
+    },
+    "rights": {
+      "title": "Your rights",
+      "description": "Each Service offers in the “Settings” a part (generally called “Data”) allowing you to access your:",
+      "access": {
+        "title": "Access right",
+        "description": "which allows you to download the data collected about you. Please note that the information: banking, password and e-mail address are not provided when downloading the data."
+      },
+      "erasure": {
+        "title": "Right to erasure",
+        "description": "which gives you the possibility to delete your account globally or individually. When this right is applied, your account is deleted within 1 month (recoverable account), except for accounts linked to each Service which is deleted instantly, then the personal data (username, password, IP address... ) excluding email address and \"vanity\"."
+      },
+      "rectification": {
+        "title": "Right of rectification",
+        "description": "you can modify at any time, via the “Settings” section, all the information collected about you."
+      },
+      "forgotten": {
+        "title": "Right to be forgotten",
+        "description": "this right requires you to contact us by e-mail. Please include the right to be forgotten in the subject line of the e-mail and contact us via our e-mail address (provided below) with your identity card."
+      },
+      "withdrawal": {
+        "title": "Right of withdrawal",
+        "description": "when you register, you accept and approve having read the contracts, however, you can decide at any time to stop your commitment. To do this, simply follow the instructions of the right to erasure; you can no longer use our Services if you no longer wish to comply with our contracts."
+      }
+    },
+    "contact": {
+      "title": "Contact us",
+      "description": [
+        "You can contact us if you have any questions about this Privacy Policy. We look forward to hearing from you and helping you!",
+        "You can also contact our DPO at the e-mail address below.",
+        "Enjoy using our Services!"
+      ],
+      "confidentiality": "Contact us about confidentiality:",
+      "dpo": "Contact our DPO:",
+      "other": "Other forms of contact:"
+    }
+  }
 }
