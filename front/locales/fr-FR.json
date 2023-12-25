@@ -1,245 +1,332 @@
 {
-  "Page not found": "Page non trouvée",
-  "Something went wrong": "Quelque chose n'a pas bien fonctionné",
-  "Return home": "Retour à l'accueil",
+  "page_not_found": "Page non trouvée",
+  "something_went_wrong": "Quelque chose n'a pas bien fonctionné",
+  "return_home": "Retour à l'accueil",
 
-  "Sign in": "Se connecter",
-  "Invalid security token, try again in a few seconds.": "Jeton de sécurité invalide, ré-essayez dans quelques secondes.",
-  "You're sending too many requests! Try again in 5 minutes.": "Vous envoyez trop de requêtes ! Ré-essayez dans 5 minutes.",
-  "Write something...": "Ecrivez quelque chose...",
-  "Invalid email address": "Adresse e-mail invalide",
-  "Email address": "Adresse e-mail",
-  "Write down your secret word 🤫": "Ecrivez votre mot secret 🤫",
-  "Invalid password": "Mot de passe invalide",
-  "Password": "Mot de passe",
-  "Create an account": "Créer un compte",
+  "sign_in": "Se connecter",
 
-  "Next": "Suivant",
-  "Previous": "Précédent",
-  "Firstname": "Prénom",
-  "Lastname": "Nom de famille",
-  "Username": "Nom d'utilisateur",
-  "Phone (optional)": "Numéro de téléphone (facultatif)",
-  "At least add your first name here": "Rajoutez au moins votre prénom ici",
-  "You must enter an e-mail address!": "Rentrer une adresse e-mail, il faut !",
-  "A little one-time password wouldn't hurt": "Un petit mot de passe unique ne ferait pas de mal",
-  "Email adress already used": "Adresse e-mail déjà utilisée",
-  "Use 8 uppercase and lowercase letters with special characters": "Utiliser 8 lettres majuscules et minuscules avec des caractères spéciaux",
-  "Your username is already in use": "Votre nom d'utilisateur est déjà utilisé",
-  "You must be at least 13 years old": "Vous devez avoir au moins 15 ans",
-  "You accept our": "Vous acceptez nos",
-  "and our": "et notre",
-  "ToS": "CGU",
-  "privacy policy": "politique de confidentialité",
+  "error": {
+    "security_token": "Jeton de sécurité invalide, ré-essayez dans quelques secondes.",
+    "rate_limit": "Vous envoyez trop de requêtes ! Ré-essayez dans 5 minutes.",
+    "write_something": "Ecrivez quelque chose...",
+    "missing_password": "Ecrivez votre mot secret 🤫",
+    "invalid_email": "Adresse e-mail invalide",
+    "invalid_password": "Mot de passe invalide",
+    "password_advices": "Utiliser 8 lettres majuscules et minuscules avec des caractères spéciaux",
+    "missing_firstname": "Rajoutez au moins votre prénom ici",
+    "missing_email": "Rentrer une adresse e-mail, il faut !",
+    "missing_password_sign_up": "Un petit mot de passe unique ne ferait pas de mal",
+    "vanity_used": "Votre nom d'utilisateur est déjà utilisé",
+    "email_used": "Adresse e-mail déjà utilisée",
+    "too_young": "Vous devez avoir au moins 15 ans"
+  },
 
-  "About": "À propos",
-  "Security": "Sécurité",
-  "Data": "Données",
-  "OAuth": "OAuth",
-  "Logout": "Se déconnecter",
+  "email": "Adresse e-mail",
+  "password": "Mot de passe",
+  "create_account": "Créer un compte",
 
-  "Terms of Service": "Conditions Générales d'Utilisation",
-  "Effective date:": "Date d’effet :",
-  "Welcome on Gravitalia! These terms and conditions govern the use of the services offered, including the programming interfaces (APIs) and the legal obligations of both parties.": "Bienvenue sur Gravitalia ! Ces présentes conditions régissent l’utilisation des services proposés, incluant les interfaces de programmation (API) ainsi que les obligations légales de nos deux partis.",
-  "Gravitalia offers places to share, to connect but also digital or physical tools to improve privacy.": "Gravitalia propose des lieux de partage, de mise en contact mais aussi des outils numériques ou physiques ayant pour but d’améliorer le respect de la vie privée.",
+  "next": "Suivant",
+  "previous": "Précédent",
+  "firstname": "Prénom",
+  "lastname": "Nom de famille",
+  "username": "Nom d'utilisateur",
+  "phone": "Numéro de téléphone (facultatif)",
+  "accept_our": "Vous acceptez nos",
+  "and_our": "et notre",
+  "tos": "CGU",
+  "privacy_policy": "politique de confidentialité",
 
-  "The use of the terms \"we\", \"us\", \"our\" or \"Gravitalia\" refers to the Gravitalia entity, its subsidiaries and other companies.": "L’emploi des termes “nous”, “notre”, “nos” ou “Gravitalia” réfère à l'entitée Gravitalia, ses filiales et autres sociétés.",
-  "The use of the terms \"User\", \"you\", \"your\" refers to you, as an individual or entity, while the use of the term \"Users\" refers to all registrants (including you, if applicable).": "L’utilisation des termes “Utilisateur”, “vous”, “vos” font référence à vous-même, en tant que personne physique ou morale tandis que l’utilisation du terme “Utilisateurs” fait référence à l’ensemble des personnes inscrites (vous incluant le cas échéant).",
-  "The use of the term \"Service\" (including \"Services\") refers both to Gravitalia's websites and products, and to the websites, products, and Services of its subsidiaries.": "L’usage du terme “Service” (incluant “Services”) fait référence à la fois, aux sites Web et produits de Gravitalia, mais aussi aux sites Web, produits et Services de ses filiales.",
+  "about": "À propos",
+  "security": "Sécurité",
+  "data": "Données",
+  "oauth": "OAuth",
+  "logout": "Se déconnecter",
 
-  "The host of Gravitalia is Contabo at Aschauer Str. 32a, 81549 Munich, Germany.": "L’hébergeur de Gravitalia est Contabo sise au Aschauer Str. 32a, 81549 Munich en Allemagne.",
-  "The content and site host is Cloudflare located at 101 Townsend St, San Francisco, CA 94107, USA.": "L’hébergeur de contenus et sites est Cloudflare sise au 101 Townsend St, San Francisco, CA 94107, Etats-Unis.",
+  "terms_of_use": "Conditions Générales d'Utilisation",
+  "date": "Date d’effet :",
 
-  "tos_us": "Dans l’espace économique européen (<b>EEE</b>), où est situé le siège social, le présent contrat est fait avec : <br />Gravitalia SAS, opérant sous les lois françaises, joignable à l’adresse X.<br /><span class=\"text-sm\">En cas de contact écrit par courriel, le temps de réponse, même pour les questions légales, pourra excéder 1 mois.</span>",
+  "terms": {
+    "welcome": "Bienvenue sur Gravitalia ! Ces présentes conditions régissent l’utilisation des services proposés, incluant les interfaces de programmation (API) ainsi que les obligations légales de nos deux partis.",
+    "description": "Gravitalia propose des lieux de partage, de mise en contact mais aussi des outils numériques ou physiques ayant pour but d’améliorer le respect de la vie privée.",
+    "definitions": {
+      "title": "Définitions",
+      "we": "L’emploi des termes « nous », « notre », « nos » ou « Gravitalia » réfère à l'entitée Gravitalia, ses filiales et autres sociétés.",
+      "user": "L’utilisation des termes « Utilisateur », « vous », « vos » font référence à vous-même, en tant que personne physique ou morale tandis que l’utilisation du terme « Utilisateurs » fait référence à l’ensemble des personnes inscrites (vous incluant le cas échéant).",
+      "service": "L’usage du terme « Service » (incluant « Services ») fait référence à la fois, aux sites Web et produits de Gravitalia, mais aussi aux sites Web, produits et Services de ses filiales."
+    },
+    "notice": {
+      "title": "Mentions légales",
+      "host": "L’hébergeur de Gravitalia est Contabo sise au Aschauer Str. 32a, 81549 Munich en Allemagne.",
+      "content": "L’hébergeur de contenus et sites est Cloudflare sise au 101 Townsend St, San Francisco, CA 94107, Etats-Unis."
+    },
+    "service_usage": {
+      "title": "Utilisation de nos Services",
+      "signed": "Les Services proposés ne sont disponibles qu’aux Utilisateurs ayant approuvés et signés ce contrat vous liant à Gravitalia ; dans le cas où vous ne souhaitez pas accepter ce contrat, il est impératif que vous fassiez la demande de suppression de compte (ou que vous ne créez pas de compte) via le Service prévu à cette effigie. Dans tous les cas, l’utilisation de nos Services doivent se faire dans le respect des lois de votre pays : vous devez être âgé de 13 ans (ou satisfaire la majorité numérique en vigueur dans votre pays). Dans le cas où vous utilisez les Services pour représenter un Etat, une société ou autre entité juridique, vous déclarez avoir les droits et être en accord avec ce présent contrat.",
+      "age": "Dans le cas où l’âge de l’Utilisateur est inférieur à la majorité numérique de son pays (voir ci-dessus pour plus de précisions), l’accord de ses parents (quant à la création du compte et à l’approbation de cette présente charte) ou de son tuteur légal est requis."
+    },
+    "except": {
+      "title": "Ce que vous pouvez attendre de nous",
+      "services": "Nous mettons en place de multiples Services (des sites Internet, réseaux sociaux, applications...) pour vous satisfaire au mieux, tout en les améliorants, et tentons d’en développer de nouveaux. Malgré nos efforts pour éviter des pannes (de Services, d’approvisionnements...), nous sommes susceptibles, comme toute entreprise, de ne pas garantir un Service sans perturbations voire une intégrité totale des données ; nous ne pourrons être tenu responsable de ces problèmes."
+    },
+    "except_you": {
+      "title": "Ce que nous attendons de vous",
+      "description": "Nous souhaitons une coexistence entre nos Utilisateurs et ce, sans vitupération, dans le respect d’autrui. Pour ce faire, vous pouvez suivre les principes suivants :",
+      "rules": [
+        "- Respecter les lois en vigueur dans votre pays ;",
+        "- Respecter la propriété intellectuelle et l'intégrité des auteurs et des personnes ;",
+        "- Ne pas tenter d'interférer avec le bon fonctionnement du Service ;",
+        "- Ne pas diffamer, insulter, frauder, harceler ou usurper l'identité d'autrui ;",
+        "- Ne pas poster de contenu susceptible de nuire à l'image des personnes présentes ;",
+        "- Ne pas publier de contenu divulguant des informations sensibles (santé, etc.) sur une personne ;",
+        "- Ne pas publier de contenu raciste, sexiste, homophobe ou xénophobe ;"
+      ],
+      "sentence": "Gravitalia se réserve le droit d’anathématiser* tout Utilisateur n’ayant pas respecté les règles ci-dessus."
+    },
+    "api": {
+      "title": "Conditions d’accès à l’API",
+      "introduction": {
+        "title": "a. Introduction",
+        "welcome": "Nous souhaitons, bien évidemment, la bienvenue à tous les développeurs qui veulent enrichir l’expérience de nos Utilisateurs sur nos Services !",
+        "security": "Pour parfaire vos idées et garantir la sécurité des données (même publiques) de nos Utilisateurs, il est important de lire ces quelques règles."
+      },
+      "restrictions": {
+        "title": "b. Restrictions",
+        "description": "Vous ne devez pas tenter de : (a) faire des analyses ayant pour finalité le traçage et/ou le profit ainsi que l’exploitation commerciale de ces données, (b) de tenter de faire de l’ingénieurerie inversé pour en tirer les codes sources privés (non <b>FOSS</b>), le savoir-faire ou les secrets commerciaux, (c) de reproduire, redistribuer, louer ou vendre l’accès à l’API, (d) d’accéder aux points de terminaison interdits (oauth.gravitalia.com)."
+      },
+      "data": {
+        "title": "c. Respect des données",
+        "privacy": "Dans le but d’améliorer le respect à la vie privée, nous demandons expressément le chiffrement des données confidentielles (adresse e-mail, numéro de téléphone...) dès lors qu’il est partagé SOUS ACCORD EXPRESS DE L’UTILISATEUR voire dans les cas où ces données ne servent pas un cadre de lecture explicite, le hachage de celles-ci.",
+        "gdrp": "De plus, nous vous recommandons de respecter le RPGD, le CCPA/CCRA et le LGPD. Dans le cas de grosses applications ou de lourdes utilisations, il vous sera imposé de fournir une politique de confidentialité mais aussi, et s’en s’y limiter, une preuve du respect des réglementations, une liste exhaustive des données sauvegardées ainsi qu’une preuve d’identité."
+      },
+      "sanctions": {
+        "title": "d. Sanctions",
+        "description": "En cas de refus d’obtempérer à ces règles, des sanctions pourront être appliquées à votre encontre tel que la suspension de votre application, de votre compte Utilisateur voire le recours aux tribunaux compétents."
+      }
+    },
+    "account": {
+      "title": "Votre compte",
+      "services": "Pour profiter des Services de manière continuelle, sans interruption ou blocage, vous devrez peut-être disposer d’un compte. La sécurité de ce compte vous incombe, vous devez fournir un mot de passe fort, vérifier si vos informations ont été compromises, etc. En cas de perte, vol ou préjudice lié à votre compte, nous ne pourrons pas être tenus responsables.",
+      "contact": "De plus, il vous sera peut-être demandé des informations pour vous contacter (numéro de téléphone, adresse e-mail), des informations visant l’authentification (mot de passe) ou l’identification (nom d’utilisateur) ; pour plus d’informations, rendez-vous sur la page de confidentialité.",
+      "responsible": "Vous êtes responsable de maintenir à jour vos coordonnées (adresse e-mail, par exemple). En cas d'impossibilité de vous joindre, nous considérerons que toutes les informations ont bien été envoyées. De même, nous considérerons que les communications effectuées depuis votre compte ou les coordonnées associées ont été effectuées par vous."
+    },
+    "your_content": {
+      "title": "Votre contenu",
+      "publish": "Certains de nos Services vous donnent la possibilité de publier du contenu (sous forme écrite, vidéographique, photographique ou autre), dès lors que vous envoyez ce contenu, vous nous laissez l’entier droit de le distribuer, conserver, copier et communiquer. De plus, vous nous affirmez et garantissez que vous avez l’entier droit sur cette œuvre. Cette licence est applicable à l’échelle mondiale, non exclusive, à titre gratuit et perpétuelle.",
+      "suspend": "Nous nous réservons le droit de supprimer ou de bloquer temporairement ou définitivement votre contenu, si celui-ci est contraire à nos principes (cf. Ce que nous attendons de vous). Lors du blocage du contenu, un e-mail sera normalement envoyé à l’auteur, et celui-ci pourra demander à avoir une procédure révisée en envoyant un e-mail à"
+    },
+    "our_content": {
+      "title": "Notre contenu",
+      "description": "Nous pouvons autoriser l’utilisation de notre contenu pour des plateformes tierces mais nous conservons tous les droits de propriété intellectuelle. Vous n’êtes pas autorisé à masquer ou à modifier les logos et marques."
+    },
+    "other_content": {
+      "title": "Autre contenu",
+      "description": "Nous pouvons mettre à disposition du contenu qui ne nous appartiennent pas par le biais de plusieurs Services. Nous ne pouvons déléguer l’utilisation de contenu. Le contenu n’est pas altéré et peut ne pas refléter l’opinion de Gravitalia."
+    },
+    "cancellation": {
+      "title": "Résiliation",
+      "will": {
+        "title": "Par votre volonté :",
+        "description": "vous êtes libre de cesser d'utiliser les services fournis à tout moment et sans raison. Vous pouvez supprimer votre compte, ce qui rendra anonymes les données qu'il contient (voir la politique de confidentialité) ou désactiver votre compte, si cette option vous est offerte, ce qui suspendra tout traitement de vos informations personnelles ; cette désactivation n'entraîne pas la résiliation du présent accord."
+      },
+      "gravitalia": {
+        "title": "Par Gravitalia :",
+        "description": "nous nous réservons le droit de suspendre* votre compte ou votre accès (à un Service, un site, un logiciel...) avec ou sans préavis si nous estimons que votre compte, ou contenu ne respecte pas nos principes."
+      }
+    },
+    "services": {
+      "title": "Services fournis",
+      "description": [
+        "Les Services sont fournis « en l’État ». Si vous résidez en dehors des EEE ou du Royaume-Uni, vous acceptez que l’accès aux Services sont à vos propres risques et périls.",
+        "NOUS (SOCIÉTÉ, AFFILIÉS) DÉCLINONS, DANS TOUTES LES MESURES PERMISES PAR LES LOIS, TOUTE GARANTIE EXPRESSE OU IMPLICITE QUANT À LA QUALITÉ MARCHANDE. LES SERVICES SONT MIS À DISPOSITION « EN L’ÉTAT ».",
+        "Nous déclinons toutes responsabilités et obligations quant à la disponibilité, la sécurité et la fiabilité des Services."
+      ]
+    },
+    "limitations": {
+      "title": "Limitations et responsabilités",
+      "description": [
+        "Cette section peut ne pas s’appliquer dans certains pays ou régions comme l’EEE.",
+        "Le présent contrat est soumis à la législation française.",
+        "Les traductions ne sont données qu’à titre informatif, en cas de litige, seule la version française des contrats (Conditions Générales d’Utilisation et Politique de Confidentialité par exemple) pourra être utilisée et seuls les tribunaux français pourront être saisis pour régler ce contentieux.",
+        "Gravitalia ne peut être tenu responsable des informations présentes sur son site ; les informations diffusées sont purement informatives et n’ont pas vocation à avoir des valeurs véridiques.",
+        "Gravitalia ne peut être tenu responsable des fichiers téléchargés par l’Utilisateur. Cela inclut les virus ou autres logiciels infectant les ordinateurs/serveurs.",
+        "Gravitalia cannot guarantee the integrity of the data and will not be liable for any incidental, special, exemplary or consequential damages, loss of profits, revenue, savings, business opportunities or customers, directly or indirectly.",
+        "NOUS NE POURRONS PAS ÊTRE TENU RESPONSABLE DES CONTENUS ET DE LA CONDUITE DES UTILISATEURS DE NOS SERVICES ET CECI DE MANIÈRE EN LIGNE OU HORS-LIGNE.",
+        "DANS LE CAS D’UN LITIGE, UN ACCORD À L’AMIABLE DEVRAIT ÊTRE ENTREPRIS AVANT TOUTE PLAINTE."
+      ]
+    },
+    "note_bene": {
+      "title": "Nota bene",
+      "anathema": "* L'anathème employé sera, par exemple, une indexation sur un registre privé de suspension de compte.",
+      "suspend": "* La suspension entraînera directement le processus d’anonymisation des données."
+    }
+  },
 
-  "The Services offered are only available to Users who have approved and signed this contract binding you to Gravitalia; if you do not wish to accept this contract, it is imperative that you request the deletion of account (or that you do not create an account) via the Service provided for this purpose. In any case, the use of our Services must be done in compliance with the laws of your country: you must be 13 years old (or meet the digital majority in force in your country). In the event that you use the Services to represent a state, corporation or other legal entity, you represent that you have the rights and are in agreement with this Agreement.": "Les Services proposés ne sont disponibles qu’aux Utilisateurs ayant approuvés et signés ce contrat vous liant à Gravitalia ; dans le cas où vous ne souhaitez pas accepter ce contrat, il est impératif que vous fassiez la demande de suppression de compte (ou que vous ne créez pas de compte) via le Service prévu à cette effigie. Dans tous les cas, l’utilisation de nos Services doivent se faire dans le respect des lois de votre pays : vous devez être âgé de 13 ans (ou satisfaire la majorité numérique en vigueur dans votre pays). Dans le cas où vous utilisez les Services pour représenter un Etat, une société ou autre entité juridique, vous déclarez avoir les droits et être en accord avec ce présent contrat.",
-  "In the event that the User's age is below the numerical age of majority in his/her country (see above for details), the consent of his/her parents (as to the creation of the account and approval of this policy) or legal guardian is required.": "Dans le cas où l’âge de l’Utilisateur est inférieur à la majorité numérique de son pays (voir ci-dessus pour plus de précisions), l’accord de ses parents (quant à la création du compte et à l’approbation de cette présente charte) ou de son tuteur légal est requis.",
-
-  "We set up multiple Services (websites, social networks, applications...) to satisfy you at best, while improving them, and try to develop new ones. Despite our efforts to avoid breakdowns (of Services, supplies...), we are likely, like any company, not to guarantee a Service without disruptions or even a total integrity of the data; we cannot be held responsible for these problems.": "Nous mettons en place de multiples Services (des sites Internet, réseaux sociaux, applications...) pour vous satisfaire au mieux, tout en les améliorants, et tentons d’en développer de nouveaux. Malgré nos efforts pour éviter des pannes (de Services, d’approvisionnements...), nous sommes susceptibles, comme toute entreprise, de ne pas garantir un Service sans perturbations voire une intégrité totale des données ; nous ne pourrons être tenu responsable de ces problèmes.",
-
-  "We want coexistence between our Users, without vituperation, with respect for others. To do this, you can follow the following principles:": "Nous souhaitons une coexistence entre nos Utilisateurs et ce, sans vitupération, dans le respect d’autrui. Pour ce faire, vous pouvez suivre les principes suivants :",
-  "- Comply with the laws in force in your country;": "- Respecter les lois en vigueur dans votre pays ;",
-  "- Respect the intellectual property and integrity of authors and persons;": "- Respecter la propriété intellectuelle et l'intégrité des auteurs et des personnes ;",
-  "- Do not not attempt to interfere with the proper functioning of the Service;": "- Ne pas tenter d'interférer avec le bon fonctionnement du Service ;",
-  "- Not to defame, insult, defraud, harass or impersonate others;": "- Ne pas diffamer, insulter, frauder, harceler ou usurper l'identité d'autrui ;",
-  "- Not to post content likely to damage the image of those present;": "- Ne pas poster de contenu susceptible de nuire à l'image des personnes présentes ;",
-  "- Do not post content disclosing sensitive information (health, etc.) about a person;": "- Ne pas publier de contenu divulguant des informations sensibles (santé, etc.) sur une personne ;",
-  "- Do not post racist, sexist, homophobic or xenophobic content;": "- Ne pas publier de contenu raciste, sexiste, homophobe ou xénophobe ;",
-  "Gravitalia reserves the right to anathematize* any User who has not complied with the above rules.": "Gravitalia se réserve le droit d’anathématiser* tout Utilisateur n’ayant pas respecté les règles ci-dessus.",
-
-  "Of course, we welcome all developers who want to enrich the experience of our Users on our Services!": "Nous souhaitons, bien évidemment, la bienvenue à tous les développeurs qui veulent enrichir l’expérience de nos Utilisateurs sur nos Services !",
-  "To perfect your ideas and to guarantee the security of our Users' data (even public), it is important to read these rules.": "Pour parfaire vos idées et garantir la sécurité des données (même publiques) de nos Utilisateurs, il est important de lire ces quelques règles.",
-
-  "You shall not attempt to: (a) perform analysis for the purpose of tracking and/or profiting from and commercially exploiting such data, (b) attempt to reverse engineer to derive private (non-<b>FOSS</b>) source code, know-how or trade secrets, (c) reproduce, redistribute, rent or sell access to the API, (d) access prohibited endpoints (oauth.gravitalia.com).": "Vous ne devez pas tenter de : (a) faire des analyses ayant pour finalité le traçage et/ou le profit ainsi que l’exploitation commerciale de ces données, (b) de tenter de faire de l’ingénieurerie inversé pour en tirer les codes sources privés (non <b>FOSS</b>), le savoir-faire ou les secrets commerciaux, (c) de reproduire, redistribuer, louer ou vendre l’accès à l’API, (d) d’accéder aux points de terminaison interdits (oauth.gravitalia.com).",
-
-  "In order to improve privacy, we expressly request the encryption of confidential data (email address, phone number...) when shared WITH EXPRESS USER AGREEMENT or even in cases where this data does not serve an explicit reading frame, the hashing of it.": "Dans le but d’améliorer le respect à la vie privée, nous demandons expressément le chiffrement des données confidentielles (adresse e-mail, numéro de téléphone...) dès lors qu’il est partagé SOUS ACCORD EXPRESS DE L’UTILISATEUR voire dans les cas où ces données ne servent pas un cadre de lecture explicite, le hachage de celles-ci.",
-  "In addition, we recommend that you comply with GDPR, CCPA/CCRA and LGPD. In the case of large applications or heavy usage, you will be required to provide a privacy policy, but also, and not limited to, proof of compliance, a comprehensive list of saved data, and proof of identity.": "De plus, nous vous recommandons de respecter le RPGD, le CCPA/CCRA et le LGPD. Dans le cas de grosses applications ou de lourdes utilisations, il vous sera imposé de fournir une politique de confidentialité mais aussi, et s’en s’y limiter, une preuve du respect des réglementations, une liste exhaustive des données sauvegardées ainsi qu’une preuve d’identité.",
-
-  "In case of refusal to comply with these rules, sanctions may be applied against you such as the suspension of your application, your User account or even recourse to the competent courts.": "En cas de refus d’obtempérer à ces règles, des sanctions pourront être appliquées à votre encontre tel que la suspension de votre application, de votre compte Utilisateur voire le recours aux tribunaux compétents.",
-
-  "To enjoy the Services continuously, without interruption or blocking, you may need to have an account. The security of this account is your responsibility, you must provide a strong password, check if your information has been compromised, etc. In case of loss, theft or damage related to your account, we cannot be held responsible.": "Pour profiter des Services de manière continuelle, sans interruption ou blocage, vous devrez peut-être disposer d’un compte. La sécurité de ce compte vous incombe, vous devez fournir un mot de passe fort, vérifier si vos informations ont été compromises, etc. En cas de perte, vol ou préjudice lié à votre compte, nous ne pourrons pas être tenus responsables.",
-  "In addition, you may be asked for contact information (phone number, e-mail address), information aimed at authentication (password) or identification (username); for more information, visit the privacy page.": "De plus, il vous sera peut-être demandé des informations pour vous contacter (numéro de téléphone, adresse e-mail), des informations visant l’authentification (mot de passe) ou l’identification (nom d’utilisateur) ; pour plus d’informations, rendez-vous sur la page de confidentialité.",
-  "You are responsible for keeping your contact details up to date (e-mail address, for example), in the event of an impossibility to reach you, we will assume that all information has indeed been sent; we also assume that the communications made from your account or the contact details thereof have been made by you.": "Vous êtes responsable de maintenir à jour vos coordonnées (adresse e-mail, par exemple). En cas d'impossibilité de vous joindre, nous considérerons que toutes les informations ont bien été envoyées. De même, nous considérerons que les communications effectuées depuis votre compte ou les coordonnées associées ont été effectuées par vous.",
-
-  "Some of our Services give you the possibility to publish content (in written, videographic, photographic or other form), as long as you send this content, you give us full rights to distribute, store, copy and communicate it. In addition, you represent and warrant to us that you have full rights to this work. This license is applicable worldwide, non-exclusive, free of charge and perpetual.": "Certains de nos Services vous donnent la possibilité de publier du contenu (sous forme écrite, vidéographique, photographique ou autre), dès lors que vous envoyez ce contenu, vous nous laissez l’entier droit de le distribuer, conserver, copier et communiquer. De plus, vous nous affirmez et garantissez que vous avez l’entier droit sur cette œuvre. Cette licence est applicable à l’échelle mondiale, non exclusive, à titre gratuit et perpétuelle.",
-  "<i>Ad nutum</i>, we reserve the right to temporarily or permanently delete or block your content, if it is contrary to our principles (cf. What we expect from you). When content is blocked, an email will normally be sent to the author, and the author may request a revised procedure by emailing.": "><i>Ad nutum</i>, nous nous réservons le droit de supprimer ou de bloquer temporairement ou définitivement votre contenu, si celui-ci est contraire à nos principes (cf. Ce que nous attendons de vous). Lors du blocage du contenu, un e-mail sera normalement envoyé à l’auteur, et celui-ci pourra demander à avoir une procédure révisée en envoyant un e-mail à.",
-
-  "We may allow our content to be used on third party platforms but we retain all intellectual property rights. You are not permitted to obscure or alter any logos or trademarks.": "Nous pouvons autoriser l’utilisation de notre contenu pour des plateformes tierces mais nous conservons tous les droits de propriété intellectuelle. Vous n’êtes pas autorisé à masquer ou à modifier les logos et marques.",
-
-  "We may make content available that we do not own through multiple Services. We cannot delegate the use of content. The content is not altered and may not reflect the opinion of Gravitalia.": "Nous pouvons mettre à disposition du contenu qui ne nous appartiennent pas par le biais de plusieurs Services. Nous ne pouvons déléguer l’utilisation de contenu. Le contenu n’est pas altéré et peut ne pas refléter l’opinion de Gravitalia.",
-
-  "By your will:": "Par votre volonté :",
-  "By Gravitalia:": "Par Gravitalia :",
-  "you are free to stop using the Services provided at any time without reason. You may delete your account, which will anonymize the data in your account (see Privacy Policy) or deactivate your account, if you are offered the option, which will suspend all processing of your personal information; such deactivation does not result in termination of this Agreement.": "vous êtes libre de cesser d'utiliser les services fournis à tout moment et sans raison. Vous pouvez supprimer votre compte, ce qui rendra anonymes les données qu'il contient (voir la politique de confidentialité) ou désactiver votre compte, si cette option vous est offerte, ce qui suspendra tout traitement de vos informations personnelles ; cette désactivation n'entraîne pas la résiliation du présent accord.",
-  "we reserve the right to suspend* your account or access (to a Service, site, software...) with or without notice if we believe that your account, or content is in violation of our principles.": "nous nous réservons le droit de suspendre* votre compte ou votre accès (à un Service, un site, un logiciel...) avec ou sans préavis si nous estimons que votre compte, ou contenu ne respecte pas nos principes.",
-
-  "The Services are provided “as is”. If you reside outside of the EEA or the UK, you agree that access to the Services is at your own risk.": "Les Services sont fournis “en l’État”. Si vous résidez en dehors des EEE ou du Royaume-Uni, vous acceptez que l’accès aux Services sont à vos propres risques et périls.",
-  "WE (COMPANY, AFFILIATES) DISCLAIM, TO THE FULLEST EXTENT PERMITTED BY LAW, ANY EXPRESS OR IMPLIED WARRANTY OF MERCHANTABILITY. THE SERVICES ARE PROVIDED “AS IS”.": "NOUS (SOCIÉTÉ, AFFILIÉS) DÉCLINONS, DANS TOUTES LES MESURES PERMISES PAR LES LOIS, TOUTE GARANTIE EXPRESSE OU IMPLICITE QUANT À LA QUALITÉ MARCHANDE. LES SERVICES SONT MIS À DISPOSITION “EN L’ÉTAT”.",
-  "We disclaim all responsibility and liability for the availability, security and reliability of the Services.": "Nous déclinons toutes responsabilités et obligations quant à la disponibilité, la sécurité et la fiabilité des Services.",
-
-  "This section may not apply in certain countries or regions such as the EEA.": "Cette section peut ne pas s’appliquer dans certains pays ou régions comme l’EEE.",
-  "This contract is subject to French law.": "Le présent contrat est soumis à la législation française.",
-  "Translations are given for information purposes only, in the event of a dispute, only the French version of the contracts (General Conditions of Use and Privacy Policy for example) may be used and only the French courts may be seized to settle this dispute.": "Les traductions ne sont données qu’à titre informatif, en cas de litige, seule la version française des contrats (Conditions Générales d’Utilisation et Politique de Confidentialité par exemple) pourra être utilisée et seuls les tribunaux français pourront être saisis pour régler ce contentieux.",
-  "Gravitalia cannot be held responsible for the information present on its site; the information disseminated is purely informative and is not intended to have true values.": "Gravitalia ne peut être tenu responsable des informations présentes sur son site ; les informations diffusées sont purement informatives et n’ont pas vocation à avoir des valeurs véridiques.",
-  "Gravitalia cannot be held responsible for files downloaded by the User. This includes viruses or other computer/server infecting software.": "Gravitalia ne peut être tenu responsable des fichiers téléchargés par l’Utilisateur. Cela inclut les virus ou autres logiciels infectant les ordinateurs/serveurs.",
-  "Gravitalia cannot guarantee the integrity of the data and will not be liable for any incidental, special, exemplary or consequential damages, loss of profits, revenue, savings, business opportunities or customers, directly or indirectly.": "Gravitalia ne peut pas garantir l’intégrité des données et ne sera pas responsable de tout dommage accessoire, spécial, exemplaire ou consécutif, de perte de bénéfices, de revenus, d’économie, d’opportunité.s commerciale.s ou de clientèle et ce, de façon directe ou indirecte.",
-  "WE CANNOT BE HELD RESPONSIBLE FOR THE CONTENT AND CONDUCT OF USERS OF OUR SERVICES AND THIS OF WAY ONLINE OR OFFLINE.": "NOUS NE POURRONS PAS ÊTRE TENU RESPONSABLE DES CONTENUS ET DE LA CONDUITE DES UTILISATEURS DE NOS SERVICES ET CECI DE MANIÈRE EN LIGNE OU HORS-LIGNE.",
-  "IN THE EVENT OF A DISPUTE, AN AMICABLE AGREEMENT SHOULD BE UNDERTAKEN PRIOR TO ANY COMPLAINT.": "DANS LE CAS D’UN LITIGE, UN ACCORD À L’AMIABLE DEVRAIT ÊTRE ENTREPRIS AVANT TOUTE PLAINTE.",
-
-  "* The anathema employed will be, for example, an indexing on a private account suspension registry.": "* L'anathème employé sera, par exemple, une indexation sur un registre privé de suspension de compte.",
-  "* The suspension will directly lead to the data anonymization process.": "* La suspension entraînera directement le processus d’anonymisation des données.",
-
-  "Definitions": "Définitions",
-  "Legal notice": "Mentions légales",
-  "Who are we": "Qui sommes-nous ?",
-  "Use of our Services": "Utilisation de nos Services",
-  "What you can expect from us": "Ce que vous pouvez attendre de nous",
-  "What we expect from you": "Ce que nous attendons de vous",
-  "Conditions of access to the API": "Conditions d’accès à l’API",
-  "a. Introduction": "a. Introduction",
-  "b. Restrictions": "b. Restrictions",
-  "c. Respect for data": "c. Respect des données",
-  "d. Sanctions": "d. Sanctions",
-  "Your account": "Votre compte",
-  "Our content": "Notre contenu",
-  "Other content": "Autre contenu",
-  "Cancellation": "Résiliation",
-  "Services provided": "Services fournis “EN L'ÉTAT”",
-  "Limitations and responsibilities": "Limitations et responsabilités",
-  "Your content": "Votre contenu",
-
-  "Privacy Policy": "Politique de confidentialité",
-  "Welcome to Gravitalia! Before creating an account, it may be interesting to read and know how your data is used and processed.": "Bienvenue chez Gravitalia ! Avant de créer un compte, il peut être intéressant de lire et de savoir comment vos données sont utilisées et traitées.",
-  "With us, we strive to guarantee: security, reliability and above all respect for private life! We do not resell anything and we do not use any data collected for advertising purposes!": "Chez nous, nous nous efforçons de garantir : la sécurité, la fiabilité et surtout le respect de la vie privée ! Nous ne revendons rien et nous n’utilisons aucune donnée récoltée à des fins publicitaires !",
-  "The definitions described in the General Conditions of Use also apply here.": "Les définitions décrites dans les Conditions Générales d’Utilisation s’appliquent aussi ici.",
-
-  "The account": "Le compte",
-  "when you create a Gravitalia account, you provide us with personal information (e-mail address, password, surname, first name); you may also, optionally, provide a telephone number or a date of birth.": "lorsque vous créez un compte Gravitalia, vous nous fournissez des renseignements personnels (adresse e-mail, mot de passe, nom, prénom) ; vous pouvez aussi, facultativement, fournir un numéro de téléphone, ou une date de naissance.",
-
-  "The content": "Le contenu",
-  "As soon as you upload a publication (photograph, video, file, messages, written material in draft or non-draft form), the information entered is recorded for redistribution on the platforms. Voice or video calls, on the other hand, are not recorded, although a cover image may be temporarily saved.": "dès lors que vous mettez en ligne une publication (une photographie, une vidéo, un fichier, des messages, des écrits sous forme de brouillon ou non), les informations entrées sont enregistrées pour les redistribuer sur les plateformes. Les appels vocaux ou vidéos, quant à eux, ne sont pas enregistrés, même si une image de couverture peut être enregistrée temporairement.",
-
-  "Payments": "Les paiements",
-  "when you purchase (or offer) products or services, you may be asked to provide a valid payment method, as well as associated information, such as the holder's first and last name or billing address. In order to secure and facilitate the transaction, third-party services such as PayPal or Stripe will process this payment information. We may store certain payment information, such as invoices or the last four digits of the card number associated with the transaction.": "lorsque vous achetez (ou offrez) des produits ou services, vous pourriez être amené à fournir un mode de paiement valide, ainsi que de fournir des informations associées, tels que le nom, prénom ou encore adresse de facturation du détenteur. Afin de sécuriser et de faciliter la transaction, des services tiers comme PayPal ou Stripe seront amenés à traiter ces informations de paiement. Nous pouvons être amené à stocker certaines informations de paiement, tels que des factures ou les quatre derniers chiffres du numéro de la carte associée à la transaction.",
-
-  "Your interactions": "Vos interactions",
-  "we also collect data on your interactions. That is to say, platform publications (photography, written posts) liked, subscriptions (when you subscribe to a user), robots/applications you have created or authorized (to access your data), publications created, accounts blocked, groups you join or create, your connections to platforms, your purchases, as well as moderation decisions.": "nous sommes aussi menés à recueillir les données de vos interactions. C'est-à-dire, les publications sur les plateformes (photographie, posts écrits) aimées, les abonnements (quand vous vous abonnez à un utilisateur), les robots/applications que vous avez créé ou autorisé (à accéder à vos données), les publications créées, les comptes bloqués, les groupes que vous rejoignez ou créez, vos connexions aux plateformes, vos achats, ainsi que les décisions de modération.",
-
-  "Other information": "Autres informations",
-  "you may fill out a form or request verification of your account; when this happens, you may be asked to enter additional information about yourself or the organization you represent.": "il se peut que vous répondiez à un formulaire ou que vous demandez la vérification de votre compte ; quand ceci se produit, vous pouvez être invité à entrer des informations supplémentaires sur vous-même ou l’organisation que vous représentez.",
-
-  "Your device": "Votre appareil",
-  "we may also collect the IP address in order to ensure the security of Users and Services, for example by checking whether they are identical.": "nous pouvons aussi collecter l’adresse IP afin de garantir la sécurité des Utilisateurs et Services, en vérifiant si elles sont identiques, par exemple.",
-
-  "Cookies": "Cookies",
-  "we use cookies for security purposes, to store configuration information (chosen language, etc.) or connection information; in no case advertising cookies.": "nous utilisons les cookies à des fins sécuritaires, pour stocker des informations de paramétrage (langue choisie...) ou des informations de connexion ; en aucun cas des cookies publicitaires.",
-
-  "To provide you with Services": "Vous fournir des Services",
-  "we use the data you provide to ensure that our Services work the way we want them to. For example, when you write a post, or share a photograph, we need to process it (to check that the content complies with our rules) and store it (to then redistribute it to other Users, and to the Internet). We may also use this data to enhance the functionality of certain Services.": "nous utilisons les données fournies afin de vous garantir des Services qui fonctionnent comme nous le souhaitons. A titre d'exemple, lorsque vous écrivez un post, ou partagez une photographie, nous avons besoin de le traiter (pour vérifier que le contenu soit en accord avec nos règles) et de le stocker (pour ensuite le redistribuer aux autres Utilisateurs, et à Internet). Nous pouvons aussi utiliser ces données afin d'alimenter la fonctionnalité de certains Services.",
-
-  "Guarantee security": "Garantir la sécurité",
-  "in order to guarantee the safety of all Users, we are constantly striving to improve security. Some data may be analyzed to prevent misuse or use contrary to our rules/terms and conditions. For instance, the analysis of certain texts or photographs may be carried out by automatic learning.": " afin de garantir la sécurité de tous les Utilisateurs, nous nous efforçons d'améliorer la sécurité, et ce, de manière continue. Certaines données peuvent être analysées pour empêcher certaines utilisations abusives ou contraire à nos règles/conditions générales d'utilisation. En effet, l'analyse de certains textes ou de certaines photographies peuvent s'opérer par apprentissage automatique, par exemple.",
-
-  "To contact you": "Pour vous contacter",
-  "we use the information provided to keep in touch with you and inform you of changes that affect you but also to set up a system of double authentication.": "nous utilisons les informations fournies pour rester en contact avec vous et vous informer des changements qui vous impactent mais aussi pour mettre en place un système de double authentification.",
-
-  "To provide service Customer": "Pour fournir un service client",
-  "we use the information to answer your questions, investigate bugs, interact with you at convenient times, or otherwise.": "nous utilisons les informations pour répondre à vos questions, enquêter sur les bogues, interagir avec vous aux heures qui vous conviennent ou autre.",
-
-  "Improve our service": "Améliorer notre service",
-  "we use this information to understand the interactions, to improve our visibility as well as the accessibility of our Services.": "nous utilisons ces informations pour comprendre les interactions, d’améliorer notre visibilité ainsi que l’accessibilité de nos Services.",
-
-  "Protect vital interests": "Protéger les intérêts vitaux",
-  "we can use, collect and share data if we believe that the physical or psychological integrity of a person is at stake (i.e. a car accident, resolving an emergency medical situation).": "nous pouvons utiliser, recueillir et partager des données si nous pensons que l’intégrité physique ou psychique d’une personne est en jeu (i.e. un accident de voiture, résoudre une situation médicale d’urgence).",
-
-  "With your consent": "Avec votre consentement",
-  "when you authorize us to share your data with a third party or Users. Indeed, when you publish a photograph, or written content, we may, where your settings allow, disclose it to the web, i.e. publicly. In another case, when you purchase a good or service, the information may be transmitted to PayPal or Stripe to satisfy your request.": "dès lors que vous nous autorisez à partager vos données avec un tiers ou les Utilisateurs. En effet, lorsque vous publiez une photographie, ou un contenu écrit, nous pouvons, lorsque vos paramètres le permettent, le divulguer à la toile, c'est-à-dire de manière publique. Autre cas, lorsque vous achetez un bien ou service, les informations peuvent être transmises à PayPal ou Stripe pour satisfaire votre demande.",
-
-  "When you share them": "Quand vous les partager",
-  "by publishing content online, by providing public data (username, profile picture, etc.).": "en publiant un contenu en ligne, en renseignant des données publiques (nom d’utilisateur, photo de profil...).",
-
-  "With our suppliers": "Avec nos fournisseurs",
-  "we delegate certain parts of our Services to trusted third parties, which enable the processing of information (e.g. payment) or the cloud providers that host our data.": "nous déléguons certaines parties de nos Services à des tiers de confiance, qui permettent le traitement d’informations (de paiement par exemple) ou les fournisseurs de cloud qui hébergent nos données.",
-
-  "For legal issues": "Pour des questions juridiques",
-  "when we believe it is in the interests of Gravitalia and the User, we may transmit data when required by law, for example during an investigation. Although we strive to limit abusive legal requests.": "quand nous pensons qu'il est dans l'intérêt de Gravitalia et de l'Utilisateur, nous pouvons transmettre des données lorsque celles-ci sont requises par la loi, par exemple lors d'une enquête. Bien que nous nous efforçons de limiter les requêtes légales abusives.",
-
-  "In case of emergency": "En cas d’urgence",
-  "if we believe that the physical or psychological integrity of someone is at stake, we can transmit certain data, in good faith to the departments concerned.": "si nous pensons que l’intégrité physique ou psychique de quelqu’un est en jeu, nous pouvons transmettre certaines données, de bonne foi aux services intéressés.",
-
-  "Merger, buyout of Gravitalia": "Fusion, rachat de Gravitalia",
-  "in the event that Gravitalia is bought out, the data may be transmitted to its parent company.": "dans le cas où Gravitalia se fait racheter, les données pourront être transmises à sa société mère.",
-
-  "Data is only processed within Europe and more specifically within the European Union. We believe that data should remain in a secure and regulated location, which is why it is processed in Germany (Frankfurt), France (Paris) or Ireland (Dublin). For security reasons, data may be stored at several locations in the European Union (fault tolerance, edge computing), but will remain just as secure.": "Les données sont traitées uniquement au sein de l'Europe et plus spécifiquement, au sein de l'Union européenne. Nous pensons que les données doivent rester dans un endroit sûr et réglementé, c'est pour cela qu'elles sont traitées en Allemagne (à Francfort), ou en France (à Paris), ou bien encore en Irlande (à Dublin). Pour des raisons de sécurité, les données peuvent être enregistrées à plusieurs endroits en Union européenne (tolérance aux pannes, informatique en périphérie de réseau), mais resteront tout aussi sécurisé.",
-
-  "Data is kept for as long as is necessary for the purposes mentioned above. However, when we detect prolonged inactivity (approximately 5 years), an account deletion procedure may be initiated.": "Les données sont conservées aussi longtemps que nécessaire aux fins mentionnées ci-dessus. Néanmoins, lorsque nous détectons une inactivité prolongée (5 ans, environ), une procédure de suppression de compte peut être enclenchée.",
-  "When the account deletion procedure is initiated, access to your account is restricted: you can no longer log in, but your data remains intact. No more Users can access your account information, which appears as deleted.": "Lorsque la procédure de suppression de compte est initiée, l'accès à votre compte est restreint : la connexion n'est plus possible, mais les données persistent. Plus aucun Utilisateur ne peut accéder aux informations de votre compte, qui apparait comme supprimé.",
-  "After 30 days (following the procedure), the data begins to be deleted (username, avatar, biography, etc.), with only the data that is important for security being kept and anonymised (the \"vanity\" to prevent identity theft, and the encrypted e-mail address).": "Au bout de 30 jours (à la suite de la procédure), les données commencent à être supprimées (nom d'utilisateur, avatar, biographie...), seules les données ayant une importance pour la sécurité sont gardées et anonymisées (le \"vanity\" pour éviter l'usurpation d'identité, ainsi que l'adresse e-mail chiffrée).",
-
-  "Safety is paramount with us! While no system is foolproof, we have strict standards for securing data.": "La sécurité est primordiale chez nous ! Même si aucun système n’est infaillible, nous avons des normes strictes quant à la sécurisation des données.",
-  "First, sensitive data is either encrypted (if it must be usable in the future: phone number, email adress, or date of birth, for example) or hashed (if it must be very secure, and non-recoverable : password, for example).": "Premièrement, les données sensibles sont soit chiffrées (si elles doivent être utilisables dans le futur : numéro de téléphone, adresse e-mail, ou date de naissance, par exemple) soit hachées (si elles doivent être très sécurisées, et non récupérables : mot de passe, par exemple).",
-  "Secondly, we put a minimum of security on the servers we use (firewalls, limited password attempts...) so that our critical infrastructures are not exposed too strongly.": "Deuxièmement, nous mettons un minimum de sécurité sur les serveurs que nous utilisons (pare-feu, tentatives de mots de passe limitées...) afin que nos infrastructures critiques ne soient pas exposées trop fortement.",
-  "Also remember that all data transmitted between Gravitalia and you (and vice versa) is under the security padlock (HTTPS) which guarantees that the data is encrypted when in transit from your browser, through Cloudflare, and finally, to reach our servers.": "N’oubliez pas aussi que toutes les données transmises entre Gravitalia et vous (et vice-versa) sont sous le cadenas de sécurité (HTTPS) qui garantit que les données sont chiffrées lorsqu’elles transitent depuis votre navigateur, en passant par Cloudflare, et enfin, pour atteindre nos serveurs.",
-  "But security is played on several tables! If you haven't already done so, you can add double authentication and even opt for a unique and strong password!": "Mais la sécurité se joue sur plusieurs tables ! Si cela n’est pas déjà fait, vous pouvez ajouter la double authentification et même opter pour un mot de passe unique et fort !",
-
-  "We do not use your data for profit, nor resell it and even believe that the data must remain with the User.": "Nous n’utilisons pas vos données à but lucratif, ni les revendons et pensons même que les données doivent rester à l’Utilisateur.",
-  "You are free to subscribe or unsubscribe from the various Services, communicate with whoever you want.": "Vous êtes libres de vous inscrire ou de vous désinscrire des différents Services, de communiquer avec qui vous voulez.",
-  "You can choose, in the settings offered by each Service, whether or not to personalize your news feed. The personalization is done, not according to precise analyzes but simply from your “likes” (or button provided with this effigy).": "Vous pouvez choisir, dans les paramètres offerts par chaque Service, de personnaliser ou non votre fil d’actualité. La personnalisation se fait, non pas en fonction d’analyses précises mais simplement à partir de vos “j’aime” (ou bouton prévu à cet effigie).",
-
-  "Each Service offers in the “Settings” a part (generally called “Data”) allowing you to access your:": "Chaque Service propose dans les “Paramètres” une partie (généralement nommée “Données”) vous permettant d’accéder à votre :",
-
-  "Access right": "Droit d’accès",
-  "which allows you to download the data collected about you. Please note that the information: banking, password and e-mail address are not provided when downloading the data.": "qui vous permet de télécharger les données recueillies à votre propos. Veuillez noter que les informations : bancaires, mot de passes et adresse e-mail ne sont pas fournies lors du téléchargement des données.",
-
-  "Right to erasure": "Droit d’effacement",
-  "which gives you the possibility to delete your account globally or individually. When this right is applied, your account is deleted within 1 month (recoverable account), except for accounts linked to each Service which is deleted instantly, then the personal data (username, password, IP address... ) excluding email address and \"vanity\".": "qui vous laisse la possibilité de supprimer votre compte globalement ou individuellement. Quand ce droit est appliqué, votre compte est supprimé sous 1 mois (compte récupérable), sauf pour les comptes liés à chaque Service qui est supprimé instantanément, puis les données personnelles (nom d’utilisateur, mot de passe, adresse IP...) hors adresse e-mail et \"vanity\".",
-
-  "Right of rectification": "Droit de rectification",
-  "you can modify at any time, via the “Settings” section, all the information collected about you.": "vous pouvez à tout moment modifié, via la section “Paramètres” toutes les informations récoltées vous concernant.",
-
-  "Right to be forgotten": "Droit à l’oubli",
-  "this right requires you to contact us by e-mail. Please include the right to be forgotten in the subject line of the e-mail and contact us via our e-mail address (provided below) with your identity card.": "ce droit requiert de nous contacter par mail. Veuillez rajouter dans l’objet du mail le droit à l’oubli et nous contacter via notre e-mail (fournit ci-dessous) munit de votre carte d’identité.",
-
-  "Right of withdrawal": "Droit de retrait",
-  "when you register, you accept and approve having read the contracts, however, you can decide at any time to stop your commitment. To do this, simply follow the instructions of the right to erasure; you can no longer use our Services if you no longer wish to comply with our contracts.": "lorsque vous vous inscrivez, vous acceptez et approuvez avoir lu les contrats néanmoins, vous pouvez à tout moment décider d’arrêter votre engagement. Pour ce faire, il vous suffit de suivre les instructions du droit d’effacement ; vous ne pouvez plus utiliser nos Services si vous ne souhaitez plus respecter nos contrats.",
-
-  "You can contact us if you have any questions about this Privacy Policy. We look forward to hearing from you and helping you!": "Vous pouvez nous contacter si vous avez des questions concernant cette politique de confidentialité. Nous sommes à votre écoute et ravis de vous aider !",
-  "You can also contact our DPO at the e-mail address below.": "Vous pouvez également contacter notre DPD à l'adresse ci-dessous.",
-  "Enjoy using our Services!": "Bonne utilisation de nos Services !",
-
-  "Contact us about confidentiality:": "Nous contacter sur la confidentialité :",
-  "Contact our DPO:": "Contacter notre DPO :",
-  "Other forms of contact:": "Autre forme de contact :",
-
-  "Data we collect": "Les informations que nous collectons",
-  "a. What you provide us with": "a. Ce que vous nous fournissez",
-  "b. What we collect": "b. Ce que nous collectons",
-  "How we use this data": "Comment nous utilisons ces données",
-  "How we share your information": "Comment nous partageons vos renseignements",
-  "International Data Transfers": "Transferts internationaux des données",
-  "Data retention time": "Temps de conservation des données",
-  "Data protection": "Protection des données",
-  "Your choices about how your data is managed": "Vos choix sur la gestion de vos données",
-  "Your rights": "Vos droits",
-  "Contact us": "Nous contacter"
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "description": [
+      "Bienvenue chez Gravitalia ! Avant de créer un compte, il peut être intéressant de lire et de savoir comment vos données sont utilisées et traitées.",
+      "Chez nous, nous nous efforçons de garantir : la sécurité, la fiabilité et surtout le respect de la vie privée ! Nous ne revendons rien et nous n’utilisons aucune donnée récoltée à des fins publicitaires !",
+      "Les définitions décrites dans les Conditions Générales d’Utilisation s’appliquent aussi ici."
+    ],
+    "data_we_collect": {
+      "title": "Données que nous collectons",
+      "provided": {
+        "title": "a. Ce que vous nous fournissez",
+        "account": {
+          "title": "Le compte",
+          "description": "lorsque vous créez un compte Gravitalia, vous nous fournissez des renseignements personnels (adresse e-mail, mot de passe, nom, prénom) ; vous pouvez aussi, facultativement, fournir un numéro de téléphone, ou une date de naissance."
+        },
+        "content": {
+          "title": "Le contenu",
+          "description": "dès lors que vous mettez en ligne une publication (une photographie, une vidéo, un fichier, des messages, des écrits sous forme de brouillon ou non), les informations entrées sont enregistrées pour les redistribuer sur les plateformes. Les appels vocaux ou vidéos, quant à eux, ne sont pas enregistrés, même si une image de couverture peut être enregistrée temporairement."
+        },
+        "payments": {
+          "title": "Les paiements",
+          "description": "lorsque vous achetez (ou offrez) des produits ou services, vous pourriez être amené à fournir un mode de paiement valide, ainsi que de fournir des informations associées, tels que le nom, prénom ou encore adresse de facturation du détenteur. Afin de sécuriser et de faciliter la transaction, des services tiers comme PayPal ou Stripe seront amenés à traiter ces informations de paiement. Nous pouvons être amené à stocker certaines informations de paiement, tels que des factures ou les quatre derniers chiffres du numéro de la carte associée à la transaction."
+        },
+        "interactions": {
+          "title": "Vos interactions",
+          "description": "nous sommes aussi menés à recueillir les données de vos interactions. C'est-à-dire, les publications sur les plateformes (photographie, posts écrits) aimées, les abonnements (quand vous vous abonnez à un utilisateur), les robots/applications que vous avez créé ou autorisé (à accéder à vos données), les publications créées, les comptes bloqués, les groupes que vous rejoignez ou créez, vos connexions aux plateformes, vos achats, ainsi que les décisions de modération."
+        },
+        "other": {
+          "title": "Autres informations",
+          "description": "il se peut que vous répondiez à un formulaire ou que vous demandez la vérification de votre compte ; quand ceci se produit, vous pouvez être invité à entrer des informations supplémentaires sur vous-même ou l’organisation que vous représentez."
+        }
+      },
+      "what": {
+        "title": "b. Ce que nous collectons",
+        "device": {
+          "title": "Votre appareil",
+          "description": "nous pouvons aussi collecter l’adresse IP afin de garantir la sécurité des Utilisateurs et Services, en vérifiant si elles sont identiques, par exemple."
+        },
+        "cookies": {
+          "title": "Cookies",
+          "description": "nous utilisons les cookies à des fins sécuritaires, pour stocker des informations de paramétrage (langue choisie...) ou des informations de connexion ; en aucun cas des cookies publicitaires."
+        }
+      }
+    },
+    "how": {
+      "title": "Comment nous utilisons ces données",
+      "services": {
+        "title": "Vous fournir des Services",
+        "description": "nous utilisons les données fournies afin de vous garantir des Services qui fonctionnent comme nous le souhaitons. A titre d'exemple, lorsque vous écrivez un post, ou partagez une photographie, nous avons besoin de le traiter (pour vérifier que le contenu soit en accord avec nos règles) et de le stocker (pour ensuite le redistribuer aux autres Utilisateurs, et à Internet). Nous pouvons aussi utiliser ces données afin d'alimenter la fonctionnalité de certains Services."
+      },
+      "security": {
+        "title": "Garantir la sécurité",
+        "description": "afin de garantir la sécurité de tous les Utilisateurs, nous nous efforçons d'améliorer la sécurité, et ce, de manière continue. Certaines données peuvent être analysées pour empêcher certaines utilisations abusives ou contraire à nos règles/conditions générales d'utilisation. En effet, l'analyse de certains textes ou de certaines photographies peuvent s'opérer par apprentissage automatique, par exemple."
+      },
+      "contact": {
+        "title": "Pour vous contacter",
+        "description": "nous utilisons les informations fournies pour rester en contact avec vous et vous informer des changements qui vous impactent mais aussi pour mettre en place un système de double authentification."
+      },
+      "service": {
+        "title": "Pour fournir un service client",
+        "description": "nous utilisons les informations pour répondre à vos questions, enquêter sur les bogues, interagir avec vous aux heures qui vous conviennent ou autre."
+      },
+      "improve_service": {
+        "title": "Améliorer notre service",
+        "description": "nous utilisons ces informations pour comprendre les interactions, d’améliorer notre visibilité ainsi que l’accessibilité de nos Services."
+      },
+      "vital": {
+        "title": "Protéger les intérêts vitaux",
+        "description": "nous pouvons utiliser, recueillir et partager des données si nous pensons que l’intégrité physique ou psychique d’une personne est en jeu (i.e. un accident de voiture, résoudre une situation médicale d’urgence)."
+      }
+    },
+    "share": {
+      "title": "Comment nous partageons vos renseignements",
+      "consent": {
+        "title": "Avec votre consentement",
+        "description": "dès lors que vous nous autorisez à partager vos données avec un tiers ou les Utilisateurs. En effet, lorsque vous publiez une photographie, ou un contenu écrit, nous pouvons, lorsque vos paramètres le permettent, le divulguer à la toile, c'est-à-dire de manière publique. Autre cas, lorsque vous achetez un bien ou service, les informations peuvent être transmises à PayPal ou Stripe pour satisfaire votre demande."
+      },
+      "when": {
+        "title": "Quand vous les partager",
+        "description": "en publiant un contenu en ligne, en renseignant des données publiques (nom d’utilisateur, photo de profil...)."
+      },
+      "contact": {
+        "title": "Pour vous contacter",
+        "description": "nous utilisons les informations fournies pour rester en contact avec vous et vous informer des changements qui vous impactent mais aussi pour mettre en place un système de double authentification."
+      },
+      "suppliers": {
+        "title": "Avec nos fournisseurs",
+        "description": "nous déléguons certaines parties de nos Services à des tiers de confiance, qui permettent le traitement d’informations (de paiement par exemple) ou les fournisseurs de cloud qui hébergent nos données."
+      },
+      "legal": {
+        "title": "Pour des questions juridiques",
+        "description": "quand nous pensons qu'il est dans l'intérêt de Gravitalia et de l'Utilisateur, nous pouvons transmettre des données lorsque celles-ci sont requises par la loi, par exemple lors d'une enquête. Bien que nous nous efforçons de limiter les requêtes légales abusives."
+      },
+      "emergency": {
+        "title": "En cas d’urgence",
+        "description": "si nous pensons que l’intégrité physique ou psychique de quelqu’un est en jeu, nous pouvons transmettre certaines données, de bonne foi aux services intéressés."
+      },
+      "merger": {
+        "title": "Fusion, rachat de Gravitalia",
+        "description": "dans le cas où Gravitalia se fait racheter, les données pourront être transmises à sa société mère."
+      }
+    },
+    "international": {
+      "title": "Transferts internationaux des données",
+      "description": "Les données sont traitées uniquement au sein de l'Europe et plus spécifiquement, au sein de l'Union européenne. Nous pensons que les données doivent rester dans un endroit sûr et réglementé, c'est pour cela qu'elles sont traitées en Allemagne (à Francfort), ou en France (à Paris), ou bien encore en Irlande (à Dublin). Pour des raisons de sécurité, les données peuvent être enregistrées à plusieurs endroits en Union européenne (tolérance aux pannes, informatique en périphérie de réseau), mais resteront tout aussi sécurisé."
+    },
+    "time": {
+      "title": "Temps de conservation des données",
+      "description": [
+        "Les données sont conservées aussi longtemps que nécessaire aux fins mentionnées ci-dessus. Néanmoins, lorsque nous détectons une inactivité prolongée (5 ans, environ), une procédure de suppression de compte peut être enclenchée.",
+        "Lorsque la procédure de suppression de compte est initiée, l'accès à votre compte est restreint : la connexion n'est plus possible, mais les données persistent. Plus aucun Utilisateur ne peut accéder aux informations de votre compte, qui apparait comme supprimé.",
+        "Au bout de 30 jours (à la suite de la procédure), les données commencent à être supprimées (nom d'utilisateur, avatar, biographie...), seules les données ayant une importance pour la sécurité sont gardées et anonymisées (le \"vanity\" pour éviter l'usurpation d'identité, ainsi que l'adresse e-mail chiffrée)."
+      ]
+    },
+    "protection": {
+      "title": "Protection des données",
+      "description": [
+        "La sécurité est primordiale chez nous ! Même si aucun système n’est infaillible, nous avons des normes strictes quant à la sécurisation des données.",
+        "Premièrement, les données sensibles sont soit chiffrées (si elles doivent être utilisables dans le futur : numéro de téléphone, adresse e-mail, ou date de naissance, par exemple) soit hachées (si elles doivent être très sécurisées, et non récupérables : mot de passe, par exemple).",
+        "Deuxièmement, nous mettons un minimum de sécurité sur les serveurs que nous utilisons (pare-feu, tentatives de mots de passe limitées...) afin que nos infrastructures critiques ne soient pas exposées trop fortement.",
+        "N’oubliez pas aussi que toutes les données transmises entre Gravitalia et vous (et vice-versa) sont sous le cadenas de sécurité (HTTPS) qui garantit que les données sont chiffrées lorsqu’elles transitent depuis votre navigateur, en passant par Cloudflare, et enfin, pour atteindre nos serveurs.",
+        "Mais la sécurité se joue sur plusieurs tables ! Si cela n’est pas déjà fait, vous pouvez ajouter la double authentification et même opter pour un mot de passe unique et fort !"
+      ]
+    },
+    "choice_data_managed": {
+      "title": "Vos choix sur la gestion de vos données",
+      "description": [
+        "Nous n’utilisons pas vos données à but lucratif, ni les revendons et pensons même que les données doivent rester à l’Utilisateur.",
+        "Vous êtes libres de vous inscrire ou de vous désinscrire des différents Services, de communiquer avec qui vous voulez.",
+        "Vous pouvez choisir, dans les paramètres offerts par chaque Service, de personnaliser ou non votre fil d’actualité. La personnalisation se fait, non pas en fonction d’analyses précises mais simplement à partir de vos “j’aime” (ou bouton prévu à cet effigie)."
+      ]
+    },
+    "rights": {
+      "title": "Vos droits",
+      "description": "Chaque Service propose dans les « Paramètres » une partie (généralement nommée « Données ») vous permettant d’accéder à votre :",
+      "access": {
+        "title": "Droit d’accès",
+        "description": "qui vous permet de télécharger les données recueillies à votre propos. Veuillez noter que les informations : bancaires, mot de passes et adresse e-mail ne sont pas fournies lors du téléchargement des données."
+      },
+      "erasure": {
+        "title": "Droit d’effacement",
+        "description": "qui vous laisse la possibilité de supprimer votre compte globalement ou individuellement. Quand ce droit est appliqué, votre compte est supprimé sous 1 mois (compte récupérable), sauf pour les comptes liés à chaque Service qui est supprimé instantanément, puis les données personnelles (nom d’utilisateur, mot de passe, adresse IP...) hors adresse e-mail et \"vanity\"."
+      },
+      "rectification": {
+        "title": "Droit de rectification",
+        "description": "vous pouvez à tout moment modifié, via la section “Paramètres” toutes les informations récoltées vous concernant."
+      },
+      "forgotten": {
+        "title": "Droit à l’oubli",
+        "description": "ce droit requiert de nous contacter par mail. Veuillez rajouter dans l’objet du mail le droit à l’oubli et nous contacter via notre e-mail (fournit ci-dessous) munit de votre carte d’identité."
+      },
+      "withdrawal": {
+        "title": "Droit de retrait",
+        "description": "lorsque vous vous inscrivez, vous acceptez et approuvez avoir lu les contrats néanmoins, vous pouvez à tout moment décider d’arrêter votre engagement. Pour ce faire, il vous suffit de suivre les instructions du droit d’effacement ; vous ne pouvez plus utiliser nos Services si vous ne souhaitez plus respecter nos contrats."
+      }
+    },
+    "contact": {
+      "title": "Nous contacter",
+      "description": [
+        "Vous pouvez nous contacter si vous avez des questions concernant cette politique de confidentialité. Nous sommes à votre écoute et ravis de vous aider !",
+        "Vous pouvez également contacter notre DPD à l'adresse ci-dessous.",
+        "Bonne utilisation de nos Services !"
+      ],
+      "confidentiality": "Nous contacter sur la confidentialité :",
+      "dpo": "Contacter notre DPO :",
+      "other": "Autre forme de contact :"
+    }
+  }
 }

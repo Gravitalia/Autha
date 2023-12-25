@@ -128,36 +128,36 @@ async function signin(): Promise<void> {
           width="40"
           draggable="false"
         />
-        <h3 font-semibold>{{ $t("Sign in") }}</h3>
+        <h3 font-semibold>{{ $t("sign_in") }}</h3>
       </div>
 
       <div flex-col container>
         <!-- Generic errors. -->
         <LabelError
           mb-34
-          text="Invalid security token, try again in a few seconds."
+          text="error.security_token"
           :cond="isError.invalidToken.value"
         />
         <LabelError
           mb-34
-          text="You're sending too many requests! Try again in 5 minutes."
+          text="error.rate_limit"
           :cond="isError.rateLimited.value"
         />
         <LabelError
           mb-34
-          text="Something went wrong"
+          text="something_went_wrong"
           :cond="isError.internalServerError.value"
         />
 
         <!-- Email input. -->
         <LabelError
           mb-28
-          text="Write something..."
+          text="error.write_something"
           :cond="isError.missingEmail.value"
         />
         <LabelError
           mb-28
-          text="Invalid email address"
+          text="error.invalid_email"
           :cond="isError.invalidEmail.value"
         />
 
@@ -172,18 +172,18 @@ async function signin(): Promise<void> {
           mb-6
           lg:mb-8
           type="email"
-          :placeholder="$t('Email address')"
+          :placeholder="$t('email')"
         />
 
         <!-- Password input. -->
         <LabelError
           mt-4
-          text="Write down your secret word 🤫"
+          text="error.missing_password"
           :cond="isError.missingPassword.value"
         />
         <LabelError
           mt-4
-          text="Invalid password"
+          text="error.invalid_password"
           :cond="isError.invalidPassword.value"
         />
 
@@ -196,7 +196,7 @@ async function signin(): Promise<void> {
           "
           input
           type="password"
-          :placeholder="$t('Password')"
+          :placeholder="$t('password')"
         />
       </div>
 
@@ -204,7 +204,7 @@ async function signin(): Promise<void> {
       <div flex container>
         <div flex justify-between w-16.5rem mt-8>
           <NuxtLink to="/signup" btn-invisible no-underline>{{
-            $t("Create an account")
+            $t("create_account")
           }}</NuxtLink>
           <button
             font-sans
@@ -214,7 +214,7 @@ async function signin(): Promise<void> {
             :disabled="isButtonDisable"
             @click="signin()"
           >
-            {{ $t("Sign in") }}
+            {{ $t("sign_in") }}
           </button>
         </div>
       </div>
