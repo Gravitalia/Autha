@@ -8,8 +8,11 @@ image = "0.24"
 fast_image_resize = "2.7"
 kamadak-exif = "0.5.5"
 webp = "0.2.6"
+tempfile = "3.8.1"
 
 cloudinary = "0.4.0"
 
 anyhow = "1"
 log = "0.4"
+
+crypto = { path = "../crypto" }
