@@ -77,7 +77,7 @@ export default defineNuxtConfig({
         langDir: "locales",
         compilation: {
           strictMessage: false,
-          escapeHtml: true
+          escapeHtml: true,
         },
         detectBrowserLanguage: {
           useCookie: true,
@@ -111,6 +111,12 @@ export default defineNuxtConfig({
     public: {
       API_URL: "http://localhost:1111",
     },
+  },
+
+  routeRules: {
+    // No JS.
+    "/terms": { experimentalNoScripts: true },
+    "/privacy": { experimentalNoScripts: true },
   },
 
   pinia: {
