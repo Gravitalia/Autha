@@ -1,5 +1,5 @@
 {
-  "checksum": "a62a5b34d894ecf3a15055298d28dec176bb645af428da6ec4b851d80ba690a8",
+  "checksum": "ddad46366c8ef27babae2ed1bc9e758e773755d330ff0041b03735550c2d7121",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -6150,6 +6150,10 @@
             {
               "id": "log 0.4.20",
               "target": "log"
+            },
+            {
+              "id": "tempfile 3.8.1",
+              "target": "tempfile"
             },
             {
               "id": "webp 0.2.6",
