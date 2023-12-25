@@ -36,101 +36,130 @@
   "tos": "CGU",
   "privacy_policy": "politique de confidentialité",
 
-  "About": "À propos",
-  "Security": "Sécurité",
-  "Data": "Données",
-  "OAuth": "OAuth",
-  "Logout": "Se déconnecter",
+  "about": "À propos",
+  "security": "Sécurité",
+  "data": "Données",
+  "oauth": "OAuth",
+  "logout": "Se déconnecter",
 
-  "Terms of Service": "Conditions Générales d'Utilisation",
-  "Effective date:": "Date d’effet :",
-  "Welcome on Gravitalia! These terms and conditions govern the use of the services offered, including the programming interfaces (APIs) and the legal obligations of both parties.": "Bienvenue sur Gravitalia ! Ces présentes conditions régissent l’utilisation des services proposés, incluant les interfaces de programmation (API) ainsi que les obligations légales de nos deux partis.",
-  "Gravitalia offers places to share, to connect but also digital or physical tools to improve privacy.": "Gravitalia propose des lieux de partage, de mise en contact mais aussi des outils numériques ou physiques ayant pour but d’améliorer le respect de la vie privée.",
+  "terms_of_use": "Conditions Générales d'Utilisation",
+  "date": "Date d’effet :",
 
-  "The use of the terms \"we\", \"us\", \"our\" or \"Gravitalia\" refers to the Gravitalia entity, its subsidiaries and other companies.": "L’emploi des termes “nous”, “notre”, “nos” ou “Gravitalia” réfère à l'entitée Gravitalia, ses filiales et autres sociétés.",
-  "The use of the terms \"User\", \"you\", \"your\" refers to you, as an individual or entity, while the use of the term \"Users\" refers to all registrants (including you, if applicable).": "L’utilisation des termes “Utilisateur”, “vous”, “vos” font référence à vous-même, en tant que personne physique ou morale tandis que l’utilisation du terme “Utilisateurs” fait référence à l’ensemble des personnes inscrites (vous incluant le cas échéant).",
-  "The use of the term \"Service\" (including \"Services\") refers both to Gravitalia's websites and products, and to the websites, products, and Services of its subsidiaries.": "L’usage du terme “Service” (incluant “Services”) fait référence à la fois, aux sites Web et produits de Gravitalia, mais aussi aux sites Web, produits et Services de ses filiales.",
-
-  "The host of Gravitalia is Contabo at Aschauer Str. 32a, 81549 Munich, Germany.": "L’hébergeur de Gravitalia est Contabo sise au Aschauer Str. 32a, 81549 Munich en Allemagne.",
-  "The content and site host is Cloudflare located at 101 Townsend St, San Francisco, CA 94107, USA.": "L’hébergeur de contenus et sites est Cloudflare sise au 101 Townsend St, San Francisco, CA 94107, Etats-Unis.",
-
-  "tos_us": "Dans l’espace économique européen (<b>EEE</b>), où est situé le siège social, le présent contrat est fait avec : <br />Gravitalia SAS, opérant sous les lois françaises, joignable à l’adresse X.<br /><span class=\"text-sm\">En cas de contact écrit par courriel, le temps de réponse, même pour les questions légales, pourra excéder 1 mois.</span>",
-
-  "The Services offered are only available to Users who have approved and signed this contract binding you to Gravitalia; if you do not wish to accept this contract, it is imperative that you request the deletion of account (or that you do not create an account) via the Service provided for this purpose. In any case, the use of our Services must be done in compliance with the laws of your country: you must be 13 years old (or meet the digital majority in force in your country). In the event that you use the Services to represent a state, corporation or other legal entity, you represent that you have the rights and are in agreement with this Agreement.": "Les Services proposés ne sont disponibles qu’aux Utilisateurs ayant approuvés et signés ce contrat vous liant à Gravitalia ; dans le cas où vous ne souhaitez pas accepter ce contrat, il est impératif que vous fassiez la demande de suppression de compte (ou que vous ne créez pas de compte) via le Service prévu à cette effigie. Dans tous les cas, l’utilisation de nos Services doivent se faire dans le respect des lois de votre pays : vous devez être âgé de 13 ans (ou satisfaire la majorité numérique en vigueur dans votre pays). Dans le cas où vous utilisez les Services pour représenter un Etat, une société ou autre entité juridique, vous déclarez avoir les droits et être en accord avec ce présent contrat.",
-  "In the event that the User's age is below the numerical age of majority in his/her country (see above for details), the consent of his/her parents (as to the creation of the account and approval of this policy) or legal guardian is required.": "Dans le cas où l’âge de l’Utilisateur est inférieur à la majorité numérique de son pays (voir ci-dessus pour plus de précisions), l’accord de ses parents (quant à la création du compte et à l’approbation de cette présente charte) ou de son tuteur légal est requis.",
-
-  "We set up multiple Services (websites, social networks, applications...) to satisfy you at best, while improving them, and try to develop new ones. Despite our efforts to avoid breakdowns (of Services, supplies...), we are likely, like any company, not to guarantee a Service without disruptions or even a total integrity of the data; we cannot be held responsible for these problems.": "Nous mettons en place de multiples Services (des sites Internet, réseaux sociaux, applications...) pour vous satisfaire au mieux, tout en les améliorants, et tentons d’en développer de nouveaux. Malgré nos efforts pour éviter des pannes (de Services, d’approvisionnements...), nous sommes susceptibles, comme toute entreprise, de ne pas garantir un Service sans perturbations voire une intégrité totale des données ; nous ne pourrons être tenu responsable de ces problèmes.",
-
-  "We want coexistence between our Users, without vituperation, with respect for others. To do this, you can follow the following principles:": "Nous souhaitons une coexistence entre nos Utilisateurs et ce, sans vitupération, dans le respect d’autrui. Pour ce faire, vous pouvez suivre les principes suivants :",
-  "- Comply with the laws in force in your country;": "- Respecter les lois en vigueur dans votre pays ;",
-  "- Respect the intellectual property and integrity of authors and persons;": "- Respecter la propriété intellectuelle et l'intégrité des auteurs et des personnes ;",
-  "- Do not not attempt to interfere with the proper functioning of the Service;": "- Ne pas tenter d'interférer avec le bon fonctionnement du Service ;",
-  "- Not to defame, insult, defraud, harass or impersonate others;": "- Ne pas diffamer, insulter, frauder, harceler ou usurper l'identité d'autrui ;",
-  "- Not to post content likely to damage the image of those present;": "- Ne pas poster de contenu susceptible de nuire à l'image des personnes présentes ;",
-  "- Do not post content disclosing sensitive information (health, etc.) about a person;": "- Ne pas publier de contenu divulguant des informations sensibles (santé, etc.) sur une personne ;",
-  "- Do not post racist, sexist, homophobic or xenophobic content;": "- Ne pas publier de contenu raciste, sexiste, homophobe ou xénophobe ;",
-  "Gravitalia reserves the right to anathematize* any User who has not complied with the above rules.": "Gravitalia se réserve le droit d’anathématiser* tout Utilisateur n’ayant pas respecté les règles ci-dessus.",
-
-  "Of course, we welcome all developers who want to enrich the experience of our Users on our Services!": "Nous souhaitons, bien évidemment, la bienvenue à tous les développeurs qui veulent enrichir l’expérience de nos Utilisateurs sur nos Services !",
-  "To perfect your ideas and to guarantee the security of our Users' data (even public), it is important to read these rules.": "Pour parfaire vos idées et garantir la sécurité des données (même publiques) de nos Utilisateurs, il est important de lire ces quelques règles.",
-
-  "You shall not attempt to: (a) perform analysis for the purpose of tracking and/or profiting from and commercially exploiting such data, (b) attempt to reverse engineer to derive private (non-<b>FOSS</b>) source code, know-how or trade secrets, (c) reproduce, redistribute, rent or sell access to the API, (d) access prohibited endpoints (oauth.gravitalia.com).": "Vous ne devez pas tenter de : (a) faire des analyses ayant pour finalité le traçage et/ou le profit ainsi que l’exploitation commerciale de ces données, (b) de tenter de faire de l’ingénieurerie inversé pour en tirer les codes sources privés (non <b>FOSS</b>), le savoir-faire ou les secrets commerciaux, (c) de reproduire, redistribuer, louer ou vendre l’accès à l’API, (d) d’accéder aux points de terminaison interdits (oauth.gravitalia.com).",
-
-  "In order to improve privacy, we expressly request the encryption of confidential data (email address, phone number...) when shared WITH EXPRESS USER AGREEMENT or even in cases where this data does not serve an explicit reading frame, the hashing of it.": "Dans le but d’améliorer le respect à la vie privée, nous demandons expressément le chiffrement des données confidentielles (adresse e-mail, numéro de téléphone...) dès lors qu’il est partagé SOUS ACCORD EXPRESS DE L’UTILISATEUR voire dans les cas où ces données ne servent pas un cadre de lecture explicite, le hachage de celles-ci.",
-  "In addition, we recommend that you comply with GDPR, CCPA/CCRA and LGPD. In the case of large applications or heavy usage, you will be required to provide a privacy policy, but also, and not limited to, proof of compliance, a comprehensive list of saved data, and proof of identity.": "De plus, nous vous recommandons de respecter le RPGD, le CCPA/CCRA et le LGPD. Dans le cas de grosses applications ou de lourdes utilisations, il vous sera imposé de fournir une politique de confidentialité mais aussi, et s’en s’y limiter, une preuve du respect des réglementations, une liste exhaustive des données sauvegardées ainsi qu’une preuve d’identité.",
-
-  "In case of refusal to comply with these rules, sanctions may be applied against you such as the suspension of your application, your User account or even recourse to the competent courts.": "En cas de refus d’obtempérer à ces règles, des sanctions pourront être appliquées à votre encontre tel que la suspension de votre application, de votre compte Utilisateur voire le recours aux tribunaux compétents.",
-
-  "To enjoy the Services continuously, without interruption or blocking, you may need to have an account. The security of this account is your responsibility, you must provide a strong password, check if your information has been compromised, etc. In case of loss, theft or damage related to your account, we cannot be held responsible.": "Pour profiter des Services de manière continuelle, sans interruption ou blocage, vous devrez peut-être disposer d’un compte. La sécurité de ce compte vous incombe, vous devez fournir un mot de passe fort, vérifier si vos informations ont été compromises, etc. En cas de perte, vol ou préjudice lié à votre compte, nous ne pourrons pas être tenus responsables.",
-  "In addition, you may be asked for contact information (phone number, e-mail address), information aimed at authentication (password) or identification (username); for more information, visit the privacy page.": "De plus, il vous sera peut-être demandé des informations pour vous contacter (numéro de téléphone, adresse e-mail), des informations visant l’authentification (mot de passe) ou l’identification (nom d’utilisateur) ; pour plus d’informations, rendez-vous sur la page de confidentialité.",
-  "You are responsible for keeping your contact details up to date (e-mail address, for example), in the event of an impossibility to reach you, we will assume that all information has indeed been sent; we also assume that the communications made from your account or the contact details thereof have been made by you.": "Vous êtes responsable de maintenir à jour vos coordonnées (adresse e-mail, par exemple). En cas d'impossibilité de vous joindre, nous considérerons que toutes les informations ont bien été envoyées. De même, nous considérerons que les communications effectuées depuis votre compte ou les coordonnées associées ont été effectuées par vous.",
-
-  "Some of our Services give you the possibility to publish content (in written, videographic, photographic or other form), as long as you send this content, you give us full rights to distribute, store, copy and communicate it. In addition, you represent and warrant to us that you have full rights to this work. This license is applicable worldwide, non-exclusive, free of charge and perpetual.": "Certains de nos Services vous donnent la possibilité de publier du contenu (sous forme écrite, vidéographique, photographique ou autre), dès lors que vous envoyez ce contenu, vous nous laissez l’entier droit de le distribuer, conserver, copier et communiquer. De plus, vous nous affirmez et garantissez que vous avez l’entier droit sur cette œuvre. Cette licence est applicable à l’échelle mondiale, non exclusive, à titre gratuit et perpétuelle.",
-  "<i>Ad nutum</i>, we reserve the right to temporarily or permanently delete or block your content, if it is contrary to our principles (cf. What we expect from you). When content is blocked, an email will normally be sent to the author, and the author may request a revised procedure by emailing.": "><i>Ad nutum</i>, nous nous réservons le droit de supprimer ou de bloquer temporairement ou définitivement votre contenu, si celui-ci est contraire à nos principes (cf. Ce que nous attendons de vous). Lors du blocage du contenu, un e-mail sera normalement envoyé à l’auteur, et celui-ci pourra demander à avoir une procédure révisée en envoyant un e-mail à.",
-
-  "We may allow our content to be used on third party platforms but we retain all intellectual property rights. You are not permitted to obscure or alter any logos or trademarks.": "Nous pouvons autoriser l’utilisation de notre contenu pour des plateformes tierces mais nous conservons tous les droits de propriété intellectuelle. Vous n’êtes pas autorisé à masquer ou à modifier les logos et marques.",
-
-  "We may make content available that we do not own through multiple Services. We cannot delegate the use of content. The content is not altered and may not reflect the opinion of Gravitalia.": "Nous pouvons mettre à disposition du contenu qui ne nous appartiennent pas par le biais de plusieurs Services. Nous ne pouvons déléguer l’utilisation de contenu. Le contenu n’est pas altéré et peut ne pas refléter l’opinion de Gravitalia.",
-
-  "By your will:": "Par votre volonté :",
-  "By Gravitalia:": "Par Gravitalia :",
-  "you are free to stop using the Services provided at any time without reason. You may delete your account, which will anonymize the data in your account (see Privacy Policy) or deactivate your account, if you are offered the option, which will suspend all processing of your personal information; such deactivation does not result in termination of this Agreement.": "vous êtes libre de cesser d'utiliser les services fournis à tout moment et sans raison. Vous pouvez supprimer votre compte, ce qui rendra anonymes les données qu'il contient (voir la politique de confidentialité) ou désactiver votre compte, si cette option vous est offerte, ce qui suspendra tout traitement de vos informations personnelles ; cette désactivation n'entraîne pas la résiliation du présent accord.",
-  "we reserve the right to suspend* your account or access (to a Service, site, software...) with or without notice if we believe that your account, or content is in violation of our principles.": "nous nous réservons le droit de suspendre* votre compte ou votre accès (à un Service, un site, un logiciel...) avec ou sans préavis si nous estimons que votre compte, ou contenu ne respecte pas nos principes.",
-
-  "The Services are provided “as is”. If you reside outside of the EEA or the UK, you agree that access to the Services is at your own risk.": "Les Services sont fournis “en l’État”. Si vous résidez en dehors des EEE ou du Royaume-Uni, vous acceptez que l’accès aux Services sont à vos propres risques et périls.",
-  "WE (COMPANY, AFFILIATES) DISCLAIM, TO THE FULLEST EXTENT PERMITTED BY LAW, ANY EXPRESS OR IMPLIED WARRANTY OF MERCHANTABILITY. THE SERVICES ARE PROVIDED “AS IS”.": "NOUS (SOCIÉTÉ, AFFILIÉS) DÉCLINONS, DANS TOUTES LES MESURES PERMISES PAR LES LOIS, TOUTE GARANTIE EXPRESSE OU IMPLICITE QUANT À LA QUALITÉ MARCHANDE. LES SERVICES SONT MIS À DISPOSITION “EN L’ÉTAT”.",
-  "We disclaim all responsibility and liability for the availability, security and reliability of the Services.": "Nous déclinons toutes responsabilités et obligations quant à la disponibilité, la sécurité et la fiabilité des Services.",
-
-  "This section may not apply in certain countries or regions such as the EEA.": "Cette section peut ne pas s’appliquer dans certains pays ou régions comme l’EEE.",
-  "This contract is subject to French law.": "Le présent contrat est soumis à la législation française.",
-  "Translations are given for information purposes only, in the event of a dispute, only the French version of the contracts (General Conditions of Use and Privacy Policy for example) may be used and only the French courts may be seized to settle this dispute.": "Les traductions ne sont données qu’à titre informatif, en cas de litige, seule la version française des contrats (Conditions Générales d’Utilisation et Politique de Confidentialité par exemple) pourra être utilisée et seuls les tribunaux français pourront être saisis pour régler ce contentieux.",
-  "Gravitalia cannot be held responsible for the information present on its site; the information disseminated is purely informative and is not intended to have true values.": "Gravitalia ne peut être tenu responsable des informations présentes sur son site ; les informations diffusées sont purement informatives et n’ont pas vocation à avoir des valeurs véridiques.",
-  "Gravitalia cannot be held responsible for files downloaded by the User. This includes viruses or other computer/server infecting software.": "Gravitalia ne peut être tenu responsable des fichiers téléchargés par l’Utilisateur. Cela inclut les virus ou autres logiciels infectant les ordinateurs/serveurs.",
-  "Gravitalia cannot guarantee the integrity of the data and will not be liable for any incidental, special, exemplary or consequential damages, loss of profits, revenue, savings, business opportunities or customers, directly or indirectly.": "Gravitalia ne peut pas garantir l’intégrité des données et ne sera pas responsable de tout dommage accessoire, spécial, exemplaire ou consécutif, de perte de bénéfices, de revenus, d’économie, d’opportunité.s commerciale.s ou de clientèle et ce, de façon directe ou indirecte.",
-  "WE CANNOT BE HELD RESPONSIBLE FOR THE CONTENT AND CONDUCT OF USERS OF OUR SERVICES AND THIS OF WAY ONLINE OR OFFLINE.": "NOUS NE POURRONS PAS ÊTRE TENU RESPONSABLE DES CONTENUS ET DE LA CONDUITE DES UTILISATEURS DE NOS SERVICES ET CECI DE MANIÈRE EN LIGNE OU HORS-LIGNE.",
-  "IN THE EVENT OF A DISPUTE, AN AMICABLE AGREEMENT SHOULD BE UNDERTAKEN PRIOR TO ANY COMPLAINT.": "DANS LE CAS D’UN LITIGE, UN ACCORD À L’AMIABLE DEVRAIT ÊTRE ENTREPRIS AVANT TOUTE PLAINTE.",
-
-  "* The anathema employed will be, for example, an indexing on a private account suspension registry.": "* L'anathème employé sera, par exemple, une indexation sur un registre privé de suspension de compte.",
-  "* The suspension will directly lead to the data anonymization process.": "* La suspension entraînera directement le processus d’anonymisation des données.",
-
-  "Definitions": "Définitions",
-  "Legal notice": "Mentions légales",
-  "Who are we": "Qui sommes-nous ?",
-  "Use of our Services": "Utilisation de nos Services",
-  "What you can expect from us": "Ce que vous pouvez attendre de nous",
-  "What we expect from you": "Ce que nous attendons de vous",
-  "Conditions of access to the API": "Conditions d’accès à l’API",
-  "a. Introduction": "a. Introduction",
-  "b. Restrictions": "b. Restrictions",
-  "c. Respect for data": "c. Respect des données",
-  "d. Sanctions": "d. Sanctions",
-  "Your account": "Votre compte",
-  "Our content": "Notre contenu",
-  "Other content": "Autre contenu",
-  "Cancellation": "Résiliation",
-  "Services provided": "Services fournis “EN L'ÉTAT”",
-  "Limitations and responsibilities": "Limitations et responsabilités",
-  "Your content": "Votre contenu",
+  "terms": {
+    "welcome": "Bienvenue sur Gravitalia ! Ces présentes conditions régissent l’utilisation des services proposés, incluant les interfaces de programmation (API) ainsi que les obligations légales de nos deux partis.",
+    "description": "Gravitalia propose des lieux de partage, de mise en contact mais aussi des outils numériques ou physiques ayant pour but d’améliorer le respect de la vie privée.",
+    "definitions": {
+      "title": "Définitions",
+      "we": "L’emploi des termes « nous », « notre », « nos » ou « Gravitalia » réfère à l'entitée Gravitalia, ses filiales et autres sociétés.",
+      "user": "L’utilisation des termes « Utilisateur », « vous », « vos » font référence à vous-même, en tant que personne physique ou morale tandis que l’utilisation du terme « Utilisateurs » fait référence à l’ensemble des personnes inscrites (vous incluant le cas échéant).",
+      "service": "L’usage du terme « Service » (incluant « Services ») fait référence à la fois, aux sites Web et produits de Gravitalia, mais aussi aux sites Web, produits et Services de ses filiales."
+    },
+    "notice": {
+      "title": "Mentions légales",
+      "host": "L’hébergeur de Gravitalia est Contabo sise au Aschauer Str. 32a, 81549 Munich en Allemagne.",
+      "content": "L’hébergeur de contenus et sites est Cloudflare sise au 101 Townsend St, San Francisco, CA 94107, Etats-Unis."
+    },
+    "service_usage": {
+      "title": "Utilisation de nos Services",
+      "signed": "Les Services proposés ne sont disponibles qu’aux Utilisateurs ayant approuvés et signés ce contrat vous liant à Gravitalia ; dans le cas où vous ne souhaitez pas accepter ce contrat, il est impératif que vous fassiez la demande de suppression de compte (ou que vous ne créez pas de compte) via le Service prévu à cette effigie. Dans tous les cas, l’utilisation de nos Services doivent se faire dans le respect des lois de votre pays : vous devez être âgé de 13 ans (ou satisfaire la majorité numérique en vigueur dans votre pays). Dans le cas où vous utilisez les Services pour représenter un Etat, une société ou autre entité juridique, vous déclarez avoir les droits et être en accord avec ce présent contrat.",
+      "age": "Dans le cas où l’âge de l’Utilisateur est inférieur à la majorité numérique de son pays (voir ci-dessus pour plus de précisions), l’accord de ses parents (quant à la création du compte et à l’approbation de cette présente charte) ou de son tuteur légal est requis."
+    },
+    "except": {
+      "title": "Ce que vous pouvez attendre de nous",
+      "services": "Nous mettons en place de multiples Services (des sites Internet, réseaux sociaux, applications...) pour vous satisfaire au mieux, tout en les améliorants, et tentons d’en développer de nouveaux. Malgré nos efforts pour éviter des pannes (de Services, d’approvisionnements...), nous sommes susceptibles, comme toute entreprise, de ne pas garantir un Service sans perturbations voire une intégrité totale des données ; nous ne pourrons être tenu responsable de ces problèmes."
+    },
+    "except_you": {
+      "title": "Ce que nous attendons de vous",
+      "description": "Nous souhaitons une coexistence entre nos Utilisateurs et ce, sans vitupération, dans le respect d’autrui. Pour ce faire, vous pouvez suivre les principes suivants :",
+      "rules": [
+        "- Respecter les lois en vigueur dans votre pays ;",
+        "- Respecter la propriété intellectuelle et l'intégrité des auteurs et des personnes ;",
+        "- Ne pas tenter d'interférer avec le bon fonctionnement du Service ;",
+        "- Ne pas diffamer, insulter, frauder, harceler ou usurper l'identité d'autrui ;",
+        "- Ne pas poster de contenu susceptible de nuire à l'image des personnes présentes ;",
+        "- Ne pas publier de contenu divulguant des informations sensibles (santé, etc.) sur une personne ;",
+        "- Ne pas publier de contenu raciste, sexiste, homophobe ou xénophobe ;"
+      ],
+      "sentence": "Gravitalia se réserve le droit d’anathématiser* tout Utilisateur n’ayant pas respecté les règles ci-dessus."
+    },
+    "api": {
+      "title": "Conditions d’accès à l’API",
+      "introduction": {
+        "title": "a. Introduction",
+        "welcome": "Nous souhaitons, bien évidemment, la bienvenue à tous les développeurs qui veulent enrichir l’expérience de nos Utilisateurs sur nos Services !",
+        "security": "Pour parfaire vos idées et garantir la sécurité des données (même publiques) de nos Utilisateurs, il est important de lire ces quelques règles."
+      },
+      "restrictions": {
+        "title": "b. Restrictions",
+        "description": "Vous ne devez pas tenter de : (a) faire des analyses ayant pour finalité le traçage et/ou le profit ainsi que l’exploitation commerciale de ces données, (b) de tenter de faire de l’ingénieurerie inversé pour en tirer les codes sources privés (non <b>FOSS</b>), le savoir-faire ou les secrets commerciaux, (c) de reproduire, redistribuer, louer ou vendre l’accès à l’API, (d) d’accéder aux points de terminaison interdits (oauth.gravitalia.com)."
+      },
+      "data": {
+        "title": "c. Respect des données",
+        "privacy": "Dans le but d’améliorer le respect à la vie privée, nous demandons expressément le chiffrement des données confidentielles (adresse e-mail, numéro de téléphone...) dès lors qu’il est partagé SOUS ACCORD EXPRESS DE L’UTILISATEUR voire dans les cas où ces données ne servent pas un cadre de lecture explicite, le hachage de celles-ci.",
+        "gdrp": "De plus, nous vous recommandons de respecter le RPGD, le CCPA/CCRA et le LGPD. Dans le cas de grosses applications ou de lourdes utilisations, il vous sera imposé de fournir une politique de confidentialité mais aussi, et s’en s’y limiter, une preuve du respect des réglementations, une liste exhaustive des données sauvegardées ainsi qu’une preuve d’identité."
+      },
+      "sanctions": {
+        "title": "d. Sanctions",
+        "description": "En cas de refus d’obtempérer à ces règles, des sanctions pourront être appliquées à votre encontre tel que la suspension de votre application, de votre compte Utilisateur voire le recours aux tribunaux compétents."
+      }
+    },
+    "account": {
+      "title": "Votre compte",
+      "services": "Pour profiter des Services de manière continuelle, sans interruption ou blocage, vous devrez peut-être disposer d’un compte. La sécurité de ce compte vous incombe, vous devez fournir un mot de passe fort, vérifier si vos informations ont été compromises, etc. En cas de perte, vol ou préjudice lié à votre compte, nous ne pourrons pas être tenus responsables.",
+      "contact": "De plus, il vous sera peut-être demandé des informations pour vous contacter (numéro de téléphone, adresse e-mail), des informations visant l’authentification (mot de passe) ou l’identification (nom d’utilisateur) ; pour plus d’informations, rendez-vous sur la page de confidentialité.",
+      "responsible": "Vous êtes responsable de maintenir à jour vos coordonnées (adresse e-mail, par exemple). En cas d'impossibilité de vous joindre, nous considérerons que toutes les informations ont bien été envoyées. De même, nous considérerons que les communications effectuées depuis votre compte ou les coordonnées associées ont été effectuées par vous."
+    },
+    "your_content": {
+      "title": "Votre contenu",
+      "publish": "Certains de nos Services vous donnent la possibilité de publier du contenu (sous forme écrite, vidéographique, photographique ou autre), dès lors que vous envoyez ce contenu, vous nous laissez l’entier droit de le distribuer, conserver, copier et communiquer. De plus, vous nous affirmez et garantissez que vous avez l’entier droit sur cette œuvre. Cette licence est applicable à l’échelle mondiale, non exclusive, à titre gratuit et perpétuelle.",
+      "suspend": "Nous nous réservons le droit de supprimer ou de bloquer temporairement ou définitivement votre contenu, si celui-ci est contraire à nos principes (cf. Ce que nous attendons de vous). Lors du blocage du contenu, un e-mail sera normalement envoyé à l’auteur, et celui-ci pourra demander à avoir une procédure révisée en envoyant un e-mail à"
+    },
+    "our_content": {
+      "title": "Notre contenu",
+      "description": "Nous pouvons autoriser l’utilisation de notre contenu pour des plateformes tierces mais nous conservons tous les droits de propriété intellectuelle. Vous n’êtes pas autorisé à masquer ou à modifier les logos et marques."
+    },
+    "other_content": {
+      "title": "Autre contenu",
+      "description": "Nous pouvons mettre à disposition du contenu qui ne nous appartiennent pas par le biais de plusieurs Services. Nous ne pouvons déléguer l’utilisation de contenu. Le contenu n’est pas altéré et peut ne pas refléter l’opinion de Gravitalia."
+    },
+    "cancellation": {
+      "title": "Résiliation",
+      "will": {
+        "title": "Par votre volonté :",
+        "description": "vous êtes libre de cesser d'utiliser les services fournis à tout moment et sans raison. Vous pouvez supprimer votre compte, ce qui rendra anonymes les données qu'il contient (voir la politique de confidentialité) ou désactiver votre compte, si cette option vous est offerte, ce qui suspendra tout traitement de vos informations personnelles ; cette désactivation n'entraîne pas la résiliation du présent accord."
+      },
+      "gravitalia": {
+        "title": "Par Gravitalia :",
+        "description": "nous nous réservons le droit de suspendre* votre compte ou votre accès (à un Service, un site, un logiciel...) avec ou sans préavis si nous estimons que votre compte, ou contenu ne respecte pas nos principes."
+      }
+    },
+    "services": {
+      "title": "Services fournis",
+      "description": [
+        "Les Services sont fournis « en l’État ». Si vous résidez en dehors des EEE ou du Royaume-Uni, vous acceptez que l’accès aux Services sont à vos propres risques et périls.",
+        "NOUS (SOCIÉTÉ, AFFILIÉS) DÉCLINONS, DANS TOUTES LES MESURES PERMISES PAR LES LOIS, TOUTE GARANTIE EXPRESSE OU IMPLICITE QUANT À LA QUALITÉ MARCHANDE. LES SERVICES SONT MIS À DISPOSITION « EN L’ÉTAT ».",
+        "Nous déclinons toutes responsabilités et obligations quant à la disponibilité, la sécurité et la fiabilité des Services."
+      ]
+    },
+    "limitations": {
+      "title": "Limitations et responsabilités",
+      "description": [
+        "Cette section peut ne pas s’appliquer dans certains pays ou régions comme l’EEE.",
+        "Le présent contrat est soumis à la législation française.",
+        "Les traductions ne sont données qu’à titre informatif, en cas de litige, seule la version française des contrats (Conditions Générales d’Utilisation et Politique de Confidentialité par exemple) pourra être utilisée et seuls les tribunaux français pourront être saisis pour régler ce contentieux.",
+        "Gravitalia ne peut être tenu responsable des informations présentes sur son site ; les informations diffusées sont purement informatives et n’ont pas vocation à avoir des valeurs véridiques.",
+        "Gravitalia ne peut être tenu responsable des fichiers téléchargés par l’Utilisateur. Cela inclut les virus ou autres logiciels infectant les ordinateurs/serveurs.",
+        "Gravitalia cannot guarantee the integrity of the data and will not be liable for any incidental, special, exemplary or consequential damages, loss of profits, revenue, savings, business opportunities or customers, directly or indirectly.",
+        "NOUS NE POURRONS PAS ÊTRE TENU RESPONSABLE DES CONTENUS ET DE LA CONDUITE DES UTILISATEURS DE NOS SERVICES ET CECI DE MANIÈRE EN LIGNE OU HORS-LIGNE.",
+        "DANS LE CAS D’UN LITIGE, UN ACCORD À L’AMIABLE DEVRAIT ÊTRE ENTREPRIS AVANT TOUTE PLAINTE."
+      ]
+    },
+    "note_bene": {
+      "title": "Nota bene",
+      "anathema": "* L'anathème employé sera, par exemple, une indexation sur un registre privé de suspension de compte.",
+      "suspend": "* La suspension entraînera directement le processus d’anonymisation des données."
+    }
+  },
 
   "Privacy Policy": "Politique de confidentialité",
   "Welcome to Gravitalia! Before creating an account, it may be interesting to read and know how your data is used and processed.": "Bienvenue chez Gravitalia ! Avant de créer un compte, il peut être intéressant de lire et de savoir comment vos données sont utilisées et traitées.",
