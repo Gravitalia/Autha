@@ -24,9 +24,9 @@ pub struct Credentials {
 ///     cloud_name: "aaaaa1234".to_string(),
 ///     secret: "SECRET_KEY".to_string(),
 /// };
-/// let buffer = &std::fs::read("example/image.webp").unwrap();
+/// let buffer = std::fs::read("example/image.webp").unwrap();
 /// 
-/// let _ = image_processor::host::cloudinary::upload(credentials, buffer);
+/// let _ = image_processor::host::cloudinary::upload(credentials, &buffer);
 ///
 /// // Log public ID.
 /// /*println!(
