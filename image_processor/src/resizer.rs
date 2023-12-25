@@ -8,7 +8,9 @@ use std::num::NonZeroU32;
 /// Image resizer.
 ///
 /// # Example
-/// ```
+/// ```no_run
+/// use std::io::Write;
+///
 /// let mut file = std::fs::File::create("example/processed.jpg").unwrap();
 /// let buff = image_processor::resizer::resize(
 ///     &std::fs::read("example/image.jpg").unwrap(),
@@ -19,8 +21,10 @@ use std::num::NonZeroU32;
 /// file.write_all(buff.unwrap().buffer()).unwrap();
 /// file.sync_all().unwrap();
 /// ```
-
-/// ```
+///
+/// # Returns
+///
+/// Resized image buffer as JPEG.
 pub fn resize(
     buffer: &[u8],
     mut width: Option<u32>,
@@ -41,8 +45,7 @@ pub fn resize(
             (f64::from(width.unwrap_or_default()) / f64::from(img_width) * f64::from(img_height))
                 as u32,
         );
-    }
-    if width.is_none() && height.is_some() {
+    } else if width.is_none() && height.is_some() {
         width = Some(
             (f64::from(height.unwrap_or_default()) / f64::from(img_height) * f64::from(img_width))
                 as u32,
