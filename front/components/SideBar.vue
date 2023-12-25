@@ -146,7 +146,7 @@ async function logout() {
             ></path>
           </svg>
 
-          <span ml-3>{{ $t("About") }}</span>
+          <span ml-3>{{ $t("about") }}</span>
         </NuxtLink>
 
         <NuxtLink
@@ -182,7 +182,7 @@ async function logout() {
             ></path>
           </svg>
 
-          <span ml-3>{{ $t("Security") }}</span>
+          <span ml-3>{{ $t("security") }}</span>
         </NuxtLink>
 
         <NuxtLink
@@ -218,7 +218,7 @@ async function logout() {
             ></path>
           </svg>
 
-          <span ml-3>{{ $t("Data") }}</span>
+          <span ml-3>{{ $t("data") }}</span>
         </NuxtLink>
 
         <NuxtLink
@@ -254,7 +254,7 @@ async function logout() {
             ></path>
           </svg>
 
-          <span ml-3>{{ $t("OAuth") }}</span>
+          <span ml-3>{{ $t("oauth") }}</span>
         </NuxtLink>
 
         <button
@@ -294,27 +294,9 @@ async function logout() {
             ></path>
           </svg>
 
-          <span ml-3 text-base>{{ $t("Logout") }}</span>
+          <span ml-3 text-base>{{ $t("logout") }}</span>
         </button>
       </div>
-
-      <!--
-                <div class="p-4 mt-6 rounded bg-blue-50 dark:bg-blue-700" role="alert">
-                <div class="flex items-center mb-3">
-                    <span class="bg-orange-100 text-orange-800 text-sm font-semibold mr-2 px-2.5 py-0.5 rounded dark:bg-orange-300 dark:text-orange-900">
-                        {{ $t("Beta") }}
-                    </span>
-                </div>
-
-                <p class="mb-3 text-sm text-blue-800 dark:text-white">
-                    {{ $t("Gravitalia Account gives you access to new features and makes your account more secure!") }}
-                </p>
-
-                <NuxtLink class="text-sm text-blue-800 underline font-medium hover:text-blue-900 dark:text-white dark:hover:text-gray-100" to="mailto:contact@gravitalia.com">
-                    {{ $t("Found bug?") }}
-                </NuxtLink>
-            </div>
-             -->
     </div>
   </aside>
 </template>

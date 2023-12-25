@@ -75,6 +75,10 @@ export default defineNuxtConfig({
         strategy: "no_prefix",
         lazy: false,
         langDir: "locales",
+        compilation: {
+          strictMessage: false,
+          escapeHtml: true,
+        },
         detectBrowserLanguage: {
           useCookie: true,
           cookieKey: "locale",
@@ -109,6 +113,12 @@ export default defineNuxtConfig({
     },
   },
 
+  routeRules: {
+    // No JS.
+    "/terms": { experimentalNoScripts: true },
+    "/privacy": { experimentalNoScripts: true },
+  },
+
   pinia: {
     storesDirs: ["./stores/**"],
   },
@@ -118,6 +128,7 @@ export default defineNuxtConfig({
     payloadExtraction: false,
     inlineSSRStyles: false,
     renderJsonPayloads: true,
+    viewTransition: true,
   },
 
   vue: {

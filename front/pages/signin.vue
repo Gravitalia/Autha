@@ -106,20 +106,7 @@ async function signin(): Promise<void> {
   <NuxtTurnstile v-model="token" />
 
   <!-- Blurry effect in background. -->
-  <div absolute flex justify-between w-98vw>
-    <div
-      rounded-full
-      w-48
-      h-48
-      xl:w-80
-      xl:h-80
-      blur-5xl
-      mt-80
-      xl:mt-30rem
-      bg-primary
-    ></div>
-    <div rounded-full w-48 h-48 xl:w-80 xl:h-80 blur-5xl bg-secondary></div>
-  </div>
+  <FontBubbles />
 
   <!-- Centered card containing inputs to connect. -->
   <div absolute w-96vw h-98vh container>
@@ -141,66 +128,38 @@ async function signin(): Promise<void> {
           width="40"
           draggable="false"
         />
-        <h3 font-semibold>{{ $t("Sign in") }}</h3>
+        <h3 font-semibold>{{ $t("sign_in") }}</h3>
       </div>
 
       <div flex-col container>
         <!-- Generic errors. -->
-        <label
-          v-if="isError.invalidToken.value"
+        <LabelError
           mb-34
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Invalid security token, try again in a few seconds.") }}
-        </label>
-
-        <label
-          v-if="isError.rateLimited.value"
+          text="error.security_token"
+          :cond="isError.invalidToken.value"
+        />
+        <LabelError
           mb-34
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("You're sending too many requests! Try again in 5 minutes.") }}
-        </label>
-
-        <label
-          v-if="isError.internalServerError.value"
+          text="error.rate_limit"
+          :cond="isError.rateLimited.value"
+        />
+        <LabelError
           mb-34
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Something went wrong") }}
-        </label>
+          text="something_went_wrong"
+          :cond="isError.internalServerError.value"
+        />
 
         <!-- Email input. -->
-        <label
-          v-if="isError.missingEmail.value"
+        <LabelError
           mb-28
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Write something...") }}
-        </label>
-
-        <label
-          v-if="isError.invalidEmail.value"
+          text="error.write_something"
+          :cond="isError.missingEmail.value"
+        />
+        <LabelError
           mb-28
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Invalid email address") }}
-        </label>
+          text="error.invalid_email"
+          :cond="isError.invalidEmail.value"
+        />
 
         <input
           v-model="email"
@@ -213,31 +172,20 @@ async function signin(): Promise<void> {
           mb-6
           lg:mb-8
           type="email"
-          :placeholder="$t('Email address')"
+          :placeholder="$t('email')"
         />
 
         <!-- Password input. -->
-        <label
-          v-if="isError.missingPassword.value"
+        <LabelError
           mt-4
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Write down your secret word 🤫") }}
-        </label>
-
-        <label
-          v-if="isError.invalidPassword.value"
+          text="error.missing_password"
+          :cond="isError.missingPassword.value"
+        />
+        <LabelError
           mt-4
-          absolute
-          text-sm
-          text-red-500
-          w-64
-        >
-          {{ $t("Invalid password") }}
-        </label>
+          text="error.invalid_password"
+          :cond="isError.invalidPassword.value"
+        />
 
         <input
           v-model="password"
@@ -248,7 +196,7 @@ async function signin(): Promise<void> {
           "
           input
           type="password"
-          :placeholder="$t('Password')"
+          :placeholder="$t('password')"
         />
       </div>
 
@@ -256,7 +204,7 @@ async function signin(): Promise<void> {
       <div flex container>
         <div flex justify-between w-16.5rem mt-8>
           <NuxtLink to="/signup" btn-invisible no-underline>{{
-            $t("Create an account")
+            $t("create_account")
           }}</NuxtLink>
           <button
             font-sans
@@ -266,7 +214,7 @@ async function signin(): Promise<void> {
             :disabled="isButtonDisable"
             @click="signin()"
           >
-            {{ $t("Sign in") }}
+            {{ $t("sign_in") }}
           </button>
         </div>
       </div>
