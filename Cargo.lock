@@ -1177,6 +1177,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cloudinary",
+ "criterion",
  "crypto",
  "fast_image_resize",
  "image",

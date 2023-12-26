@@ -1,5 +1,5 @@
 {
-  "checksum": "ddad46366c8ef27babae2ed1bc9e758e773755d330ff0041b03735550c2d7121",
+  "checksum": "9b787f36d332233dfaa409aa6fc48d750c8483493a3e8247152d5d9dc6fe7ffd",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -6158,6 +6158,15 @@
             {
               "id": "webp 0.2.6",
               "target": "webp"
+            }
+          ],
+          "selects": {}
+        },
+        "deps_dev": {
+          "common": [
+            {
+              "id": "criterion 0.5.1",
+              "target": "criterion"
             }
           ],
           "selects": {}
