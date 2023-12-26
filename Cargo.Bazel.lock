@@ -1,5 +1,5 @@
 {
-  "checksum": "7607b671fd29970dbf0a90aeeeeeef0801fa2788fbadca602fd9847b9cdd6225",
+  "checksum": "9013c2878671e982b9e6ea64b0921b361a6808abbbad547a4e19117c37163bff",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -558,13 +558,13 @@
       },
       "license": "MIT"
     },
-    "async-trait 0.1.74": {
+    "async-trait 0.1.75": {
       "name": "async-trait",
-      "version": "0.1.74",
+      "version": "0.1.75",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/async-trait/0.1.74/download",
-          "sha256": "a66537f1bb974b254c98ed142ff995236e81b9d0fe4db0575f46612cb15eb0f9"
+          "url": "https://crates.io/api/v1/crates/async-trait/0.1.75/download",
+          "sha256": "fdf6721fb0140e4f897002dd086c06f6c27775df19cfe1fccb21181a48fd2c98"
         }
       },
       "targets": [
@@ -595,7 +595,7 @@
         "deps": {
           "common": [
             {
-              "id": "async-trait 0.1.74",
+              "id": "async-trait 0.1.75",
               "target": "build_script_build"
             },
             {
@@ -614,7 +614,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.1.74"
+        "version": "0.1.75"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -896,7 +896,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.74",
+              "id": "async-trait 0.1.75",
               "target": "async_trait"
             }
           ],
@@ -995,7 +995,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.74",
+              "id": "async-trait 0.1.75",
               "target": "async_trait"
             }
           ],
@@ -3250,7 +3250,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.74",
+              "id": "async-trait 0.1.75",
               "target": "async_trait"
             }
           ],
@@ -12292,7 +12292,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.74",
+              "id": "async-trait 0.1.75",
               "target": "async_trait"
             },
             {
@@ -12384,7 +12384,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.74",
+              "id": "async-trait 0.1.75",
               "target": "async_trait"
             },
             {
@@ -15073,7 +15073,7 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "async-trait 0.1.74",
+              "id": "async-trait 0.1.75",
               "target": "async_trait"
             }
           ],
