@@ -6,7 +6,7 @@ const { error } = defineProps<{
 }>();
 
 const errorCodes: Record<number, string> = {
-  404: "Page not found",
+  404: "page_not_found",
 };
 
 /* eslint-disable no-console */
@@ -21,11 +21,11 @@ if (process.dev) console.error(error);
     <slot>
       <div h-screen font-sans flex-col container>
         <h1 text-2xl>
-          {{ $t(errorCodes[error.statusCode!] || "Something went wrong") }}
+          {{ $t(errorCodes[error.statusCode!] || "something_went_wrong") }}
         </h1>
 
         <NuxtLink to="/" prefetch btn-base no-underline mt-11>{{
-          $t("Return home")
+          $t("return_home")
         }}</NuxtLink>
       </div>
     </slot>
