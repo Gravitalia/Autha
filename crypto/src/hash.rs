@@ -1,6 +1,6 @@
 use anyhow::Result;
 use argon2::{Config, Variant, Version};
-use ring::digest::{Context, SHA256};
+use ring::digest::{Context, SHA1_FOR_LEGACY_USE_ONLY, SHA256};
 
 /// Hash plaintext using Argon2, mostly used for passwords.
 /// It uses the two version, Argon2d for GPU attacks and Argon2i for auxiliary channel attacks.
@@ -55,6 +55,18 @@ pub fn sha256(data: &[u8]) -> Result<String> {
     Ok(hex::encode(context.finish()))
 }
 
+/// Compute the SHA1 digest for the bytes data.
+///
+/// # Warning
+/// This should only be used when security is not a priority.
+pub fn sha1(data: &[u8]) -> Result<String> {
+    let mut context = Context::new(&SHA1_FOR_LEGACY_USE_ONLY);
+
+    context.update(data);
+
+    Ok(hex::encode(context.finish()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -77,6 +89,16 @@ mod tests {
         assert_eq!(
             hash.unwrap(),
             "8fced00b6ce281456d69daef5f2b33eaf1a4a29b5923ebe5f1f2c54f5886c7a3".to_string()
+        );
+    }
+
+    #[test]
+    fn test_sha1() {
+        let hash = sha1(b"hello world!");
+
+        assert_eq!(
+            hash.unwrap(),
+            "430ce34d020724ed75a196dfc2ad67c77772d169".to_string()
         );
     }
 }

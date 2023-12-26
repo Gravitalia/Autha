@@ -11,6 +11,7 @@ warp = { version = "0.3", features = ["tls"] }
 
 crypto = { path = "../crypto" }
 db = { path = "../db" }
+image_processor = { path = "../image_processor" }
 
 anyhow = "1"
 hex = "0.4"

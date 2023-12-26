@@ -9,15 +9,22 @@ fn hash_benchmark(c: &mut Criterion) {
 
 fn sha256_digest_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("throughput");
-    group.throughput(Throughput::Bytes(256));
+    group.throughput(Throughput::Bytes(32));
     group.bench_function("sha256_digest", |b| b.iter(|| sha256(b"Internet Protocol")));
+    group.finish();
+}
+
+fn sha1_digest_benchmark(c: &mut Criterion) {
+    let mut group = c.benchmark_group("throughput");
+    group.throughput(Throughput::Bytes(20));
+    group.bench_function("sha1_digest", |b| b.iter(|| sha1(b"Internet Protocol")));
     group.finish();
 }
 
 criterion_group! {
     name = basics;
     config = Criterion::default().significance_level(0.1).sample_size(500);
-    targets = sha256_digest_benchmark,
+    targets = sha256_digest_benchmark, sha1_digest_benchmark,
 }
 criterion_group! {
     name = consumers;
