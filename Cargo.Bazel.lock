@@ -1,5 +1,5 @@
 {
-  "checksum": "3c5aa47e407729f1676efd25555dcdbcfe04b8a55dbd66c0cf5974f89a3c278c",
+  "checksum": "7607b671fd29970dbf0a90aeeeeeef0801fa2788fbadca602fd9847b9cdd6225",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -690,7 +690,7 @@
               "target": "regex"
             },
             {
-              "id": "reqwest 0.11.22",
+              "id": "reqwest 0.11.23",
               "target": "reqwest"
             },
             {
@@ -2115,7 +2115,7 @@
               "target": "mime"
             },
             {
-              "id": "reqwest 0.11.22",
+              "id": "reqwest 0.11.23",
               "target": "reqwest"
             },
             {
@@ -11111,13 +11111,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "reqwest 0.11.22": {
+    "reqwest 0.11.23": {
       "name": "reqwest",
-      "version": "0.11.22",
+      "version": "0.11.23",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/reqwest/0.11.22/download",
-          "sha256": "046cd98826c46c2ac8ddecae268eb5c2e58628688a5fc7a2643704a73faba95b"
+          "url": "https://crates.io/api/v1/crates/reqwest/0.11.23/download",
+          "sha256": "37b1ae8d9ac08420c66222fb9096fc5de435c3c48542bc5336c51892cffafb41"
         }
       },
       "targets": [
@@ -11302,7 +11302,7 @@
           }
         },
         "edition": "2018",
-        "version": "0.11.22"
+        "version": "0.11.23"
       },
       "license": "MIT OR Apache-2.0"
     },
