@@ -1,5 +1,5 @@
 {
-  "checksum": "9b787f36d332233dfaa409aa6fc48d750c8483493a3e8247152d5d9dc6fe7ffd",
+  "checksum": "0e5abf8e6377af5968c4c5f6ded2ec794dbff70a48723bba5aec45fa31a3589c",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -2936,6 +2936,174 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "darling 0.20.3": {
+      "name": "darling",
+      "version": "0.20.3",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/darling/0.20.3/download",
+          "sha256": "0209d94da627ab5605dcccf08bb18afa5009cfbef48d8a8b7d7bdbc79be25c5e"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "darling",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "darling",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "suggestions"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "darling_core 0.20.3",
+              "target": "darling_core"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "darling_macro 0.20.3",
+              "target": "darling_macro"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "0.20.3"
+      },
+      "license": "MIT"
+    },
+    "darling_core 0.20.3": {
+      "name": "darling_core",
+      "version": "0.20.3",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/darling_core/0.20.3/download",
+          "sha256": "177e3443818124b357d8e76f53be906d60937f0d3a90773a664fa63fa253e621"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "darling_core",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "darling_core",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "strsim",
+            "suggestions"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "fnv 1.0.7",
+              "target": "fnv"
+            },
+            {
+              "id": "ident_case 1.0.1",
+              "target": "ident_case"
+            },
+            {
+              "id": "proc-macro2 1.0.70",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.33",
+              "target": "quote"
+            },
+            {
+              "id": "strsim 0.10.0",
+              "target": "strsim"
+            },
+            {
+              "id": "syn 2.0.41",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.20.3"
+      },
+      "license": "MIT"
+    },
+    "darling_macro 0.20.3": {
+      "name": "darling_macro",
+      "version": "0.20.3",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/darling_macro/0.20.3/download",
+          "sha256": "836a9bbc7ad63342d6d6e7b815ccab164bc77a2d95d84bc3117a8c0d5c98e2d5"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "darling_macro",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "darling_macro",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "darling_core 0.20.3",
+              "target": "darling_core"
+            },
+            {
+              "id": "quote 1.0.33",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.41",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.20.3"
+      },
+      "license": "MIT"
+    },
     "dashmap 5.5.3": {
       "name": "dashmap",
       "version": "5.5.3",
@@ -3068,7 +3236,7 @@
               "target": "r2d2_memcache"
             },
             {
-              "id": "scylla 0.10.1",
+              "id": "scylla 0.11.1",
               "target": "scylla"
             },
             {
@@ -5951,6 +6119,36 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "ident_case 1.0.1": {
+      "name": "ident_case",
+      "version": "1.0.1",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/ident_case/1.0.1/download",
+          "sha256": "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ident_case",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "ident_case",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "1.0.1"
+      },
+      "license": "MIT/Apache-2.0"
+    },
     "idna 0.5.0": {
       "name": "idna",
       "version": "0.5.0",
@@ -6980,10 +7178,76 @@
         "crate_features": {
           "common": [
             "default",
-            "extra_traits",
             "std"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              "extra_traits"
+            ],
+            "aarch64-apple-ios": [
+              "extra_traits"
+            ],
+            "aarch64-apple-ios-sim": [
+              "extra_traits"
+            ],
+            "aarch64-fuchsia": [
+              "extra_traits"
+            ],
+            "aarch64-linux-android": [
+              "extra_traits"
+            ],
+            "armv7-linux-androideabi": [
+              "extra_traits"
+            ],
+            "i686-apple-darwin": [
+              "extra_traits"
+            ],
+            "i686-linux-android": [
+              "extra_traits"
+            ],
+            "i686-unknown-freebsd": [
+              "extra_traits"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "extra_traits"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "extra_traits"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "extra_traits"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "extra_traits"
+            ],
+            "thumbv7em-none-eabi": [
+              "extra_traits"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "extra_traits"
+            ],
+            "wasm32-wasi": [
+              "extra_traits"
+            ],
+            "x86_64-apple-darwin": [
+              "extra_traits"
+            ],
+            "x86_64-apple-ios": [
+              "extra_traits"
+            ],
+            "x86_64-fuchsia": [
+              "extra_traits"
+            ],
+            "x86_64-linux-android": [
+              "extra_traits"
+            ],
+            "x86_64-unknown-freebsd": [
+              "extra_traits"
+            ],
+            "x86_64-unknown-none": [
+              "extra_traits"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -7165,32 +7429,13 @@
         ],
         "crate_features": {
           "common": [
+            "elf",
+            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
-          "selects": {
-            "aarch64-unknown-linux-gnu": [
-              "elf",
-              "errno"
-            ],
-            "arm-unknown-linux-gnueabi": [
-              "elf",
-              "errno"
-            ],
-            "armv7-unknown-linux-gnueabi": [
-              "elf",
-              "errno"
-            ],
-            "i686-unknown-linux-gnu": [
-              "elf",
-              "errno"
-            ],
-            "x86_64-unknown-linux-gnu": [
-              "elf",
-              "errno"
-            ]
-          }
+          "selects": {}
         },
         "edition": "2021",
         "version": "0.4.12"
@@ -11915,13 +12160,13 @@
       },
       "license": "Apache-2.0 OR ISC OR MIT"
     },
-    "scylla 0.10.1": {
+    "scylla 0.11.1": {
       "name": "scylla",
-      "version": "0.10.1",
+      "version": "0.11.1",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/scylla/0.10.1/download",
-          "sha256": "7b30067d0d0313a0bbcda9c31a503678f18dacd5426dd8a63c3f581cf80f5c30"
+          "url": "https://crates.io/api/v1/crates/scylla/0.11.1/download",
+          "sha256": "db4bca1987121cceb419f0644cf064416f719c73c44b6cbe849b62fd3b7adc3c"
         }
       },
       "targets": [
@@ -12005,7 +12250,7 @@
               "target": "rand_pcg"
             },
             {
-              "id": "scylla-cql 0.0.9",
+              "id": "scylla-cql 0.0.11",
               "target": "scylla_cql"
             },
             {
@@ -12051,7 +12296,7 @@
               "target": "async_trait"
             },
             {
-              "id": "scylla-macros 0.2.1",
+              "id": "scylla-macros 0.3.0",
               "target": "scylla_macros"
             },
             {
@@ -12061,17 +12306,17 @@
           ],
           "selects": {}
         },
-        "version": "0.10.1"
+        "version": "0.11.1"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "scylla-cql 0.0.9": {
+    "scylla-cql 0.0.11": {
       "name": "scylla-cql",
-      "version": "0.0.9",
+      "version": "0.0.11",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/scylla-cql/0.0.9/download",
-          "sha256": "c9642864295085ef2fe62493eec405a109fbaae9f3a9b80ea087556af4a97df2"
+          "url": "https://crates.io/api/v1/crates/scylla-cql/0.0.11/download",
+          "sha256": "50938b1bbb5c6364617977939c09644384495f658dc899ec37fd90bce73e6f37"
         }
       },
       "targets": [
@@ -12103,10 +12348,6 @@
             {
               "id": "bytes 1.5.0",
               "target": "bytes"
-            },
-            {
-              "id": "chrono 0.4.31",
-              "target": "chrono"
             },
             {
               "id": "lz4_flex 0.11.1",
@@ -12147,23 +12388,23 @@
               "target": "async_trait"
             },
             {
-              "id": "scylla-macros 0.2.1",
+              "id": "scylla-macros 0.3.0",
               "target": "scylla_macros"
             }
           ],
           "selects": {}
         },
-        "version": "0.0.9"
+        "version": "0.0.11"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "scylla-macros 0.2.1": {
+    "scylla-macros 0.3.0": {
       "name": "scylla-macros",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/scylla-macros/0.2.1/download",
-          "sha256": "5757ded3dfb10967ca7d1ff1084d072d565b5e10b2b21c286d5335c245425a7e"
+          "url": "https://crates.io/api/v1/crates/scylla-macros/0.3.0/download",
+          "sha256": "22b6659cdeed34c5b83719edd4d9f023c18357677e3fbe14237a59f00403acce"
         }
       },
       "targets": [
@@ -12185,6 +12426,10 @@
         "deps": {
           "common": [
             {
+              "id": "darling 0.20.3",
+              "target": "darling"
+            },
+            {
               "id": "proc-macro2 1.0.70",
               "target": "proc_macro2"
             },
@@ -12200,7 +12445,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.2.1"
+        "version": "0.3.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -13201,6 +13446,36 @@
         "version": "1.1.0"
       },
       "license": "MIT OR Apache-2.0"
+    },
+    "strsim 0.10.0": {
+      "name": "strsim",
+      "version": "0.10.0",
+      "repository": {
+        "Http": {
+          "url": "https://crates.io/api/v1/crates/strsim/0.10.0/download",
+          "sha256": "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "strsim",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "strsim",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2015",
+        "version": "0.10.0"
+      },
+      "license": "MIT"
     },
     "strum 0.23.0": {
       "name": "strum",
