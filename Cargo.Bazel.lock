@@ -1,5 +1,5 @@
 {
-  "checksum": "be9ad14050edc59d13f8bc816ae690f676259a49967c0df2c8de0b1eeece910d",
+  "checksum": "703aa4c40306470d6e1ea663705a6c443ae9d2ccd04c4c1a22fec550c3556e10",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -6350,7 +6350,7 @@
               "target": "log"
             },
             {
-              "id": "tempfile 3.8.1",
+              "id": "tempfile 3.9.0",
               "target": "tempfile"
             },
             {
@@ -8262,7 +8262,7 @@
                 "target": "security_framework_sys"
               },
               {
-                "id": "tempfile 3.8.1",
+                "id": "tempfile 3.9.0",
                 "target": "tempfile"
               }
             ],
@@ -10279,7 +10279,7 @@
               "target": "syn"
             },
             {
-              "id": "tempfile 3.8.1",
+              "id": "tempfile 3.9.0",
               "target": "tempfile"
             },
             {
@@ -13889,13 +13889,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "tempfile 3.8.1": {
+    "tempfile 3.9.0": {
       "name": "tempfile",
-      "version": "3.8.1",
+      "version": "3.9.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/tempfile/3.8.1/download",
-          "sha256": "7ef1adac450ad7f4b3c28589471ade84f25f731a7a0fe30d71dfa9f60fd808e5"
+          "url": "https://crates.io/api/v1/crates/tempfile/3.9.0/download",
+          "sha256": "01ce4141aa927a6d1bd34a041795abd0db1cccba5d5f24b009f694bdf3a1f3fa"
         }
       },
       "targets": [
@@ -13940,14 +13940,14 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.48.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
           }
         },
         "edition": "2018",
-        "version": "3.8.1"
+        "version": "3.9.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -17463,6 +17463,16 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "Win32",
+            "Win32_Foundation",
+            "Win32_Storage",
+            "Win32_Storage_FileSystem",
+            "default"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
