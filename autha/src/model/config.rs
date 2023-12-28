@@ -27,6 +27,10 @@ pub struct Database {
 pub struct Config {
     /// The port number for the server.
     pub port: u16,
+    /// If set, check that the new avatars do not contain any nudity.
+    /// Otherwise, skip the verification stage and authorise all avatars.
+    /// This can be useful for reducing latency and bandwidth consumption.
+    pub(crate) remini_url: Option<String>,
     /// The database configuration.
     pub database: Database,
 }
