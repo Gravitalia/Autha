@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.gravitalia.remini.remini";
+option java_outer_classname = "ReminiProto";
+
+package remini;
+
+// Remini service definition used to perform requests.
+service Remini {
+    // Predict an output for a given input using the appropriate model.
+    rpc Predict (Request) returns (Reply) {}
+}
+
+// Prediction query using machine learning models containing the model to be used cf. readme or code)
+// and an input such as text or an image in byte form.
+message Request {
+    string model = 1;
+    bytes data = 2;
+}
+
+// Prediction response containing details such as the model, whether there was an error
+// and the message of either the model or the error.
+message Reply {
+    string model = 1;
+    string message = 2;
+    bool error = 3;
+}

@@ -1,6 +1,9 @@
 # Define port for the HTTP API
 port: 1111
 
+# Remini server URL.
+remini_url: ~
+
 database:
   scylla:
     username: cassandra
