@@ -1,12 +1,21 @@
 load("@crate_index//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("@rules_rust//cargo:cargo_build_script.bzl", "cargo_build_script")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 
 package(default_visibility = ["//visibility:public"])
+
+proto_library(
+    name = "remini_proto",
+    srcs = ["proto/remini.proto"],
+    visibility = ["//visibility:public"],
+)
 
 CUSTOM_CRATES = [
     "//crypto",
     "//db",
-    "//image_processor"
+    "//image_processor",
+    ":proto_build_script",
 ]
 
 rust_binary(
@@ -33,4 +42,19 @@ rust_test(
     ),
     size = "medium",
     timeout = "short",
+)
+
+cargo_build_script(
+    name = "proto_build_script",
+    srcs = ["build.rs"],
+    build_script_env = {
+        "PROTOC": "$(execpath @com_google_protobuf//:protoc)",
+    },
+    data = [
+        ":remini_proto",
+        "@com_google_protobuf//:protoc",
+    ],
+    deps = all_crate_deps(
+        build = True,
+    ),
 )
