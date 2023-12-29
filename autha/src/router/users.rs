@@ -4,6 +4,10 @@ use db::model::User;
 use db::scylla::{Scylla, ScyllaManager};
 use warp::reply::{Json, WithStatus};
 
+const IMAGE_WIDTH: u32 = 224;
+const IMAGE_HEIGHT: u32 = 224;
+const IMAGE_QUALITY: f32 = 70.0;
+
 /// Get a user with its vanity via a cache or the database.
 #[inline]
 pub async fn get_user(
@@ -109,9 +113,257 @@ pub async fn get(
 
 /// Handle users modifications route.
 pub async fn update(
-    _scylla: std::sync::Arc<Scylla>,
-    _memcached: MemcachePool,
-    _token: String,
+    scylla: std::sync::Arc<Scylla>,
+    memcached: MemcachePool,
+    token: String,
+    body: crate::model::body::UserPatch,
 ) -> Result<WithStatus<Json>> {
-    unimplemented!("not finished");
+    let vanity = match crate::helpers::token::get(&scylla, &token).await {
+        Ok(vanity) => vanity,
+        Err(error) => {
+            log::error!("Cannot retrive user token: {}", error);
+            return Ok(super::err(super::INVALID_TOKEN));
+        }
+    };
+
+    let rows = scylla
+        .connection
+        .query(
+            "SELECT username, email, password, avatar, bio FROM accounts.users WHERE vanity = ?",
+            vec![&vanity],
+        )
+        .await?
+        .rows_typed::<(String, String, String, Option<String>, Option<String>)>()?
+        .collect::<Vec<_>>();
+
+    let (mut username, mut email, password, mut avatar, mut bio) = rows[0].clone()?;
+    let mut birthdate: Option<String> = None;
+    let mut phone: Option<String> = None;
+
+    let mut is_psw_valid = false;
+    if let Some(psw) = body.password {
+        if crypto::hash::check_argon2(password, psw.as_bytes(), vanity.as_bytes())? {
+            is_psw_valid = true;
+        } else {
+            return Ok(crate::router::err(super::INVALID_PASSWORD));
+        }
+    }
+
+    // Prepare the query to be faster if user set both phone, birthdate and MFA.
+    // It will avoid database to make a query pasing.
+    let insert_salt_query = scylla
+        .connection
+        .prepare("INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?)")
+        .await?;
+
+    // Update username (firstname and lastname).
+    if let Some(u) = body.username {
+        if u.len() > 25 {
+            return Ok(crate::router::err("Invalid username"));
+        } else {
+            username = u;
+        }
+    }
+
+    // Update biography.
+    if let Some(b) = body.bio {
+        if b.len() > 160 {
+            return Ok(crate::router::err("Invalid bio"));
+        } else if !b.is_empty() {
+            bio = Some(b);
+        }
+    }
+
+    // Update avatar.
+    if let Some(a) = body.avatar {
+        if a.is_empty() {
+            avatar = None;
+        } else {
+            let config: crate::model::config::Config = crate::helpers::config::read();
+            let resized_img = image_processor::resizer::resize(&a, Some(224), Some(224))?;
+            let credentials = image_processor::host::cloudinary::Credentials {
+                key: "".to_string(),
+                cloud_name: "".to_string(),
+                secret: "".to_string(),
+            };
+
+            if let Some(remini_url) = config.remini_url {
+                if crate::helpers::machine_learning::is_nude(remini_url, resized_img.buffer())
+                    .await?
+                {
+                    return Ok(crate::router::err("Avatar appears to contain nudity"));
+                } else {
+                    avatar = Some(
+                        image_processor::resize_and_upload(
+                            &a,
+                            Some(IMAGE_WIDTH),
+                            Some(IMAGE_HEIGHT),
+                            Some(IMAGE_QUALITY),
+                            credentials,
+                        )
+                        .await?,
+                    );
+                }
+            } else {
+                avatar = Some(
+                    image_processor::resize_and_upload(
+                        &a,
+                        Some(IMAGE_WIDTH),
+                        Some(IMAGE_HEIGHT),
+                        Some(IMAGE_QUALITY),
+                        credentials,
+                    )
+                    .await?,
+                );
+            }
+        }
+    }
+
+    // Update email.
+    if let Some(e) = body.email {
+        if !is_psw_valid || !crate::router::create::EMAIL.is_match(&e) {
+            return Ok(crate::router::err(super::INVALID_EMAIL));
+        } else {
+            let hashed_email =
+                crypto::encrypt::format_preserving_encryption(e.encode_utf16().collect())?;
+
+            // Check if email is already in use.
+            if !scylla
+                .connection
+                .query(
+                    "SELECT vanity FROM accounts.users WHERE email = ?",
+                    vec![&hashed_email],
+                )
+                .await?
+                .rows
+                .unwrap_or_default()
+                .is_empty()
+            {
+                return Ok(crate::router::err("Email already used"));
+            }
+
+            // Otherwise, set it.
+            email = hashed_email;
+        }
+    }
+
+    // Update birthdate.
+    if let Some(birth) = body.birthdate {
+        if !crate::router::create::BIRTH.is_match(&birth) {
+            return Ok(crate::router::err(super::INVALID_BIRTHDATE));
+        } else {
+            let dates: Vec<&str> = birth.split('-').collect();
+
+            if 13
+                > crate::helpers::get_age(
+                    dates[0].parse::<i16>()?,
+                    dates[1].parse::<i8>()?,
+                    dates[2].parse::<i8>()?,
+                )?
+            {
+                return Ok(crate::router::err(super::INVALID_BIRTHDATE));
+            } else {
+                let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(birth.into())?;
+                let uuid = uuid::Uuid::new_v4().to_string();
+
+                scylla
+                    .connection
+                    .execute(&insert_salt_query, (&uuid, &nonce))
+                    .await?;
+
+                // Set primary key (to get nonce) and encrypted birthdate.
+                birthdate = Some(format!("{}//{}", uuid, encrypted));
+            }
+        }
+    }
+
+    // Update phone.
+    if let Some(number) = body.phone {
+        if !crate::router::create::PHONE.is_match(&number) {
+            return Ok(super::err(super::INVALID_PHONE));
+        } else {
+            let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(number.into())?;
+            let uuid = uuid::Uuid::new_v4();
+
+            scylla
+                .connection
+                .execute(&insert_salt_query, (&uuid, &nonce))
+                .await?;
+
+            // Set primary key (to get nonce) and encrypted phone.
+            phone = Some(format!("{}//{}", uuid, encrypted));
+        }
+    }
+
+    // Change 2FA (MFA).
+    if let Some(mfa) = body.mfa {
+        if !is_psw_valid {
+            return Ok(crate::router::err(super::INVALID_PASSWORD));
+        } else {
+            let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(mfa.into())?;
+            let uuid = uuid::Uuid::new_v4();
+
+            scylla
+                .connection
+                .execute(&insert_salt_query, (&uuid, &nonce))
+                .await?;
+
+            scylla
+                .connection
+                .query(
+                    "UPDATE accounts.users SET password = ? WHERE vanity = ?",
+                    vec![&format!("{}//{}", uuid, encrypted), &vanity],
+                )
+                .await?;
+        }
+    }
+
+    // Change password
+    if let Some(np) = body.new_password {
+        if !is_psw_valid || !crate::router::create::PASSWORD.is_match(&np) {
+            return Ok(crate::router::err(super::INVALID_PASSWORD));
+        } else {
+            scylla
+                .connection
+                .query(
+                    "UPDATE accounts.users SET password = ? WHERE vanity = ?",
+                    vec![
+                        &crypto::hash::argon2(np.as_bytes(), vanity.as_bytes()),
+                        &vanity,
+                    ],
+                )
+                .await?;
+        }
+    }
+
+    match scylla
+    .connection.
+    query(
+        "UPDATE accounts.users SET username = ?, avatar = ?, bio = ?, birthdate = ?, phone = ?, email = ? WHERE vanity = ?",
+        (
+            &username,
+            &avatar,
+            &bio,
+            &birthdate,
+            &phone,
+            &email,
+            &vanity,
+        )
+    ).await {
+        Ok(_) => {
+            // Todo: publish globally the modified user via RabbitMQ, Kafka or NATS.
+
+            // Delete cached user.
+            memcached.delete(vanity)?;
+
+            Ok(warp::reply::with_status(
+                warp::reply::json(&crate::model::error::Error {
+                    error: false,
+                    message: "OK".to_string(),
+                }),
+                warp::http::StatusCode::OK,
+            ))
+        }
+        Err(_) => Ok(crate::router::err(super::INTERNAL_SERVER_ERROR)),
+    }
 }
