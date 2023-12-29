@@ -30,3 +30,29 @@ pub struct Login {
     /// 6-digit multifactor authentication code.
     pub mfa: Option<String>,
 }
+
+/// Represents the body structure for user patch via HTTP route.
+#[derive(Deserialize)]
+pub struct UserPatch {
+    /// The newname used of the account.
+    pub username: Option<String>,
+    /// Image buffer used as avatar.
+    pub avatar: Option<Vec<u8>>,
+    /// New biography of the account.
+    pub bio: Option<String>,
+    /// New email of the account.
+    /// Require password field.
+    pub email: Option<String>,
+    /// Actual password of the user.
+    pub password: Option<String>,
+    /// New password of the account.
+    /// Require password field.
+    pub new_password: Option<String>,
+    /// Update the birthdate of the user.
+    pub birthdate: Option<String>,
+    /// Update user's phone.
+    pub phone: Option<String>,
+    /// Update 2FA code used for login.
+    /// Require password field.
+    pub mfa: Option<String>,
+}

@@ -135,6 +135,7 @@ async fn main() {
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
         .and(warp::header::<String>("authorization"))
+        .and(warp::body::json())
         .and_then(router::update_user);
 
     warp::serve(
