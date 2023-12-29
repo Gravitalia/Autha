@@ -29,11 +29,11 @@ lazy_static! {
     pub static ref EMAIL: Regex = Regex::new(r".+@.+.([a-zA-Z]{2,7})$").unwrap();
     pub static ref PASSWORD: Regex = Regex::new(r"([0-9|*|]|[$&+,:;=?@#|'<>.^*()%!-])+").unwrap();
     static ref VANITY: Regex = Regex::new(r"[A-z|0-9|_]{3,16}$").unwrap();
-    static ref PHONE: Regex = Regex::new(
+    pub(super) static ref PHONE: Regex = Regex::new(
         r"^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$"
     )
     .unwrap();
-    static ref BIRTH: Regex =
+    pub(super) static ref BIRTH: Regex =
         Regex::new(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$").unwrap();
 }
 
@@ -63,7 +63,7 @@ pub async fn handle(
 
     // Username length check.
     if body.username.len() as u8 > MAX_USERNAME_LENGTH || body.username.is_empty() {
-        return Ok(super::err("Invalid username"));
+        return Ok(super::err(super::INVALID_USERNAME));
     }
 
     // Check if locale respects ISO 639-1.
@@ -170,10 +170,9 @@ pub async fn handle(
     let mut phone: Option<String> = None;
     if let Some(number) = body.phone {
         if !PHONE.is_match(&number) {
-            return Ok(super::err("Invalid phone"));
+            return Ok(super::err(super::INVALID_PHONE));
         } else {
-            let (nonce, encrypted) =
-                crypto::encrypt::chacha20_poly1305(number.as_bytes().to_vec())?;
+            let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(number.into())?;
 
             let uuid = uuid::Uuid::new_v4();
 
@@ -200,9 +199,9 @@ pub async fn handle(
                     dates[2].parse::<i8>().unwrap_or_default(),
                 )?
         {
-            return Ok(super::err("Too young"));
+            return Ok(super::err(super::INVALID_BIRTHDATE));
         } else {
-            let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(birth.as_bytes().to_vec())?;
+            let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(birth.into())?;
 
             let uuid = uuid::Uuid::new_v4().to_string();
 
