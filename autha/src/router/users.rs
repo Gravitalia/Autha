@@ -156,10 +156,14 @@ pub async fn update(
         .prepare("INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?)")
         .await?;
 
+    // New batch to perform multiple requests at the same time.
+    let mut batch = scylla.new_batch();
+    let mut batch_values: Vec<(String, String)> = Vec::new();
+
     // Update username (firstname and lastname).
     if let Some(u) = body.username {
         if u.len() > 25 {
-            return Ok(crate::router::err("Invalid username"));
+            return Ok(crate::router::err(super::INVALID_USERNAME));
         } else {
             username = u;
         }
@@ -264,12 +268,10 @@ pub async fn update(
                 return Ok(crate::router::err(super::INVALID_BIRTHDATE));
             } else {
                 let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(birth.into())?;
-                let uuid = uuid::Uuid::new_v4().to_string();
+                let uuid = uuid::Uuid::new_v4();
 
-                scylla
-                    .connection
-                    .execute(&insert_salt_query, (&uuid, &nonce))
-                    .await?;
+                batch.append_statement(insert_salt_query.clone());
+                batch_values.push((uuid.to_string(), nonce));
 
                 // Set primary key (to get nonce) and encrypted birthdate.
                 birthdate = Some(format!("{}//{}", uuid, encrypted));
@@ -285,10 +287,8 @@ pub async fn update(
             let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(number.into())?;
             let uuid = uuid::Uuid::new_v4();
 
-            scylla
-                .connection
-                .execute(&insert_salt_query, (&uuid, &nonce))
-                .await?;
+            batch.append_statement(insert_salt_query.clone());
+            batch_values.push((uuid.to_string(), nonce));
 
             // Set primary key (to get nonce) and encrypted phone.
             phone = Some(format!("{}//{}", uuid, encrypted));
@@ -303,18 +303,11 @@ pub async fn update(
             let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(mfa.into())?;
             let uuid = uuid::Uuid::new_v4();
 
-            scylla
-                .connection
-                .execute(&insert_salt_query, (&uuid, &nonce))
-                .await?;
+            batch.append_statement(insert_salt_query.clone());
+            batch_values.push((uuid.to_string(), nonce));
 
-            scylla
-                .connection
-                .query(
-                    "UPDATE accounts.users SET password = ? WHERE vanity = ?",
-                    vec![&format!("{}//{}", uuid, encrypted), &vanity],
-                )
-                .await?;
+            batch.append_statement("UPDATE accounts.users SET mfa_code = ? WHERE vanity = ?;");
+            batch_values.push((format!("{}//{}", uuid, encrypted), vanity.clone()));
         }
     }
 
@@ -323,18 +316,20 @@ pub async fn update(
         if !is_psw_valid || !crate::router::create::PASSWORD.is_match(&np) {
             return Ok(crate::router::err(super::INVALID_PASSWORD));
         } else {
-            scylla
-                .connection
-                .query(
-                    "UPDATE accounts.users SET password = ? WHERE vanity = ?",
-                    vec![
-                        &crypto::hash::argon2(np.as_bytes(), vanity.as_bytes()),
-                        &vanity,
-                    ],
-                )
-                .await?;
+            batch.append_statement("UPDATE accounts.users SET password = ? WHERE vanity = ?");
+            batch_values.push((
+                crypto::hash::argon2(np.as_bytes(), vanity.as_bytes()),
+                vanity.clone(),
+            ));
         }
     }
+
+    // Prepare a batch to take advantage of good load balancing.
+    let prepared_batch = scylla.connection.prepare_batch(&batch).await?;
+    scylla
+        .connection
+        .batch(&prepared_batch, batch_values)
+        .await?;
 
     match scylla
     .connection.
