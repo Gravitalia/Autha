@@ -105,6 +105,8 @@ pub trait ScyllaManager {
     async fn create_tables(&self) -> Result<()>;
     /// Get a user in the Scylla database without cache.
     async fn get_user(&self, vanity: &str) -> Result<User>;
+    /// Create a new scylla batch to perform mutliple requests.
+    fn new_batch(&self) -> scylla::batch::Batch;
 }
 
 #[async_trait]
@@ -139,6 +141,11 @@ impl ScyllaManager for Scylla {
         } else {
             bail!("no user found")
         }
+    }
+
+    fn new_batch(&self) -> scylla::batch::Batch {
+        let batch: scylla::batch::Batch = Default::default();
+        batch
     }
 }
 
