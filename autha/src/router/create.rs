@@ -26,13 +26,19 @@ const INVALID_VANITY: [&str; 14] = [
 ];
 
 lazy_static! {
+    /// Match emails such as hinome@gravitalia.com or "John Doe"@🏹.com.
     pub static ref EMAIL: Regex = Regex::new(r".+@.+.([a-zA-Z]{2,7})$").unwrap();
+    /// Match special characters of the password.
     pub static ref PASSWORD: Regex = Regex::new(r"([0-9|*|]|[$&+,:;=?@#|'<>.^*()%!-])+").unwrap();
+    /// Check if vanity is between 3 and 6 characters and if it contains
+    /// only upper case, lower case, numbers and underscore.
     static ref VANITY: Regex = Regex::new(r"[A-z|0-9|_]{3,16}$").unwrap();
+    /// Match phones number such as (555) 555-1234 and 0611111111.
     pub(super) static ref PHONE: Regex = Regex::new(
         r"^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$"
     )
     .unwrap();
+    /// Match dates like 2018-01-01.
     pub(super) static ref BIRTH: Regex =
         Regex::new(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$").unwrap();
 }
