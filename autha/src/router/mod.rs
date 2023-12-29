@@ -15,6 +15,9 @@ const INVALID_EMAIL: &str = "Invalid email";
 const INVALID_PASSWORD: &str = "Invalid password";
 const MISSING_AUTHORIZATION_HEADER: &str = "Missing authorization header";
 const INVALID_TOKEN: &str = "Invalid token";
+const INVALID_USERNAME: &str = "Invalid username";
+const INVALID_BIRTHDATE: &str = "Too young";
+const INVALID_PHONE: &str = "Invalid phone";
 
 /// Define errors
 #[derive(Debug)]
@@ -126,8 +129,9 @@ pub async fn update_user(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
     token: String,
+    body: crate::model::body::UserPatch,
 ) -> Result<impl Reply, Rejection> {
-    match users::update(scylla, memcached, token).await {
+    match users::update(scylla, memcached, token, body).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
