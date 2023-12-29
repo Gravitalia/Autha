@@ -114,14 +114,20 @@ pub async fn get_user(
     memcached: MemcachePool,
     token: Option<String>,
 ) -> Result<impl Reply, Rejection> {
-    match users::get(
-        scylla,
-        memcached,
-        vanity,
-        token,
-    )
-    .await
-    {
+    match users::get(scylla, memcached, vanity, token).await {
+        Ok(r) => Ok(r),
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
+
+/// Handler of route to update its account.
+#[inline]
+pub async fn update_user(
+    scylla: Arc<Scylla>,
+    memcached: MemcachePool,
+    token: String,
+) -> Result<impl Reply, Rejection> {
+    match users::update(scylla, memcached, token).await {
         Ok(r) => Ok(r),
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }

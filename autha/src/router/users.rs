@@ -106,3 +106,12 @@ pub async fn get(
         warp::http::StatusCode::OK,
     ))
 }
+
+/// Handle users modifications route.
+pub async fn update(
+    _scylla: std::sync::Arc<Scylla>,
+    _memcached: MemcachePool,
+    _token: String,
+) -> Result<WithStatus<Json>> {
+    unimplemented!("not finished");
+}
