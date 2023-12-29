@@ -144,8 +144,7 @@ impl ScyllaManager for Scylla {
     }
 
     fn new_batch(&self) -> scylla::batch::Batch {
-        let batch: scylla::batch::Batch = Default::default();
-        batch
+        scylla::batch::Batch::default()
     }
 }
 
