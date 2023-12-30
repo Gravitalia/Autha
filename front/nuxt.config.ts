@@ -117,6 +117,9 @@ export default defineNuxtConfig({
     // No JS.
     "/terms": { experimentalNoScripts: true },
     "/privacy": { experimentalNoScripts: true },
+    // No SSR.
+    "/signin": { isr: true },
+    "/signup": { isr: true },
   },
 
   pinia: {
