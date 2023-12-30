@@ -1,4 +1,4 @@
-# Define port for the HTTP API
+# Define port for the HTTP API.
 port: 1111
 
 # Remini server URL.
@@ -17,5 +17,5 @@ database:
     publish: true
     host: 127.0.0.1:11211
 
-services: # List of Gravitalia's connected services
+services: # List of Gravitalia's connected services.
   - http://gravitalia:8888
