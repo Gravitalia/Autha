@@ -44,7 +44,7 @@ function next(): void {
   ++step.value;
 }
 
-async function signup(): Promise<void> {
+async function signup() {
   // Set all errors to false before processing the sign-in.
   for (const key in isError) {
     isError[key].value = false;

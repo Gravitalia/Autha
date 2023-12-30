@@ -26,7 +26,7 @@ if (useCookie("session").value !== "") {
   if (user.vanity !== "") await navigateTo("/");
 }
 
-async function signin(): Promise<void> {
+async function signin() {
   // Disable button until the end.
   isButtonDisable.value = true;
 
