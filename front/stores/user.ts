@@ -22,7 +22,7 @@ export const useUser = defineStore("user", {
      */
     async fetchUser(forceFetching: boolean = false): Promise<void> {
       // Get session cookie.
-      const session: string = useCookie("session").value || "";
+      const session: string = useCookie("session").value ?? "";
       if (!forceFetching && (session === "" || this.vanity !== "")) return;
 
       // Set header with session cookie.
@@ -33,7 +33,7 @@ export const useUser = defineStore("user", {
       this.$patch(
         (await fetch(
           `${
-            useRuntimeConfig().public?.API_URL || "https://oauth.gravitalia.com"
+            useRuntimeConfig().public?.API_URL ?? "https://oauth.gravitalia.com"
           }/users/@me`,
           {
             headers,

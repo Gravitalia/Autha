@@ -142,7 +142,7 @@ useHead({
       <h2 underline text-3xl font-bold>{{ $t("terms.your_content.title") }}</h2>
       <div mt-3>
         <p>
-          {{ "terms.your_content.publish" }}
+          {{ $t("terms.your_content.publish") }}
         </p>
         <span
           v-html="
