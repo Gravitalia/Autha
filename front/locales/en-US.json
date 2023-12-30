@@ -12,12 +12,12 @@
     "missing_password": "Write down your secret word 🤫",
     "invalid_email": "Invalid email address",
     "invalid_password": "Invalid password",
-    "password_advices": "Use 8 uppercase and lowercase letters with special characters",
+    "password_advices": "Use 8 uppercase and lowercase and special characters",
     "missing_firstname": "At least add your first name here",
     "missing_email": "You must enter an e-mail address!",
-    "missing_password_sign_up": "A little one-time password wouldn't hurt",
+    "missing_password_sign_up": "Enter a unique password",
     "vanity_used": "Your username is already in use",
-    "email_used": "Email adress already used",
+    "email_used": "Email address already used",
     "too_young": "You must be at least 13 years old"
   },
 
