@@ -25,13 +25,23 @@ jobs:
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
-        working-directory: ./front
+      - name: Install dependencies
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+          dir: front
       - name: Build Nuxt
-        run: NITRO_PRESET=cloudflare npm run build
-        working-directory: ./front
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: build
+          dir: front
+        env:
+          NITRO_PRESET: cloudflare
       #- name: Test
-      #  run: npm run test
-      #  working-directory: ./front
+      #  uses: borales/actions-yarn@v4
+      #  with:
+      #    cmd: test
+      #    dir: front
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
