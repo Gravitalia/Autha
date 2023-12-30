@@ -6,7 +6,6 @@ const isError: Record<string, Ref<boolean>> = {
   invalidEmail: ref(false),
   invalidToken: ref(false),
   invalidPassword: ref(false),
-  invalidPhone: ref(false),
   invalidVanity: ref(false),
   tooYoung: ref(false),
   rateLimited: ref(false),
@@ -49,22 +48,22 @@ async function signup() {
   // Check for missing values in the user input.
   if (firstname.value === "") {
     isError.missingFirstname.value = true;
-    if (step.value === 1) --step.value;
+    step.value = 0;
     isButtonDisable.value = false;
     return;
   } else if (email.value === "") {
     isError.missingEmail.value = true;
-    if (step.value === 1) --step.value;
-    isButtonDisable.value = false;
-    return;
-  } else if (password.value === "") {
-    isError.missingPassword.value = true;
-    if (step.value === 1) --step.value;
+    step.value = 0;
     isButtonDisable.value = false;
     return;
   } else if (vanity.value === "") {
     isError.invalidVanity.value = true;
-    if (step.value === 0) ++step.value;
+    step.value = 2;
+    isButtonDisable.value = false;
+    return;
+  } else if (password.value === "") {
+    isError.missingPassword.value = true;
+    step.value = 2;
     isButtonDisable.value = false;
     return;
   }
@@ -110,24 +109,28 @@ async function signup() {
         break;
       case "Invalid email":
         isError.invalidEmail.value = true;
-        if (step.value === 1) --step.value;
+        step.value = 0;
         break;
       case "Invalid password":
         isError.invalidPassword.value = true;
-        if (step.value === 1) --step.value;
+        step.value = 2;
         break;
       case "Invalid vanity":
       case "Vanity already used":
         isError.invalidVanity.value = true;
-        if (step.value === 0) ++step.value;
+        step.value = 2;
         break;
       case "Invalid username":
         isError.missingFirstname.value = true;
-        if (step.value === 1) --step.value;
+        step.value = 0;
         break;
       case "Email already used":
         isError.alreadyUsedEmail.value = true;
-        if (step.value === 1) --step.value;
+        step.value = 0;
+        break;
+      case "Too young":
+        isError.tooYoung.value = true;
+        step.value = 1;
         break;
       default:
         /* eslint-disable no-console */
@@ -190,61 +193,30 @@ async function signup() {
       <div flex-col container>
         <!-- Generic errors. -->
         <LabelError
-          mb-36
+          mb-34
           text="error.security_token"
           :cond="isError.invalidToken.value"
         />
         <LabelError
-          mb-36
+          mb-34
           text="error.rate_limit"
           :cond="isError.rateLimited.value"
         />
-
-        <!-- Firstname error. -->
         <LabelError
-          mb-36
-          text="error.missing_firstname"
-          :cond="isError.missingFirstname.value"
-        />
-
-        <!-- Email errors. -->
-        <LabelError
-          mb-36
-          text="error.missing_email"
-          :cond="isError.missingEmail.value"
-        />
-        <LabelError
-          mb-36
-          text="Email adress already used"
-          :cond="isError.alreadyUsedEmail.value"
-        />
-
-        <!-- Password errors. -->
-        <LabelError
-          mb-36
-          text="error.missing_password_sign_up"
-          :cond="isError.missingPassword.value"
-        />
-        <LabelError
-          mb-36
-          text="error.password_advices"
-          :cond="isError.invalidPassword.value"
-        />
-
-        <!-- Vanity errors. -->
-        <LabelError
-          mb-36
-          text="error.vanity_used"
-          :cond="isError.invalidVanity.value"
-        />
-        <LabelError
-          mb-36
-          text="error.too_young"
-          :cond="isError.tooYoung.value"
+          mb-34
+          text="something_went_wrong"
+          :cond="isError.internalServerError.value"
         />
 
         <!-- 1-step account creation. -->
-        <div v-if="step === 0">
+        <div v-if="step === 0" flex-col container>
+          <!-- Firstname error. -->
+          <LabelError
+            mb-28
+            text="error.missing_firstname"
+            :cond="isError.missingFirstname.value"
+          />
+
           <!-- Firstname and name inputs. -->
           <div flex space-x-2 mb-6 lg:mb-8>
             <input
@@ -265,6 +237,18 @@ async function signup() {
               :placeholder="$t('lastname')"
             />
           </div>
+
+          <!-- Email errors. -->
+          <LabelError
+            mt-4
+            text="error.missing_email"
+            :cond="isError.missingEmail.value"
+          />
+          <LabelError
+            mt-4
+            text="error.email_used"
+            :cond="isError.alreadyUsedEmail.value"
+          />
 
           <!-- Email input. -->
           <div flex-col container>
@@ -289,12 +273,26 @@ async function signup() {
             :placeholder="$t('phone')"
           />
 
+          <!-- Birthdate error. -->
+          <LabelError
+            mt-4
+            text="error.too_young"
+            :cond="isError.tooYoung.value"
+          />
+
           <!-- Birthdate input. -->
           <input v-model="birthdate" input type="date" />
         </div>
 
         <!-- 3rd step account creation. -->
         <div v-else-if="step === 2" flex-col container>
+          <!-- Vanity errors. -->
+          <LabelError
+            mb-28
+            text="error.vanity_used"
+            :cond="isError.invalidVanity.value"
+          />
+
           <!-- Vanity input. -->
           <div mb-6 lg:mb-8 mr-2 flex>
             <span rounded flex justify-center items-center text-sm font-mono>
@@ -310,6 +308,18 @@ async function signup() {
               :placeholder="$t('username').toLowerCase()"
             />
           </div>
+
+          <!-- Password errors. -->
+          <LabelError
+            mt-4
+            text="error.missing_password_sign_up"
+            :cond="isError.missingPassword.value"
+          />
+          <LabelError
+            mt-4
+            text="error.password_advices"
+            :cond="isError.invalidPassword.value"
+          />
 
           <!-- Password input. -->
           <input
