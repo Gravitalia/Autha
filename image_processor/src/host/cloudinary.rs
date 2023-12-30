@@ -25,7 +25,7 @@ pub struct Credentials {
 ///     secret: "SECRET_KEY".to_string(),
 /// };
 /// let buffer = std::fs::read("example/image.webp").unwrap();
-/// 
+///
 /// let _ = image_processor::host::cloudinary::upload(credentials, &buffer);
 ///
 /// // Log public ID.
@@ -36,7 +36,7 @@ pub struct Credentials {
 ///         .unwrap()
 /// );*/
 /// ```
-/// 
+///
 /// # Returns
 /// SHA1 buffer hash.
 pub async fn upload(credentials: Credentials, buffer: &[u8]) -> Result<String> {

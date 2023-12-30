@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use image_processor::resizer::resize;
 use image_processor::encoder::encode_webp;
+use image_processor::resizer::resize;
 
 fn resize_benchmark(c: &mut Criterion) {
     let buffer = &std::fs::read("benches/image.jpg").unwrap();

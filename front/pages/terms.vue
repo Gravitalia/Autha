@@ -188,11 +188,12 @@ useHead({
 
       <h3 font-bold ml-8 text-lg>{{ $t("b. Restrictions") }}</h3>
       <p mt-3>
-        {{
-          $t(
-            "You shall not attempt to: (a) perform analysis for the purpose of tracking and/or profiting from and commercially exploiting such data, (b) attempt to reverse engineer to derive private (non-<b>FOSS</b>) source code, know-how or trade secrets, (c) reproduce, redistribute, rent or sell access to the API, (d) access prohibited endpoints (oauth.gravitalia.com)."
-          )
-        }}
+        {{ $t( "You shall not attempt to: (a) perform analysis for the purpose
+        of tracking and/or profiting from and commercially exploiting such data,
+        (b) attempt to reverse engineer to derive private (non-<b>FOSS</b>)
+        source code, know-how or trade secrets, (c) reproduce, redistribute,
+        rent or sell access to the API, (d) access prohibited endpoints
+        (oauth.gravitalia.com)." ) }}
       </p>
 
       <h3 font-bold ml-8 text-lg>{{ $t("c. Respect for data") }}</h3>
