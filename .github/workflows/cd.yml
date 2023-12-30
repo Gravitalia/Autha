@@ -24,8 +24,6 @@ jobs:
           key: node
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        run: npm install
-      - name: Install dependencies
         uses: borales/actions-yarn@v4
         with:
           cmd: install
