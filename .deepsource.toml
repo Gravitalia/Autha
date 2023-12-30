@@ -1,15 +1,29 @@
 version = 1
 
 [[analyzers]]
+name = "javascript"
+
+  [analyzers.meta]
+  plugins = ["vue"]
+  environment = [
+    "nodejs",
+    "vitest"
+  ]
+
+[[analyzers]]
+name = "rust"
+
+  [analyzers.meta]
+  msrv = "stable"
+
+[[analyzers]]
 name = "docker"
-enabled = true
 
   [analyzers.meta]
   dockerfile_paths = ["Dockerfile"]
 
-[[analyzers]]
-name = "rust"
-enabled = true
+[[transformers]]
+name = "rustfmt"
 
-  [analyzers.meta]
-  msrv = "1.63.0"
+[[transformers]]
+name = "prettier"
