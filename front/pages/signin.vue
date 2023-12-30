@@ -53,7 +53,7 @@ async function signin() {
 
   // Make request.
   const json: Error | TokenResponse = await fetch(
-    useRuntimeConfig().public.API_URL + "/login",
+    `${useRuntimeConfig().public.API_URL}/login`,
     {
       method: "post",
       headers,

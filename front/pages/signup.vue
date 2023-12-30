@@ -80,7 +80,7 @@ async function signup() {
 
   // Make request.
   const json: Error | TokenResponse = await fetch(
-    useRuntimeConfig().public.API_URL + "/create",
+    `${useRuntimeConfig().public.API_URL}/create`,
     {
       method: "post",
       headers,
