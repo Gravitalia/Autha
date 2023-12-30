@@ -40,10 +40,6 @@ if (useCookie("session").value !== "") {
   if (user.vanity !== "") await navigateTo("/");
 }
 
-function next(): void {
-  ++step.value;
-}
-
 async function signup() {
   // Set all errors to false before processing the sign-in.
   for (const key in isError) {
@@ -163,26 +159,32 @@ async function signup() {
   <FontBubbles />
 
   <!-- Centered card containing inputs to connect. -->
-  <div absolute w-96vw h-98vh container>
+  <div absolute w-96vw h-98vh container flex-col>
     <div
       bg-zinc-50
       dark:bg-dark
       border
       border-gray-900
-      w-22rem
-      h-22rem
+      w-80
+      h-80
       lg:w-96
       lg:h-96
       shadow-lg
     >
-      <div mt-6 mb-4 flex-col container>
+      <div mt-4 lg:mt-8 mb-4 lg:mb-8 flex-col container>
         <NuxtImg
           alt="Gravitalia"
           src="/favicon.webp"
           width="40"
           draggable="false"
         />
-        <h3 font-semibold>{{ $t("create_account") }}</h3>
+        <h3 v-if="step === 0" font-semibold>{{ $t("create_account") }}</h3>
+        <h3 v-else-if="step === 1" font-semibold>
+          {{ $t("optional_information") }}
+        </h3>
+        <h3 v-else-if="step === 2" font-semibold>
+          {{ $t("required_information") }}
+        </h3>
       </div>
 
       <div flex-col container>
@@ -244,12 +246,10 @@ async function signup() {
         <!-- 1-step account creation. -->
         <div v-if="step === 0">
           <!-- Firstname and name inputs. -->
-          <div flex space-x-2>
+          <div flex space-x-2 mb-6 lg:mb-8>
             <input
               v-model="firstname"
               input
-              mb-2
-              lg:mb-4
               w-7.65rem
               type="text"
               maxlength="10"
@@ -271,25 +271,32 @@ async function signup() {
             <input
               v-model="email"
               input
-              mb-2
-              lg:mb-4
               type="email"
               :placeholder="$t('email')"
-            />
-
-            <!-- Password input. -->
-            <input
-              v-model="password"
-              input
-              type="password"
-              :placeholder="$t('password')"
             />
           </div>
         </div>
 
         <!-- 2nd step account creation. -->
-        <div v-else flex-col container>
-          <div mb-2 lg:mb-4 mr-2 flex>
+        <div v-else-if="step === 1" flex-col container>
+          <!-- Phone number input. -->
+          <input
+            v-model="phone"
+            input
+            type="tel"
+            mb-6
+            lg:mb-8
+            :placeholder="$t('phone')"
+          />
+
+          <!-- Birthdate input. -->
+          <input v-model="birthdate" input type="date" />
+        </div>
+
+        <!-- 3rd step account creation. -->
+        <div v-else-if="step === 2" flex-col container>
+          <!-- Vanity input. -->
+          <div mb-6 lg:mb-8 mr-2 flex>
             <span rounded flex justify-center items-center text-sm font-mono>
               gravitalia.com/
             </span>
@@ -304,42 +311,19 @@ async function signup() {
             />
           </div>
 
+          <!-- Password input. -->
           <input
-            v-model="phone"
+            v-model="password"
             input
-            type="tel"
-            mb-2
-            lg:mb-4
-            :placeholder="$t('phone')"
+            type="password"
+            :placeholder="$t('password')"
           />
-
-          <input v-model="birthdate" input type="date" />
-
-          <!-- Terms of Service and Privacy Policy acceptance. -->
-          <p w-64 mt-44 text-xs absolute>
-            {{ $t("accept_our") }}
-            <NuxtLink
-              to="/terms"
-              target="_blank"
-              text-blue-500
-              hover:text-blue-700
-              >{{ $t("tos") }}</NuxtLink
-            >
-            {{ $t("and_our") }}
-            <NuxtLink
-              to="/privacy"
-              target="_blank"
-              text-blue-500
-              hover:text-blue-700
-              >{{ $t("privacy_policy") }}</NuxtLink
-            >.
-          </p>
         </div>
       </div>
 
       <!-- Links and buttons. -->
       <div flex container>
-        <div flex justify-between w-16.5rem mt-10>
+        <div flex justify-between w-16.5rem mt-8>
           <!-- Buttons on the left. -->
           <NuxtLink v-if="step === 0" to="/signin" btn-invisible no-underline>{{
             $t("sign_in")
@@ -358,12 +342,12 @@ async function signup() {
 
           <!-- Buttons on the right. -->
           <button
-            v-if="step === 0"
+            v-if="step < 2"
             font-sans
             font-medium
             btn-base
             type="button"
-            @click="next()"
+            @click="++step"
           >
             {{ $t("next") }}
           </button>
@@ -381,5 +365,17 @@ async function signup() {
         </div>
       </div>
     </div>
+
+    <!-- Terms of Service and Privacy Policy acceptance. -->
+    <p v-if="step === 2" mt-96 lg:mt-28rem absolute text-xs>
+      {{ $t("accept_our") }}
+      <NuxtLink to="/terms" target="_blank" text-blue-500 hover:text-blue-700>{{
+        $t("tos")
+      }}</NuxtLink>
+      {{ $t("and_our") }}
+      <NuxtLink to="/privacy" target="_blank" text-blue-500 hover:text-blue-700>
+        {{ $t("privacy_policy") }} </NuxtLink
+      >.
+    </p>
   </div>
 </template>
