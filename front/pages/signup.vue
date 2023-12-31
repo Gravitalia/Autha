@@ -179,6 +179,7 @@ async function signup() {
           alt="Gravitalia"
           src="/favicon.webp"
           width="40"
+          height="40"
           draggable="false"
         />
         <h3 v-if="step === 0" font-semibold>{{ $t("create_account") }}</h3>

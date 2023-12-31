@@ -126,6 +126,7 @@ async function signin() {
           alt="Gravitalia"
           src="/favicon.webp"
           width="40"
+          height="40"
           draggable="false"
         />
         <h3 font-semibold>{{ $t("sign_in") }}</h3>
