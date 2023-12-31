@@ -95,6 +95,7 @@ const INDICES_TO_CREATE: [&str; 4] = [
 /// Define a structure to manage the Scylla connections.
 #[derive(Debug)]
 pub struct Scylla {
+    /// Scylla connections to the cluster.
     pub connection: Session,
 }
 
