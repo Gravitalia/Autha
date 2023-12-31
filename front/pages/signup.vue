@@ -6,7 +6,6 @@ const isError: Record<string, Ref<boolean>> = {
   invalidEmail: ref(false),
   invalidToken: ref(false),
   invalidPassword: ref(false),
-  invalidPhone: ref(false),
   invalidVanity: ref(false),
   tooYoung: ref(false),
   rateLimited: ref(false),
@@ -40,10 +39,6 @@ if (useCookie("session").value !== "") {
   if (user.vanity !== "") await navigateTo("/");
 }
 
-function next(): void {
-  ++step.value;
-}
-
 async function signup() {
   // Set all errors to false before processing the sign-in.
   for (const key in isError) {
@@ -53,22 +48,22 @@ async function signup() {
   // Check for missing values in the user input.
   if (firstname.value === "") {
     isError.missingFirstname.value = true;
-    if (step.value === 1) --step.value;
+    step.value = 0;
     isButtonDisable.value = false;
     return;
   } else if (email.value === "") {
     isError.missingEmail.value = true;
-    if (step.value === 1) --step.value;
-    isButtonDisable.value = false;
-    return;
-  } else if (password.value === "") {
-    isError.missingPassword.value = true;
-    if (step.value === 1) --step.value;
+    step.value = 0;
     isButtonDisable.value = false;
     return;
   } else if (vanity.value === "") {
     isError.invalidVanity.value = true;
-    if (step.value === 0) ++step.value;
+    step.value = 2;
+    isButtonDisable.value = false;
+    return;
+  } else if (password.value === "") {
+    isError.missingPassword.value = true;
+    step.value = 2;
     isButtonDisable.value = false;
     return;
   }
@@ -114,24 +109,28 @@ async function signup() {
         break;
       case "Invalid email":
         isError.invalidEmail.value = true;
-        if (step.value === 1) --step.value;
+        step.value = 0;
         break;
       case "Invalid password":
         isError.invalidPassword.value = true;
-        if (step.value === 1) --step.value;
+        step.value = 2;
         break;
       case "Invalid vanity":
       case "Vanity already used":
         isError.invalidVanity.value = true;
-        if (step.value === 0) ++step.value;
+        step.value = 2;
         break;
       case "Invalid username":
         isError.missingFirstname.value = true;
-        if (step.value === 1) --step.value;
+        step.value = 0;
         break;
       case "Email already used":
         isError.alreadyUsedEmail.value = true;
-        if (step.value === 1) --step.value;
+        step.value = 0;
+        break;
+      case "Too young":
+        isError.tooYoung.value = true;
+        step.value = 1;
         break;
       default:
         /* eslint-disable no-console */
@@ -163,93 +162,66 @@ async function signup() {
   <FontBubbles />
 
   <!-- Centered card containing inputs to connect. -->
-  <div absolute w-96vw h-98vh container>
+  <div absolute w-96vw h-98vh container flex-col>
     <div
       bg-zinc-50
       dark:bg-dark
       border
       border-gray-900
-      w-22rem
-      h-22rem
+      w-80
+      h-80
       lg:w-96
       lg:h-96
       shadow-lg
     >
-      <div mt-6 mb-4 flex-col container>
+      <div mt-4 lg:mt-8 mb-4 lg:mb-8 flex-col container>
         <NuxtImg
           alt="Gravitalia"
           src="/favicon.webp"
           width="40"
           draggable="false"
         />
-        <h3 font-semibold>{{ $t("create_account") }}</h3>
+        <h3 v-if="step === 0" font-semibold>{{ $t("create_account") }}</h3>
+        <h3 v-else-if="step === 1" font-semibold>
+          {{ $t("optional_information") }}
+        </h3>
+        <h3 v-else-if="step === 2" font-semibold>
+          {{ $t("required_information") }}
+        </h3>
       </div>
 
       <div flex-col container>
         <!-- Generic errors. -->
         <LabelError
-          mb-36
+          mb-34
           text="error.security_token"
           :cond="isError.invalidToken.value"
         />
         <LabelError
-          mb-36
+          mb-34
           text="error.rate_limit"
           :cond="isError.rateLimited.value"
         />
-
-        <!-- Firstname error. -->
         <LabelError
-          mb-36
-          text="error.missing_firstname"
-          :cond="isError.missingFirstname.value"
-        />
-
-        <!-- Email errors. -->
-        <LabelError
-          mb-36
-          text="error.missing_email"
-          :cond="isError.missingEmail.value"
-        />
-        <LabelError
-          mb-36
-          text="Email adress already used"
-          :cond="isError.alreadyUsedEmail.value"
-        />
-
-        <!-- Password errors. -->
-        <LabelError
-          mb-36
-          text="error.missing_password_sign_up"
-          :cond="isError.missingPassword.value"
-        />
-        <LabelError
-          mb-36
-          text="error.password_advices"
-          :cond="isError.invalidPassword.value"
-        />
-
-        <!-- Vanity errors. -->
-        <LabelError
-          mb-36
-          text="error.vanity_used"
-          :cond="isError.invalidVanity.value"
-        />
-        <LabelError
-          mb-36
-          text="error.too_young"
-          :cond="isError.tooYoung.value"
+          mb-34
+          text="something_went_wrong"
+          :cond="isError.internalServerError.value"
         />
 
         <!-- 1-step account creation. -->
-        <div v-if="step === 0">
+        <div v-if="step === 0" flex-col container>
+          <!-- Firstname error. -->
+          <LabelError
+            mb-28
+            text="error.missing_firstname"
+            :cond="isError.missingFirstname.value"
+          />
+
           <!-- Firstname and name inputs. -->
-          <div flex space-x-2>
+          <div flex space-x-2 mb-6 lg:mb-8>
             <input
               v-model="firstname"
               input
-              mb-2
-              lg:mb-4
               w-7.65rem
               type="text"
               maxlength="10"
@@ -266,30 +238,63 @@ async function signup() {
             />
           </div>
 
+          <!-- Email errors. -->
+          <LabelError
+            mt-4
+            text="error.missing_email"
+            :cond="isError.missingEmail.value"
+          />
+          <LabelError
+            mt-4
+            text="error.email_used"
+            :cond="isError.alreadyUsedEmail.value"
+          />
+
           <!-- Email input. -->
           <div flex-col container>
             <input
               v-model="email"
               input
-              mb-2
-              lg:mb-4
               type="email"
               :placeholder="$t('email')"
-            />
-
-            <!-- Password input. -->
-            <input
-              v-model="password"
-              input
-              type="password"
-              :placeholder="$t('password')"
             />
           </div>
         </div>
 
         <!-- 2nd step account creation. -->
-        <div v-else flex-col container>
-          <div mb-2 lg:mb-4 mr-2 flex>
+        <div v-else-if="step === 1" flex-col container>
+          <!-- Phone number input. -->
+          <input
+            v-model="phone"
+            input
+            type="tel"
+            mb-6
+            lg:mb-8
+            :placeholder="$t('phone')"
+          />
+
+          <!-- Birthdate error. -->
+          <LabelError
+            mt-4
+            text="error.too_young"
+            :cond="isError.tooYoung.value"
+          />
+
+          <!-- Birthdate input. -->
+          <input v-model="birthdate" input type="date" />
+        </div>
+
+        <!-- 3rd step account creation. -->
+        <div v-else-if="step === 2" flex-col container>
+          <!-- Vanity errors. -->
+          <LabelError
+            mb-28
+            text="error.vanity_used"
+            :cond="isError.invalidVanity.value"
+          />
+
+          <!-- Vanity input. -->
+          <div mb-6 lg:mb-8 mr-2 flex>
             <span rounded flex justify-center items-center text-sm font-mono>
               gravitalia.com/
             </span>
@@ -304,42 +309,31 @@ async function signup() {
             />
           </div>
 
-          <input
-            v-model="phone"
-            input
-            type="tel"
-            mb-2
-            lg:mb-4
-            :placeholder="$t('phone')"
+          <!-- Password errors. -->
+          <LabelError
+            mt-4
+            text="error.missing_password_sign_up"
+            :cond="isError.missingPassword.value"
+          />
+          <LabelError
+            mt-4
+            text="error.password_advices"
+            :cond="isError.invalidPassword.value"
           />
 
-          <input v-model="birthdate" input type="date" />
-
-          <!-- Terms of Service and Privacy Policy acceptance. -->
-          <p w-64 mt-44 text-xs absolute>
-            {{ $t("accept_our") }}
-            <NuxtLink
-              to="/terms"
-              target="_blank"
-              text-blue-500
-              hover:text-blue-700
-              >{{ $t("tos") }}</NuxtLink
-            >
-            {{ $t("and_our") }}
-            <NuxtLink
-              to="/privacy"
-              target="_blank"
-              text-blue-500
-              hover:text-blue-700
-              >{{ $t("privacy_policy") }}</NuxtLink
-            >.
-          </p>
+          <!-- Password input. -->
+          <input
+            v-model="password"
+            input
+            type="password"
+            :placeholder="$t('password')"
+          />
         </div>
       </div>
 
       <!-- Links and buttons. -->
       <div flex container>
-        <div flex justify-between w-16.5rem mt-10>
+        <div flex justify-between w-16.5rem mt-8>
           <!-- Buttons on the left. -->
           <NuxtLink v-if="step === 0" to="/signin" btn-invisible no-underline>{{
             $t("sign_in")
@@ -358,12 +352,12 @@ async function signup() {
 
           <!-- Buttons on the right. -->
           <button
-            v-if="step === 0"
+            v-if="step < 2"
             font-sans
             font-medium
             btn-base
             type="button"
-            @click="next()"
+            @click="++step"
           >
             {{ $t("next") }}
           </button>
@@ -381,5 +375,17 @@ async function signup() {
         </div>
       </div>
     </div>
+
+    <!-- Terms of Service and Privacy Policy acceptance. -->
+    <p v-if="step === 2" mt-96 lg:mt-28rem absolute text-xs>
+      {{ $t("accept_our") }}
+      <NuxtLink to="/terms" target="_blank" text-blue-500 hover:text-blue-700>{{
+        $t("tos")
+      }}</NuxtLink>
+      {{ $t("and_our") }}
+      <NuxtLink to="/privacy" target="_blank" text-blue-500 hover:text-blue-700>
+        {{ $t("privacy_policy") }} </NuxtLink
+      >.
+    </p>
   </div>
 </template>

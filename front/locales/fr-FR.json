@@ -12,10 +12,10 @@
     "missing_password": "Ecrivez votre mot secret 🤫",
     "invalid_email": "Adresse e-mail invalide",
     "invalid_password": "Mot de passe invalide",
-    "password_advices": "Utiliser 8 lettres majuscules et minuscules avec des caractères spéciaux",
+    "password_advices": "Utilisez 8 majuscules, minuscules et caractères spéciaux",
     "missing_firstname": "Rajoutez au moins votre prénom ici",
-    "missing_email": "Rentrer une adresse e-mail, il faut !",
-    "missing_password_sign_up": "Un petit mot de passe unique ne ferait pas de mal",
+    "missing_email": "Rentrez une adresse e-mail, il faut !",
+    "missing_password_sign_up": "Entrez un mot de passe unique",
     "vanity_used": "Votre nom d'utilisateur est déjà utilisé",
     "email_used": "Adresse e-mail déjà utilisée",
     "too_young": "Vous devez avoir au moins 15 ans"
@@ -35,6 +35,8 @@
   "and_our": "et notre",
   "tos": "CGU",
   "privacy_policy": "politique de confidentialité",
+  "optional_information": "Informations facultatives",
+  "required_information": "Informations requises",
 
   "about": "À propos",
   "security": "Sécurité",
