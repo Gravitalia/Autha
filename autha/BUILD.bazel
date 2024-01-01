@@ -91,5 +91,8 @@ oci_push(
     name = "push",
     image = ":image",
     repository = "ghcr.io/gravitalia/autha",
-    remote_tags = ["latest"]
+    remote_tags = [
+        "latest",
+        "3.0.0",
+    ]
 )
