@@ -96,6 +96,6 @@ oci_pull(
     image = "gcr.io/distroless/cc-debian12",
     platforms = [
         #"linux/amd64",
-        "linux/arm64/v8"
+        "linux/arm64/v8",
     ],
 )
