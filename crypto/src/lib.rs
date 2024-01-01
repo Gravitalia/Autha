@@ -1,5 +1,21 @@
+// Clippy lint.
+#![deny(missing_docs)]
+//! # crypto
+//!
+//! little library using ring and fpe to encrypt,
+//! decrypt and hash informations for Gravitalia.
+//!
+//! # Hash with SHA.
+//!
+//! ```rust
+//! println!("SHA256 of 'Hello world': {}", crypto::hash::sha256(b"Hello world").unwrap_or_default());
+//! ```
+
+/// Module to decrypt datas.
 pub mod decrypt;
+/// Module to encrypt datas.
 pub mod encrypt;
+/// Module to hash datas.
 pub mod hash;
 
 use rand::rngs::OsRng;

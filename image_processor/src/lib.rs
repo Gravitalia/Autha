@@ -1,3 +1,5 @@
+// Clippy lint.
+#![deny(missing_docs)]
 //! # image_processor
 //!
 //! fast and efficient image resizer and encoder (WebP only).
@@ -7,8 +9,8 @@
 //!
 //! # Resize, optimize and upload image
 //!
-//! ```no_run
-//! let buffer = std::fs::read("example/image.jpg").unwrap();
+//! ```rust
+//! let buffer = std::fs::read("./benches/image.jpg").unwrap();
 //! let id = image_processor::resize_and_upload(
 //!     &buffer,
 //!     Some(256),
@@ -21,9 +23,16 @@
 //!     },
 //! );
 //! ```
+/// Encode image to selected format.
+/// Possible encoder are: WebP.
 pub mod encoder;
+/// Manage exif of an image.
+/// You can delete, get or update it.
 pub mod exif;
+/// Publish an image into a selected host.
+/// Hosts are: Cloudinary, S3.
 pub mod host;
+/// Resize image fastly and well.
 pub mod resizer;
 
 use anyhow::Result;

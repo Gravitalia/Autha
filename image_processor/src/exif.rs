@@ -2,6 +2,8 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 
+/// Exif remover.
+/// This is in work.
 pub fn remove_exif(path: &Path) -> Result<(), exif::Error> {
     let file = File::open(path)?;
     let exif = exif::Reader::new().read_from_container(&mut BufReader::new(&file))?;

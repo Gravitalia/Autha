@@ -1,6 +1,3 @@
-// Clippy lint.
-#![deny(missing_docs)]
-
 mod helpers;
 mod model;
 mod router;
