@@ -16,7 +16,7 @@ jobs:
     name: Build (${{ matrix.name || matrix.target }})
     runs-on: ${{ matrix.target }}
     permissions:
-      contents: write # Allow writing only for this job.
+      contents: write-all # Allow writing only for this job.
     steps:
     - uses: actions/checkout@v3
     - uses: bazelbuild/setup-bazelisk@v2
