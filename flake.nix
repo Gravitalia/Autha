@@ -1,5 +1,5 @@
 {
-  description = "A devShell example";
+  description = "Set up a devShell for a Rust project with necessary dependencies.";
 
   inputs = {
     nixpkgs.url      = "github:NixOS/nixpkgs/nixos-unstable";
