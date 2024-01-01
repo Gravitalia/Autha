@@ -69,18 +69,10 @@ pkg_tar(
     srcs = [":autha"],
 )
 
-# Build images.
+# Build image.
 oci_image(
-    name = "linux_arm64",
-    base = "@distroless_cc_arm64",
-    tars = [":layer"],
-    entrypoint = ["/autha"],
-    exposed_ports = ["1111/tcp"],
-)
-
-oci_image(
-    name = "linux_amd64",
-    base = "@distroless_cc_amd64",
+    name = "linux",
+    base = "@distroless_static",
     tars = [":layer"],
     entrypoint = ["/autha"],
     exposed_ports = ["1111/tcp"],
@@ -90,8 +82,7 @@ oci_image(
 oci_image_index(
     name = "images",
     images = [
-        ":linux_arm64",
-        ":linux_amd64",
+        ":linux",
     ],
 )
 
