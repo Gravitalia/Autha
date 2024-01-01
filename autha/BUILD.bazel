@@ -69,10 +69,18 @@ pkg_tar(
     srcs = [":autha"],
 )
 
-# Build image.
+# Build images.
 oci_image(
     name = "linux_arm64",
-    base = "@distroless_cc",
+    base = "@distroless_cc_arm64",
+    tars = [":layer"],
+    entrypoint = ["/autha"],
+    exposed_ports = ["1111/tcp"],
+)
+
+oci_image(
+    name = "linux_amd64",
+    base = "@distroless_cc_amd64",
     tars = [":layer"],
     entrypoint = ["/autha"],
     exposed_ports = ["1111/tcp"],
@@ -80,16 +88,17 @@ oci_image(
 
 # Add multiple images.
 oci_image_index(
-    name = "image",
+    name = "images",
     images = [
         ":linux_arm64",
-    ]
+        ":linux_amd64",
+    ],
 )
 
 # Publish to Docker Hub.
 oci_push(
     name = "push",
-    image = ":image",
+    image = ":images",
     repository = "ghcr.io/gravitalia/autha",
     remote_tags = [
         "latest",
