@@ -2,6 +2,8 @@ load("@crate_index//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load("@rules_rust//cargo:cargo_build_script.bzl", "cargo_build_script")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_push")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -57,4 +59,37 @@ cargo_build_script(
     deps = all_crate_deps(
         build = True,
     ),
+)
+
+# Build and publish to Docker.
+
+# Compress binary to layer.
+pkg_tar(
+    name = "layer",
+    srcs = [":autha"],
+)
+
+# Build image.
+oci_image(
+    name = "linux_arm64",
+    base = "@distroless_cc",
+    tars = [":layer"],
+    entrypoint = ["/autha"],
+    exposed_ports = ["1111/tcp"],
+)
+
+# Add multiple images.
+oci_image_index(
+    name = "image",
+    images = [
+        ":linux_arm64",
+    ]
+)
+
+# Publish to Docker Hub.
+oci_push(
+    name = "push",
+    image = ":image",
+    repository = "index.docker.io/gravitalia/autha",
+    remote_tags = ["latest"]
 )
