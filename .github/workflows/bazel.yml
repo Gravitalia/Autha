@@ -17,6 +17,9 @@ jobs:
           name: Linux Ubuntu
     name: Build (${{ matrix.name || matrix.target }})
     runs-on: ${{ matrix.target }}
+    permissions:
+      contents: write
+      packages: write
     steps:
     - uses: actions/checkout@v3
     - uses: bazelbuild/setup-bazelisk@v2
