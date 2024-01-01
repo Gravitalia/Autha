@@ -90,6 +90,6 @@ oci_image_index(
 oci_push(
     name = "push",
     image = ":image",
-    repository = "index.docker.io/gravitalia/autha",
+    repository = "ghcr.io/gravitalia/autha",
     remote_tags = ["latest"]
 )
