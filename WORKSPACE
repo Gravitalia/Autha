@@ -104,6 +104,6 @@ oci_pull(
     digest = "sha256:a9056d2232d16e3772bec3ef36b93a5ea9ef6ad4b4ed407631e534b85832cf40",
     image = "gcr.io/distroless/cc-debian12",
     platforms = [
-        "linux/arm64/v8",
+        "linux/amd64",
     ],
 )
