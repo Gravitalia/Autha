@@ -12,11 +12,15 @@
       in {
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [ 
-            cargo 
+            cargo
             rustc
             pkg-config
-            openssl 
+            openssl
             protobuf
+            darwin.apple_sdk.frameworks.Security
+            darwin.apple_sdk.frameworks.SystemConfiguration
+            darwin.apple_sdk.frameworks.CoreServices
+            libiconv
           ];
         };
       }
