@@ -1,9 +1,11 @@
 name: Autha/bazel
 
-permissions:
-  contents: read
-
-on: [push, pull_request]
+on:
+  workflow_dispatch: # Allow manual runs.
+  pull_request:
+    branches: [ 'master' ]
+  push:
+    branches: [ 'master' ]
 
 jobs:
   bazel:
@@ -15,8 +17,6 @@ jobs:
           name: Linux Ubuntu
     name: Build (${{ matrix.name || matrix.target }})
     runs-on: ${{ matrix.target }}
-    permissions:
-      contents: write-all # Allow writing only for this job.
     steps:
     - uses: actions/checkout@v3
     - uses: bazelbuild/setup-bazelisk@v2
