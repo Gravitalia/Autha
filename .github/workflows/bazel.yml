@@ -40,6 +40,7 @@ jobs:
     - name: Run tests
       run: bazel test //... -c opt
       shell: bash
-    #- name: Upload on docker.io
-    #  run: bazel run //autha:autha_push -c opt
-    #  shell: bash
+    - name: Push to docker.io
+      if: ${{ github.ref == 'refs/heads/master' }}
+      run: bazel run //autha:push -c opt
+      shell: bash
