@@ -1,5 +1,5 @@
 {
-  "checksum": "adef33e8f94609e3fdab82504617dcb0ea592f2e10aeedd800b7fde9474dadf7",
+  "checksum": "a915934840f21c8eea0277cdfe680db0248a28210dc218a7763df7c742ed2d89",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -702,7 +702,7 @@
               "target": "serde_json"
             },
             {
-              "id": "serde_yaml 0.9.29",
+              "id": "serde_yaml 0.9.30",
               "target": "serde_yaml"
             },
             {
@@ -12810,13 +12810,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "serde_yaml 0.9.29": {
+    "serde_yaml 0.9.30": {
       "name": "serde_yaml",
-      "version": "0.9.29",
+      "version": "0.9.30",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/serde_yaml/0.9.29/download",
-          "sha256": "a15e0ef66bf939a7c890a0bf6d5a733c70202225f9888a89ed5c62298b019129"
+          "url": "https://crates.io/api/v1/crates/serde_yaml/0.9.30/download",
+          "sha256": "b1bf28c79a99f70ee1f1d83d10c875d2e70618417fda01ad1785e027579d9d38"
         }
       },
       "targets": [
@@ -12861,7 +12861,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.9.29"
+        "version": "0.9.30"
       },
       "license": "MIT OR Apache-2.0"
     },
