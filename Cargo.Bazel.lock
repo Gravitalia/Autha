@@ -1,5 +1,5 @@
 {
-  "checksum": "703aa4c40306470d6e1ea663705a6c443ae9d2ccd04c4c1a22fec550c3556e10",
+  "checksum": "75f21319e7218fc662f69f5add0d15b5b5419002c70b9224619ade9f5a0772b1",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -309,13 +309,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "anyhow 1.0.77": {
+    "anyhow 1.0.79": {
       "name": "anyhow",
-      "version": "1.0.77",
+      "version": "1.0.79",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/anyhow/1.0.77/download",
-          "sha256": "c9d19de80eff169429ac1e9f48fffb163916b448a44e8e046186232046d9e1f9"
+          "url": "https://crates.io/api/v1/crates/anyhow/1.0.79/download",
+          "sha256": "080e9890a082662b09c1ad45f567faeeb47f22b5fb23895fbe1e651e718e25ca"
         }
       },
       "targets": [
@@ -353,14 +353,14 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.77",
+              "id": "anyhow 1.0.79",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2018",
-        "version": "1.0.77"
+        "version": "1.0.79"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -646,7 +646,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.77",
+              "id": "anyhow 1.0.79",
               "target": "anyhow"
             },
             {
@@ -2099,7 +2099,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.77",
+              "id": "anyhow 1.0.79",
               "target": "anyhow"
             },
             {
@@ -2839,7 +2839,7 @@
               "target": "aes"
             },
             {
-              "id": "anyhow 1.0.77",
+              "id": "anyhow 1.0.79",
               "target": "anyhow"
             },
             {
@@ -3220,7 +3220,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.77",
+              "id": "anyhow 1.0.79",
               "target": "anyhow"
             },
             {
@@ -6326,7 +6326,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.77",
+              "id": "anyhow 1.0.79",
               "target": "anyhow"
             },
             {
@@ -10322,7 +10322,7 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.77",
+              "id": "anyhow 1.0.79",
               "target": "anyhow"
             },
             {
