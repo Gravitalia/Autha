@@ -12,15 +12,17 @@
       let pkgs = nixpkgs.legacyPackages.${system};
       in {
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs;
-            [ cargo rustc pkg-config openssl protobuf libiconv ]
-            ++ (if lib.strings.hasInfix system "darwin" then [
-              darwin.apple_sdk.frameworks.Security
-              darwin.apple_sdk.frameworks.SystemConfiguration
-              darwin.apple_sdk.frameworks.CoreServices
-            ] else
-              [ ]);
-        };
-      });
-}
+          nativeBuildInputs = with pkgs; [pkg-config] ++
+          lib.optionals stdenv.buildPlatform.isDarwin [
+            pkgs.darwin.apple_sdk.frameworks.CoreFoundation
+            pkgs.darwin.apple_sdk.frameworks.CoreServices
+            pkgs.darwin.apple_sdk.frameworks.Security 
+            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
+          ];
 
+          buildInputs = with pkgs;
+            [ rustc cargo gcc clippy openssl protobuf libiconv bazel ];
+        };
+      }
+    );
+}
