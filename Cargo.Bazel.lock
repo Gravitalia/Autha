@@ -1,5 +1,5 @@
 {
-  "checksum": "b78d7f7380c076963a75d6cb9c727bbf5095f91cad70cd63288ec2ffcbe85d2f",
+  "checksum": "fee1b470c039e8577f4d59077c8a1313e4aa3dacf248c43f8de319bf7477b6e8",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -698,7 +698,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.108",
+              "id": "serde_json 1.0.109",
               "target": "serde_json"
             },
             {
@@ -2123,7 +2123,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.108",
+              "id": "serde_json 1.0.109",
               "target": "serde_json"
             },
             {
@@ -2514,7 +2514,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.108",
+              "id": "serde_json 1.0.109",
               "target": "serde_json"
             },
             {
@@ -7010,7 +7010,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.108",
+              "id": "serde_json 1.0.109",
               "target": "serde_json"
             },
             {
@@ -11185,7 +11185,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.108",
+              "id": "serde_json 1.0.109",
               "target": "serde_json"
             },
             {
@@ -12687,13 +12687,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "serde_json 1.0.108": {
+    "serde_json 1.0.109": {
       "name": "serde_json",
-      "version": "1.0.108",
+      "version": "1.0.109",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/serde_json/1.0.108/download",
-          "sha256": "3d1c7e3eac408d115102c4c24ad393e0821bb3a5df4d506a80f85f7a742a526b"
+          "url": "https://crates.io/api/v1/crates/serde_json/1.0.109/download",
+          "sha256": "cb0652c533506ad7a2e353cce269330d6afd8bdfb6d75e0ace5b35aacbd7b9e9"
         }
       },
       "targets": [
@@ -12743,14 +12743,14 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.108",
+              "id": "serde_json 1.0.109",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.0.108"
+        "version": "1.0.109"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -14286,7 +14286,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.108",
+              "id": "serde_json 1.0.109",
               "target": "serde_json"
             }
           ],
@@ -16382,7 +16382,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.108",
+              "id": "serde_json 1.0.109",
               "target": "serde_json"
             },
             {
