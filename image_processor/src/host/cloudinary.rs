@@ -18,7 +18,7 @@ pub struct Credentials {
 /// Upload image buffer into Cloudinary.
 ///
 /// # Example
-/// ```rust
+/// ```no_run
 /// let credentials = image_processor::host::cloudinary::Credentials {
 ///     key: "111111111111111".to_string(),
 ///     cloud_name: "aaaaa1234".to_string(),
