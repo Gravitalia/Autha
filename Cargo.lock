@@ -126,6 +126,7 @@ name = "autha"
 version = "3.0.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "crypto",
  "db",
  "fern",
