@@ -1,5 +1,3 @@
-
-
 use memcache::MemcacheError;
 pub extern crate r2d2;
 

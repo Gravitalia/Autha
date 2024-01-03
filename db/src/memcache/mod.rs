@@ -1,8 +1,8 @@
 mod pool;
 
 use anyhow::{anyhow, Result};
-use r2d2::Pool;
 use pool::MemcacheConnectionManager;
+use r2d2::Pool;
 
 /// Represents the value to be stored in Memcached, which can be either a string or a number.
 #[allow(dead_code)]
