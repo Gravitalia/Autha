@@ -1,6 +1,8 @@
+mod pool;
+
 use anyhow::{anyhow, Result};
+use pool::MemcacheConnectionManager;
 use r2d2::Pool;
-use r2d2_memcache::MemcacheConnectionManager;
 
 /// Represents the value to be stored in Memcached, which can be either a string or a number.
 #[allow(dead_code)]
@@ -128,12 +130,12 @@ impl MemcacheManager for MemcachePool {
 
 /// Initialize the connection pool for Memcached.
 pub fn init(hosts: Vec<String>, pool_size: u32) -> Result<Pool<MemcacheConnectionManager>> {
-    let manager = r2d2_memcache::MemcacheConnectionManager::new(format!(
+    let manager = pool::MemcacheConnectionManager::new(format!(
         "memcache://{}?timeout=2&use_udp=true",
         hosts[0]
     ));
 
-    Ok(r2d2_memcache::r2d2::Pool::builder()
+    Ok(pool::r2d2::Pool::builder()
         .max_size(pool_size)
         .min_idle(Some(2))
         .build(manager)?)
