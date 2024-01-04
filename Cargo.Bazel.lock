@@ -1,5 +1,5 @@
 {
-  "checksum": "02a0bc6b8951bbe24ee11af32320d836f848ed5b16658455c9702b089ad88756",
+  "checksum": "1009bd4101953a2b4f0c6e6758ff8abf4a18f2323f70b25cff19bbe86b86dcda",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -702,7 +702,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.110",
+              "id": "serde_json 1.0.111",
               "target": "serde_json"
             },
             {
@@ -2127,7 +2127,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.110",
+              "id": "serde_json 1.0.111",
               "target": "serde_json"
             },
             {
@@ -2518,7 +2518,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.110",
+              "id": "serde_json 1.0.111",
               "target": "serde_json"
             },
             {
@@ -6928,7 +6928,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.110",
+              "id": "serde_json 1.0.111",
               "target": "serde_json"
             },
             {
@@ -7096,10 +7096,76 @@
         "crate_features": {
           "common": [
             "default",
-            "extra_traits",
             "std"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              "extra_traits"
+            ],
+            "aarch64-apple-ios": [
+              "extra_traits"
+            ],
+            "aarch64-apple-ios-sim": [
+              "extra_traits"
+            ],
+            "aarch64-fuchsia": [
+              "extra_traits"
+            ],
+            "aarch64-linux-android": [
+              "extra_traits"
+            ],
+            "armv7-linux-androideabi": [
+              "extra_traits"
+            ],
+            "i686-apple-darwin": [
+              "extra_traits"
+            ],
+            "i686-linux-android": [
+              "extra_traits"
+            ],
+            "i686-unknown-freebsd": [
+              "extra_traits"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "extra_traits"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "extra_traits"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "extra_traits"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "extra_traits"
+            ],
+            "thumbv7em-none-eabi": [
+              "extra_traits"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "extra_traits"
+            ],
+            "wasm32-wasi": [
+              "extra_traits"
+            ],
+            "x86_64-apple-darwin": [
+              "extra_traits"
+            ],
+            "x86_64-apple-ios": [
+              "extra_traits"
+            ],
+            "x86_64-fuchsia": [
+              "extra_traits"
+            ],
+            "x86_64-linux-android": [
+              "extra_traits"
+            ],
+            "x86_64-unknown-freebsd": [
+              "extra_traits"
+            ],
+            "x86_64-unknown-none": [
+              "extra_traits"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -7281,32 +7347,13 @@
         ],
         "crate_features": {
           "common": [
+            "elf",
+            "errno",
             "general",
             "ioctl",
             "no_std"
           ],
-          "selects": {
-            "aarch64-unknown-linux-gnu": [
-              "elf",
-              "errno"
-            ],
-            "arm-unknown-linux-gnueabi": [
-              "elf",
-              "errno"
-            ],
-            "armv7-unknown-linux-gnueabi": [
-              "elf",
-              "errno"
-            ],
-            "i686-unknown-linux-gnu": [
-              "elf",
-              "errno"
-            ],
-            "x86_64-unknown-linux-gnu": [
-              "elf",
-              "errno"
-            ]
-          }
+          "selects": {}
         },
         "edition": "2021",
         "version": "0.4.12"
@@ -10945,7 +10992,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.110",
+              "id": "serde_json 1.0.111",
               "target": "serde_json"
             },
             {
@@ -12447,13 +12494,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "serde_json 1.0.110": {
+    "serde_json 1.0.111": {
       "name": "serde_json",
-      "version": "1.0.110",
+      "version": "1.0.111",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/serde_json/1.0.110/download",
-          "sha256": "6fbd975230bada99c8bb618e0c365c2eefa219158d5c6c29610fd09ff1833257"
+          "url": "https://crates.io/api/v1/crates/serde_json/1.0.111/download",
+          "sha256": "176e46fa42316f18edd598015a5166857fc835ec732f5215eac6b7bdbf0a84f4"
         }
       },
       "targets": [
@@ -12503,14 +12550,14 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.110",
+              "id": "serde_json 1.0.111",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.0.110"
+        "version": "1.0.111"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -13993,7 +14040,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.110",
+              "id": "serde_json 1.0.111",
               "target": "serde_json"
             }
           ],
@@ -16089,7 +16136,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.110",
+              "id": "serde_json 1.0.111",
               "target": "serde_json"
             },
             {
