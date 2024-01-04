@@ -1,16 +1,28 @@
 <template>
-  <div absolute flex justify-between w-98vw>
-    <div
-      rounded-full
-      w-48
-      h-48
-      xl:w-80
-      xl:h-80
-      blur-5xl
-      mt-80
-      xl:mt-30rem
-      bg-primary
-    ></div>
-    <div rounded-full w-48 h-48 xl:w-80 xl:h-80 blur-5xl bg-secondary></div>
-  </div>
+  <div
+    rounded-full
+    w-48
+    h-48
+    xl:w-80
+    xl:h-80
+    blur-5xl
+    bg-primary
+    fixed
+    bottom-0
+    left-0
+    p-4
+  ></div>
+  <div
+    rounded-full
+    w-48
+    h-48
+    xl:w-80
+    xl:h-80
+    blur-5xl
+    bg-secondary
+    fixed
+    top-0
+    right-0
+    p-4
+  ></div>
 </template>
