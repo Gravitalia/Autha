@@ -16,7 +16,7 @@ export default defineConfig({
     }),
   ],
   shortcuts: {
-    "blur-5xl": "blur-240px",
+    "blur-5xl": "blur-260px",
     "bg-primary": "bg-violet-600 dark:bg-violet-500",
     "bg-secondary": "bg-amber-400 dark:bg-amber-600",
 
