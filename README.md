@@ -9,7 +9,7 @@ It implements an account creation, connection and authorization delegation syste
 
 **Status**:
 
-[![Autha/bazel](https://github.com/Gravitalia/Autha/actions/workflows/ci.yml/badge.svg?branch=v3&event=push)](https://github.com/Gravitalia/Autha/actions/workflows/ci.yml) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FGravitalia%2FAutha.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FGravitalia%2FAutha?ref=badge_shield)
+[![Autha/bazel](https://github.com/Gravitalia/Autha/actions/workflows/bazel.yml/badge.svg)](https://github.com/Gravitalia/Autha/actions/workflows/bazel.yml) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FGravitalia%2FAutha.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FGravitalia%2FAutha?ref=badge_shield)
 
 ## Security
 
