@@ -119,16 +119,21 @@ async function signin() {
       h-80
       lg:w-96
       lg:h-96
+      2xl:w-26rem
+      2xl:h-26rem
       shadow-lg
     >
-      <div mt-4 lg:mt-8 mb-4 lg:mb-8 flex-col container>
+      <div mt-6 lg:mt-10 mb-8 lg:mb-10 divide-x space-x-2 container>
         <NuxtImg
           alt="Gravitalia"
           src="/favicon.webp"
-          width="40"
-          height="40"
+          width="35"
+          height="35"
           draggable="false"
         />
+
+        <div class="h-1.5rem bg-zinc-400 w-0.1rem"></div>
+
         <h3 font-semibold>{{ $t("sign_in") }}</h3>
       </div>
 
@@ -170,8 +175,8 @@ async function signin() {
               : ''
           "
           input
-          mb-6
-          lg:mb-8
+          mb-8
+          lg:mb-10
           type="email"
           :placeholder="$t('email')"
         />
@@ -203,7 +208,7 @@ async function signin() {
 
       <!-- Links and buttons. -->
       <div flex container>
-        <div flex justify-between w-16.5rem mt-8>
+        <div flex justify-between w-16.5rem mt-12>
           <NuxtLink to="/signup" btn-invisible no-underline>{{
             $t("create_account")
           }}</NuxtLink>
