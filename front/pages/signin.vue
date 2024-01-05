@@ -111,17 +111,7 @@ async function signin() {
   <!-- Centered card containing inputs to connect. -->
   <div absolute w-96vw h-98vh container>
     <div
-      bg-zinc-50
-      dark:bg-dark
-      border
-      border-gray-900
-      w-80
-      h-80
-      lg:w-96
-      lg:h-96
-      2xl:w-26rem
-      2xl:h-26rem
-      shadow-lg
+      class="bg-zinc-50 dark:bg-dark border border-gray-900 w-80 h-80 lg:w-96 lg:h-96 2xl:w-26rem 2xl:h-26rem shadow-lg"
     >
       <div mt-6 lg:mt-10 mb-8 lg:mb-10 divide-x space-x-2 container>
         <NuxtImg
@@ -157,12 +147,12 @@ async function signin() {
 
         <!-- Email input. -->
         <LabelError
-          mb-28
+          mb-30
           text="error.write_something"
           :cond="isError.missingEmail.value"
         />
         <LabelError
-          mb-28
+          mb-30
           text="error.invalid_email"
           :cond="isError.invalidEmail.value"
         />
@@ -208,7 +198,7 @@ async function signin() {
 
       <!-- Links and buttons. -->
       <div flex container>
-        <div flex justify-between w-16.5rem mt-12>
+        <div flex justify-between w-16.5rem lg:w-18.5rem mt-10 lg:mt-12>
           <NuxtLink to="/signup" btn-invisible no-underline>{{
             $t("create_account")
           }}</NuxtLink>
