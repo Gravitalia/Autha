@@ -157,12 +157,12 @@ async function signin() {
 
         <!-- Email input. -->
         <LabelError
-          mb-28
+          mb-30
           text="error.write_something"
           :cond="isError.missingEmail.value"
         />
         <LabelError
-          mb-28
+          mb-30
           text="error.invalid_email"
           :cond="isError.invalidEmail.value"
         />
@@ -208,7 +208,7 @@ async function signin() {
 
       <!-- Links and buttons. -->
       <div flex container>
-        <div flex justify-between w-16.5rem mt-12>
+        <div flex justify-between w-16.5rem lg:w-18.5rem mt-10 lg:mt-12>
           <NuxtLink to="/signup" btn-invisible no-underline>{{
             $t("create_account")
           }}</NuxtLink>
