@@ -111,17 +111,7 @@ async function signin() {
   <!-- Centered card containing inputs to connect. -->
   <div absolute w-96vw h-98vh container>
     <div
-      bg-zinc-50
-      dark:bg-dark
-      border
-      border-gray-900
-      w-80
-      h-80
-      lg:w-96
-      lg:h-96
-      2xl:w-26rem
-      2xl:h-26rem
-      shadow-lg
+      class="bg-zinc-50 dark:bg-dark border border-gray-900 w-80 h-80 lg:w-96 lg:h-96 2xl:w-26rem 2xl:h-26rem shadow-lg"
     >
       <div mt-6 lg:mt-10 mb-8 lg:mb-10 divide-x space-x-2 container>
         <NuxtImg
