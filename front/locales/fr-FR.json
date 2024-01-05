@@ -14,7 +14,7 @@
     "invalid_password": "Mot de passe invalide",
     "password_advices": "Utilisez 8 majuscules, minuscules et caractères spéciaux",
     "missing_firstname": "Rajoutez au moins votre prénom ici",
-    "missing_email": "Rentrez une adresse e-mail, il faut !",
+    "missing_email": "Rentrer une adresse e-mail, il faut !",
     "missing_password_sign_up": "Entrez un mot de passe unique",
     "vanity_used": "Votre nom d'utilisateur est déjà utilisé",
     "email_used": "Adresse e-mail déjà utilisée",
