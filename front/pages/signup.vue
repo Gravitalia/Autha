@@ -172,16 +172,21 @@ async function signup() {
       h-80
       lg:w-96
       lg:h-96
+      2xl:w-26rem
+      2xl:h-26rem
       shadow-lg
     >
-      <div mt-4 lg:mt-8 mb-4 lg:mb-8 flex-col container>
+      <div mt-6 lg:mt-10 mb-8 lg:mb-10 divide-x space-x-2 container>
         <NuxtImg
           alt="Gravitalia"
           src="/favicon.webp"
-          width="40"
-          height="40"
+          width="35"
+          height="35"
           draggable="false"
         />
+
+        <div class="h-1.5rem bg-zinc-400 w-0.1rem"></div>
+
         <h3 v-if="step === 0" font-semibold>{{ $t("create_account") }}</h3>
         <h3 v-else-if="step === 1" font-semibold>
           {{ $t("optional_information") }}
@@ -213,17 +218,18 @@ async function signup() {
         <div v-if="step === 0" flex-col container>
           <!-- Firstname error. -->
           <LabelError
-            mb-28
+            mb-30
             text="error.missing_firstname"
             :cond="isError.missingFirstname.value"
           />
 
           <!-- Firstname and name inputs. -->
-          <div flex space-x-2 mb-6 lg:mb-8>
+          <div flex space-x-2 mb-8 lg:mb-10>
             <input
               v-model="firstname"
               input
               w-7.65rem
+              lg:w-8.65rem
               type="text"
               maxlength="10"
               :placeholder="$t('firstname')"
@@ -233,6 +239,7 @@ async function signup() {
               v-model="lastname"
               input
               w-7.65rem
+              lg:w-8.65rem
               type="text"
               maxlength="15"
               :placeholder="$t('lastname')"
@@ -269,8 +276,8 @@ async function signup() {
             v-model="phone"
             input
             type="tel"
-            mb-6
-            lg:mb-8
+            mb-8
+            lg:mb-10
             :placeholder="$t('phone')"
           />
 
@@ -289,13 +296,13 @@ async function signup() {
         <div v-else-if="step === 2" flex-col container>
           <!-- Vanity errors. -->
           <LabelError
-            mb-28
+            mb-30
             text="error.vanity_used"
             :cond="isError.invalidVanity.value"
           />
 
           <!-- Vanity input. -->
-          <div mb-6 lg:mb-8 mr-2 flex>
+          <div mb-8 lg:mb-10 mr-2 flex>
             <span rounded flex justify-center items-center text-sm font-mono>
               gravitalia.com/
             </span>
@@ -334,7 +341,7 @@ async function signup() {
 
       <!-- Links and buttons. -->
       <div flex container>
-        <div flex justify-between w-16.5rem mt-8>
+        <div flex justify-between w-16.5rem lg:w-18.5rem mt-10 lg:mt-12>
           <!-- Buttons on the left. -->
           <NuxtLink v-if="step === 0" to="/signin" btn-invisible no-underline>{{
             $t("sign_in")
