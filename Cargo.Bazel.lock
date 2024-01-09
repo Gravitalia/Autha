@@ -1,5 +1,5 @@
 {
-  "checksum": "1009bd4101953a2b4f0c6e6758ff8abf4a18f2323f70b25cff19bbe86b86dcda",
+  "checksum": "7bcbdd7392e7c5f4108b8124424db9b9e68ff91e530c8169938ab6f65c61007e",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -2867,7 +2867,7 @@
               "target": "ring"
             },
             {
-              "id": "rust-argon2 2.0.0",
+              "id": "rust-argon2 2.1.0",
               "target": "argon2"
             }
           ],
@@ -11219,13 +11219,13 @@
       },
       "license": null
     },
-    "rust-argon2 2.0.0": {
+    "rust-argon2 2.1.0": {
       "name": "rust-argon2",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/rust-argon2/2.0.0/download",
-          "sha256": "1e71971821b3ae0e769e4a4328dbcb517607b434db7697e9aba17203ec14e46a"
+          "url": "https://crates.io/api/v1/crates/rust-argon2/2.1.0/download",
+          "sha256": "9d9848531d60c9cbbcf9d166c885316c24bc0e2a9d3eba0956bb6cbbd79bc6e8"
         }
       },
       "targets": [
@@ -11262,7 +11262,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.0.0"
+        "version": "2.1.0"
       },
       "license": "MIT/Apache-2.0"
     },
