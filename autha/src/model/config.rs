@@ -20,6 +20,10 @@ pub struct Database {
     pub memcached: Connection,
     /// The connection details for ScyllaDB or Apache Cassandra.
     pub scylla: Connection,
+    /// The connection details for create Kafka instance.
+    pub kafka: Option<Connection>,
+    /// The connection details for create RabbitMQ instance.
+    pub rabbitmq: Option<Connection>,
 }
 
 /// Represents the configuration structure expected from the 'config.yaml' file.

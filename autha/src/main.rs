@@ -4,6 +4,7 @@ mod router;
 
 #[macro_use]
 extern crate lazy_static;
+use db::broker::BrokersManager;
 use db::scylla::ScyllaManager;
 use std::sync::Arc;
 use warp::Filter;
@@ -92,15 +93,44 @@ async fn main() {
         }
     };
 
-    // Create needed tables.
-    match scylladb.create_tables().await {
-        Ok(_) => {
-            log::trace!("Successfully created tables, if they didn't exist.");
+    // Init message broker.
+    let broker = match (
+        config.database.kafka.as_ref(),
+        config.database.rabbitmq.as_ref(),
+    ) {
+        (Some(_), Some(_)) => {
+            log::error!("You have declared Kafka and RabbitMQ. Only a broker message can be used. No broker messages will be started, and other services will receive no data.");
+            Arc::new(db::broker::Brokers::new(vec![], 0))
         }
-        Err(error) => {
-            log::error!("Failed to create tables: {}", error);
+        (Some(kafka_conn), None) => {
+            let mut empty_broker =
+                db::broker::Brokers::new(kafka_conn.hosts.clone(), kafka_conn.pool_size);
+            match empty_broker.use_kafka() {
+                Ok(broker) => {
+                    log::info!("Kafka pool connection created successfully.");
+                    Arc::new(broker)
+                }
+                Err(error) => {
+                    log::error!("Could not initialize Kafka pool: {}", error);
+                    Arc::new(empty_broker)
+                }
+            }
+        }
+        (None, Some(_)) => unimplemented!(),
+        (None, None) => {
+            log::warn!(
+                "No message broker set; other services will not be notified of user changes."
+            );
+            Arc::new(db::broker::Brokers::new(vec![], 0))
         }
     };
+
+    // Create needed tables.
+    if let Err(error) = scylladb.create_tables().await {
+        log::error!("Failed to create tables: {}", error);
+    } else {
+        log::trace!("Successfully created tables, if they didn't exist.");
+    }
 
     let create_route = warp::path("create")
         .and(warp::post())

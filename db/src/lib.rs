@@ -28,6 +28,8 @@
 //! };
 //! ```
 
+/// Handle multiple brokers.
+pub mod broker;
 /// Memcached database handler.
 pub mod memcache;
 /// Models requiring databases traits.
