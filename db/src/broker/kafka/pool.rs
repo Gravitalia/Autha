@@ -1,4 +1,4 @@
-use kafka::producer::{Producer, Record, RequiredAcks};
+use kafka::producer::{Compression, Producer, Record, RequiredAcks};
 use kafka::Error;
 use std::fmt::Write;
 use std::time::Duration;
@@ -27,6 +27,7 @@ impl r2d2::ManageConnection for KafkaConnectionManager {
         Producer::from_hosts(self.urls.clone())
             .with_ack_timeout(Duration::from_secs(1))
             .with_required_acks(RequiredAcks::One)
+            .with_compression(Compression::GZIP)
             .create()
     }
 
