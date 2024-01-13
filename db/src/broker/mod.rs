@@ -48,27 +48,17 @@ where
             pool_size,
         }
     }
-}
 
-/// Trait for managing different types of brokers.
-pub trait BrokersManager {
-    /// Establishes a connection with Kafka pools.
-    fn use_kafka(&mut self) -> Result<Brokers<KafkaPool>>;
-}
-
-impl<B> BrokersManager for Brokers<B>
-where
-    B: Into<Broker> + Clone,
-{
-    fn use_kafka(&mut self) -> Result<Brokers<KafkaPool>> {
-        let new_kafka_connection = kafka::init(self.hosts.clone(), self.pool_size)?;
+    /// Creates a new instance of `Brokers` using Kafka.
+    pub fn with_kafka(hosts: Vec<String>, pool_size: u32) -> Result<Brokers<KafkaPool>> {
+        let new_kafka_connection = kafka::init(hosts.clone(), pool_size)?;
 
         Ok(Brokers {
             broker: Some(kafka::KafkaPool {
                 connection: new_kafka_connection,
             }),
-            hosts: self.hosts.clone(),
-            pool_size: self.pool_size,
+            hosts: hosts.clone(),
+            pool_size: pool_size,
         })
     }
 }
