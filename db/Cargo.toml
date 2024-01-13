@@ -6,9 +6,11 @@ edition = "2021"
 [dependencies]
 anyhow = "1"
 async-trait = "0.1"
+lapin = "2.3"
 log = "0.4"
 r2d2 = "0.8"
 memcache = "0.17"
 scylla = "0.11"
 kafka = "0.10"
 serde = { version = "1", features = ["derive"] }
+futures-executor = "0"
