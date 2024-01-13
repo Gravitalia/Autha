@@ -57,8 +57,8 @@ where
             broker: Some(kafka::KafkaPool {
                 connection: new_kafka_connection,
             }),
-            hosts: hosts.clone(),
-            pool_size: pool_size,
+            hosts,
+            pool_size,
         })
     }
 }
