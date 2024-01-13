@@ -2,24 +2,30 @@ version: '3.9'
 
 services:
   autha:
-    image: gravitalia/autha:latest
+    image: ghcr.io/gravitalia/autha:3.0.0
+    platform: linux/amd64
     container_name: autha
     restart: always
-    networks:
-      - authwork
+    environment:
+      - CHACHA20_KEY=4D6A514749614D6C74595A50756956446E5673424142524C4F4451736C515233
+      - AES256_KEY=4D6A514749614D6C74595A50756956446E5673424142524C4F4451736C515233
+      - KEY=SECRET
+      - MEMORY_COST=1048576
+      - ROUND=2
+      - HASH_LENGTH=32
     deploy:
       resources:
         limits:
           memory: 1g
     ports:
-      - '127.0.0.1:1111:1111'
+      - 1111:1111
     depends_on:
       cassandra:
-        condition: service_healthy
+        condition: service_started
       memcached:
-        condition: service_healthy
-    env_file:
-      - .env
+        condition: service_started
+    volumes:
+      - ./config.yaml:/config.yaml
 
   cassandra:
     image: cassandra:latest
@@ -28,21 +34,14 @@ services:
     environment:
       - MAX_HEAP_SIZE=512M
       - HEAP_NEWSIZE=100M
-    networks:
-      - authwork
     deploy:
       resources:
         limits:
           memory: 5g
         reservations:
           memory: 1g
-    expose:
-      - '9042'
-      - '7000'
-      - '7001'
-      - '7199'
-      - '9142'
-      - '9160'
+    ports:
+      - 9042:9042
     volumes:
       - ./data/cassandra:/var/lib/cassandra
     healthcheck:
@@ -54,28 +53,20 @@ services:
 
   memcached:
     image: memcached:latest
-    restart: always
     container_name: memcached
-    networks:
-      - authwork
-      - gravitalia
     deploy:
       resources:
         limits:
           memory: 1g
-    expose:
-      - "11211"
-    healthcheck:
-      test: ["CMD", "true"]
-      start_period: 40s
-      interval: 10s
-      timeout: 5s
-      retries: 3
+    ports:
+      - 11211:11211
 
-volumes:
-  cassandra-data:
-
-networks:
-  authwork:
-  gravitalia:
-    external: true
+  rabbitmq:
+    image: rabbitmq:3.12.11-alpine
+    container_name: rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+        - ./data/rabbitmq/data/:/var/lib/rabbitmq/
+        - ./data/rabbitmq/log/:/var/log/rabbitmq
