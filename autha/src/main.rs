@@ -4,7 +4,7 @@ mod router;
 
 #[macro_use]
 extern crate lazy_static;
-use db::broker::BrokersManager;
+use db::broker::kafka::KafkaPool;
 use db::scylla::ScyllaManager;
 use std::sync::Arc;
 use warp::Filter;
@@ -103,16 +103,17 @@ async fn main() {
             Arc::new(db::broker::Brokers::new(vec![], 0))
         }
         (Some(kafka_conn), None) => {
-            let mut empty_broker =
-                db::broker::Brokers::new(kafka_conn.hosts.clone(), kafka_conn.pool_size);
-            match empty_broker.use_kafka() {
+            match db::broker::Brokers::<KafkaPool>::with_kafka(
+                kafka_conn.hosts.clone(),
+                kafka_conn.pool_size,
+            ) {
                 Ok(broker) => {
                     log::info!("Kafka pool connection created successfully.");
                     Arc::new(broker)
                 }
                 Err(error) => {
                     log::error!("Could not initialize Kafka pool: {}", error);
-                    Arc::new(empty_broker)
+                    Arc::new(db::broker::Brokers::new(vec![], 0))
                 }
             }
         }
