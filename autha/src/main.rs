@@ -100,29 +100,37 @@ async fn main() {
     ) {
         (Some(_), Some(_)) => {
             log::error!("You have declared Kafka and RabbitMQ. Only a broker message can be used. No broker messages will be started, and other services will receive no data.");
-            Arc::new(db::broker::Brokers::new(vec![], 0))
+            Arc::new(db::broker::empty())
         }
         (Some(kafka_conn), None) => {
-            match db::broker::Brokers::<KafkaPool>::with_kafka(
-                kafka_conn.hosts.clone(),
-                kafka_conn.pool_size,
-            ) {
+            match db::broker::with_kafka(kafka_conn.hosts.clone(), kafka_conn.pool_size) {
                 Ok(broker) => {
                     log::info!("Kafka pool connection created successfully.");
                     Arc::new(broker)
                 }
                 Err(error) => {
                     log::error!("Could not initialize Kafka pool: {}", error);
-                    Arc::new(db::broker::Brokers::new(vec![], 0))
+                    Arc::new(db::broker::empty())
                 }
             }
         }
-        (None, Some(_)) => unimplemented!(),
+        (None, Some(rabbit_conn)) => {
+            match db::broker::with_rabbitmq(rabbit_conn.hosts.clone(), rabbit_conn.pool_size) {
+                Ok(broker) => {
+                    log::info!("RabbitMQ pool connection created successfully.");
+                    Arc::new(broker)
+                }
+                Err(error) => {
+                    log::error!("Could not initialize RabbitMQ pool: {}", error);
+                    Arc::new(db::broker::empty())
+                }
+            }
+        }
         (None, None) => {
             log::warn!(
                 "No message broker set; other services will not be notified of user changes."
             );
-            Arc::new(db::broker::Brokers::new(vec![], 0))
+            Arc::new(db::broker::empty())
         }
     };
 
