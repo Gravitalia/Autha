@@ -138,7 +138,11 @@ impl ScyllaManager for Scylla {
                 "SELECT username, vanity, avatar, bio, email, birthdate, phone, verified, deleted, flags FROM accounts.users WHERE vanity = ?",
                 vec![vanity]
             ).await?.rows {
-                Ok(rows.into_typed::<User>().collect::<Vec<_>>()[0].clone()?)
+                if rows.is_empty() {
+                    bail!("no user found")
+                } else {
+                    Ok(rows.into_typed::<User>().collect::<Vec<_>>()[0].clone()?)
+                }
         } else {
             bail!("no user found")
         }
