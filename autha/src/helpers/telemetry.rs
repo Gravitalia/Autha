@@ -24,13 +24,13 @@ lazy_static! {
 
 /// Initiates gRPC connection to Jaeger. Data is sent under OpenTelemetry Protocol.
 #[inline]
-pub fn init_tracer() -> Result<opentelemetry_sdk::trace::Tracer, TraceError> {
+pub fn init_tracer(url: &str) -> Result<opentelemetry_sdk::trace::Tracer, TraceError> {
     opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(
             opentelemetry_otlp::new_exporter()
                 .tonic()
-                .with_endpoint("http://localhost:4317"),
+                .with_endpoint(url),
         )
         .with_trace_config(sdktrace::config().with_resource(Resource::new(vec![
             KeyValue::new("service.name", "autha"),
