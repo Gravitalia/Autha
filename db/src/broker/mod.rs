@@ -25,9 +25,7 @@ impl From<Arc<Broker>> for Broker {
     fn from(arc_broker: Arc<Broker>) -> Self {
         match Arc::try_unwrap(arc_broker) {
             Ok(inner_broker) => inner_broker,
-            Err(_) => {
-                Broker::None
-            }
+            Err(_) => Broker::None,
         }
     }
 }
