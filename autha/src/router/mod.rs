@@ -7,6 +7,8 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 use warp::{Filter, Rejection, Reply};
 
+use crate::helpers::telemetry;
+
 // Error constants.
 const ERROR_RATE_LIMITED: &str = "You are being rate limited.";
 const INTERNAL_SERVER_ERROR: &str = "Internal server error";
@@ -51,6 +53,16 @@ pub fn with_scylla(
     db: Arc<Scylla>,
 ) -> impl Filter<Extract = (Arc<Scylla>,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || Arc::clone(&db))
+}
+
+/// Creates a Warp filter increment Prometheus metrics counters.
+pub fn with_metric(
+) -> impl Filter<Extract = (), Error = std::convert::Infallible> + Clone {
+    warp::any()
+    .map(|| {
+        telemetry::HTTP_REQUESTS.inc();
+    })
+    .untuple_one()
 }
 
 /// Handler of route to create a user.
