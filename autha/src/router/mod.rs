@@ -66,7 +66,10 @@ pub fn with_broker(
 /// The atomic Jaeger session is cloned and returned as an outcome of this filter.
 pub fn with_tracing(
     jaeger: Option<Arc<opentelemetry_sdk::trace::Tracer>>,
-) -> impl Filter<Extract = (Option<Arc<opentelemetry_sdk::trace::Tracer>>,), Error = std::convert::Infallible> + Clone {
+) -> impl Filter<
+    Extract = (Option<Arc<opentelemetry_sdk::trace::Tracer>>,),
+    Error = std::convert::Infallible,
+> + Clone {
     warp::any().map(move || jaeger.clone())
 }
 
