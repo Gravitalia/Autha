@@ -56,13 +56,12 @@ pub fn with_scylla(
 }
 
 /// Creates a Warp filter increment Prometheus metrics counters.
-pub fn with_metric(
-) -> impl Filter<Extract = (), Error = std::convert::Infallible> + Clone {
+pub fn with_metric() -> impl Filter<Extract = (), Error = std::convert::Infallible> + Clone {
     warp::any()
-    .map(|| {
-        telemetry::HTTP_REQUESTS.inc();
-    })
-    .untuple_one()
+        .map(|| {
+            telemetry::HTTP_REQUESTS.inc();
+        })
+        .untuple_one()
 }
 
 /// Handler of route to create a user.
