@@ -161,7 +161,7 @@ pub async fn get_user(
             let res = r.into_response();
 
             telemetry::RESPONSE_CODE_COLLECTOR
-                .with_label_values(&[&res.status().to_string(), "POST"])
+                .with_label_values(&[&res.status().to_string(), "GET"])
                 .inc();
             telemetry::RESPONSE_TIME_COLLECTOR
                 .with_label_values(&[])
@@ -188,7 +188,7 @@ pub async fn update_user(
             let res = r.into_response();
 
             telemetry::RESPONSE_CODE_COLLECTOR
-                .with_label_values(&[&res.status().to_string(), "POST"])
+                .with_label_values(&[&res.status().to_string(), "PATCH"])
                 .inc();
             telemetry::RESPONSE_TIME_COLLECTOR
                 .with_label_values(&[])
