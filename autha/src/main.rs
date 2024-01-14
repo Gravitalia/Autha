@@ -47,7 +47,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
 
     let tracer = if let Some(url) = config.jaeger_url {
         log::info!("Tracing requests activated with Jaeger.");
-        Some(helpers::telemetry::init_tracer(&url)?)
+        Some(Arc::new(helpers::telemetry::init_tracer(&url)?))
     } else {
         None
     };
@@ -106,7 +106,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     };
 
     // Init message broker.
-    let broker = match (
+    let broker: Arc<db::broker::Broker> = match (
         config.database.kafka.as_ref(),
         config.database.rabbitmq.as_ref(),
     ) {
@@ -189,6 +189,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .and(router::with_metric())
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
+        .and(router::with_tracing(tracer.clone()))
+        .and(router::with_broker(Arc::clone(&broker)))
         .and(warp::header::<String>("authorization"))
         .and(warp::body::json())
         .and_then(router::update_user);
