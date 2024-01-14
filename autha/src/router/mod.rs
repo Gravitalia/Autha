@@ -55,6 +55,21 @@ pub fn with_scylla(
     warp::any().map(move || Arc::clone(&db))
 }
 
+/// Creates a Warp filter to inject the broker into Warp routes.
+pub fn with_broker(
+    broker: Arc<db::broker::Broker>,
+) -> impl Filter<Extract = (Arc<db::broker::Broker>,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || Arc::clone(&broker))
+}
+
+/// Also creates a Warp filter to inject Jaeger into Warp routes.
+/// The atomic Jaeger session is cloned and returned as an outcome of this filter.
+pub fn with_tracing(
+    jaeger: Option<Arc<opentelemetry_sdk::trace::Tracer>>,
+) -> impl Filter<Extract = (Option<Arc<opentelemetry_sdk::trace::Tracer>>,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || jaeger.clone())
+}
+
 /// Creates a Warp filter increment Prometheus metrics counters.
 pub fn with_metric() -> impl Filter<Extract = (), Error = std::convert::Infallible> + Clone {
     warp::any()
@@ -178,12 +193,14 @@ pub async fn get_user(
 pub async fn update_user(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
+    tracer: Option<Arc<opentelemetry_sdk::trace::Tracer>>,
+    broker: Arc<db::broker::Broker>,
     token: String,
     body: crate::model::body::UserPatch,
 ) -> Result<Response, Rejection> {
     let current_seconds = crate::helpers::get_current_seconds();
 
-    match users::update(scylla, memcached, token, body).await {
+    match users::update(scylla, memcached, tracer, broker, token, body).await {
         Ok(r) => {
             let res = r.into_response();
 
