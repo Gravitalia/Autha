@@ -37,6 +37,10 @@ pub struct Config {
     pub(crate) remini_url: Option<String>,
     /// The database configuration.
     pub database: Database,
+    /// Wether to start /metric endpoint.
+    pub prometheus: Option<bool>,
+    /// Jaeger traces in OpenTelemetry OTLP format URL (should be port 4317).
+    pub jaeger_url: Option<String>,
 }
 
 /// Represents non-private informations transmitted on login to make
