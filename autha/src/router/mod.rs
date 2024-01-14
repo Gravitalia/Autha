@@ -5,7 +5,7 @@ pub mod users;
 use db::{memcache::MemcachePool, scylla::Scylla};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
-use warp::{Filter, Rejection, Reply};
+use warp::{reply::Response, Filter, Rejection, Reply};
 
 use crate::helpers::telemetry;
 
@@ -73,7 +73,9 @@ pub async fn create_user(
     cf_token: Option<String>,
     forwarded: Option<String>,
     ip: Option<SocketAddr>,
-) -> Result<impl Reply, Rejection> {
+) -> Result<Response, Rejection> {
+    let current_seconds = crate::helpers::get_current_seconds();
+
     match create::handle(
         scylla,
         memcached,
@@ -87,7 +89,18 @@ pub async fn create_user(
     )
     .await
     {
-        Ok(r) => Ok(r),
+        Ok(r) => {
+            let res = r.into_response();
+
+            telemetry::RESPONSE_CODE_COLLECTOR
+                .with_label_values(&[&res.status().to_string(), "POST"])
+                .inc();
+            telemetry::RESPONSE_TIME_COLLECTOR
+                .with_label_values(&[])
+                .observe(crate::helpers::get_current_seconds() - current_seconds);
+
+            Ok(res)
+        }
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
@@ -101,7 +114,9 @@ pub async fn login_user(
     cf_token: Option<String>,
     forwarded: Option<String>,
     ip: Option<SocketAddr>,
-) -> Result<impl Reply, Rejection> {
+) -> Result<Response, Rejection> {
+    let current_seconds = crate::helpers::get_current_seconds();
+
     match login::handle(
         scylla,
         memcached,
@@ -115,7 +130,18 @@ pub async fn login_user(
     )
     .await
     {
-        Ok(r) => Ok(r),
+        Ok(r) => {
+            let res = r.into_response();
+
+            telemetry::RESPONSE_CODE_COLLECTOR
+                .with_label_values(&[&res.status().to_string(), "POST"])
+                .inc();
+            telemetry::RESPONSE_TIME_COLLECTOR
+                .with_label_values(&[])
+                .observe(crate::helpers::get_current_seconds() - current_seconds);
+
+            Ok(res)
+        }
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
@@ -127,9 +153,22 @@ pub async fn get_user(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
     token: Option<String>,
-) -> Result<impl Reply, Rejection> {
+) -> Result<Response, Rejection> {
+    let current_seconds = crate::helpers::get_current_seconds();
+
     match users::get(scylla, memcached, vanity, token).await {
-        Ok(r) => Ok(r),
+        Ok(r) => {
+            let res = r.into_response();
+
+            telemetry::RESPONSE_CODE_COLLECTOR
+                .with_label_values(&[&res.status().to_string(), "POST"])
+                .inc();
+            telemetry::RESPONSE_TIME_COLLECTOR
+                .with_label_values(&[])
+                .observe(crate::helpers::get_current_seconds() - current_seconds);
+
+            Ok(res)
+        }
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
@@ -141,9 +180,22 @@ pub async fn update_user(
     memcached: MemcachePool,
     token: String,
     body: crate::model::body::UserPatch,
-) -> Result<impl Reply, Rejection> {
+) -> Result<Response, Rejection> {
+    let current_seconds = crate::helpers::get_current_seconds();
+
     match users::update(scylla, memcached, token, body).await {
-        Ok(r) => Ok(r),
+        Ok(r) => {
+            let res = r.into_response();
+
+            telemetry::RESPONSE_CODE_COLLECTOR
+                .with_label_values(&[&res.status().to_string(), "POST"])
+                .inc();
+            telemetry::RESPONSE_TIME_COLLECTOR
+                .with_label_values(&[])
+                .observe(crate::helpers::get_current_seconds() - current_seconds);
+
+            Ok(res)
+        }
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
