@@ -5,9 +5,7 @@ use opentelemetry::{
 };
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{runtime, trace as sdktrace, Resource};
-use prometheus::{
-    Encoder, HistogramOpts, HistogramVec, IntCounter, IntCounterVec, Opts, Registry,
-};
+use prometheus::{Encoder, HistogramOpts, HistogramVec, IntCounter, IntCounterVec, Opts, Registry};
 
 lazy_static! {
     pub static ref REGISTRY: Registry = Registry::new();
