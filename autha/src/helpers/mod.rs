@@ -29,6 +29,15 @@ pub fn get_age(year: i16, month: i8, day: i8) -> Result<i32> {
     Ok(((current_time.as_millis() - birth_date) / MILLIS_IN_YEAR).try_into()?)
 }
 
+/// Get the current timestamp in seconds
+#[inline]
+pub fn get_current_seconds() -> f64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs_f64()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
