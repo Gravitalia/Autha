@@ -36,11 +36,21 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .chain(std::io::stdout())
         .apply()?;
 
-    // Initialize telemetry.
-    helpers::telemetry::register_custom_metrics();
-
     // Read configuration file.
     let config = helpers::config::read();
+
+    // Initialize telemetry.
+    if config.prometheus.unwrap_or_default() {
+        log::info!("Metrics are enabled using Prometheus.");
+        helpers::telemetry::register_custom_metrics();
+    }
+
+    let tracer = if let Some(url) = config.jaeger_url {
+        log::info!("Tracing requests activated with Jaeger.");
+        Some(helpers::telemetry::init_tracer(&url)?)
+    } else {
+        None
+    };
 
     // Initialize databases.
     let scylladb = match db::scylla::init(
