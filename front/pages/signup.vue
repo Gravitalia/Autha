@@ -217,6 +217,11 @@ async function signup() {
           <div flex space-x-2 mb-10 lg:mb-12>
             <input
               v-model="firstname"
+              :class="
+                isError.missingFirstname.value
+                  ? 'border-red-500 dark:border-red-500'
+                  : ''
+              "
               input
               w-7.65rem
               lg:w-8.65rem
@@ -238,10 +243,12 @@ async function signup() {
 
           <!-- Email errors. -->
           <LabelError
+            mt-6
             text="error.missing_email"
             :cond="isError.missingEmail.value"
           />
           <LabelError
+            mt-6
             text="error.email_used"
             :cond="isError.alreadyUsedEmail.value"
           />
@@ -250,6 +257,13 @@ async function signup() {
           <div flex-col container>
             <input
               v-model="email"
+              :class="
+                isError.invalidEmail.value ||
+                isError.missingEmail.value ||
+                isError.alreadyUsedEmail.value
+                  ? 'border-red-500 dark:border-red-500'
+                  : ''
+              "
               input
               type="email"
               :placeholder="$t('email')"
@@ -270,10 +284,21 @@ async function signup() {
           />
 
           <!-- Birthdate error. -->
-          <LabelError text="error.too_young" :cond="isError.tooYoung.value" />
+          <LabelError
+            mt-6
+            text="error.too_young"
+            :cond="isError.tooYoung.value"
+          />
 
           <!-- Birthdate input. -->
-          <input v-model="birthdate" input type="date" />
+          <input
+            v-model="birthdate"
+            :class="
+              isError.tooYoung.value ? 'border-red-500 dark:border-red-500' : ''
+            "
+            input
+            type="date"
+          />
         </div>
 
         <!-- 3rd step account creation. -->
@@ -292,7 +317,13 @@ async function signup() {
             </span>
             <input
               v-model="vanity"
-              w-8.35rem
+              :class="
+                isError.invalidVanity.value
+                  ? 'border-red-500 dark:border-red-500'
+                  : ''
+              "
+              w-36
+              lg:w-44
               input
               type="text"
               maxlength="15"
@@ -303,10 +334,12 @@ async function signup() {
 
           <!-- Password errors. -->
           <LabelError
+            mt-6
             text="error.missing_password_sign_up"
             :cond="isError.missingPassword.value"
           />
           <LabelError
+            mt-6
             text="error.password_advices"
             :cond="isError.invalidPassword.value"
           />
@@ -314,6 +347,11 @@ async function signup() {
           <!-- Password input. -->
           <input
             v-model="password"
+            :class="
+              isError.missingPassword.value || isError.invalidPassword.value
+                ? 'border-red-500 dark:border-red-500'
+                : ''
+            "
             input
             type="password"
             :placeholder="$t('password')"
