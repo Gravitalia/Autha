@@ -166,7 +166,7 @@ async function signup() {
     <div
       class="bg-zinc-50 dark:bg-dark border border-gray-900 w-80 h-80 lg:w-96 lg:h-96 2xl:w-26rem 2xl:h-26rem shadow-lg"
     >
-      <div mt-6 lg:mt-10 mb-8 lg:mb-10 divide-x space-x-2 container>
+      <div mt-6 lg:mt-11 mb-8 lg:mb-12 divide-x space-x-2 container>
         <NuxtImg
           alt="Gravitalia"
           src="/favicon.webp"
@@ -189,17 +189,17 @@ async function signup() {
       <div flex-col container>
         <!-- Generic errors. -->
         <LabelError
-          mb-34
+          mb-42
           text="error.security_token"
           :cond="isError.invalidToken.value"
         />
         <LabelError
-          mb-34
+          mb-42
           text="error.rate_limit"
           :cond="isError.rateLimited.value"
         />
         <LabelError
-          mb-34
+          mb-42
           text="something_went_wrong"
           :cond="isError.internalServerError.value"
         />
@@ -208,15 +208,20 @@ async function signup() {
         <div v-if="step === 0" flex-col container>
           <!-- Firstname error. -->
           <LabelError
-            mb-30
+            mb-36
             text="error.missing_firstname"
             :cond="isError.missingFirstname.value"
           />
 
           <!-- Firstname and name inputs. -->
-          <div flex space-x-2 mb-8 lg:mb-10>
+          <div flex space-x-2 mb-10 lg:mb-12>
             <input
               v-model="firstname"
+              :class="
+                isError.missingFirstname.value
+                  ? 'border-red-500 dark:border-red-500'
+                  : ''
+              "
               input
               w-7.65rem
               lg:w-8.65rem
@@ -238,12 +243,12 @@ async function signup() {
 
           <!-- Email errors. -->
           <LabelError
-            mt-4
+            mt-6
             text="error.missing_email"
             :cond="isError.missingEmail.value"
           />
           <LabelError
-            mt-4
+            mt-6
             text="error.email_used"
             :cond="isError.alreadyUsedEmail.value"
           />
@@ -252,6 +257,13 @@ async function signup() {
           <div flex-col container>
             <input
               v-model="email"
+              :class="
+                isError.invalidEmail.value ||
+                isError.missingEmail.value ||
+                isError.alreadyUsedEmail.value
+                  ? 'border-red-500 dark:border-red-500'
+                  : ''
+              "
               input
               type="email"
               :placeholder="$t('email')"
@@ -266,39 +278,52 @@ async function signup() {
             v-model="phone"
             input
             type="tel"
-            mb-8
-            lg:mb-10
+            mb-10
+            lg:mb-12
             :placeholder="$t('phone')"
           />
 
           <!-- Birthdate error. -->
           <LabelError
-            mt-4
+            mt-6
             text="error.too_young"
             :cond="isError.tooYoung.value"
           />
 
           <!-- Birthdate input. -->
-          <input v-model="birthdate" input type="date" />
+          <input
+            v-model="birthdate"
+            :class="
+              isError.tooYoung.value ? 'border-red-500 dark:border-red-500' : ''
+            "
+            input
+            type="date"
+          />
         </div>
 
         <!-- 3rd step account creation. -->
         <div v-else-if="step === 2" flex-col container>
           <!-- Vanity errors. -->
           <LabelError
-            mb-30
+            mb-36
             text="error.vanity_used"
             :cond="isError.invalidVanity.value"
           />
 
           <!-- Vanity input. -->
-          <div mb-8 lg:mb-10 mr-2 flex>
+          <div mb-10 lg:mb-12 mr-2 flex>
             <span rounded flex justify-center items-center text-sm font-mono>
               gravitalia.com/
             </span>
             <input
               v-model="vanity"
-              w-8.35rem
+              :class="
+                isError.invalidVanity.value
+                  ? 'border-red-500 dark:border-red-500'
+                  : ''
+              "
+              w-36
+              lg:w-44
               input
               type="text"
               maxlength="15"
@@ -309,12 +334,12 @@ async function signup() {
 
           <!-- Password errors. -->
           <LabelError
-            mt-4
+            mt-6
             text="error.missing_password_sign_up"
             :cond="isError.missingPassword.value"
           />
           <LabelError
-            mt-4
+            mt-6
             text="error.password_advices"
             :cond="isError.invalidPassword.value"
           />
@@ -322,6 +347,11 @@ async function signup() {
           <!-- Password input. -->
           <input
             v-model="password"
+            :class="
+              isError.missingPassword.value || isError.invalidPassword.value
+                ? 'border-red-500 dark:border-red-500'
+                : ''
+            "
             input
             type="password"
             :placeholder="$t('password')"
@@ -331,7 +361,7 @@ async function signup() {
 
       <!-- Links and buttons. -->
       <div flex container>
-        <div flex justify-between w-16.5rem lg:w-18.5rem mt-10 lg:mt-12>
+        <div flex justify-between w-16.5rem lg:w-18.5rem mt-8 lg:mt-14>
           <!-- Buttons on the left. -->
           <NuxtLink v-if="step === 0" to="/signin" btn-invisible no-underline>{{
             $t("sign_in")

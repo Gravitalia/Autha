@@ -111,6 +111,7 @@ export default defineNuxtConfig({
     public: {
       API_URL: "http://localhost:1111",
     },
+    email: "support@gravitalia.com",
   },
 
   routeRules: {
