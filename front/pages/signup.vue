@@ -270,10 +270,7 @@ async function signup() {
           />
 
           <!-- Birthdate error. -->
-          <LabelError
-            text="error.too_young"
-            :cond="isError.tooYoung.value"
-          />
+          <LabelError text="error.too_young" :cond="isError.tooYoung.value" />
 
           <!-- Birthdate input. -->
           <input v-model="birthdate" input type="date" />
