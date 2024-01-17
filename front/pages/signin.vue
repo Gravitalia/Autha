@@ -130,29 +130,29 @@ async function signin() {
       <div flex-col container>
         <!-- Generic errors. -->
         <LabelError
-          mb-34
+          mb-42
           text="error.security_token"
           :cond="isError.invalidToken.value"
         />
         <LabelError
-          mb-34
+          mb-42
           text="error.rate_limit"
           :cond="isError.rateLimited.value"
         />
         <LabelError
-          mb-34
+          mb-42
           text="something_went_wrong"
           :cond="isError.internalServerError.value"
         />
 
         <!-- Email input. -->
         <LabelError
-          mb-30
+          mb-36
           text="error.write_something"
           :cond="isError.missingEmail.value"
         />
         <LabelError
-          mb-30
+          mb-36
           text="error.invalid_email"
           :cond="isError.invalidEmail.value"
         />
@@ -173,12 +173,10 @@ async function signin() {
 
         <!-- Password input. -->
         <LabelError
-          mt-4
           text="error.missing_password"
           :cond="isError.missingPassword.value"
         />
         <LabelError
-          mt-4
           text="error.invalid_password"
           :cond="isError.invalidPassword.value"
         />
@@ -194,11 +192,22 @@ async function signin() {
           type="password"
           :placeholder="$t('password')"
         />
+
+        <!-- No more access. -->
+        <div hidden lg:block mt-2 w-64 lg:w-72>
+          <NuxtLink
+            :to="'mailto:' + useRuntimeConfig().email"
+            text-sm
+            text-link
+          >
+            {{ $t("lost_account") }}
+          </NuxtLink>
+        </div>
       </div>
 
       <!-- Links and buttons. -->
       <div flex container>
-        <div flex justify-between w-16.5rem lg:w-18.5rem mt-10 lg:mt-12>
+        <div flex justify-between w-16.5rem lg:w-18.5rem mt-11>
           <NuxtLink to="/signup" btn-invisible no-underline>{{
             $t("create_account")
           }}</NuxtLink>
