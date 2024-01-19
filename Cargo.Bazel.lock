@@ -1,5 +1,5 @@
 {
-  "checksum": "6da5f9d7e39cec016df61ac723ebd39591380e85890fb3edfe04c83e2fa680e9",
+  "checksum": "2aa6f10707834b8925c4cf4a91120170e0d625ad2b80959255f8907022b1a16e",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -6586,13 +6586,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "h2 0.3.23": {
+    "h2 0.3.24": {
       "name": "h2",
-      "version": "0.3.23",
+      "version": "0.3.24",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/h2/0.3.23/download",
-          "sha256": "b553656127a00601c8ae5590fcfdc118e4083a7924b6cf4ffc1ea4b99dc429d7"
+          "url": "https://crates.io/api/v1/crates/h2/0.3.24/download",
+          "sha256": "bb2c4422095b67ee78da96fbb51a4cc413b3b25883c7717ff7ca1ab31022c9c9"
         }
       },
       "targets": [
@@ -6661,7 +6661,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.3.23"
+        "version": "0.3.24"
       },
       "license": "MIT"
     },
@@ -7415,7 +7415,7 @@
               "target": "futures_util"
             },
             {
-              "id": "h2 0.3.23",
+              "id": "h2 0.3.24",
               "target": "h2"
             },
             {
@@ -7443,7 +7443,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "socket2 0.5.5",
+              "id": "socket2 0.4.10",
               "target": "socket2"
             },
             {
@@ -13704,7 +13704,7 @@
                 "target": "encoding_rs"
               },
               {
-                "id": "h2 0.3.23",
+                "id": "h2 0.3.24",
                 "target": "h2"
               },
               {
@@ -17862,7 +17862,7 @@
               "target": "flate2"
             },
             {
-              "id": "h2 0.3.23",
+              "id": "h2 0.3.24",
               "target": "h2"
             },
             {
