@@ -1,5 +1,5 @@
 {
-  "checksum": "53acd8234bfab16835ff235ce313d8b448aa4f8c3f46a0ef83544a366868447c",
+  "checksum": "6da5f9d7e39cec016df61ac723ebd39591380e85890fb3edfe04c83e2fa680e9",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -1611,7 +1611,7 @@
               "target": "totp_lite"
             },
             {
-              "id": "uuid 1.6.1",
+              "id": "uuid 1.7.0",
               "target": "uuid"
             },
             {
@@ -15084,7 +15084,7 @@
               "target": "tracing"
             },
             {
-              "id": "uuid 1.6.1",
+              "id": "uuid 1.7.0",
               "target": "uuid"
             }
           ],
@@ -15176,7 +15176,7 @@
               "target": "tokio"
             },
             {
-              "id": "uuid 1.6.1",
+              "id": "uuid 1.7.0",
               "target": "uuid"
             }
           ],
@@ -18963,13 +18963,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "uuid 1.6.1": {
+    "uuid 1.7.0": {
       "name": "uuid",
-      "version": "1.6.1",
+      "version": "1.7.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/uuid/1.6.1/download",
-          "sha256": "5e395fcf16a7a3d8127ec99782007af141946b4795001f876d54fb0d55978560"
+          "url": "https://crates.io/api/v1/crates/uuid/1.7.0/download",
+          "sha256": "f00cc9702ca12d3c81455259621e676d0f7251cec66a21e98fe2e9a37db93b2a"
         }
       },
       "targets": [
@@ -18991,7 +18991,6 @@
         "crate_features": {
           "common": [
             "default",
-            "getrandom",
             "rng",
             "std",
             "v4"
@@ -19008,7 +19007,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "1.6.1"
+        "version": "1.7.0"
       },
       "license": "Apache-2.0 OR MIT"
     },
