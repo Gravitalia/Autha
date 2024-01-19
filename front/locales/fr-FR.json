@@ -24,6 +24,7 @@
   "email": "Adresse e-mail",
   "password": "Mot de passe",
   "create_account": "Créer un compte",
+  "lost_account": "Votre compte n'est pas accessible ?",
 
   "next": "Suivant",
   "previous": "Précédent",
