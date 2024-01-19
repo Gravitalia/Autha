@@ -1,5 +1,5 @@
 {
-  "checksum": "388480730a24a0c5a3cfa707d5d7ad4d8b72647aad63ea75801a3e418e07d68a",
+  "checksum": "53acd8234bfab16835ff235ce313d8b448aa4f8c3f46a0ef83544a366868447c",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -7794,13 +7794,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "image 0.24.7": {
+    "image 0.24.8": {
       "name": "image",
-      "version": "0.24.7",
+      "version": "0.24.8",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/image/0.24.7/download",
-          "sha256": "6f3dfdbdd72063086ff443e297b61695500514b1e41095b6fb9a5ab48a70a711"
+          "url": "https://crates.io/api/v1/crates/image/0.24.8/download",
+          "sha256": "034bbe799d1909622a74d1193aa50147769440040ff36cb2baa947609b0a4e23"
         }
       },
       "targets": [
@@ -7870,10 +7870,6 @@
               "alias": "jpeg"
             },
             {
-              "id": "num-rational 0.4.1",
-              "target": "num_rational"
-            },
-            {
               "id": "num-traits 0.2.17",
               "target": "num_traits"
             },
@@ -7892,8 +7888,8 @@
           ],
           "selects": {}
         },
-        "edition": "2018",
-        "version": "0.24.7"
+        "edition": "2021",
+        "version": "0.24.8"
       },
       "license": "MIT"
     },
@@ -7932,7 +7928,7 @@
               "target": "fast_image_resize"
             },
             {
-              "id": "image 0.24.7",
+              "id": "image 0.24.8",
               "target": "image"
             },
             {
@@ -9143,10 +9139,79 @@
         "crate_features": {
           "common": [
             "default",
-            "extra_traits",
             "std"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              "extra_traits"
+            ],
+            "aarch64-apple-ios": [
+              "extra_traits"
+            ],
+            "aarch64-apple-ios-sim": [
+              "extra_traits"
+            ],
+            "aarch64-fuchsia": [
+              "extra_traits"
+            ],
+            "aarch64-linux-android": [
+              "extra_traits"
+            ],
+            "armv7-linux-androideabi": [
+              "extra_traits"
+            ],
+            "i686-apple-darwin": [
+              "extra_traits"
+            ],
+            "i686-linux-android": [
+              "extra_traits"
+            ],
+            "i686-unknown-freebsd": [
+              "extra_traits"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "extra_traits"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "extra_traits"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "extra_traits"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "extra_traits"
+            ],
+            "thumbv7em-none-eabi": [
+              "extra_traits"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "extra_traits"
+            ],
+            "wasm32-unknown-unknown": [
+              "extra_traits"
+            ],
+            "wasm32-wasi": [
+              "extra_traits"
+            ],
+            "x86_64-apple-darwin": [
+              "extra_traits"
+            ],
+            "x86_64-apple-ios": [
+              "extra_traits"
+            ],
+            "x86_64-fuchsia": [
+              "extra_traits"
+            ],
+            "x86_64-linux-android": [
+              "extra_traits"
+            ],
+            "x86_64-unknown-freebsd": [
+              "extra_traits"
+            ],
+            "x86_64-unknown-none": [
+              "extra_traits"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -9382,35 +9447,89 @@
         ],
         "crate_features": {
           "common": [
+            "elf",
+            "errno",
             "general",
-            "if_ether",
             "ioctl",
-            "net",
-            "netlink",
-            "no_std",
-            "prctl",
-            "xdp"
+            "no_std"
           ],
           "selects": {
+            "aarch64-linux-android": [
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
+            ],
             "aarch64-unknown-linux-gnu": [
-              "elf",
-              "errno"
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
             ],
             "arm-unknown-linux-gnueabi": [
-              "elf",
-              "errno"
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
+            ],
+            "armv7-linux-androideabi": [
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
             ],
             "armv7-unknown-linux-gnueabi": [
-              "elf",
-              "errno"
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
+            ],
+            "i686-linux-android": [
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
             ],
             "i686-unknown-linux-gnu": [
-              "elf",
-              "errno"
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
+            ],
+            "x86_64-linux-android": [
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
             ],
             "x86_64-unknown-linux-gnu": [
-              "elf",
-              "errno"
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
             ]
           }
         },
@@ -10513,76 +10632,6 @@
         },
         "edition": "2015",
         "version": "0.1.45"
-      },
-      "build_script_attrs": {
-        "data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "autocfg 1.1.0",
-              "target": "autocfg"
-            }
-          ],
-          "selects": {}
-        }
-      },
-      "license": "MIT OR Apache-2.0"
-    },
-    "num-rational 0.4.1": {
-      "name": "num-rational",
-      "version": "0.4.1",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/num-rational/0.4.1/download",
-          "sha256": "0638a1c9d0a3c0914158145bc76cff373a75a627e6ecbfb71cbe6f453a5a19b0"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "num_rational",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "num_rational",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "num-integer 0.1.45",
-              "target": "num_integer"
-            },
-            {
-              "id": "num-rational 0.4.1",
-              "target": "build_script_build"
-            },
-            {
-              "id": "num-traits 0.2.17",
-              "target": "num_traits"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.4.1"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -19846,7 +19895,7 @@
         "deps": {
           "common": [
             {
-              "id": "image 0.24.7",
+              "id": "image 0.24.8",
               "target": "image"
             },
             {
