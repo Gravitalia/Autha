@@ -20,7 +20,7 @@ export const useUser = defineStore("user", {
      * @param forceFetching fetch for user even if cached.
      * @returns {Promise<void>}
      */
-    async fetchUser(forceFetching: boolean = false): Promise<void> {
+    async fetchUser(forceFetching: boolean = false) {
       // Get session cookie.
       const session: string = useCookie("session").value ?? "";
       if (!forceFetching && (session === "" || this.vanity !== "")) return;
