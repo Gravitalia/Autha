@@ -55,12 +55,12 @@ pub async fn get(
                         Ok(vanity) => {
                             is_jwt = true;
                             vanity.0
-                        }
+                        },
                         Err(_) => {
                             return Ok(super::err(super::INVALID_TOKEN));
-                        }
+                        },
                     }
-                }
+                },
             }
         } else {
             return Ok(super::err(super::MISSING_AUTHORIZATION_HEADER));
@@ -119,7 +119,7 @@ pub async fn get(
 pub async fn update(
     scylla: std::sync::Arc<Scylla>,
     memcached: MemcachePool,
-    tracer: Option<Arc<opentelemetry_sdk::trace::Tracer>>,
+    tracer: Option<Arc<opentelemetry::global::BoxedTracer>>,
     broker: Arc<db::broker::Broker>,
     token: String,
     body: crate::model::body::UserPatch,
@@ -129,7 +129,7 @@ pub async fn update(
         Err(error) => {
             log::error!("Cannot retrive user token: {}", error);
             return Ok(super::err(super::INVALID_TOKEN));
-        }
+        },
     };
 
     let rows = scylla
@@ -142,13 +142,18 @@ pub async fn update(
         .rows_typed::<(String, String, String, Option<String>, Option<String>)>()?
         .collect::<Vec<_>>();
 
-    let (mut username, mut email, password, mut avatar, mut bio) = rows[0].clone()?;
+    let (mut username, mut email, password, mut avatar, mut bio) =
+        rows[0].clone()?;
     let mut birthdate: Option<String> = None;
     let mut phone: Option<String> = None;
 
     let mut is_psw_valid = false;
     if let Some(psw) = body.password {
-        if crypto::hash::check_argon2(password, psw.as_bytes(), vanity.as_bytes())? {
+        if crypto::hash::check_argon2(
+            password,
+            psw.as_bytes(),
+            vanity.as_bytes(),
+        )? {
             is_psw_valid = true;
         } else {
             return Ok(crate::router::err(super::INVALID_PASSWORD));
@@ -189,8 +194,10 @@ pub async fn update(
         if a.is_empty() {
             avatar = None;
         } else {
-            let config: crate::model::config::Config = crate::helpers::config::read();
-            let resized_img = image_processor::resizer::resize(&a, Some(224), Some(224))?;
+            let config: crate::model::config::Config =
+                crate::helpers::config::read();
+            let resized_img =
+                image_processor::resizer::resize(&a, Some(224), Some(224))?;
             let credentials = image_processor::host::cloudinary::Credentials {
                 key: "".to_string(),
                 cloud_name: "".to_string(),
@@ -198,10 +205,15 @@ pub async fn update(
             };
 
             if let Some(remini_url) = config.remini_url {
-                if crate::helpers::machine_learning::is_nude(remini_url, resized_img.buffer())
-                    .await?
+                if crate::helpers::machine_learning::is_nude(
+                    remini_url,
+                    resized_img.buffer(),
+                )
+                .await?
                 {
-                    return Ok(crate::router::err("Avatar appears to contain nudity"));
+                    return Ok(crate::router::err(
+                        "Avatar appears to contain nudity",
+                    ));
                 } else {
                     avatar = Some(
                         image_processor::resize_and_upload(
@@ -234,8 +246,9 @@ pub async fn update(
         if !is_psw_valid || !crate::router::create::EMAIL.is_match(&e) {
             return Ok(crate::router::err(super::INVALID_EMAIL));
         } else {
-            let hashed_email =
-                crypto::encrypt::format_preserving_encryption(e.encode_utf16().collect())?;
+            let hashed_email = crypto::encrypt::format_preserving_encryption(
+                e.encode_utf16().collect(),
+            )?;
 
             // Check if email is already in use.
             if !scylla
@@ -273,7 +286,8 @@ pub async fn update(
             {
                 return Ok(crate::router::err(super::INVALID_BIRTHDATE));
             } else {
-                let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(birth.into())?;
+                let (nonce, encrypted) =
+                    crypto::encrypt::chacha20_poly1305(birth.into())?;
                 let uuid = uuid::Uuid::new_v4();
 
                 batch.append_statement(insert_salt_query.clone());
@@ -290,7 +304,8 @@ pub async fn update(
         if !crate::router::create::PHONE.is_match(&number) {
             return Ok(super::err(super::INVALID_PHONE));
         } else {
-            let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(number.into())?;
+            let (nonce, encrypted) =
+                crypto::encrypt::chacha20_poly1305(number.into())?;
             let uuid = uuid::Uuid::new_v4();
 
             batch.append_statement(insert_salt_query.clone());
@@ -306,14 +321,18 @@ pub async fn update(
         if !is_psw_valid {
             return Ok(crate::router::err(super::INVALID_PASSWORD));
         } else {
-            let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(mfa.into())?;
+            let (nonce, encrypted) =
+                crypto::encrypt::chacha20_poly1305(mfa.into())?;
             let uuid = uuid::Uuid::new_v4();
 
             batch.append_statement(insert_salt_query.clone());
             batch_values.push((uuid.to_string(), nonce));
 
-            batch.append_statement("UPDATE accounts.users SET mfa_code = ? WHERE vanity = ?;");
-            batch_values.push((format!("{}//{}", uuid, encrypted), vanity.clone()));
+            batch.append_statement(
+                "UPDATE accounts.users SET mfa_code = ? WHERE vanity = ?;",
+            );
+            batch_values
+                .push((format!("{}//{}", uuid, encrypted), vanity.clone()));
         }
     }
 
@@ -322,7 +341,9 @@ pub async fn update(
         if !is_psw_valid || !crate::router::create::PASSWORD.is_match(&np) {
             return Ok(crate::router::err(super::INVALID_PASSWORD));
         } else {
-            batch.append_statement("UPDATE accounts.users SET password = ? WHERE vanity = ?");
+            batch.append_statement(
+                "UPDATE accounts.users SET password = ? WHERE vanity = ?",
+            );
             batch_values.push((
                 crypto::hash::argon2(np.as_bytes(), vanity.as_bytes()),
                 vanity.clone(),

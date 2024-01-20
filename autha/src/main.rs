@@ -47,7 +47,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
 
     let tracer = if let Some(url) = config.jaeger_url {
         log::info!("Tracing requests activated with Jaeger.");
-        Some(Arc::new(helpers::telemetry::init_tracer(&url)?))
+        helpers::telemetry::init_tracer(&url)?;
+        Some(Arc::new(opentelemetry::global::tracer("tracing-jaeger")))
     } else {
         None
     };
@@ -70,7 +71,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
             log::info!("Cassandra/ScyllaDB connection created successfully.");
 
             Arc::new(db::scylla::Scylla { connection: pool })
-        }
+        },
         Err(error) => {
             // A connection failure renders the entire API unstable and unusable.
             log::error!(
@@ -78,7 +79,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
                 error
             );
             std::process::exit(0);
-        }
+        },
     };
 
     let memcached_pool = match db::memcache::init(
@@ -91,7 +92,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
             db::memcache::MemcachePool {
                 connection: Some(pool),
             }
-        }
+        },
         Err(error) => {
             // In the event that establishing a connections pool encounters any difficulties, it will be duly logged.
             // Such a scenario might lead to suboptimal performance in specific requests.
@@ -102,7 +103,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
             );
 
             db::memcache::MemcachePool { connection: None }
-        }
+        },
     };
 
     // Init message broker.
@@ -113,37 +114,48 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         (Some(_), Some(_)) => {
             log::error!("You have declared Kafka and RabbitMQ. Only a broker message can be used. No broker messages will be started, and other services will receive no data.");
             Arc::new(db::broker::empty())
-        }
+        },
         (Some(kafka_conn), None) => {
-            match db::broker::with_kafka(kafka_conn.hosts.clone(), kafka_conn.pool_size) {
+            match db::broker::with_kafka(
+                kafka_conn.hosts.clone(),
+                kafka_conn.pool_size,
+            ) {
                 Ok(broker) => {
                     log::info!("Kafka pool connection created successfully.");
                     Arc::new(broker)
-                }
+                },
                 Err(error) => {
                     log::error!("Could not initialize Kafka pool: {}", error);
                     Arc::new(db::broker::empty())
-                }
+                },
             }
-        }
+        },
         (None, Some(rabbit_conn)) => {
-            match db::broker::with_rabbitmq(rabbit_conn.hosts.clone(), rabbit_conn.pool_size) {
+            match db::broker::with_rabbitmq(
+                rabbit_conn.hosts.clone(),
+                rabbit_conn.pool_size,
+            ) {
                 Ok(broker) => {
-                    log::info!("RabbitMQ pool connection created successfully.");
+                    log::info!(
+                        "RabbitMQ pool connection created successfully."
+                    );
                     Arc::new(broker)
-                }
+                },
                 Err(error) => {
-                    log::error!("Could not initialize RabbitMQ pool: {}", error);
+                    log::error!(
+                        "Could not initialize RabbitMQ pool: {}",
+                        error
+                    );
                     Arc::new(db::broker::empty())
-                }
+                },
             }
-        }
+        },
         (None, None) => {
             log::warn!(
                 "No message broker set; other services will not be notified of user changes."
             );
             Arc::new(db::broker::empty())
-        }
+        },
     };
 
     // Create needed tables.
@@ -205,7 +217,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
                 .or(login_route)
                 .or(get_user_route)
                 .or(update_user_route)
-                .or(warp::path("metrics").and_then(helpers::telemetry::metrics_handler))),
+                .or(warp::path("metrics")
+                    .and_then(helpers::telemetry::metrics_handler))),
     )
     .run(([0, 0, 0, 0], config.port))
     .await;
