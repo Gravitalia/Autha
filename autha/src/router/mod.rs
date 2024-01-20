@@ -43,8 +43,7 @@ fn err<T: ToString>(message: T) -> warp::reply::WithStatus<warp::reply::Json> {
 /// The MemPool is cloned and returned as an outcome of this filter.
 pub fn with_memcached(
     db_pool: MemcachePool,
-) -> impl Filter<Extract = (MemcachePool,), Error = std::convert::Infallible> + Clone
-{
+) -> impl Filter<Extract = (MemcachePool,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || db_pool.clone())
 }
 
@@ -52,18 +51,14 @@ pub fn with_memcached(
 /// The atomic Scylla session is cloned and returned as an outcome of this filter.
 pub fn with_scylla(
     db: Arc<Scylla>,
-) -> impl Filter<Extract = (Arc<Scylla>,), Error = std::convert::Infallible> + Clone
-{
+) -> impl Filter<Extract = (Arc<Scylla>,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || Arc::clone(&db))
 }
 
 /// Creates a Warp filter to inject the broker into Warp routes.
 pub fn with_broker(
     broker: Arc<db::broker::Broker>,
-) -> impl Filter<
-    Extract = (Arc<db::broker::Broker>,),
-    Error = std::convert::Infallible,
-> + Clone {
+) -> impl Filter<Extract = (Arc<db::broker::Broker>,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || Arc::clone(&broker))
 }
 
@@ -79,8 +74,7 @@ pub fn with_tracing(
 }
 
 /// Creates a Warp filter increment Prometheus metrics counters.
-pub fn with_metric(
-) -> impl Filter<Extract = (), Error = std::convert::Infallible> + Clone {
+pub fn with_metric() -> impl Filter<Extract = (), Error = std::convert::Infallible> + Clone {
     warp::any()
         .map(|| {
             telemetry::HTTP_REQUESTS.inc();
@@ -106,11 +100,9 @@ pub async fn create_user(
         body,
         cf_token,
         forwarded.unwrap_or_else(|| {
-            ip.unwrap_or_else(|| {
-                SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
-            })
-            .ip()
-            .to_string()
+            ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80))
+                .ip()
+                .to_string()
         }),
     )
     .await
@@ -123,12 +115,10 @@ pub async fn create_user(
                 .inc();
             telemetry::RESPONSE_TIME_COLLECTOR
                 .with_label_values(&[])
-                .observe(
-                    crate::helpers::get_current_seconds() - current_seconds,
-                );
+                .observe(crate::helpers::get_current_seconds() - current_seconds);
 
             Ok(res)
-        },
+        }
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
@@ -151,11 +141,9 @@ pub async fn login_user(
         body,
         cf_token,
         forwarded.unwrap_or_else(|| {
-            ip.unwrap_or_else(|| {
-                SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
-            })
-            .ip()
-            .to_string()
+            ip.unwrap_or_else(|| SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80))
+                .ip()
+                .to_string()
         }),
     )
     .await
@@ -168,12 +156,10 @@ pub async fn login_user(
                 .inc();
             telemetry::RESPONSE_TIME_COLLECTOR
                 .with_label_values(&[])
-                .observe(
-                    crate::helpers::get_current_seconds() - current_seconds,
-                );
+                .observe(crate::helpers::get_current_seconds() - current_seconds);
 
             Ok(res)
-        },
+        }
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
@@ -197,12 +183,10 @@ pub async fn get_user(
                 .inc();
             telemetry::RESPONSE_TIME_COLLECTOR
                 .with_label_values(&[])
-                .observe(
-                    crate::helpers::get_current_seconds() - current_seconds,
-                );
+                .observe(crate::helpers::get_current_seconds() - current_seconds);
 
             Ok(res)
-        },
+        }
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
@@ -228,12 +212,10 @@ pub async fn update_user(
                 .inc();
             telemetry::RESPONSE_TIME_COLLECTOR
                 .with_label_values(&[])
-                .observe(
-                    crate::helpers::get_current_seconds() - current_seconds,
-                );
+                .observe(crate::helpers::get_current_seconds() - current_seconds);
 
             Ok(res)
-        },
+        }
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
