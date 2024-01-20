@@ -5,7 +5,9 @@ pub mod users;
 use db::{memcache::MemcachePool, scylla::Scylla};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
-use warp::{Filter, Rejection, Reply};
+use warp::{reply::Response, Filter, Rejection, Reply};
+
+use crate::helpers::telemetry;
 
 // Error constants.
 const ERROR_RATE_LIMITED: &str = "You are being rate limited.";
@@ -53,6 +55,33 @@ pub fn with_scylla(
     warp::any().map(move || Arc::clone(&db))
 }
 
+/// Creates a Warp filter to inject the broker into Warp routes.
+pub fn with_broker(
+    broker: Arc<db::broker::Broker>,
+) -> impl Filter<Extract = (Arc<db::broker::Broker>,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || Arc::clone(&broker))
+}
+
+/// Also creates a Warp filter to inject Jaeger into Warp routes.
+/// The atomic Jaeger session is cloned and returned as an outcome of this filter.
+pub fn with_tracing(
+    jaeger: Option<Arc<opentelemetry::global::BoxedTracer>>,
+) -> impl Filter<
+    Extract = (Option<Arc<opentelemetry::global::BoxedTracer>>,),
+    Error = std::convert::Infallible,
+> + Clone {
+    warp::any().map(move || jaeger.clone())
+}
+
+/// Creates a Warp filter increment Prometheus metrics counters.
+pub fn with_metric() -> impl Filter<Extract = (), Error = std::convert::Infallible> + Clone {
+    warp::any()
+        .map(|| {
+            telemetry::HTTP_REQUESTS.inc();
+        })
+        .untuple_one()
+}
+
 /// Handler of route to create a user.
 #[inline]
 pub async fn create_user(
@@ -62,7 +91,9 @@ pub async fn create_user(
     cf_token: Option<String>,
     forwarded: Option<String>,
     ip: Option<SocketAddr>,
-) -> Result<impl Reply, Rejection> {
+) -> Result<Response, Rejection> {
+    let current_seconds = crate::helpers::get_current_seconds();
+
     match create::handle(
         scylla,
         memcached,
@@ -76,7 +107,18 @@ pub async fn create_user(
     )
     .await
     {
-        Ok(r) => Ok(r),
+        Ok(r) => {
+            let res = r.into_response();
+
+            telemetry::RESPONSE_CODE_COLLECTOR
+                .with_label_values(&[&res.status().to_string(), "POST"])
+                .inc();
+            telemetry::RESPONSE_TIME_COLLECTOR
+                .with_label_values(&[])
+                .observe(crate::helpers::get_current_seconds() - current_seconds);
+
+            Ok(res)
+        }
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
@@ -90,7 +132,9 @@ pub async fn login_user(
     cf_token: Option<String>,
     forwarded: Option<String>,
     ip: Option<SocketAddr>,
-) -> Result<impl Reply, Rejection> {
+) -> Result<Response, Rejection> {
+    let current_seconds = crate::helpers::get_current_seconds();
+
     match login::handle(
         scylla,
         memcached,
@@ -104,7 +148,18 @@ pub async fn login_user(
     )
     .await
     {
-        Ok(r) => Ok(r),
+        Ok(r) => {
+            let res = r.into_response();
+
+            telemetry::RESPONSE_CODE_COLLECTOR
+                .with_label_values(&[&res.status().to_string(), "POST"])
+                .inc();
+            telemetry::RESPONSE_TIME_COLLECTOR
+                .with_label_values(&[])
+                .observe(crate::helpers::get_current_seconds() - current_seconds);
+
+            Ok(res)
+        }
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
@@ -116,9 +171,22 @@ pub async fn get_user(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
     token: Option<String>,
-) -> Result<impl Reply, Rejection> {
+) -> Result<Response, Rejection> {
+    let current_seconds = crate::helpers::get_current_seconds();
+
     match users::get(scylla, memcached, vanity, token).await {
-        Ok(r) => Ok(r),
+        Ok(r) => {
+            let res = r.into_response();
+
+            telemetry::RESPONSE_CODE_COLLECTOR
+                .with_label_values(&[&res.status().to_string(), "GET"])
+                .inc();
+            telemetry::RESPONSE_TIME_COLLECTOR
+                .with_label_values(&[])
+                .observe(crate::helpers::get_current_seconds() - current_seconds);
+
+            Ok(res)
+        }
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
@@ -128,11 +196,26 @@ pub async fn get_user(
 pub async fn update_user(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
+    tracer: Option<Arc<opentelemetry::global::BoxedTracer>>,
+    broker: Arc<db::broker::Broker>,
     token: String,
     body: crate::model::body::UserPatch,
-) -> Result<impl Reply, Rejection> {
-    match users::update(scylla, memcached, token, body).await {
-        Ok(r) => Ok(r),
+) -> Result<Response, Rejection> {
+    let current_seconds = crate::helpers::get_current_seconds();
+
+    match users::update(scylla, memcached, tracer, broker, token, body).await {
+        Ok(r) => {
+            let res = r.into_response();
+
+            telemetry::RESPONSE_CODE_COLLECTOR
+                .with_label_values(&[&res.status().to_string(), "PATCH"])
+                .inc();
+            telemetry::RESPONSE_TIME_COLLECTOR
+                .with_label_values(&[])
+                .observe(crate::helpers::get_current_seconds() - current_seconds);
+
+            Ok(res)
+        }
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }

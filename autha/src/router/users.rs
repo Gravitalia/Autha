@@ -1,7 +1,11 @@
 use anyhow::Result;
+use db::broker::kafka::KafkaManager;
+use db::broker::rabbitmq::RabbitManager;
+use db::broker::Broker;
 use db::memcache::{MemcacheManager, MemcachePool};
 use db::model::User;
 use db::scylla::{Scylla, ScyllaManager};
+use std::sync::Arc;
 use warp::reply::{Json, WithStatus};
 
 const IMAGE_WIDTH: u32 = 224;
@@ -115,6 +119,8 @@ pub async fn get(
 pub async fn update(
     scylla: std::sync::Arc<Scylla>,
     memcached: MemcachePool,
+    tracer: Option<Arc<opentelemetry::global::BoxedTracer>>,
+    broker: Arc<db::broker::Broker>,
     token: String,
     body: crate::model::body::UserPatch,
 ) -> Result<WithStatus<Json>> {
@@ -346,7 +352,26 @@ pub async fn update(
         )
     ).await {
         Ok(_) => {
-            // Todo: publish globally the modified user via RabbitMQ, Kafka or NATS.
+            log::trace!("User {} modified his profile", vanity);
+
+            let new_user = serde_json::to_string(&User {
+                username,
+                vanity: vanity.clone(),
+                avatar,
+                bio,
+                email: None,
+                birthdate: None,
+                phone: None,
+                verified: false,
+                deleted: false,
+                flags: 0,
+            })?;
+
+            match <std::sync::Arc<Broker> as Into<Broker>>::into(broker) {
+                Broker::Kafka(func) => func.publish("user", &new_user)?,
+                Broker::RabbitMQ(func) => func.publish("user", &new_user).await?,
+                _ => log::warn!("No service has been notified of the change in profile of {}", vanity),
+            }
 
             // Delete cached user.
             memcached.delete(vanity)?;

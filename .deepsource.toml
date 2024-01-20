@@ -23,7 +23,4 @@ name = "docker"
   dockerfile_paths = ["Dockerfile"]
 
 [[transformers]]
-name = "rustfmt"
-
-[[transformers]]
 name = "prettier"

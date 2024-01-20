@@ -2,7 +2,10 @@
 port: 1111
 
 # Remini server URL.
-remini_url: http://localhost:50051
+remini_url: http://remini:50051
+# Telemetry
+prometheus: true
+jaeger_url: http://jaeger:4317
 
 database:
   scylla:

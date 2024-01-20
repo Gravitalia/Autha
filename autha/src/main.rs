@@ -5,11 +5,12 @@ mod router;
 #[macro_use]
 extern crate lazy_static;
 use db::scylla::ScyllaManager;
+use std::error::Error;
 use std::sync::Arc;
 use warp::Filter;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     // Set logger with Fern.
     fern::Dispatch::new()
         .format(|out, message, record| {
@@ -33,11 +34,24 @@ async fn main() {
         .level_for("hyper", log::LevelFilter::Error)
         .level_for("warp_server", log::LevelFilter::Info)
         .chain(std::io::stdout())
-        .apply()
-        .unwrap();
+        .apply()?;
 
     // Read configuration file.
     let config = helpers::config::read();
+
+    // Initialize telemetry.
+    if config.prometheus.unwrap_or_default() {
+        log::info!("Metrics are enabled using Prometheus.");
+        helpers::telemetry::register_custom_metrics();
+    }
+
+    let tracer = if let Some(url) = config.jaeger_url {
+        log::info!("Tracing requests activated with Jaeger.");
+        helpers::telemetry::init_tracer(&url)?;
+        Some(Arc::new(opentelemetry::global::tracer("tracing-jaeger")))
+    } else {
+        None
+    };
 
     // Initialize databases.
     let scylladb = match db::scylla::init(
@@ -93,7 +107,7 @@ async fn main() {
     };
 
     // Init message broker.
-    let broker = match (
+    let broker: Arc<db::broker::Broker> = match (
         config.database.kafka.as_ref(),
         config.database.rabbitmq.as_ref(),
     ) {
@@ -142,6 +156,7 @@ async fn main() {
 
     let create_route = warp::path("create")
         .and(warp::post())
+        .and(router::with_metric())
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
         .and(warp::body::json())
@@ -152,6 +167,7 @@ async fn main() {
 
     let login_route = warp::path("login")
         .and(warp::post())
+        .and(router::with_metric())
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
         .and(warp::body::json())
@@ -162,6 +178,7 @@ async fn main() {
 
     let get_user_route = warp::path!("users" / String)
         .and(warp::get())
+        .and(router::with_metric())
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
         .and(warp::header::optional::<String>("authorization"))
@@ -170,8 +187,11 @@ async fn main() {
     let update_user_route = warp::path("users")
         .and(warp::path("@me"))
         .and(warp::patch())
+        .and(router::with_metric())
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
+        .and(router::with_tracing(tracer.clone()))
+        .and(router::with_broker(Arc::clone(&broker)))
         .and(warp::header::<String>("authorization"))
         .and(warp::body::json())
         .and_then(router::update_user);
@@ -185,8 +205,12 @@ async fn main() {
                 .or(create_route)
                 .or(login_route)
                 .or(get_user_route)
-                .or(update_user_route)),
+                .or(update_user_route)
+                .or(warp::path("metrics").and_then(helpers::telemetry::metrics_handler))),
     )
     .run(([0, 0, 0, 0], config.port))
     .await;
+
+    opentelemetry::global::shutdown_tracer_provider();
+    Ok(())
 }

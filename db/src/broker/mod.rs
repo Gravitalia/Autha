@@ -7,6 +7,7 @@ pub mod rabbitmq;
 
 use crate::broker::kafka::KafkaPool;
 use crate::broker::rabbitmq::RabbitPool;
+use std::sync::Arc;
 
 /// Enumerates the possibilities of usable broker messages.
 #[derive(Default, Clone)]
@@ -18,6 +19,15 @@ pub enum Broker {
     /// Stores a non-connected broker.
     #[default]
     None,
+}
+
+impl From<Arc<Broker>> for Broker {
+    fn from(arc_broker: Arc<Broker>) -> Self {
+        match Arc::try_unwrap(arc_broker) {
+            Ok(inner_broker) => inner_broker,
+            Err(_) => Broker::None,
+        }
+    }
 }
 
 /// Create a new empty `Broker` representation.
