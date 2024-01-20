@@ -1,0 +1,7 @@
+max_width = 80
+indent_style = "Block"
+match_block_trailing_comma = true
+binop_separator = "Back"
+reorder_imports = true
+group_imports = "StdExternalCrate"
+imports_granularity = "Module"
