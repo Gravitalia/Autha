@@ -1,20 +1,21 @@
-use opentelemetry::{
-    global,
-    trace::{TraceContextExt, TraceError, Tracer},
-    KeyValue,
-};
+use opentelemetry::{trace::TraceError, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{runtime, trace as sdktrace, Resource};
-use prometheus::{Encoder, HistogramOpts, HistogramVec, IntCounter, IntCounterVec, Opts, Registry};
+use prometheus::{
+    Encoder, HistogramOpts, HistogramVec, IntCounter, IntCounterVec, Opts,
+    Registry,
+};
 
 lazy_static! {
     pub static ref REGISTRY: Registry = Registry::new();
     pub static ref HTTP_REQUESTS: IntCounter =
         IntCounter::new("http_requests", "Incoming HTTP Requests")
             .expect("http_requests metric could not be created");
-    pub static ref RESPONSE_TIME_COLLECTOR: HistogramVec =
-        HistogramVec::new(HistogramOpts::new("response_time", "Response Times"), &[])
-            .expect("response_time metric could not be created");
+    pub static ref RESPONSE_TIME_COLLECTOR: HistogramVec = HistogramVec::new(
+        HistogramOpts::new("response_time", "Response Times"),
+        &[]
+    )
+    .expect("response_time metric could not be created");
     pub static ref RESPONSE_CODE_COLLECTOR: IntCounterVec = IntCounterVec::new(
         Opts::new("response_code", "Response Codes"),
         &["statuscode", "type"]
@@ -24,7 +25,7 @@ lazy_static! {
 
 /// Initiates gRPC connection to Jaeger. Data is sent under OpenTelemetry Protocol.
 #[inline]
-pub fn init_tracer(url: &str) -> Result<opentelemetry_sdk::trace::Tracer, TraceError> {
+pub fn init_tracer(url: &str) -> Result<sdktrace::Tracer, TraceError> {
     opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(
@@ -32,11 +33,13 @@ pub fn init_tracer(url: &str) -> Result<opentelemetry_sdk::trace::Tracer, TraceE
                 .tonic()
                 .with_endpoint(url),
         )
-        .with_trace_config(sdktrace::config().with_resource(Resource::new(vec![
-            KeyValue::new("service.name", "autha"),
-            KeyValue::new("service.namespace", "gravitalia"),
-            KeyValue::new("exporter", "jaeger"),
-        ])))
+        .with_trace_config(sdktrace::config().with_resource(Resource::new(
+            vec![
+                KeyValue::new("service.name", "autha"),
+                KeyValue::new("service.namespace", "gravitalia"),
+                KeyValue::new("exporter", "jaeger"),
+            ],
+        )))
         .install_batch(runtime::Tokio)
 }
 
@@ -70,7 +73,7 @@ pub async fn metrics_handler() -> Result<impl warp::Reply, warp::Rejection> {
         Err(e) => {
             log::error!("custom metrics could not be from_utf8'd: {}", e);
             String::default()
-        }
+        },
     };
     buffer.clear();
 
@@ -83,7 +86,7 @@ pub async fn metrics_handler() -> Result<impl warp::Reply, warp::Rejection> {
         Err(e) => {
             log::error!("prometheus metrics could not be from_utf8'd: {}", e);
             String::default()
-        }
+        },
     };
     buffer.clear();
 
