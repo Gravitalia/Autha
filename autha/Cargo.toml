@@ -10,7 +10,7 @@ tokio = { version = "1.35", features = ["macros", "rt-multi-thread"] }
 warp = { version = "0.3", features = ["tls"] }
 
 crypto = { path = "../crypto" }
-db = { path = "../db", features = ["logging", "cassandra", "memcached", "apache_kafka", "rabbitmq"] }
+db = { path = "../db", features = ["logging", "cassandra", "memcached"] }
 image_processor = { path = "../image_processor" }
 
 anyhow = "1"
@@ -38,3 +38,7 @@ prometheus = { version = "0.13", features = ["process"] }
 
 [build-dependencies]
 tonic-build = { version = "0.10", features = [ "prost" ] }
+
+[features]
+kafka = ["db/apache_kafka"]
+rabbitmq = ["db/rabbitmq"]
