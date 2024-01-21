@@ -40,11 +40,13 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     let config = helpers::config::read();
 
     // Initialize telemetry.
+    #[cfg(feature = "telemetry")]
     if config.prometheus.unwrap_or_default() {
         log::info!("Metrics are enabled using Prometheus.");
         helpers::telemetry::register_custom_metrics();
     }
 
+    #[cfg(feature = "telemetry")]
     if let Some(url) = config.jaeger_url {
         log::info!("Tracing requests activated with Jaeger.");
         helpers::telemetry::init_tracer(&url)?;
@@ -206,6 +208,12 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .and(warp::body::json())
         .and_then(router::update_user);
 
+    #[cfg(feature = "telemetry")]
+    let metrics =
+        warp::path("metrics").and_then(helpers::telemetry::metrics_handler);
+    #[cfg(not(feature = "telemetry"))]
+    let metrics = warp::path("metrics").map(|| "no metrics");
+
     warp::serve(
         warp::any()
             .and(warp::options())
@@ -216,12 +224,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
                 .or(login_route)
                 .or(get_user_route)
                 .or(update_user_route)
-                .or(warp::path("metrics")
-                    .and_then(helpers::telemetry::metrics_handler))),
+                .or(metrics)),
     )
     .run(([0, 0, 0, 0], config.port))
     .await;
 
-    opentelemetry::global::shutdown_tracer_provider();
     Ok(())
 }
