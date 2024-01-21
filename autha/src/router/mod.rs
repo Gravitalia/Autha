@@ -7,7 +7,7 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 use warp::{reply::Response, Filter, Rejection, Reply};
 
-use crate::helpers::telemetry;
+use crate::helpers::route_telemetry;
 
 // Error constants.
 const ERROR_RATE_LIMITED: &str = "You are being rate limited.";
@@ -72,7 +72,8 @@ pub fn with_metric(
 ) -> impl Filter<Extract = (), Error = std::convert::Infallible> + Clone {
     warp::any()
         .map(|| {
-            telemetry::HTTP_REQUESTS.inc();
+            #[cfg(feature = "telemetry")]
+            crate::helpers::telemetry::HTTP_REQUESTS.inc();
         })
         .untuple_one()
 }
@@ -107,14 +108,8 @@ pub async fn create_user(
         Ok(r) => {
             let res = r.into_response();
 
-            telemetry::RESPONSE_CODE_COLLECTOR
-                .with_label_values(&[&res.status().to_string(), "POST"])
-                .inc();
-            telemetry::RESPONSE_TIME_COLLECTOR
-                .with_label_values(&[])
-                .observe(
-                    crate::helpers::get_current_seconds() - current_seconds,
-                );
+            // Increment and add values of prometheus.
+            route_telemetry(&res.status().to_string(), current_seconds);
 
             Ok(res)
         },
@@ -152,14 +147,8 @@ pub async fn login_user(
         Ok(r) => {
             let res = r.into_response();
 
-            telemetry::RESPONSE_CODE_COLLECTOR
-                .with_label_values(&[&res.status().to_string(), "POST"])
-                .inc();
-            telemetry::RESPONSE_TIME_COLLECTOR
-                .with_label_values(&[])
-                .observe(
-                    crate::helpers::get_current_seconds() - current_seconds,
-                );
+            // Increment and add values of prometheus.
+            route_telemetry(&res.status().to_string(), current_seconds);
 
             Ok(res)
         },
@@ -181,14 +170,8 @@ pub async fn get_user(
         Ok(r) => {
             let res = r.into_response();
 
-            telemetry::RESPONSE_CODE_COLLECTOR
-                .with_label_values(&[&res.status().to_string(), "GET"])
-                .inc();
-            telemetry::RESPONSE_TIME_COLLECTOR
-                .with_label_values(&[])
-                .observe(
-                    crate::helpers::get_current_seconds() - current_seconds,
-                );
+            // Increment and add values of prometheus.
+            route_telemetry(&res.status().to_string(), current_seconds);
 
             Ok(res)
         },
@@ -211,14 +194,8 @@ pub async fn update_user(
         Ok(r) => {
             let res = r.into_response();
 
-            telemetry::RESPONSE_CODE_COLLECTOR
-                .with_label_values(&[&res.status().to_string(), "PATCH"])
-                .inc();
-            telemetry::RESPONSE_TIME_COLLECTOR
-                .with_label_values(&[])
-                .observe(
-                    crate::helpers::get_current_seconds() - current_seconds,
-                );
+            // Increment and add values of prometheus.
+            route_telemetry(&res.status().to_string(), current_seconds);
 
             Ok(res)
         },
