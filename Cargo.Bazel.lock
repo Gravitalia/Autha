@@ -1,5 +1,5 @@
 {
-  "checksum": "7c60d177b04e1edd65d4e8d88fb1bad8d7b3552d7a887b4ef9d2110b4c5178be",
+  "checksum": "523fdfccd35d51115678a76b5eaf2c77aced71fe59ddfdaf22447f273755169a",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -4451,6 +4451,24 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "apache_kafka",
+            "async-trait",
+            "cassandra",
+            "futures-executor",
+            "kafka",
+            "lapin",
+            "log",
+            "logging",
+            "memcache",
+            "memcached",
+            "rabbitmq",
+            "scylla",
+            "serde"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -7527,7 +7545,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "socket2 0.4.10",
+              "id": "socket2 0.5.5",
               "target": "socket2"
             },
             {

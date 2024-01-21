@@ -5,12 +5,19 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
-async-trait = "0.1"
-lapin = "2.3"
-log = "0.4"
+async-trait = { version = "0.1", optional = true }
+lapin = { version = "2.3", optional = true }
+log = { version = "0.4", optional = true }
 r2d2 = "0.8"
-memcache = "0.17"
-scylla = "0.11"
-kafka = "0.10"
-serde = { version = "1", features = ["derive"] }
-futures-executor = "0"
+memcache = { version = "0.17", optional = true }
+scylla = { version = "0.11", optional = true }
+kafka = { version = "0.10", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+futures-executor = { version = "0", optional = true }
+
+[features]
+logging = ["log"]
+rabbitmq = ["async-trait", "lapin", "futures-executor"]
+apache_kafka = ["kafka"]
+memcached = ["memcache"]
+cassandra = ["async-trait", "scylla", "serde"]

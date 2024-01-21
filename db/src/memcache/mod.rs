@@ -40,7 +40,11 @@ pub trait MemcacheManager {
     /// Get data from a given key.
     fn get<T: ToString>(&self, key: T) -> Result<Option<String>>;
     /// Set data in Memcached and return the key.
-    fn set<T: ToString, V: Into<SetValue> + Clone>(&self, key: T, value: V) -> Result<String>;
+    fn set<T: ToString, V: Into<SetValue> + Clone>(
+        &self,
+        key: T,
+        value: V,
+    ) -> Result<String>;
     /// Delete data based on the key.
     fn delete<T: ToString>(&self, key: T) -> Result<()>;
 }
@@ -54,41 +58,56 @@ impl MemcacheManager for MemcachePool {
             .ok_or_else(|| anyhow!("No connection pool"))?
             .get()
             .map_err(|error| {
+                #[cfg(feature = "logging")]
                 log::error!("Error while getting connection: {:?}", error);
+
                 error
             })?;
 
         connection
             .get(&key.to_string())
             .map(|data| {
+                #[cfg(feature = "logging")]
                 log::trace!("Cache data got with key {}", key.to_string());
                 data
             })
             .map_err(|error| {
+                #[cfg(feature = "logging")]
                 log::error!("Error while retrieving data: {:?}", error);
                 error.into()
             })
     }
 
     /// Store data in Memcached and return the key.
-    fn set<T: ToString, V: Into<SetValue> + Clone>(&self, key: T, value: V) -> Result<String> {
+    fn set<T: ToString, V: Into<SetValue> + Clone>(
+        &self,
+        key: T,
+        value: V,
+    ) -> Result<String> {
         let connection = self
             .connection
             .as_ref()
             .ok_or_else(|| anyhow!("No connection pool"))?
             .get()
             .map_err(|error| {
+                #[cfg(feature = "logging")]
                 log::error!("Error while getting connection: {:?}", error);
+
                 error
             })?;
 
         let result = match value.clone().into() {
-            SetValue::Characters(data) => connection.set(&key.to_string(), data, 300),
-            SetValue::Number(data) => connection.set(&key.to_string(), data, 300),
+            SetValue::Characters(data) => {
+                connection.set(&key.to_string(), data, 300)
+            },
+            SetValue::Number(data) => {
+                connection.set(&key.to_string(), data, 300)
+            },
         };
 
         result
             .map(move |_| {
+                #[cfg(feature = "logging")]
                 log::trace!(
                     "Cache data set with key {} and content as {:?}",
                     key.to_string(),
@@ -97,7 +116,9 @@ impl MemcacheManager for MemcachePool {
                 key.to_string()
             })
             .map_err(|error| {
+                #[cfg(feature = "logging")]
                 log::error!("Error while setting data: {:?}", error);
+
                 error.into()
             })
     }
@@ -110,16 +131,20 @@ impl MemcacheManager for MemcachePool {
             .ok_or_else(|| anyhow!("No connection pool"))?
             .get()
             .map_err(|error| {
+                #[cfg(feature = "logging")]
                 log::error!("Error while getting connection: {:?}", error);
+
                 error
             })?;
 
         connection
             .delete(&key.to_string())
             .map(move |_| {
+                #[cfg(feature = "logging")]
                 log::trace!("Cache deleted with key {}", key.to_string());
             })
             .map_err(|error| {
+                #[cfg(feature = "logging")]
                 log::error!("Error while deleting data: {:?}", error);
                 error
             })?;
@@ -129,7 +154,10 @@ impl MemcacheManager for MemcachePool {
 }
 
 /// Initialize the connection pool for Memcached.
-pub fn init(hosts: Vec<String>, pool_size: u32) -> Result<Pool<MemcacheConnectionManager>> {
+pub fn init(
+    hosts: Vec<String>,
+    pool_size: u32,
+) -> Result<Pool<MemcacheConnectionManager>> {
     let manager = pool::MemcacheConnectionManager::new(format!(
         "memcache://{}?timeout=2&use_udp=true",
         hosts[0]

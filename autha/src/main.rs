@@ -113,6 +113,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
             log::error!("You have declared Kafka and RabbitMQ. Only a broker message can be used. No broker messages will be started, and other services will receive no data.");
             Arc::new(db::broker::empty())
         },
+        #[cfg(feature = "kafka")]
         (Some(kafka_conn), None) => {
             match db::broker::with_kafka(
                 kafka_conn.hosts.clone(),
@@ -128,6 +129,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
                 },
             }
         },
+        #[cfg(feature = "rabbitmq")]
         (None, Some(rabbit_conn)) => {
             match db::broker::with_rabbitmq(
                 rabbit_conn.hosts.clone(),

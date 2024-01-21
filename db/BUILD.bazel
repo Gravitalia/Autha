@@ -7,6 +7,13 @@ rust_library(
     name = "db",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
+    crate_features = [
+        "logging",
+        "rabbitmq",
+        "apache_kafka",
+        "memcached",
+        "cassandra",
+    ],
     deps = all_crate_deps(
         normal = True,
     ),

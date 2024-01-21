@@ -24,6 +24,9 @@ rust_binary(
     name = "autha",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
+    crate_features = [
+        "kafka",
+    ],
     deps = CUSTOM_CRATES + all_crate_deps(
         normal = True,
     ),
