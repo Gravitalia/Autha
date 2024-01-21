@@ -48,7 +48,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     if let Some(url) = config.jaeger_url {
         log::info!("Tracing requests activated with Jaeger.");
         helpers::telemetry::init_tracer(&url)?;
-        opentelemetry::global::tracer("tracing-jaeger")
+        opentelemetry::global::tracer("tracing-jaeger");
     }
 
     // Initialize databases.
