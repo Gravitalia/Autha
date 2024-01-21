@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use anyhow::Result;
 
 /// `kafka` module contains functionalities related to Kafka communication.
