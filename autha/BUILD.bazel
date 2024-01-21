@@ -25,7 +25,7 @@ rust_binary(
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
     crate_features = [
-        "kafka"
+        "kafka",
     ],
     deps = CUSTOM_CRATES + all_crate_deps(
         normal = True,
