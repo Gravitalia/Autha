@@ -20,7 +20,9 @@ pub trait KafkaManager {
 impl KafkaManager for KafkaPool {
     fn publish(&self, topic: &str, content: &str) -> Result<()> {
         let mut connection = self.connection.get().map_err(|error| {
+            #[cfg(feature = "logging")]
             log::error!("Error while getting connection: {:?}", error);
+
             error
         })?;
 
@@ -32,17 +34,26 @@ impl KafkaManager for KafkaPool {
                 value: content,
             })
             .map(|_| {
+                #[cfg(feature = "logging")]
                 log::trace!("Message sent to topic {} with Kafka", topic);
             })
             .map_err(|error| {
-                log::error!("Error during message broking with Kafka: {:?}", error);
+                #[cfg(feature = "logging")]
+                log::error!(
+                    "Error during message broking with Kafka: {:?}",
+                    error
+                );
+
                 error.into()
             })
     }
 }
 
 /// Initialize the connection pool for Kafka.
-pub(super) fn init(hosts: Vec<String>, pool_size: u32) -> Result<Pool<KafkaConnectionManager>> {
+pub(super) fn init(
+    hosts: Vec<String>,
+    pool_size: u32,
+) -> Result<Pool<KafkaConnectionManager>> {
     let manager = pool::KafkaConnectionManager::new(hosts);
 
     Ok(pool::r2d2::Pool::builder()

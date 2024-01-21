@@ -1,11 +1,15 @@
 use anyhow::Result;
 
 /// `kafka` module contains functionalities related to Kafka communication.
+#[cfg(feature = "apache_kafka")]
 pub mod kafka;
 /// `rabbitmq` module contains functionalities related to RabbitMQ communication.
+#[cfg(feature = "rabbitmq")]
 pub mod rabbitmq;
 
+#[cfg(feature = "apache_kafka")]
 use crate::broker::kafka::KafkaPool;
+#[cfg(feature = "rabbitmq")]
 use crate::broker::rabbitmq::RabbitPool;
 use std::sync::Arc;
 
@@ -13,8 +17,10 @@ use std::sync::Arc;
 #[derive(Default, Clone)]
 pub enum Broker {
     /// Stores a Kafka pool of connections.
+    #[cfg(feature = "apache_kafka")]
     Kafka(KafkaPool),
     /// Stores a RabbitMQ pool of connections.
+    #[cfg(feature = "rabbitmq")]
     RabbitMQ(RabbitPool),
     /// Stores a non-connected broker.
     #[default]
@@ -45,6 +51,7 @@ pub fn empty() -> Broker {
 /// # Returns
 ///
 /// A Result containing a new instance of `Broker` with a Kafka connection pool.
+#[cfg(feature = "apache_kafka")]
 pub fn with_kafka(hosts: Vec<String>, pool_size: u32) -> Result<Broker> {
     Ok(Broker::Kafka(KafkaPool {
         connection: kafka::init(hosts, pool_size)?,
@@ -61,6 +68,7 @@ pub fn with_kafka(hosts: Vec<String>, pool_size: u32) -> Result<Broker> {
 /// # Returns
 ///
 /// A Result containing a new instance of `Broker` with a RabbitMQ connection pool.
+#[cfg(feature = "rabbitmq")]
 pub fn with_rabbitmq(hosts: Vec<String>, pool_size: u32) -> Result<Broker> {
     Ok(Broker::RabbitMQ(RabbitPool {
         connection: rabbitmq::init(hosts, pool_size)?,

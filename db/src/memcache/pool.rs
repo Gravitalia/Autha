@@ -11,7 +11,9 @@ impl MemcacheConnectionManager {
     ///
     /// See `memcache::Connection::connect` for a description of the parameter
     /// types.
-    pub fn new<C: memcache::Connectable>(target: C) -> MemcacheConnectionManager {
+    pub fn new<C: memcache::Connectable>(
+        target: C,
+    ) -> MemcacheConnectionManager {
         MemcacheConnectionManager {
             urls: target.get_urls(),
         }
@@ -26,7 +28,10 @@ impl r2d2::ManageConnection for MemcacheConnectionManager {
         memcache::Client::connect(self.urls.clone())
     }
 
-    fn is_valid(&self, connection: &mut memcache::Client) -> Result<(), MemcacheError> {
+    fn is_valid(
+        &self,
+        connection: &mut memcache::Client,
+    ) -> Result<(), MemcacheError> {
         match connection.version() {
             Ok(_) => Ok(()),
             Err(error) => Err(error),

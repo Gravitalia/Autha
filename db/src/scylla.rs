@@ -2,7 +2,8 @@ use super::model::User;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use scylla::{
-    frame::Compression, transport::session::PoolSize, IntoTypedRows, Session, SessionBuilder,
+    frame::Compression, transport::session::PoolSize, IntoTypedRows, Session,
+    SessionBuilder,
 };
 use std::num::NonZeroUsize;
 
@@ -67,7 +68,8 @@ const CREATE_SALTS_TABLE: &str = r#"
         salt TEXT,
         PRIMARY KEY (id) );
 "#;
-const CREATE_USERS_INDEX_EMAIL: &str = "CREATE INDEX IF NOT EXISTS ON accounts.users ( email );";
+const CREATE_USERS_INDEX_EMAIL: &str =
+    "CREATE INDEX IF NOT EXISTS ON accounts.users ( email );";
 const CREATE_USERS_INDEX_EXPIRE_AT: &str =
     "CREATE INDEX IF NOT EXISTS ON accounts.users ( expire_at );";
 const CREATE_OAUTH_INDEX_USER_ID: &str =

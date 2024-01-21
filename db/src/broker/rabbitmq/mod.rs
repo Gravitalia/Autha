@@ -47,8 +47,14 @@ impl RabbitManager for RabbitPool {
 }
 
 /// Initialize the connection pool for RabbitMQ.
-pub(super) fn init(hosts: Vec<String>, pool_size: u32) -> Result<Pool<LapinConnectionManager>> {
-    let manager = pool::LapinConnectionManager::new(&hosts[0], &ConnectionProperties::default());
+pub(super) fn init(
+    hosts: Vec<String>,
+    pool_size: u32,
+) -> Result<Pool<LapinConnectionManager>> {
+    let manager = pool::LapinConnectionManager::new(
+        &hosts[0],
+        &ConnectionProperties::default(),
+    );
 
     Ok(r2d2::Pool::builder()
         .max_size(pool_size)

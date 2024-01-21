@@ -31,8 +31,11 @@
 /// Handle multiple brokers.
 pub mod broker;
 /// Memcached database handler.
+#[cfg(feature = "memcached")]
 pub mod memcache;
 /// Models requiring databases traits.
+#[cfg(feature = "cassandra")]
 pub mod model;
 /// Scylla database handler.
+#[cfg(feature = "cassandra")]
 pub mod scylla;

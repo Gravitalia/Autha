@@ -10,7 +10,10 @@ pub struct LapinConnectionManager {
 
 impl LapinConnectionManager {
     /// Creates a new `LapinConnectionManager`.
-    pub fn new(amqp_address: &str, conn_properties: &ConnectionProperties) -> Self {
+    pub fn new(
+        amqp_address: &str,
+        conn_properties: &ConnectionProperties,
+    ) -> Self {
         Self {
             amqp_address: amqp_address.to_string(),
             conn_properties: conn_properties.clone(),
@@ -54,7 +57,8 @@ impl r2d2::ManageConnection for LapinConnectionManager {
     }
 
     fn has_broken(&self, conn: &mut Self::Connection) -> bool {
-        let broken_states = vec![ConnectionState::Closed, ConnectionState::Error];
+        let broken_states =
+            vec![ConnectionState::Closed, ConnectionState::Error];
         broken_states.contains(&conn.status().state())
     }
 }
