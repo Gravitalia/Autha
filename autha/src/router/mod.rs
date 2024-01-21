@@ -67,17 +67,6 @@ pub fn with_broker(
     warp::any().map(move || Arc::clone(&broker))
 }
 
-/// Also creates a Warp filter to inject Jaeger into Warp routes.
-/// The atomic Jaeger session is cloned and returned as an outcome of this filter.
-pub fn with_tracing(
-    jaeger: Option<Arc<opentelemetry::global::BoxedTracer>>,
-) -> impl Filter<
-    Extract = (Option<Arc<opentelemetry::global::BoxedTracer>>,),
-    Error = std::convert::Infallible,
-> + Clone {
-    warp::any().map(move || jaeger.clone())
-}
-
 /// Creates a Warp filter increment Prometheus metrics counters.
 pub fn with_metric(
 ) -> impl Filter<Extract = (), Error = std::convert::Infallible> + Clone {
