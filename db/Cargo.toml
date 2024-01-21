@@ -1,16 +1,20 @@
-[package]
-name = "db"
-version = "0.1.0"
-edition = "2021"
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+debug = false
 
-[dependencies]
-anyhow = "1"
-async-trait = "0.1"
-lapin = "2.3"
-log = "0.4"
-r2d2 = "0.8"
-memcache = "0.17"
-scylla = "0.11"
-kafka = "0.10"
-serde = { version = "1", features = ["derive"] }
-futures-executor = "0"
+[profile.dev]
+opt-level = 0
+debug = true
+
+[workspace]
+members = [
+    "autha",
+    "crypto",
+    "db",
+    "image_processor",
+]
+resolver = "2"
