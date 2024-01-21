@@ -1,5 +1,7 @@
 use anyhow::Result;
+#[cfg(feature = "kafka")]
 use db::broker::kafka::KafkaManager;
+#[cfg(feature = "rabbitmq")]
 use db::broker::rabbitmq::RabbitManager;
 use db::broker::Broker;
 use db::memcache::{MemcacheManager, MemcachePool};
@@ -374,6 +376,7 @@ pub async fn update(
         Ok(_) => {
             log::trace!("User {} modified his profile", vanity);
 
+            #[cfg(any(feature = "kafka", feature = "rabbitmq"))]
             let new_user = serde_json::to_string(&User {
                 username,
                 vanity: vanity.clone(),
@@ -388,7 +391,9 @@ pub async fn update(
             })?;
 
             match <std::sync::Arc<Broker> as Into<Broker>>::into(broker) {
+                #[cfg(feature = "kafka")]
                 Broker::Kafka(func) => func.publish("user", &new_user)?,
+                #[cfg(feature = "rabbitmq")]
                 Broker::RabbitMQ(func) => func.publish("user", &new_user).await?,
                 _ => log::warn!("No service has been notified of the change in profile of {}", vanity),
             }
