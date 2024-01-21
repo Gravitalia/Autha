@@ -1,5 +1,5 @@
 {
-  "checksum": "3e17712a581a1ba34697350a28097068d0f922a0ded8b625a9b7ac7ca10840d0",
+  "checksum": "3cb1e9c097906928fc7c40052d0d667f791b104300fb2e8ae9814ab1c15ecb04",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -7545,7 +7545,7 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "socket2 0.4.10",
+              "id": "socket2 0.5.5",
               "target": "socket2"
             },
             {
