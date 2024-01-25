@@ -37,11 +37,6 @@ jobs:
           dir: front
         env:
           NITRO_PRESET: cloudflare
-      #- name: Test
-      #  uses: borales/actions-yarn@v4
-      #  with:
-      #    cmd: test
-      #    dir: front
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
