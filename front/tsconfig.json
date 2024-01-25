@@ -1,4 +1,13 @@
 {
   // https://nuxt.com/docs/guide/concepts/typescript
-  "extends": "./.nuxt/tsconfig.json"
+  "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Node",
+  },
+  "exclude": [
+    "./node_modules",
+    "./node_modules/string-width/index.js",
+    "./node_modules/wide-align/align.js"
+  ]
 }
