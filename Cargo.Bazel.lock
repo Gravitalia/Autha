@@ -1,5 +1,5 @@
 {
-  "checksum": "d13e913d00f6f1a83b43366ffb9fb3278979ea646ed9f80e7514b65c8c34c92b",
+  "checksum": "0a66775e383abbde25c9f6086da317c5df35357893c6749bcb543655ae9cbf4a",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -1543,7 +1543,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "chrono 0.4.31",
+              "id": "chrono 0.4.32",
               "target": "chrono"
             },
             {
@@ -2695,13 +2695,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "chrono 0.4.31": {
+    "chrono 0.4.32": {
       "name": "chrono",
-      "version": "0.4.31",
+      "version": "0.4.32",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/chrono/0.4.31/download",
-          "sha256": "7f2c685bad3eb3d45a01354cedb7d5faa66194d1d58ba6e267a8de788f79db38"
+          "url": "https://crates.io/api/v1/crates/chrono/0.4.32/download",
+          "sha256": "41daef31d7a747c5c847246f36de49ced6f7403b4cdabc807a97b5cc184cda7a"
         }
       },
       "targets": [
@@ -2722,11 +2722,13 @@
         ],
         "crate_features": {
           "common": [
+            "alloc",
             "android-tzdata",
             "clock",
             "default",
             "iana-time-zone",
             "js-sys",
+            "now",
             "oldtime",
             "std",
             "wasm-bindgen",
@@ -2768,14 +2770,14 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-targets 0.48.5",
+                "id": "windows-targets 0.52.0",
                 "target": "windows_targets"
               }
             ]
           }
         },
         "edition": "2021",
-        "version": "0.4.31"
+        "version": "0.4.32"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -3119,7 +3121,7 @@
               "target": "anyhow"
             },
             {
-              "id": "chrono 0.4.31",
+              "id": "chrono 0.4.32",
               "target": "chrono"
             },
             {
@@ -15030,7 +15032,7 @@
               "target": "bytes"
             },
             {
-              "id": "chrono 0.4.31",
+              "id": "chrono 0.4.32",
               "target": "chrono"
             },
             {
