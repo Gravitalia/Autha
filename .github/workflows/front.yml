@@ -22,6 +22,8 @@ jobs:
         with:
           path: front/node_modules
           key: node-${{ hashFiles('front/yarn.lock') }}
+          restore-keys: |
+            node-
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         uses: borales/actions-yarn@v4
