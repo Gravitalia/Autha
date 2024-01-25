@@ -1862,9 +1862,9 @@ checksum = "0e7465ac9959cc2b1404e8e2367b43684a6d13790fe23056cc8c6c5a6b7bcb94"
 
 [[package]]
 name = "memcache"
-version = "0.17.1"
+version = "0.17.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb8f14bdacf7b55e268ebe54ca98c2d419d90e5b9af1ef8481126386c63b95b8"
+checksum = "0396084c5d5e2ef2c480a51933b56e9673898f14657212eebbffcbcc12c7153a"
 dependencies = [
  "byteorder",
  "enum_dispatch",
