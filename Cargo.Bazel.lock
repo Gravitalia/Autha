@@ -1,5 +1,5 @@
 {
-  "checksum": "3c19e6ad7d3db1740be7521f283c1345d5d4270ce188f1e0295ed7101cbbf927",
+  "checksum": "7344332cc468257e8a2c96427157f6578e47d8f8228ace539f801a817400073a",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -1542,7 +1542,7 @@
               "target": "build_script_build"
             },
             {
-              "id": "chrono 0.4.32",
+              "id": "chrono 0.4.33",
               "target": "chrono"
             },
             {
@@ -2694,13 +2694,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "chrono 0.4.32": {
+    "chrono 0.4.33": {
       "name": "chrono",
-      "version": "0.4.32",
+      "version": "0.4.33",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/chrono/0.4.32/download",
-          "sha256": "41daef31d7a747c5c847246f36de49ced6f7403b4cdabc807a97b5cc184cda7a"
+          "url": "https://crates.io/api/v1/crates/chrono/0.4.33/download",
+          "sha256": "9f13690e35a5e4ace198e7beea2895d29f3a9cc55015fcebe6336bd2010af9eb"
         }
       },
       "targets": [
@@ -2776,7 +2776,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.4.32"
+        "version": "0.4.33"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -3120,7 +3120,7 @@
               "target": "anyhow"
             },
             {
-              "id": "chrono 0.4.32",
+              "id": "chrono 0.4.33",
               "target": "chrono"
             },
             {
@@ -15031,7 +15031,7 @@
               "target": "bytes"
             },
             {
-              "id": "chrono 0.4.32",
+              "id": "chrono 0.4.33",
               "target": "chrono"
             },
             {
