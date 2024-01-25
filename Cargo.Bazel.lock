@@ -1,5 +1,5 @@
 {
-  "checksum": "0a66775e383abbde25c9f6086da317c5df35357893c6749bcb543655ae9cbf4a",
+  "checksum": "3c19e6ad7d3db1740be7521f283c1345d5d4270ce188f1e0295ed7101cbbf927",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -147,7 +147,6 @@
         ],
         "crate_features": {
           "common": [
-            "default",
             "perf-literal",
             "std"
           ],
@@ -1579,7 +1578,7 @@
               "target": "prost_types"
             },
             {
-              "id": "regex 1.10.2",
+              "id": "regex 1.10.3",
               "target": "regex"
             },
             {
@@ -3676,7 +3675,7 @@
               "target": "rayon"
             },
             {
-              "id": "regex 1.10.2",
+              "id": "regex 1.10.3",
               "target": "regex"
             },
             {
@@ -4011,7 +4010,7 @@
               "target": "rand"
             },
             {
-              "id": "regex 1.10.2",
+              "id": "regex 1.10.3",
               "target": "regex"
             },
             {
@@ -12709,7 +12708,7 @@
               "target": "prost_types"
             },
             {
-              "id": "regex 1.10.2",
+              "id": "regex 1.10.3",
               "target": "regex"
             },
             {
@@ -13435,13 +13434,13 @@
       },
       "license": "Apache-2.0/MIT"
     },
-    "regex 1.10.2": {
+    "regex 1.10.3": {
       "name": "regex",
-      "version": "1.10.2",
+      "version": "1.10.3",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/regex/1.10.2/download",
-          "sha256": "380b951a9c5e80ddfd6136919eef32310721aa4aacd4889a8d39124b026ab343"
+          "url": "https://crates.io/api/v1/crates/regex/1.10.3/download",
+          "sha256": "b62dbe01f0b06f9d8dc7d49e05a0785f153b00b2c227856282f671e0318c9b15"
         }
       },
       "targets": [
@@ -13493,7 +13492,7 @@
               "target": "memchr"
             },
             {
-              "id": "regex-automata 0.4.3",
+              "id": "regex-automata 0.4.4",
               "target": "regex_automata"
             },
             {
@@ -13504,17 +13503,17 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.10.2"
+        "version": "1.10.3"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "regex-automata 0.4.3": {
+    "regex-automata 0.4.4": {
       "name": "regex-automata",
-      "version": "0.4.3",
+      "version": "0.4.4",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/regex-automata/0.4.3/download",
-          "sha256": "5f804c7828047e88b2d32e2d7fe5a105da8ee3264f01902f796c8e067dc2483f"
+          "url": "https://crates.io/api/v1/crates/regex-automata/0.4.4/download",
+          "sha256": "3b7fa1134405e2ec9353fd416b17f8dacd46c473d7d3fd1cf202706a14eb792a"
         }
       },
       "targets": [
@@ -13578,7 +13577,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.4.3"
+        "version": "0.4.4"
       },
       "license": "MIT OR Apache-2.0"
     },
