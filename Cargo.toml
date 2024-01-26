@@ -1,3 +1,20 @@
+[workspace]
+resolver = "2"
+members = [
+    "autha",
+    "crypto",
+    "db",
+    "image_processor",
+]
+
+[workspace.package]
+version = "3.0.0"
+description = "fast and safe authorization delegation and account management API"
+homepage = "https://account.gravitalia.com"
+readme = "README.md"
+edition = "2021"
+license = "MPL"
+
 [profile.release]
 opt-level = 3
 lto = true
@@ -7,14 +24,11 @@ strip = true
 debug = false
 
 [profile.dev]
-opt-level = 0
+opt-level = "z"
 debug = true
 
-[workspace]
-members = [
-    "autha",
-    "crypto",
-    "db",
-    "image_processor",
-]
-resolver = "2"
+[profile.dev.package.crypto]
+opt-level = 3
+
+[profile.bench.package.crypto]
+opt-level = 3
