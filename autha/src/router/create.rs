@@ -7,7 +7,7 @@ use warp::reply::{Json, WithStatus};
 use crate::helpers;
 
 const MAX_USERNAME_LENGTH: u8 = 25;
-pub(super) const MIN_PASSWORD_LENGTH: u8 = 25;
+pub(super) const MIN_PASSWORD_LENGTH: u8 = 8;
 const INVALID_VANITY: [&str; 14] = [
     "explore",
     "callback",
