@@ -53,6 +53,9 @@ oci.pull(
     name = "distroless_cc",
     tag = "latest",
     image = "gcr.io/distroless/cc",
-    platforms = ["linux/arm64/v8"],
+    platforms = platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
 )
 use_repo(oci, "distroless_cc")
