@@ -1,0 +1,58 @@
+module(
+    name = "autha",
+    version = "1.0",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.5.0")
+
+# Protobuf support.
+bazel_dep(name = "rules_proto", version = "6.0.0-rc1")
+
+proto = use_extension("@rules_proto//proto:repositories.bzl", "proto")
+proto.dependencies()
+proto.toolchain()
+
+# Rust support.
+bazel_dep(name = "rules_rust", version = "0.38.0")
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(edition = "2021")
+use_repo(
+    rust,
+    "rust_toolchains",
+)
+
+register_toolchains("@rust_toolchains//:all")
+
+crate = use_extension("@rules_rust//rust:extensions.bzl", "crate")
+crate.from_cargo(
+    name = "crate_index",
+    cargo_lockfile = "//:Cargo.lock",
+    lockfile = "//:Cargo.Bazel.lock",
+    manifests = [
+        "//:Cargo.toml",
+        "//autha:Cargo.toml",
+        "//crypto:Cargo.toml",
+        "//db:Cargo.toml",
+        "//image_processor:Cargo.toml",
+    ],
+)
+
+# OCI support.
+bazel_dep(name = "rules_pkg", version = "0.9.1")
+bazel_dep(name = "rules_oci", version = "1.6.0")
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+oci.toolchains(
+    name = "oci",
+    crane_version = "v0.17.0",
+    zot_version = "",
+)
+
+oci.pull(
+    name = "distroless_cc",
+    tag = "latest",
+    image = "gcr.io/distroless/cc",
+    platforms = ["linux/arm64/v8"],
+)
+use_repo(oci, "distroless_cc")
