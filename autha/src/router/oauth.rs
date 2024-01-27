@@ -4,6 +4,8 @@ use db::scylla::Scylla;
 use std::sync::Arc;
 use warp::reply::{Json, WithStatus};
 
+const VALID_SCOPE: [&str; 1] = ["identity"];
+
 /// Route to create an authorization code to obtain an access token.
 pub async fn create(
     scylla: Arc<Scylla>,
@@ -18,14 +20,11 @@ pub async fn create(
         },
     };
 
-    let user =
-        match crate::router::users::get_user(&scylla, &memcached, &id).await {
-            Ok(user) => user,
-            Err(error) => {
-                log::error!("Failed retrieving user: {}", error);
-                return Ok(super::err(super::INTERNAL_SERVER_ERROR));
-            },
-        };
+    // Check if scopes are valid.
+    let scopes: Vec<&str> = query.scope.split("%20").collect();
+    if !scopes.iter().all(|scope| VALID_SCOPE.contains(&scope)) {
+        return Ok(super::err("Invalid scope"));
+    }
 
     let bot = scylla
         .connection
@@ -55,7 +54,7 @@ pub async fn create(
 
     memcached.set(
         &id,
-        format!("{}+{}+{}", query.client_id, query.redirect_uri, user.vanity),
+        format!("{}+{}+{}", query.client_id, query.redirect_uri, id),
     )?;
 
     Ok(warp::reply::with_status(
