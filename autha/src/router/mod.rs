@@ -1,5 +1,6 @@
 pub mod create;
 pub mod login;
+pub mod oauth;
 pub mod users;
 
 use db::{memcache::MemcachePool, scylla::Scylla};
@@ -20,6 +21,7 @@ const INVALID_TOKEN: &str = "Invalid token";
 const INVALID_USERNAME: &str = "Invalid username";
 const INVALID_BIRTHDATE: &str = "Too young";
 const INVALID_PHONE: &str = "Invalid phone";
+const INVALID_BOT: &str = "Invalid client_id";
 
 /// Define errors
 #[derive(Debug)]
