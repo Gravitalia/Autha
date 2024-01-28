@@ -56,3 +56,19 @@ pub struct UserPatch {
     /// Require password field.
     pub mfa: Option<String>,
 }
+
+/// Represents the body structure for create access token.
+#[derive(Deserialize)]
+#[allow(dead_code)]
+pub struct OAuth {
+    /// Application (bot) vanity/unique identifier.
+    pub client_id: String,
+    /// Application (bot) secret key.
+    pub client_secret: String,
+    /// Temporary authorization code created before.
+    pub code: String,
+    /// Must be authorization_code.
+    grant_type: String,
+    /// Redirect URL to be followed by the user.
+    pub redirect_uri: String,
+}
