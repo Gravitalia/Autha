@@ -54,7 +54,10 @@ pub async fn create(
 
     memcached.set(
         &id,
-        format!("{}+{}+{}", query.client_id, query.redirect_uri, vanity),
+        format!(
+            "{}+{}+{}+{}",
+            query.client_id, query.redirect_uri, vanity, query.scope
+        ),
     )?;
 
     Ok(warp::reply::with_status(
@@ -63,5 +66,87 @@ pub async fn create(
             message: id,
         }),
         warp::http::StatusCode::OK,
+    ))
+}
+
+pub async fn get_token(
+    scylla: Arc<Scylla>,
+    memcached: MemcachePool,
+    body: crate::model::body::OAuth,
+) -> Result<WithStatus<Json>> {
+    let data = match memcached.get(&body.code)? {
+        Some(r) => Vec::from_iter(r.split('+').map(|x| x.to_string())),
+        None => vec![],
+    };
+
+    // If no code exists, return an error.
+    if data.is_empty() {
+        return Ok(super::err("Invalid code"));
+    }
+
+    let (client_id, redirect_uri, user_id, scope) = match data.as_slice() {
+        [client_id, redirect_uri, user_id, scope] => {
+            (client_id, redirect_uri, user_id, scope)
+        },
+        _ => return Ok(super::err(super::INTERNAL_SERVER_ERROR)),
+    };
+
+    if &body.client_id != client_id {
+        return Ok(super::err(super::INVALID_BOT));
+    }
+
+    let bot = scylla
+        .connection
+        .query(
+            "SELECT deleted, redirect_url, client_secret FROM accounts.bots WHERE id = ?",
+            vec![client_id],
+        )
+        .await?
+        .rows_typed::<(bool, Vec<String>, String)>()?
+        .collect::<Vec<_>>();
+
+    // Check if bot still exists.
+    if bot.is_empty() {
+        return Ok(super::err(super::INVALID_BOT));
+    }
+
+    let (deleted, redirect_uris, client_secret) =
+        bot[0].clone().unwrap();
+
+    if deleted {
+        return Ok(super::err("Bot has been deleted"));
+    }
+    // Also check if redirect_uri is still valid.
+    // This can be useful in cases where an intruder has modified the redirection
+    // URLs and the developer has become aware of this.
+    else if redirect_uris.iter().any(|x| x == &body.redirect_uri)
+        && redirect_uris.iter().any(|x| x == redirect_uri)
+    {
+        return Ok(super::err("Invalid redirect_uri"));
+    } else if client_secret != body.client_secret {
+        return Ok(super::err("Invalid client_secret"));
+    }
+
+    // Deleted used authorization code.
+    memcached.delete(body.code)?;
+
+    // Create access token.
+    let (expires_in, access_token) = crate::helpers::token::create_jwt(
+        user_id.to_string(),
+        scope.split_whitespace().map(|x| x.to_string()).collect(),
+    )?;
+
+    // To do: `INSERT INTO accounts.oauth ( id, user_id, bot_id, scope, deleted ) VALUES (?, ?, ?, ?, ?)`
+    // To do: refresh token.
+
+    Ok(warp::reply::with_status(
+        warp::reply::json(&crate::model::response::AccessToken {
+            access_token,
+            expires_in,
+            refresh_token: String::default(),
+            refresh_token_expires_in: 0,
+            scope: scope.to_string(),
+        }),
+        warp::http::StatusCode::CREATED,
     ))
 }
