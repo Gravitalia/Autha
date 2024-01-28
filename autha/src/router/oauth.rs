@@ -13,7 +13,7 @@ pub async fn create(
     query: crate::model::query::OAuth,
     token: String,
 ) -> Result<WithStatus<Json>> {
-    let id = match crate::helpers::token::get(&scylla, &token).await {
+    let vanity = match crate::helpers::token::get(&scylla, &token).await {
         Ok(vanity) => vanity,
         Err(_) => {
             return Ok(super::err(super::INVALID_TOKEN));
@@ -54,7 +54,7 @@ pub async fn create(
 
     memcached.set(
         &id,
-        format!("{}+{}+{}", query.client_id, query.redirect_uri, id),
+        format!("{}+{}+{}", query.client_id, query.redirect_uri, vanity),
     )?;
 
     Ok(warp::reply::with_status(
