@@ -227,3 +227,25 @@ pub async fn create_token(
         Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }
+
+/// Handler of route to get access token after created authorization token.
+#[inline]
+pub async fn access_token(
+    scylla: Arc<Scylla>,
+    memcached: MemcachePool,
+    body: crate::model::body::OAuth,
+) -> Result<Response, Rejection> {
+    let current_seconds = crate::helpers::get_current_seconds();
+
+    match oauth::get_token(scylla, memcached, body).await {
+        Ok(r) => {
+            let res = r.into_response();
+
+            // Increment and add values of prometheus.
+            route_telemetry(&res.status().to_string(), current_seconds);
+
+            Ok(res)
+        },
+        Err(_) => Err(warp::reject::custom(UnknownError)),
+    }
+}
