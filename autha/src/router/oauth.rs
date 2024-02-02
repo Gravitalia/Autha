@@ -22,7 +22,7 @@ pub async fn create(
 
     // Check if scopes are valid.
     let scopes: Vec<&str> = query.scope.split("%20").collect();
-    if !scopes.iter().all(|scope| VALID_SCOPE.contains(&scope)) {
+    if !scopes.iter().all(|scope| VALID_SCOPE.contains(scope)) {
         return Ok(super::err("Invalid scope"));
     }
 
@@ -69,6 +69,7 @@ pub async fn create(
     ))
 }
 
+/// Get a json web token (JWT) access token from authorization code.
 pub async fn get_token(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
@@ -110,8 +111,7 @@ pub async fn get_token(
         return Ok(super::err(super::INVALID_BOT));
     }
 
-    let (deleted, redirect_uris, client_secret) =
-        bot[0].clone().unwrap();
+    let (deleted, redirect_uris, client_secret) = bot[0].clone().unwrap();
 
     if deleted {
         return Ok(super::err("Bot has been deleted"));
