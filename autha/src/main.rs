@@ -218,6 +218,15 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .and(warp::header::<String>("authorization"))
         .and(warp::query::<model::query::OAuth>())
         .and_then(router::create_token);
+    
+    let access_token = warp::path("oauth2")
+        .and(warp::path("token"))
+        .and(warp::post())
+        .and(router::with_metric())
+        .and(router::with_scylla(Arc::clone(&scylladb)))
+        .and(router::with_memcached(memcached_pool.clone()))
+        .and(warp::body::json())
+        .and_then(router::access_token);
 
     #[cfg(feature = "telemetry")]
     let metrics =
@@ -236,6 +245,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
                 .or(get_user_route)
                 .or(update_user_route)
                 .or(create_oauth)
+                .or(access_token)
                 .or(metrics)),
     )
     .run(([0, 0, 0, 0], config.port))
