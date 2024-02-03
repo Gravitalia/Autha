@@ -130,13 +130,16 @@ pub async fn get_token(
     // Deleted used authorization code.
     memcached.delete(body.code)?;
 
+    let scopes: Vec<String> = scope.split_whitespace().map(|x| x.to_string()).collect();
+
     // Create access token.
     let (expires_in, access_token) = crate::helpers::token::create_jwt(
         user_id.to_string(),
-        scope.split_whitespace().map(|x| x.to_string()).collect(),
+        scopes.clone(),
     )?;
 
-    // To do: `INSERT INTO accounts.oauth ( id, user_id, bot_id, scope, deleted ) VALUES (?, ?, ?, ?, ?)`
+    scylla.connection.query("INSERT INTO accounts.oauth ( id, user_id, bot_id, scope, deleted ) VALUES (?, ?, ?, ?, ?)", (&access_token, &user_id, &client_id, scopes, false)).await?;
+
     // To do: refresh token.
 
     Ok(warp::reply::with_status(
