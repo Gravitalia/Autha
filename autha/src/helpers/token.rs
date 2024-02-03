@@ -1,3 +1,4 @@
+use super::queries::CREATE_TOKEN;
 use anyhow::{bail, Result};
 use db::scylla::Scylla;
 use jsonwebtoken::{
@@ -39,14 +40,6 @@ pub async fn create(
         .expect("Time went backwards")
         .as_millis() as i64;
 
-    // Use prepared query to properly balance.
-    let insert_token_query = scylla
-    .connection
-    .prepare(
-        "INSERT INTO accounts.tokens (id, user_id, ip, date, deleted) VALUES (?, ?, ?, ?, false)"
-    )
-    .await?;
-
     // Encrypt IP adress before save it.
     let (nonce, encrypted) =
         crypto::encrypt::chacha20_poly1305(ip.as_bytes().to_vec())?;
@@ -60,18 +53,22 @@ pub async fn create(
         )
         .await?;
 
-    scylla
-        .connection
-        .execute(
-            &insert_token_query,
-            (
-                &id,
-                &user_id,
-                &format!("{}//{}", uuid, encrypted),
-                &timestamp,
-            ),
-        )
-        .await?;
+    if let Some(query) = CREATE_TOKEN.get() {
+        scylla
+            .connection
+            .execute(
+                query,
+                (
+                    &id,
+                    &user_id,
+                    &format!("{}//{}", uuid, encrypted),
+                    db::libscylla::frame::value::CqlTimestamp(timestamp),
+                ),
+            )
+            .await?;
+    } else {
+        log::error!("Prepared queries do not appear to be initialized.");
+    }
 
     Ok(id)
 }
