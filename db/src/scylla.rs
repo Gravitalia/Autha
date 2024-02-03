@@ -120,14 +120,6 @@ pub trait ScyllaManager {
 impl ScyllaManager for Scylla {
     /// Create tables on "accounts" keyspace.
     async fn create_tables(&self) -> Result<()> {
-        let get_user = self
-        .connection
-        .prepare(
-            "SELECT username, vanity, avatar, bio, email, birthdate, phone, verified, deleted, flags FROM accounts.users WHERE vanity = ?"
-        )
-        .await?;
-        GET_USER.get_or_init(|| get_user);
-
         for table in TABLES_TO_CREATE.iter() {
             self.connection
                 .query(table.to_string(), &[])
@@ -141,6 +133,14 @@ impl ScyllaManager for Scylla {
                 .await
                 .context(format!("Failed to create index: {}", index))?;
         }
+
+        let get_user = self
+            .connection
+            .prepare(
+                "SELECT username, vanity, avatar, bio, email, birthdate, phone, verified, deleted, flags FROM accounts.users WHERE vanity = ?"
+            )
+            .await?;
+            GET_USER.get_or_init(|| get_user);
 
         Ok(())
     }
