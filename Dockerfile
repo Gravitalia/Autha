@@ -10,7 +10,7 @@ COPY ./Cargo.toml ./Cargo.toml
 COPY ./autha ./autha
 COPY ./crypto ./crypto
 COPY ./db ./db
-#COPY ./build.rs ./build.rs
+COPY ./image_processor ./image_processor
 
 RUN cargo build --release
 
