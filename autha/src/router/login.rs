@@ -18,7 +18,9 @@ pub async fn handle(
         return Ok(super::err(super::INVALID_EMAIL));
     }
 
-    if (body.password.len() as u8) < MIN_PASSWORD_LENGTH && !PASSWORD.is_match(&body.password) {
+    if (body.password.len() as u8) < MIN_PASSWORD_LENGTH
+        && !PASSWORD.is_match(&body.password)
+    {
         return Ok(super::err(super::INVALID_PASSWORD));
     }
 
@@ -46,7 +48,9 @@ pub async fn handle(
     }
 
     // Increment the rate limit counter.
-    if let Err(error) = memcached.set(format!("account_login_{}", hashed_ip), rate_limit + 1) {
+    if let Err(error) =
+        memcached.set(format!("account_login_{}", hashed_ip), rate_limit + 1)
+    {
         log::warn!("Cannot set global rate limiter when create. This could lead to massive spam! Error: {}", error)
     }
 
@@ -67,19 +71,23 @@ pub async fn handle(
                     if !res {
                         return Ok(super::err(super::INVALID_TURNSTILE));
                     }
-                }
+                },
                 Err(error) => {
-                    log::error!("Cannot make Cloudflare Turnstile request: {}", error);
+                    log::error!(
+                        "Cannot make Cloudflare Turnstile request: {}",
+                        error
+                    );
                     return Ok(super::err(super::INTERNAL_SERVER_ERROR));
-                }
+                },
             }
         } else {
             return Ok(super::err(super::INVALID_TURNSTILE));
         }
     }
 
-    let hashed_email =
-        crypto::encrypt::format_preserving_encryption(body.email.encode_utf16().collect())?;
+    let hashed_email = crypto::encrypt::format_preserving_encryption(
+        body.email.encode_utf16().collect(),
+    )?;
 
     let rows = scylla
         .connection
@@ -88,7 +96,7 @@ pub async fn handle(
             vec![&hashed_email],
         )
         .await?
-        .rows_typed::<(String, String, bool, Option<String>, i64, String)>()?
+        .rows_typed::<(String, String, bool, String, i64, String)>()?
         .collect::<Vec<_>>();
 
     // Check if email is in use. Otherwise return error.
@@ -96,7 +104,8 @@ pub async fn handle(
         return Ok(super::err(super::INVALID_EMAIL));
     }
 
-    let (vanity, password, deleted, mfa, expire, locale) = rows[0].clone().unwrap();
+    let (vanity, password, deleted, mfa, expire, locale) =
+        rows[0].clone().unwrap_or_default();
 
     // Check if account is deleted or even suspended.
     let timestamp_ms: i64 = SystemTime::now()
@@ -117,17 +126,25 @@ pub async fn handle(
     }
 
     // Check if passwords are matching.
-    if !crypto::hash::check_argon2(password, body.password.as_bytes(), vanity.as_bytes())? {
+    if !crypto::hash::check_argon2(
+        password,
+        body.password.as_bytes(),
+        vanity.as_bytes(),
+    )? {
         return Ok(crate::router::err(super::INVALID_PASSWORD));
     }
 
+    println!("mFA: {:?}", mfa);
+
     // Check multifactor authentification.
-    if let Some(code) = mfa {
+    if !mfa.is_empty() {
         if body.mfa.is_none() {
             return Ok(crate::router::err("MFA required"));
         }
 
-        let (salt, cypher) = code.split_once("//").unwrap_or(("", ""));
+        println!("here");
+
+        let (salt, cypher) = mfa.split_once("//").unwrap_or(("", ""));
 
         let res = scylla
             .connection
@@ -141,6 +158,8 @@ pub async fn handle(
             return Ok(super::err(super::INTERNAL_SERVER_ERROR));
         }
 
+        println!("here 2");
+
         let nonce: [u8; 12] = hex::decode(
             res[0].columns[0]
                 .as_ref()
@@ -150,12 +169,17 @@ pub async fn handle(
         )?
         .try_into()
         .unwrap_or_default();
+        println!("here 3");
 
         // Save MFA code in clear, not in base32 => for generate key, use helpers::random_string with 10 as length
         if totp_lite::totp_custom::<totp_lite::Sha1>(
             30,
             6,
-            crypto::decrypt::chacha20_poly1305(nonce, cypher.as_bytes().to_vec())?.as_ref(),
+            crypto::decrypt::chacha20_poly1305(
+                nonce,
+                cypher.as_bytes().to_vec(),
+            )?
+            .as_ref(),
             SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
         ) != body.mfa.unwrap_or_default()
         {
@@ -163,12 +187,13 @@ pub async fn handle(
         }
     }
 
-    let token = match crate::helpers::token::create(&scylla, &vanity, ip).await {
+    let token = match crate::helpers::token::create(&scylla, &vanity, ip).await
+    {
         Ok(res) => res,
         Err(error) => {
             log::error!("Cannot create user token: {}", error);
             return Ok(super::err("Cannot create token"));
-        }
+        },
     };
 
     Ok(warp::reply::with_status(
