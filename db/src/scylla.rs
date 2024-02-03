@@ -9,7 +9,7 @@ use std::num::NonZeroUsize;
 use std::sync::OnceLock;
 
 /// Prepared query to get user faster.
-pub static GET_USER: OnceLock<PreparedStatement> = OnceLock::new();
+static GET_USER: OnceLock<PreparedStatement> = OnceLock::new();
 
 // Define constants for table creation and queries.
 const CREATE_USERS_TABLE: &str = r#"
