@@ -28,6 +28,9 @@
 //! };
 //! ```
 
+#[cfg(feature = "cassandra")]
+pub extern crate scylla as libscylla;
+
 /// Handle multiple brokers.
 pub mod broker;
 /// Memcached database handler.
