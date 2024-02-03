@@ -82,6 +82,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         },
     };
 
+    helpers::queries::init(&scylladb).await?;
+
     let memcached_pool = match db::memcache::init(
         config.database.memcached.hosts,
         config.database.memcached.pool_size,
