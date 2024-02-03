@@ -32,3 +32,6 @@ opt-level = 3
 
 [profile.bench.package.crypto]
 opt-level = 3
+
+[profile.release.package.image_processor]
+opt-level = "z"
