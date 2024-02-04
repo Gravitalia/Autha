@@ -21,7 +21,7 @@
           ];
 
           buildInputs = with pkgs;
-            [ rustc cargo gcc clippy openssl protobuf libiconv bazel ];
+            [ rustc cargo rustfmt gcc clippy openssl protobuf libiconv bazel_6 bazel-buildtools ];
         };
       }
     );
