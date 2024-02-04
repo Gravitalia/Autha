@@ -23,12 +23,6 @@
 //!     },
 //! );
 //! ```
-/// Encode image to selected format.
-/// Possible encoder are: WebP.
-pub mod encoder;
-/// Manage exif of an image.
-/// You can delete, get or update it.
-pub mod exif;
 /// Publish an image into a selected host.
 /// Hosts are: Cloudinary, S3.
 pub mod host;
@@ -45,12 +39,10 @@ pub async fn resize_and_upload(
     buffer: &[u8],
     width: Option<u32>,
     height: Option<u32>,
-    quality: Option<f32>,
     credentials: host::cloudinary::Credentials,
 ) -> Result<String> {
     let resized = resizer::resize(buffer, width, height)?;
-    let encoded = encoder::encode_webp(resized.buffer(), quality)?;
-    let public_id = host::cloudinary::upload(credentials, &encoded).await?;
+    let public_id = host::cloudinary::upload(credentials, resized.buffer()).await?;
 
     Ok(public_id)
 }
