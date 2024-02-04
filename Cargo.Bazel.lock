@@ -1,5 +1,5 @@
 {
-  "checksum": "64ed5dc439964c979ad4dcc6a28a4727daebcc423f3aa33082ea937f1556acac",
+  "checksum": "de1642dc28bb21729fcbd3e923b8ac6b5f7ca6631659c2d26e6e0be1c7264481",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -1594,7 +1594,7 @@
               "target": "serde_json"
             },
             {
-              "id": "serde_yaml 0.9.30",
+              "id": "serde_yaml 0.9.31",
               "target": "serde_yaml"
             },
             {
@@ -6657,7 +6657,7 @@
               "target": "http"
             },
             {
-              "id": "indexmap 2.1.0",
+              "id": "indexmap 2.2.2",
               "target": "indexmap"
             },
             {
@@ -8049,13 +8049,13 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
-    "indexmap 2.1.0": {
+    "indexmap 2.2.2": {
       "name": "indexmap",
-      "version": "2.1.0",
+      "version": "2.2.2",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/indexmap/2.1.0/download",
-          "sha256": "d530e1a18b1cb4c484e6e34556a0d948706958449fca0cab753d649f2bce3d1f"
+          "url": "https://crates.io/api/v1/crates/indexmap/2.2.2/download",
+          "sha256": "824b2ae422412366ba479e8111fd301f7b5faece8149317bb81925979a53f520"
         }
       },
       "targets": [
@@ -8095,7 +8095,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.1.0"
+        "version": "2.2.2"
       },
       "license": "Apache-2.0 OR MIT"
     },
@@ -11598,7 +11598,7 @@
               "target": "fixedbitset"
             },
             {
-              "id": "indexmap 2.1.0",
+              "id": "indexmap 2.2.2",
               "target": "indexmap"
             }
           ],
@@ -15639,13 +15639,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "serde_yaml 0.9.30": {
+    "serde_yaml 0.9.31": {
       "name": "serde_yaml",
-      "version": "0.9.30",
+      "version": "0.9.31",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/serde_yaml/0.9.30/download",
-          "sha256": "b1bf28c79a99f70ee1f1d83d10c875d2e70618417fda01ad1785e027579d9d38"
+          "url": "https://crates.io/api/v1/crates/serde_yaml/0.9.31/download",
+          "sha256": "adf8a49373e98a4c5f0ceb5d05aa7c648d75f63774981ed95b7c7443bbd50c6e"
         }
       },
       "targets": [
@@ -15667,7 +15667,7 @@
         "deps": {
           "common": [
             {
-              "id": "indexmap 2.1.0",
+              "id": "indexmap 2.2.2",
               "target": "indexmap"
             },
             {
@@ -15690,7 +15690,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.9.30"
+        "version": "0.9.31"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -17810,7 +17810,7 @@
         "deps": {
           "common": [
             {
-              "id": "indexmap 2.1.0",
+              "id": "indexmap 2.2.2",
               "target": "indexmap"
             },
             {
