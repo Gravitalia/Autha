@@ -1,10 +1,12 @@
-use anyhow::Result;
+use crate::helpers::{
+    queries::{CREATE_SALT, CREATE_USER},
+    token,
+};
+use anyhow::{bail, Result};
 use db::memcache::{MemcacheManager, MemcachePool};
 use db::scylla::Scylla;
 use regex::Regex;
 use warp::reply::{Json, WithStatus};
-
-use crate::helpers;
 
 const MAX_USERNAME_LENGTH: u8 = 25;
 pub(super) const MIN_PASSWORD_LENGTH: u8 = 8;
@@ -58,17 +60,23 @@ pub async fn handle(
     }
 
     // Check password length and its reliability.
-    if (body.password.len() as u8) < MIN_PASSWORD_LENGTH && !PASSWORD.is_match(&body.password) {
+    if (body.password.len() as u8) < MIN_PASSWORD_LENGTH
+        && !PASSWORD.is_match(&body.password)
+    {
         return Ok(super::err(super::INVALID_PASSWORD));
     }
 
     // Vanity verification.
-    if !VANITY.is_match(&body.vanity) || body.vanity.chars().all(|c| c.is_ascii_digit()) {
+    if !VANITY.is_match(&body.vanity)
+        || body.vanity.chars().all(|c| c.is_ascii_digit())
+    {
         return Ok(super::err("Invalid vanity"));
     }
 
     // Username length check.
-    if body.username.len() as u8 > MAX_USERNAME_LENGTH || body.username.is_empty() {
+    if body.username.len() as u8 > MAX_USERNAME_LENGTH
+        || body.username.is_empty()
+    {
         return Ok(super::err(super::INVALID_USERNAME));
     }
 
@@ -84,10 +92,11 @@ pub async fn handle(
             "The IP could not be hashed. This can result in the uncontrolled creation of accounts."
         );
     } else {
-        let rate_limit = match memcached.get(format!("account_create_{}", hashed_ip))? {
-            Some(r) => r.parse::<u16>().unwrap_or(0),
-            None => 0,
-        };
+        let rate_limit =
+            match memcached.get(format!("account_create_{}", hashed_ip))? {
+                Some(r) => r.parse::<u16>().unwrap_or(0),
+                None => 0,
+            };
 
         if rate_limit >= 1 {
             return Ok(warp::reply::with_status(
@@ -117,19 +126,23 @@ pub async fn handle(
                     if !res {
                         return Ok(super::err(super::INVALID_TURNSTILE));
                     }
-                }
+                },
                 Err(error) => {
-                    log::error!("Cannot make Cloudflare Turnstile request: {}", error);
+                    log::error!(
+                        "Cannot make Cloudflare Turnstile request: {}",
+                        error
+                    );
                     return Ok(super::err(super::INTERNAL_SERVER_ERROR));
-                }
+                },
             }
         } else {
             return Ok(super::err(super::INVALID_TURNSTILE));
         }
     }
 
-    let hashed_email =
-        crypto::encrypt::format_preserving_encryption(body.email.encode_utf16().collect())?;
+    let hashed_email = crypto::encrypt::format_preserving_encryption(
+        body.email.encode_utf16().collect(),
+    )?;
 
     // Check if account with this email already exists.
     if !scylla
@@ -166,26 +179,24 @@ pub async fn handle(
         return Ok(super::err("Vanity already used"));
     }
 
-    // Prepare the query to be faster if user set both phone and birthdate.
-    // It will avoid database to make a query pasing.
-    let insert_salt_query = scylla
-        .connection
-        .prepare("INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?)")
-        .await?;
-
     let mut phone: Option<String> = None;
     if let Some(number) = body.phone {
         if !PHONE.is_match(&number) {
             return Ok(super::err(super::INVALID_PHONE));
         } else {
-            let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(number.into())?;
+            let (nonce, encrypted) =
+                crypto::encrypt::chacha20_poly1305(number.into())?;
 
             let uuid = uuid::Uuid::new_v4();
 
-            scylla
-                .connection
-                .execute(&insert_salt_query, (&uuid, &nonce))
-                .await?;
+            if let Some(query) = CREATE_SALT.get() {
+                scylla.connection.execute(query, (&uuid, &nonce)).await?;
+            } else {
+                log::error!(
+                    "Prepared queries do not appear to be initialized."
+                );
+                bail!("cannot create salt")
+            }
 
             // Set primary key (to get nonce) and encrypted phone.
             phone = Some(format!("{}//{}", uuid, encrypted));
@@ -207,60 +218,64 @@ pub async fn handle(
         {
             return Ok(super::err(super::INVALID_BIRTHDATE));
         } else {
-            let (nonce, encrypted) = crypto::encrypt::chacha20_poly1305(birth.into())?;
+            let (nonce, encrypted) =
+                crypto::encrypt::chacha20_poly1305(birth.into())?;
 
             let uuid = uuid::Uuid::new_v4().to_string();
 
-            scylla
-                .connection
-                .execute(&insert_salt_query, (&uuid, &nonce))
-                .await?;
+            if let Some(query) = CREATE_SALT.get() {
+                scylla.connection.execute(query, (&uuid, &nonce)).await?;
+            } else {
+                log::error!(
+                    "Prepared queries do not appear to be initialized."
+                );
+                bail!("cannot create salt")
+            }
 
             // Set primary key (to get nonce) and encrypted birthdate.
             birthdate = Some(format!("{}//{}", uuid, encrypted));
         }
     }
 
-    // Use prepared query to properly balance.
-    // The values of not set (avatar, banner and bio) columns will be set as null
-    // but would not create tombestone unless they are set directly as null values.
-    let insert_user_query = scylla
-    .connection
-    .prepare(
-        "INSERT INTO accounts.users ( vanity, email, username, password, locale, phone, birthdate, flags, deleted, verified, expire_at ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, false, false, 0)"
-    )
-    .await?;
-
     // Create user on database.
-    if let Err(error) = scylla
-        .connection
-        .execute(
-            &insert_user_query,
-            (
-                &body.vanity,
-                &hashed_email,
-                &body.username,
-                &crypto::hash::argon2(body.password.as_bytes(), body.vanity.as_bytes()),
-                &body.locale,
-                &phone.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
-                &birthdate.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
-            ),
-        )
-        .await
-    {
-        log::error!("Cannot create user: {}", error);
+    if let Some(query) = CREATE_USER.get() {
+        if let Err(error) = scylla
+            .connection
+            .execute(
+                query,
+                (
+                    &body.vanity,
+                    &hashed_email,
+                    &body.username,
+                    &crypto::hash::argon2(
+                        body.password.as_bytes(),
+                        body.vanity.as_bytes(),
+                    ),
+                    &body.locale,
+                    &phone.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
+                    &birthdate.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
+                ),
+            )
+            .await
+        {
+            log::error!("Cannot create user: {}", error);
+        }
+    } else {
+        log::error!("Prepared queries do not appear to be initialized.");
     }
 
-    let token = match helpers::token::create(&scylla, &body.vanity, ip).await {
+    let token = match token::create(&scylla, &body.vanity, ip).await {
         Ok(res) => res,
         Err(error) => {
             log::error!("Cannot create user token: {}", error);
             return Ok(super::err("Cannot create token"));
-        }
+        },
     };
 
-    if let Err(error) = memcached.set(format!("account_create_{}", hashed_ip), 1) {
-        log::warn!("Cannot set global rate limiter when create. This could lead to massive spam! Error: {}", error)
+    if let Err(error) =
+        memcached.set(format!("account_create_{}", hashed_ip), 1)
+    {
+        log::warn!("Cannot set global rate limiter when create. This could lead to massive spam! Error: {}", error);
     }
 
     Ok(warp::reply::with_status(

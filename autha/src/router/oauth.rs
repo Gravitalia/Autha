@@ -4,6 +4,8 @@ use db::scylla::Scylla;
 use std::sync::Arc;
 use warp::reply::{Json, WithStatus};
 
+use crate::helpers::queries::CREATE_OAUTH;
+
 const VALID_SCOPE: [&str; 1] = ["identity"];
 
 /// Route to create an authorization code to obtain an access token.
@@ -130,15 +132,24 @@ pub async fn get_token(
     // Deleted used authorization code.
     memcached.delete(body.code)?;
 
-    let scopes: Vec<String> = scope.split_whitespace().map(|x| x.to_string()).collect();
+    let scopes: Vec<String> =
+        scope.split_whitespace().map(|x| x.to_string()).collect();
 
     // Create access token.
-    let (expires_in, access_token) = crate::helpers::token::create_jwt(
-        user_id.to_string(),
-        scopes.clone(),
-    )?;
+    let (expires_in, access_token) =
+        crate::helpers::token::create_jwt(user_id.to_string(), scopes.clone())?;
 
-    scylla.connection.query("INSERT INTO accounts.oauth ( id, user_id, bot_id, scope, deleted ) VALUES (?, ?, ?, ?, ?)", (&access_token, &user_id, &client_id, scopes, false)).await?;
+    if let Some(query) = CREATE_OAUTH.get() {
+        scylla
+            .connection
+            .execute(
+                query,
+                (&access_token, &user_id, &client_id, scopes, false),
+            )
+            .await?;
+    } else {
+        log::error!("Prepared queries do not appear to be initialized.");
+    }
 
     // To do: refresh token.
 

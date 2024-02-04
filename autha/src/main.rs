@@ -166,6 +166,9 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     } else {
         log::trace!("Successfully created tables, if they didn't exist.");
     }
+    
+    // Init prepared queries.
+    helpers::queries::init(&scylladb).await?;
 
     let create_route = warp::path("create")
         .and(warp::post())
@@ -218,7 +221,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .and(warp::header::<String>("authorization"))
         .and(warp::query::<model::query::OAuth>())
         .and_then(router::create_token);
-    
+
     let access_token = warp::path("oauth2")
         .and(warp::path("token"))
         .and(warp::post())

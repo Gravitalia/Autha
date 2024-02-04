@@ -2,10 +2,14 @@ use super::model::User;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use scylla::{
-    frame::Compression, transport::session::PoolSize, IntoTypedRows, Session,
-    SessionBuilder,
+    frame::Compression, prepared_statement::PreparedStatement,
+    transport::session::PoolSize, IntoTypedRows, Session, SessionBuilder,
 };
 use std::num::NonZeroUsize;
+use std::sync::OnceLock;
+
+/// Prepared query to get user faster.
+static GET_USER: OnceLock<PreparedStatement> = OnceLock::new();
 
 // Define constants for table creation and queries.
 const CREATE_USERS_TABLE: &str = r#"
@@ -130,21 +134,29 @@ impl ScyllaManager for Scylla {
                 .context(format!("Failed to create index: {}", index))?;
         }
 
+        let get_user = self
+            .connection
+            .prepare(
+                "SELECT username, vanity, avatar, bio, email, birthdate, phone, verified, deleted, flags FROM accounts.users WHERE vanity = ?"
+            )
+            .await?;
+            GET_USER.get_or_init(|| get_user);
+
         Ok(())
     }
 
-    /// Get a user in the Scylla database without cache.
     async fn get_user(&self, vanity: &str) -> Result<User> {
-        if let Some(rows) =
-            self.connection.query(
-                "SELECT username, vanity, avatar, bio, email, birthdate, phone, verified, deleted, flags FROM accounts.users WHERE vanity = ?",
-                vec![vanity]
-            ).await?.rows {
-                if rows.is_empty() {
-                    bail!("no user found")
-                } else {
-                    Ok(rows.into_typed::<User>().collect::<Vec<_>>()[0].clone()?)
-                }
+        if let Some(rows) = self
+            .connection
+            .execute(GET_USER.get_or_init(|| unreachable!()), vec![vanity])
+            .await?
+            .rows
+        {
+            if rows.is_empty() {
+                bail!("no user found")
+            } else {
+                Ok(rows.into_typed::<User>().collect::<Vec<_>>()[0].clone()?)
+            }
         } else {
             bail!("no user found")
         }
