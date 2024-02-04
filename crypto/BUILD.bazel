@@ -13,6 +13,7 @@ rust_library(
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
+    rustc_flags = ["-Copt-level=3", "-Cstrip=symbols", "-Clto", "-Ccodegen-units=1", "-Cdebuginfo=none"],
     visibility = ["//visibility:public"],
 )
 
