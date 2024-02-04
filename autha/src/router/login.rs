@@ -1,5 +1,6 @@
 use crate::router::create::{EMAIL, MIN_PASSWORD_LENGTH, PASSWORD};
 use anyhow::{anyhow, Result};
+use db::libscylla::frame::value::CqlTimestamp;
 use db::memcache::{MemcacheManager, MemcachePool};
 use db::scylla::Scylla;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -96,7 +97,7 @@ pub async fn handle(
             vec![&hashed_email],
         )
         .await?
-        .rows_typed::<(String, String, bool, String, i64, String)>()?
+        .rows_typed::<(String, String, bool, Option<String>, CqlTimestamp, String)>()?
         .collect::<Vec<_>>();
 
     // Check if email is in use. Otherwise return error.
@@ -105,7 +106,16 @@ pub async fn handle(
     }
 
     let (vanity, password, deleted, mfa, expire, locale) =
-        rows[0].clone().unwrap_or_default();
+        rows[0].clone().unwrap_or_else(|_| {
+            (
+                String::default(),
+                String::default(),
+                false,
+                None,
+                CqlTimestamp(0),
+                String::default(),
+            )
+        });
 
     // Check if account is deleted or even suspended.
     let timestamp_ms: i64 = SystemTime::now()
@@ -114,13 +124,13 @@ pub async fn handle(
         .as_millis()
         .try_into()?;
 
-    if deleted && expire == 0 {
+    if deleted && expire.0 == 0 {
         // Account is totaly suspended and can't be recovered.
         return Ok(crate::router::err("Account suspended"));
-    } else if deleted && expire >= timestamp_ms {
+    } else if deleted && expire.0 >= timestamp_ms {
         // Account is deleted but data are kept for 2 months.
         return Ok(crate::router::err("Deleted account: recoverable"));
-    } else if deleted && expire <= timestamp_ms {
+    } else if deleted && expire.0 <= timestamp_ms {
         // Account is totaly deleted, only email and vanity are kept.
         return Ok(crate::router::err(super::INVALID_EMAIL));
     }
@@ -134,17 +144,13 @@ pub async fn handle(
         return Ok(crate::router::err(super::INVALID_PASSWORD));
     }
 
-    println!("mFA: {:?}", mfa);
-
     // Check multifactor authentification.
-    if !mfa.is_empty() {
+    if let Some(code) = mfa {
         if body.mfa.is_none() {
             return Ok(crate::router::err("MFA required"));
         }
 
-        println!("here");
-
-        let (salt, cypher) = mfa.split_once("//").unwrap_or(("", ""));
+        let (salt, cypher) = code.split_once("//").unwrap_or(("", ""));
 
         let res = scylla
             .connection
@@ -158,8 +164,6 @@ pub async fn handle(
             return Ok(super::err(super::INTERNAL_SERVER_ERROR));
         }
 
-        println!("here 2");
-
         let nonce: [u8; 12] = hex::decode(
             res[0].columns[0]
                 .as_ref()
@@ -169,7 +173,6 @@ pub async fn handle(
         )?
         .try_into()
         .unwrap_or_default();
-        println!("here 3");
 
         // Save MFA code in clear, not in base32 => for generate key, use helpers::random_string with 10 as length
         if totp_lite::totp_custom::<totp_lite::Sha1>(
