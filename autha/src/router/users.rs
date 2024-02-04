@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 #[cfg(feature = "kafka")]
 use db::broker::kafka::KafkaManager;
 #[cfg(feature = "rabbitmq")]
@@ -10,9 +10,11 @@ use db::scylla::{Scylla, ScyllaManager};
 use std::sync::Arc;
 use warp::reply::{Json, WithStatus};
 
+use crate::helpers::queries::CREATE_SALT;
+
 const IMAGE_WIDTH: u32 = 224;
 const IMAGE_HEIGHT: u32 = 224;
-const IMAGE_QUALITY: f32 = 70.0;
+const _IMAGE_QUALITY: f32 = 70.0;
 
 /// Get a user with its vanity via a cache or the database.
 #[inline]
@@ -163,10 +165,12 @@ pub async fn update(
 
     // Prepare the query to be faster if user set both phone, birthdate and MFA.
     // It will avoid database to make a query pasing.
-    let insert_salt_query = scylla
-        .connection
-        .prepare("INSERT INTO accounts.salts ( id, salt ) VALUES (?, ?)")
-        .await?;
+    let insert_salt_query = if let Some(query) = CREATE_SALT.get() {
+        query.clone()
+    } else {
+        log::error!("Prepared queries do not appear to be initialized.");
+        bail!("cannot create salt")
+    };
 
     // New batch to perform multiple requests at the same time.
     let mut batch = scylla.new_batch();
@@ -221,7 +225,6 @@ pub async fn update(
                             &a,
                             Some(IMAGE_WIDTH),
                             Some(IMAGE_HEIGHT),
-                            Some(IMAGE_QUALITY),
                             credentials,
                         )
                         .await?,
@@ -233,7 +236,6 @@ pub async fn update(
                         &a,
                         Some(IMAGE_WIDTH),
                         Some(IMAGE_HEIGHT),
-                        Some(IMAGE_QUALITY),
                         credentials,
                     )
                     .await?,
