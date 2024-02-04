@@ -328,7 +328,7 @@ pub async fn update(
                 crypto::encrypt::chacha20_poly1305(mfa.into())?;
             let uuid = uuid::Uuid::new_v4();
 
-            batch.append_statement(insert_salt_query.clone());
+            batch.append_statement(insert_salt_query);
             batch_values.push((uuid.to_string(), nonce));
 
             batch.append_statement(
