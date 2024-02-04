@@ -5,7 +5,7 @@ use crate::helpers::{
 use anyhow::{bail, Result};
 use db::memcache::{MemcacheManager, MemcachePool};
 use db::scylla::Scylla;
-use regex::Regex;
+use regex_lite::Regex;
 use warp::reply::{Json, WithStatus};
 
 const MAX_USERNAME_LENGTH: u8 = 25;
