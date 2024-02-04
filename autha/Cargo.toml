@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-tonic = { version = "0.10", features = [ "tls", "gzip" ] }
-tokio = { version = "1.36", features = ["macros", "rt-multi-thread"] }
-warp = { version = "0.3", features = ["tls"] }
+tonic = { version = "0.10", features = [ "default" ] }
+tokio = { version = "1.35", features = ["rt-multi-thread"] }
+warp = "0.3"
 
 crypto = { path = "../crypto" }
 db = { path = "../db", features = ["logging", "cassandra", "memcached", "apache_kafka", "rabbitmq"] }
@@ -19,13 +19,13 @@ jsonwebtoken = "9.2"
 lazy_static = "1"
 prost = "0.12"
 prost-types = "0.12"
-regex = "1"
+regex-lite = "0"
 reqwest = { version = "0.11", features = ["json"] }
 serde_json = "1"
 serde_yaml = "0.9"
 totp-lite = "2"
 uuid = { version = "1.7", features = ["v4"] }
-isolang = "2.4"
+isolang = { version = "2.4", features = ["list_languages"] }
 chrono = "0.4"
 
 fern = "0.6"
