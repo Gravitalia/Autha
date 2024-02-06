@@ -412,17 +412,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
 
 [[package]]
-name = "bigdecimal"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d1e50562e37200edf7c6c43e54a08e64a5553bfb59d9c297d5572512aa517256"
-dependencies = [
- "num-bigint 0.3.3",
- "num-integer",
- "num-traits",
-]
-
-[[package]]
 name = "bit_field"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1132,7 +1121,7 @@ dependencies = [
  "cbc",
  "cipher",
  "libm",
- "num-bigint 0.4.4",
+ "num-bigint",
  "num-integer",
  "num-traits",
 ]
@@ -1937,17 +1926,6 @@ checksum = "d273983c5a657a70a3e8f2a01329822f3b8c8172b73826411a55751e404a0a4a"
 dependencies = [
  "memchr",
  "minimal-lexical",
-]
-
-[[package]]
-name = "num-bigint"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f6f7833f2cbf2360a6cfd58cd41a53aa7a90bd4c202f5b1c7dd2ed73c57b2c3"
-dependencies = [
- "autocfg",
- "num-integer",
- "num-traits",
 ]
 
 [[package]]
@@ -2927,13 +2905,12 @@ dependencies = [
 
 [[package]]
 name = "scylla"
-version = "0.11.1"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db4bca1987121cceb419f0644cf064416f719c73c44b6cbe849b62fd3b7adc3c"
+checksum = "03d2db76aa23f55d2ece5354e1a3778633098a3d1ea76153f494d71e92cd02d8"
 dependencies = [
  "arc-swap",
  "async-trait",
- "bigdecimal",
  "byteorder",
  "bytes",
  "chrono",
@@ -2942,7 +2919,6 @@ dependencies = [
  "histogram",
  "itertools 0.11.0",
  "lz4_flex",
- "num-bigint 0.3.3",
  "num_enum",
  "rand",
  "rand_pcg",
@@ -2961,16 +2937,14 @@ dependencies = [
 
 [[package]]
 name = "scylla-cql"
-version = "0.0.11"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50938b1bbb5c6364617977939c09644384495f658dc899ec37fd90bce73e6f37"
+checksum = "345626c0dd5d9624c413daaba854685bba6a65cff4eb5ea0fb0366df16901f67"
 dependencies = [
  "async-trait",
- "bigdecimal",
  "byteorder",
  "bytes",
  "lz4_flex",
- "num-bigint 0.3.3",
  "num_enum",
  "scylla-macros",
  "snap",
@@ -2981,9 +2955,9 @@ dependencies = [
 
 [[package]]
 name = "scylla-macros"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22b6659cdeed34c5b83719edd4d9f023c18357677e3fbe14237a59f00403acce"
+checksum = "eb6085ff9c3fd7e5163826901d39164ab86f11bdca16b2f766a00c528ff9cef9"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -3104,7 +3078,7 @@ version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "adc4e5204eb1910f40f9cfa375f6f05b68c3abac4b6fd879c8ff5e7ae8a0a085"
 dependencies = [
- "num-bigint 0.4.4",
+ "num-bigint",
  "num-traits",
  "thiserror",
  "time",
