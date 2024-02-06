@@ -1,5 +1,5 @@
 {
-  "checksum": "9facf100fb3c63a5513f2ba5aa22211a9c956485dc8f223a0f6eb139d86dd55e",
+  "checksum": "1f9679b8b3acc431cb66e1e65d3322930da7cae44991d9a986f4808e2185ada7",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -2037,53 +2037,6 @@
         "version": "0.21.7"
       },
       "license": "MIT OR Apache-2.0"
-    },
-    "bigdecimal 0.2.2": {
-      "name": "bigdecimal",
-      "version": "0.2.2",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/bigdecimal/0.2.2/download",
-          "sha256": "d1e50562e37200edf7c6c43e54a08e64a5553bfb59d9c297d5572512aa517256"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "bigdecimal",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "bigdecimal",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "num-bigint 0.3.3",
-              "target": "num_bigint"
-            },
-            {
-              "id": "num-integer 0.1.45",
-              "target": "num_integer"
-            },
-            {
-              "id": "num-traits 0.2.17",
-              "target": "num_traits"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2015",
-        "version": "0.2.2"
-      },
-      "license": "MIT/Apache-2.0"
     },
     "bit_field 0.10.2": {
       "name": "bit_field",
@@ -4405,7 +4358,7 @@
               "target": "r2d2"
             },
             {
-              "id": "scylla 0.11.1",
+              "id": "scylla 0.12.0",
               "target": "scylla"
             },
             {
@@ -10217,83 +10170,6 @@
       },
       "license": "MIT"
     },
-    "num-bigint 0.3.3": {
-      "name": "num-bigint",
-      "version": "0.3.3",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/num-bigint/0.3.3/download",
-          "sha256": "5f6f7833f2cbf2360a6cfd58cd41a53aa7a90bd4c202f5b1c7dd2ed73c57b2c3"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "num_bigint",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "num_bigint",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "num-bigint 0.3.3",
-              "target": "build_script_build"
-            },
-            {
-              "id": "num-integer 0.1.45",
-              "target": "num_integer"
-            },
-            {
-              "id": "num-traits 0.2.17",
-              "target": "num_traits"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.3.3"
-      },
-      "build_script_attrs": {
-        "data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "autocfg 1.1.0",
-              "target": "autocfg"
-            }
-          ],
-          "selects": {}
-        }
-      },
-      "license": "MIT OR Apache-2.0"
-    },
     "num-bigint 0.4.4": {
       "name": "num-bigint",
       "version": "0.4.4",
@@ -10400,9 +10276,7 @@
         ],
         "crate_features": {
           "common": [
-            "default",
-            "i128",
-            "std"
+            "i128"
           ],
           "selects": {}
         },
@@ -14789,13 +14663,13 @@
       },
       "license": "Apache-2.0 OR ISC OR MIT"
     },
-    "scylla 0.11.1": {
+    "scylla 0.12.0": {
       "name": "scylla",
-      "version": "0.11.1",
+      "version": "0.12.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/scylla/0.11.1/download",
-          "sha256": "db4bca1987121cceb419f0644cf064416f719c73c44b6cbe849b62fd3b7adc3c"
+          "url": "https://crates.io/api/v1/crates/scylla/0.12.0/download",
+          "sha256": "03d2db76aa23f55d2ece5354e1a3778633098a3d1ea76153f494d71e92cd02d8"
         }
       },
       "targets": [
@@ -14825,10 +14699,6 @@
             {
               "id": "arc-swap 1.6.0",
               "target": "arc_swap"
-            },
-            {
-              "id": "bigdecimal 0.2.2",
-              "target": "bigdecimal"
             },
             {
               "id": "byteorder 1.5.0",
@@ -14863,10 +14733,6 @@
               "target": "lz4_flex"
             },
             {
-              "id": "num-bigint 0.3.3",
-              "target": "num_bigint"
-            },
-            {
               "id": "num_enum 0.6.1",
               "target": "num_enum"
             },
@@ -14879,7 +14745,7 @@
               "target": "rand_pcg"
             },
             {
-              "id": "scylla-cql 0.0.11",
+              "id": "scylla-cql 0.1.0",
               "target": "scylla_cql"
             },
             {
@@ -14925,7 +14791,7 @@
               "target": "async_trait"
             },
             {
-              "id": "scylla-macros 0.3.0",
+              "id": "scylla-macros 0.4.0",
               "target": "scylla_macros"
             },
             {
@@ -14935,17 +14801,17 @@
           ],
           "selects": {}
         },
-        "version": "0.11.1"
+        "version": "0.12.0"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "scylla-cql 0.0.11": {
+    "scylla-cql 0.1.0": {
       "name": "scylla-cql",
-      "version": "0.0.11",
+      "version": "0.1.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/scylla-cql/0.0.11/download",
-          "sha256": "50938b1bbb5c6364617977939c09644384495f658dc899ec37fd90bce73e6f37"
+          "url": "https://crates.io/api/v1/crates/scylla-cql/0.1.0/download",
+          "sha256": "345626c0dd5d9624c413daaba854685bba6a65cff4eb5ea0fb0366df16901f67"
         }
       },
       "targets": [
@@ -14967,10 +14833,6 @@
         "deps": {
           "common": [
             {
-              "id": "bigdecimal 0.2.2",
-              "target": "bigdecimal"
-            },
-            {
               "id": "byteorder 1.5.0",
               "target": "byteorder"
             },
@@ -14981,10 +14843,6 @@
             {
               "id": "lz4_flex 0.11.2",
               "target": "lz4_flex"
-            },
-            {
-              "id": "num-bigint 0.3.3",
-              "target": "num_bigint"
             },
             {
               "id": "num_enum 0.6.1",
@@ -15017,23 +14875,23 @@
               "target": "async_trait"
             },
             {
-              "id": "scylla-macros 0.3.0",
+              "id": "scylla-macros 0.4.0",
               "target": "scylla_macros"
             }
           ],
           "selects": {}
         },
-        "version": "0.0.11"
+        "version": "0.1.0"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "scylla-macros 0.3.0": {
+    "scylla-macros 0.4.0": {
       "name": "scylla-macros",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/scylla-macros/0.3.0/download",
-          "sha256": "22b6659cdeed34c5b83719edd4d9f023c18357677e3fbe14237a59f00403acce"
+          "url": "https://crates.io/api/v1/crates/scylla-macros/0.4.0/download",
+          "sha256": "eb6085ff9c3fd7e5163826901d39164ab86f11bdca16b2f766a00c528ff9cef9"
         }
       },
       "targets": [
@@ -15074,7 +14932,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.3.0"
+        "version": "0.4.0"
       },
       "license": "MIT OR Apache-2.0"
     },
