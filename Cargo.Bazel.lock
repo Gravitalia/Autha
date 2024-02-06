@@ -1,5 +1,5 @@
 {
-  "checksum": "1f9679b8b3acc431cb66e1e65d3322930da7cae44991d9a986f4808e2185ada7",
+  "checksum": "cafea9ebba6c74278ffe7f5cf963672bdcece5995c7711b64d083ada4c9841b5",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -1105,7 +1105,7 @@
               "target": "polling"
             },
             {
-              "id": "rustix 0.38.30",
+              "id": "rustix 0.38.31",
               "target": "rustix"
             },
             {
@@ -7870,7 +7870,7 @@
               "target": "log"
             },
             {
-              "id": "tempfile 3.9.0",
+              "id": "tempfile 3.10.0",
               "target": "tempfile"
             }
           ],
@@ -8242,7 +8242,7 @@
           "selects": {
             "cfg(not(any(windows, target_os = \"hermit\", target_os = \"unknown\")))": [
               {
-                "id": "rustix 0.38.30",
+                "id": "rustix 0.38.31",
                 "target": "rustix"
               }
             ],
@@ -10068,7 +10068,7 @@
                 "target": "security_framework_sys"
               },
               {
-                "id": "tempfile 3.9.0",
+                "id": "tempfile 3.10.0",
                 "target": "tempfile"
               }
             ],
@@ -11958,7 +11958,7 @@
           "selects": {
             "cfg(any(unix, target_os = \"fuchsia\", target_os = \"vxworks\"))": [
               {
-                "id": "rustix 0.38.30",
+                "id": "rustix 0.38.31",
                 "target": "rustix"
               }
             ],
@@ -12360,7 +12360,7 @@
               "target": "syn"
             },
             {
-              "id": "tempfile 3.9.0",
+              "id": "tempfile 3.10.0",
               "target": "tempfile"
             },
             {
@@ -13790,13 +13790,13 @@
       },
       "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT"
     },
-    "rustix 0.38.30": {
+    "rustix 0.38.31": {
       "name": "rustix",
-      "version": "0.38.30",
+      "version": "0.38.31",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/rustix/0.38.30/download",
-          "sha256": "322394588aaf33c24007e8bb3238ee3e4c5c09c084ab32bc73890b99ff326bca"
+          "url": "https://crates.io/api/v1/crates/rustix/0.38.31/download",
+          "sha256": "6ea3e1a662af26cd7a3ba09c0297a31af215563ecf42817c98df621387f4e949"
         }
       },
       "targets": [
@@ -14008,7 +14008,7 @@
               "target": "bitflags"
             },
             {
-              "id": "rustix 0.38.30",
+              "id": "rustix 0.38.31",
               "target": "build_script_build"
             }
           ],
@@ -14055,7 +14055,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.38.30"
+        "version": "0.38.31"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -16437,13 +16437,13 @@
       },
       "license": "BSD-2-Clause"
     },
-    "tempfile 3.9.0": {
+    "tempfile 3.10.0": {
       "name": "tempfile",
-      "version": "3.9.0",
+      "version": "3.10.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/tempfile/3.9.0/download",
-          "sha256": "01ce4141aa927a6d1bd34a041795abd0db1cccba5d5f24b009f694bdf3a1f3fa"
+          "url": "https://crates.io/api/v1/crates/tempfile/3.10.0/download",
+          "sha256": "a365e8cd18e44762ef95d87f284f4b5cd04107fec2ff3052bd6a3e6069669e67"
         }
       },
       "targets": [
@@ -16476,14 +16476,8 @@
           "selects": {
             "cfg(any(unix, target_os = \"wasi\"))": [
               {
-                "id": "rustix 0.38.30",
+                "id": "rustix 0.38.31",
                 "target": "rustix"
-              }
-            ],
-            "cfg(target_os = \"redox\")": [
-              {
-                "id": "redox_syscall 0.4.1",
-                "target": "syscall"
               }
             ],
             "cfg(windows)": [
@@ -16495,7 +16489,7 @@
           }
         },
         "edition": "2018",
-        "version": "3.9.0"
+        "version": "3.10.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -19538,7 +19532,7 @@
               "target": "either"
             },
             {
-              "id": "rustix 0.38.30",
+              "id": "rustix 0.38.31",
               "target": "rustix"
             }
           ],
