@@ -39,10 +39,10 @@ jobs:
       with:
         commit_message: 'chore(deps): Update Bazel lockfile'
     - name: Run builds
-      run: bazel build //... -c opt
+      run: bazel build //... --strip=always --compilation_mode opt
       shell: bash
     - name: Run tests
-      run: bazel test //... -c opt
+      run: bazel test //... --strip=always --compilation_mode opt
       shell: bash
     - name: Login to GitHub Container Registry
       if: ${{ github.ref == 'refs/heads/master' }}
@@ -53,5 +53,5 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Push to docker.io
       if: ${{ github.ref == 'refs/heads/master' }}
-      run: bazel run //autha:push -c opt
+      run: bazel run //autha:push --strip=always --compilation_mode opt
       shell: bash
