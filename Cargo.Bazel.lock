@@ -1,5 +1,5 @@
 {
-  "checksum": "93b08524337e7a9d381546f966a8260276af36247e7beb270bcb2cf9e6ec7462",
+  "checksum": "e9a9a7042afe4874f43783f54585244771ec04f952d0cbbb21233d0c25cd770b",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -343,7 +343,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.111",
+              "id": "serde_json 1.0.113",
               "target": "serde_json"
             }
           ],
@@ -1590,7 +1590,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.111",
+              "id": "serde_json 1.0.113",
               "target": "serde_json"
             },
             {
@@ -3081,7 +3081,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.111",
+              "id": "serde_json 1.0.113",
               "target": "serde_json"
             },
             {
@@ -3624,7 +3624,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.111",
+              "id": "serde_json 1.0.113",
               "target": "serde_json"
             },
             {
@@ -8616,7 +8616,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.111",
+              "id": "serde_json 1.0.113",
               "target": "serde_json"
             },
             {
@@ -13382,7 +13382,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.111",
+              "id": "serde_json 1.0.113",
               "target": "serde_json"
             },
             {
@@ -15174,13 +15174,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "serde_json 1.0.111": {
+    "serde_json 1.0.113": {
       "name": "serde_json",
-      "version": "1.0.111",
+      "version": "1.0.113",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/serde_json/1.0.111/download",
-          "sha256": "176e46fa42316f18edd598015a5166857fc835ec732f5215eac6b7bdbf0a84f4"
+          "url": "https://crates.io/api/v1/crates/serde_json/1.0.113/download",
+          "sha256": "69801b70b1c3dac963ecb03a364ba0ceda9cf60c71cfe475e99864759c8b8a79"
         }
       },
       "targets": [
@@ -15230,14 +15230,14 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.111",
+              "id": "serde_json 1.0.113",
               "target": "build_script_build"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.0.111"
+        "version": "1.0.113"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -16828,7 +16828,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.111",
+              "id": "serde_json 1.0.113",
               "target": "serde_json"
             }
           ],
@@ -18894,7 +18894,7 @@
               "target": "serde"
             },
             {
-              "id": "serde_json 1.0.111",
+              "id": "serde_json 1.0.113",
               "target": "serde_json"
             },
             {
