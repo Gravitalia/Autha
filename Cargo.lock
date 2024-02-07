@@ -1003,9 +1003,9 @@ dependencies = [
 
 [[package]]
 name = "fast_image_resize"
-version = "3.0.1"
+version = "3.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2534940c274e290139ec14b3cbb2a2be8528fd4e06978357238ebe433d31b7fc"
+checksum = "ba7291ef427ab56daa0bf39cec6d8ea0392b6e41668fd16215aecc00ffa99f31"
 dependencies = [
  "cfg-if",
  "num-traits",
