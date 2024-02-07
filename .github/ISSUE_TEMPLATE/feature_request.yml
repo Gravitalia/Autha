@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest a new feature
+labels: ["enhancement"]
+assignees:
+  - realhinome
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: >
+        Describe what you want in a new way for Autha:
+  - type: dropdown
+    id: directory
+    attributes:
+      label: Which library/binary?
+      multiple: true
+      options:
+        - Autha
+        - crypto
+        - db
+        - front
+        - image_processor
