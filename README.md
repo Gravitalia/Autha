@@ -42,25 +42,31 @@ It allows us to manage the amount of memory used, the degree of parallelism as w
 To achieve encryption, we use [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard), which is used by the US government.
 
 ## Build Autha from source
+
 ### Dependencies
+
 To build and run Gravitalia, you'll need:
+
 - `git`
 - `pnpm`
 - `bazel`
 
 ### Building
+
 1. Clone this repository with `git`:
    ```shell
    git clone https://github.com/Gravitalia/autha
    cd autha
    ```
-3. Build with `bazel`:
+2. Build with `bazel`:
    ```shell
    bazel build //... # this will build every projects.
    ```
 
 ## Run Autha
+
 ### With `docker-compose`
+
 1. Clone this repository with `git`:
    ```shell
    git clone https://github.com/Gravitalia/autha
