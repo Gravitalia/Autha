@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 tonic = { version = "0.10", features = [ "default" ] }
-tokio = { version = "1.35", features = ["rt-multi-thread"] }
+tokio = { version = "1.36", features = ["rt-multi-thread"] }
 warp = "0.3"
 
 crypto = { path = "../crypto" }
