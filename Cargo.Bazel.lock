@@ -1,5 +1,5 @@
 {
-  "checksum": "0697bb9eea2cee8937a19c3dc99fbbe6a2f993bb5dd6f6c26edf7390eb393cb8",
+  "checksum": "46293ca917aab11775039a1b1f4a51a17eb067f12e560275f124b7715b9a818e",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -1582,7 +1582,7 @@
               "target": "regex_lite"
             },
             {
-              "id": "reqwest 0.11.23",
+              "id": "reqwest 0.11.24",
               "target": "reqwest"
             },
             {
@@ -3073,7 +3073,7 @@
               "target": "mime"
             },
             {
-              "id": "reqwest 0.11.23",
+              "id": "reqwest 0.11.24",
               "target": "reqwest"
             },
             {
@@ -13308,13 +13308,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "reqwest 0.11.23": {
+    "reqwest 0.11.24": {
       "name": "reqwest",
-      "version": "0.11.23",
+      "version": "0.11.24",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/reqwest/0.11.23/download",
-          "sha256": "37b1ae8d9ac08420c66222fb9096fc5de435c3c48542bc5336c51892cffafb41"
+          "url": "https://crates.io/api/v1/crates/reqwest/0.11.24/download",
+          "sha256": "c6920094eb85afde5e4a138be3f2de8bbdf28000f0029e72c45025a56b042251"
         }
       },
       "targets": [
@@ -13390,6 +13390,10 @@
               "target": "serde_urlencoded"
             },
             {
+              "id": "sync_wrapper 0.1.2",
+              "target": "sync_wrapper"
+            },
+            {
               "id": "tower-service 0.3.2",
               "target": "tower_service"
             },
@@ -13450,6 +13454,10 @@
                 "target": "pin_project_lite"
               },
               {
+                "id": "rustls-pemfile 1.0.4",
+                "target": "rustls_pemfile"
+              },
+              {
                 "id": "tokio 1.36.0",
                 "target": "tokio"
               },
@@ -13476,7 +13484,7 @@
                 "target": "wasm_bindgen_futures"
               },
               {
-                "id": "wasm-streams 0.3.0",
+                "id": "wasm-streams 0.4.0",
                 "target": "wasm_streams"
               },
               {
@@ -13499,7 +13507,7 @@
           }
         },
         "edition": "2018",
-        "version": "0.11.23"
+        "version": "0.11.24"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -19331,13 +19339,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "wasm-streams 0.3.0": {
+    "wasm-streams 0.4.0": {
       "name": "wasm-streams",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/wasm-streams/0.3.0/download",
-          "sha256": "b4609d447824375f43e1ffbc051b50ad8f4b3ae8219680c94452ea05eb240ac7"
+          "url": "https://crates.io/api/v1/crates/wasm-streams/0.4.0/download",
+          "sha256": "b65dc4c90b63b118468cf747d8bf3566c1913ef60be765b5730ead9e0a3ba129"
         }
       },
       "targets": [
@@ -19382,7 +19390,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.3.0"
+        "version": "0.4.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -19421,15 +19429,35 @@
             "File",
             "FormData",
             "Headers",
+            "QueuingStrategy",
+            "ReadableByteStreamController",
             "ReadableStream",
+            "ReadableStreamByobReader",
+            "ReadableStreamByobRequest",
+            "ReadableStreamDefaultController",
+            "ReadableStreamDefaultReader",
+            "ReadableStreamGetReaderOptions",
+            "ReadableStreamReadResult",
+            "ReadableStreamReaderMode",
+            "ReadableStreamType",
+            "ReadableWritablePair",
             "Request",
             "RequestCredentials",
             "RequestInit",
             "RequestMode",
             "Response",
             "ServiceWorkerGlobalScope",
+            "StreamPipeOptions",
+            "TransformStream",
+            "TransformStreamDefaultController",
+            "Transformer",
+            "UnderlyingSink",
+            "UnderlyingSource",
             "Window",
-            "WorkerGlobalScope"
+            "WorkerGlobalScope",
+            "WritableStream",
+            "WritableStreamDefaultController",
+            "WritableStreamDefaultWriter"
           ],
           "selects": {
             "wasm32-unknown-unknown": [
