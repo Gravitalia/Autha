@@ -1,0 +1,29 @@
+name: Bug report
+description: File a bug report.
+labels: ["bug"]
+assignees:
+  - realhinome
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: >
+        Describe the bug.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: On which platform?
+      multiple: true
+      options:
+        - Linux
+        - macOS
+        - Windows
+  - type: textarea
+    id: repro
+    attributes:
+      label: >
+        Describe how to reproduce the bug
+  - type: textarea
+    id: extras
+    attributes:
+      label: Any other information, logs, or outputs that you want to share?
