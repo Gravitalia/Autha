@@ -2,7 +2,7 @@
 
 # Autha
 
-> Autha, pronounced `Otter` 🦦, is the service that manages user accounts and the associated delegation. ☄️
+> Autha, pronounced `Otter` 🦦, is the service that manages user accounts and provides identity (authorization server, AS).
 
 Autha is an OAuth2 server designed with **Rust** to allow extreme low resource usage, low _latency_ and high request throughput.<br />
 It implements an account creation, connection and authorization delegation system.
@@ -15,10 +15,11 @@ It implements an account creation, connection and authorization delegation syste
 
 > We want to guarantee our users **increased security**. This way, all users can see how we store data and also help us to improve the cryptographic systems.
 
-- `Argon2`, `ChaCha20Poly1305`, `SHA-3` and `FPE` (with `AES`) are the hashing and cryptographic systems used
-- Short expiration time (< `15 min.`)
-- JWT with asymmetric key
-- One-Time Usage OAuth token
+- `Argon2`, `ChaCha20Poly1305`, `SHA-3` and `FPE` (with `AES`) are the hashing and cryptographic systems used;
+- Short expiration time (< `5 min.`) for auhtorization code;
+- JWT with asymmetric key and low data;
+- One-Time Usage auhtorization code;
+- PKCE support.
 
 #### Argon2
 
@@ -40,24 +41,41 @@ It allows us to manage the amount of memory used, the degree of parallelism as w
 [Format-preserving encryption](https://en.wikipedia.org/wiki/Format-preserving_encryption) aka FPE is an encryption function that provides the same output for the same text and the same format.<br />
 To achieve encryption, we use [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard), which is used by the US government.
 
-## Database
+## Build Autha from source
 
-> We try to use high-performance databases to optimize critical response times.
+### Dependencies
 
-- Apache Cassandra
-- Memcached
+To build and run Gravitalia, you'll need:
 
-We are also working on implementing a possibility to use `PostgreSQL` instead of `Apache Cassandra`.
+- `git`
+- `pnpm`
+- `bazel`
 
-#### Casssandra
+### Building
 
-Apache [Cassandra](https://en.wikipedia.org/wiki/Apache_Cassandra) is a fast, fault-tolerant and ultra-scalable distributed database optimized for mass writing.<br />
-We use Cassandra to manage user accounts and security; every _significant_ action taken by the user is logged.
+1. Clone this repository with `git`:
+   ```shell
+   git clone https://github.com/Gravitalia/autha
+   cd autha
+   ```
+2. Build with `bazel`:
+   ```shell
+   bazel build //... # this will build every projects.
+   ```
 
-#### Memcached
+## Run Autha
 
-[Memcached](https://en.wikipedia.org/wiki/Memcached) is a key-value database with in-memory capability, extremely fast.
-Used to cache public user data and redistribute it quickly as well as to unclog requests to Cassandra.
+### With `docker-compose`
+
+1. Clone this repository with `git`:
+   ```shell
+   git clone https://github.com/Gravitalia/autha
+   cd autha
+   ```
+2. Run `dokcer-compose`
+   ```shell
+   docker-compose up
+   ```
 
 ## License
 

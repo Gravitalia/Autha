@@ -1,0 +1,17 @@
+name: Documentation issue
+description: File a documentation issue
+labels: ["documentation"]
+assignees:
+  - realhinome
+body:
+  - type: input
+    id: file
+    attributes:
+      label: >
+        What file? Put the entire path (for example: `./autha/src/main.rs`) or
+        GitHub link.
+  - type: textarea
+    id: desc
+    attributes:
+      label: >
+        Problem description (include actual vs expected text, if applicable):
