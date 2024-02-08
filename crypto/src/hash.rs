@@ -70,11 +70,12 @@ pub fn sha1(data: &[u8]) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use regex_lite::Regex;
 
     #[test]
     fn test_argon2() {
         let pwd = argon2(b"password", b"test");
-        assert!(regex::Regex::new(
+        assert!(Regex::new(
             r"[$]argon2(i)?(d)?[$]v=[0-9]{1,2}[$]m=[0-9]+,t=[0-9]{1,},p=[0-9]{1,}[$].*"
         )
         .unwrap()
