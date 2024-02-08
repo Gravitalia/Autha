@@ -1,5 +1,5 @@
 {
-  "checksum": "a2d3a37dcf7f1da6a4ece98916a17c80f30e71d3cdc1a1fe342d602518cbb115",
+  "checksum": "5d221b71449979db9378bc30e0af28df3a8485d368425ab82fcca78d53887641",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -5051,13 +5051,13 @@
       },
       "license": "BSD-3-Clause"
     },
-    "fast_image_resize 3.0.2": {
+    "fast_image_resize 3.0.3": {
       "name": "fast_image_resize",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/fast_image_resize/3.0.2/download",
-          "sha256": "ba7291ef427ab56daa0bf39cec6d8ea0392b6e41668fd16215aecc00ffa99f31"
+          "url": "https://crates.io/api/v1/crates/fast_image_resize/3.0.3/download",
+          "sha256": "dcdef35678d4ac518be2135c451d81ee0b542a35aee5df162886b95c8c43ee0d"
         }
       },
       "targets": [
@@ -5094,7 +5094,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "3.0.2"
+        "version": "3.0.3"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -7858,7 +7858,7 @@
               "target": "cloudinary"
             },
             {
-              "id": "fast_image_resize 3.0.2",
+              "id": "fast_image_resize 3.0.3",
               "target": "fast_image_resize"
             },
             {
