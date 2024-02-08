@@ -39,13 +39,14 @@ pub fn random_string(length: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use regex_lite::Regex;
 
     #[test]
     fn test_random_string() {
         let str = random_string(20);
         assert_eq!(str.len(), 20);
         assert_eq!(
-            regex::Regex::new(
+            Regex::new(
                 r"[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_%?!&]*"
             )
             .unwrap()
