@@ -5,17 +5,27 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
-aes = "0.8"
-fpe = "0.6"
+aes = { version = "0.8", optional = true }
+fpe = { version = "0.6", optional = true }
 hex = "0"
-log = "0.4"
-rand = "0.8"
+log = { version = "0.4", optional = true }
+rand = { version = "0.8", optional = true }
 regex = "1"
-ring = "0.17"
-rust-argon2 = "2"
+ring = { version = "0.17", optional = true }
+rust-argon2 = { version = "2", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
+
+[features]
+logging = ["log"]
+chacha20 = ["ring", "rand"]
+format_preserving = ["aes", "fpe"]
+argon2 = ["rust-argon2"]
+sha = ["ring"]
+
+encryption = ["dep:chacha20", "dep:format_preserving"]
+hashing = ["dep:argon2", "dep:sha"]
 
 [[bench]]
 name = "hash_benchmark"
