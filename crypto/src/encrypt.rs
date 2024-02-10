@@ -1,4 +1,4 @@
-use crate::{CryptoError, RADIX, random_bytes};
+use crate::{random_bytes, CryptoError, RADIX};
 #[cfg(feature = "format_preserving")]
 use fpe::ff1::{FlexibleNumeralString, Operations, FF1};
 use ring::aead::*;
@@ -79,15 +79,18 @@ pub fn format_preserving_encryption(
 ) -> Result<String, CryptoError> {
     // Get encryption key. The key MUST be 32 bytes (256 bits), otherwise it panics.
     let key = std::env::var("AES256_KEY").unwrap_or_else(|_| {
-        "4D6a514749614D6c74595a50756956446e5673424142524c4f4451736c515233".to_string()
+        "4D6a514749614D6c74595a50756956446e5673424142524c4f4451736c515233"
+            .to_string()
     });
 
-    let key_bytes = hex::decode(&key).map_err(|_| CryptoError::UnableDecodeHex)?;
+    let key_bytes =
+        hex::decode(key).map_err(|_| CryptoError::UnableDecodeHex)?;
 
     let ff = FF1::<aes::Aes256>::new(&key_bytes, RADIX)
         .map_err(|_| CryptoError::InvalidRadix)?;
 
-    let encrypted_data = ff.encrypt(&[], &FlexibleNumeralString::from(data.clone()))
+    let encrypted_data = ff
+        .encrypt(&[], &FlexibleNumeralString::from(data.clone()))
         .map_err(|_| CryptoError::ExceedRadix)?;
 
     Ok(hex::encode(encrypted_data.to_be_bytes(RADIX, data.len())))
