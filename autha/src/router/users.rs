@@ -348,7 +348,7 @@ pub async fn update(
                 "UPDATE accounts.users SET password = ? WHERE vanity = ?",
             );
             batch_values.push((
-                crypto::hash::argon2(np.as_bytes(), vanity.as_bytes()),
+                crypto::hash::argon2(np.as_bytes(), vanity.as_bytes())?,
                 vanity.clone(),
             ));
         }

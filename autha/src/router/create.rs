@@ -86,7 +86,7 @@ pub async fn handle(
     }
 
     // Check if user have already created account 5 minutes ago.
-    let hashed_ip = crypto::hash::sha256(ip.as_bytes()).unwrap_or_default();
+    let hashed_ip = crypto::hash::sha256(ip.as_bytes());
     if hashed_ip.is_empty() {
         log::warn!(
             "The IP could not be hashed. This can result in the uncontrolled creation of accounts."
@@ -250,7 +250,7 @@ pub async fn handle(
                     &crypto::hash::argon2(
                         body.password.as_bytes(),
                         body.vanity.as_bytes(),
-                    ),
+                    )?,
                     &body.locale,
                     &phone.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
                     &birthdate.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
