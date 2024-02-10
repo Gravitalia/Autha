@@ -9,8 +9,7 @@ aes = { version = "0.8", optional = true }
 fpe = { version = "0.6", optional = true }
 hex = "0"
 log = { version = "0.4", optional = true }
-rand = { version = "0.8", optional = true }
-ring = { version = "0.17", optional = true }
+ring = "0.17"
 rust-argon2 = { version = "2", optional = true }
 
 [dev-dependencies]
@@ -18,14 +17,9 @@ criterion = { version = "0.5", features = ["html_reports"] }
 regex-lite = "0.1"
 
 [features]
-logging = ["log"]
-chacha20 = ["ring", "rand"]
-format_preserving = ["aes", "fpe"]
 argon2 = ["rust-argon2"]
-sha = ["ring"]
-
-encryption = ["dep:chacha20", "dep:format_preserving"]
-hashing = ["dep:argon2", "dep:sha"]
+format_preserving = ["aes", "fpe"]
+logging = ["log"]
 
 [[bench]]
 name = "hash_benchmark"
@@ -33,4 +27,8 @@ harness = false
 
 [[bench]]
 name = "encryption_benchmark"
+harness = false
+
+[[bench]]
+name = "random_benchmark"
 harness = false
