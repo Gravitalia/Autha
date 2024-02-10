@@ -29,10 +29,10 @@ rust_test(
         "format_preserving",
     ],
     deps = all_crate_deps(
-        normal = True,
+        normal_dev = True,
     ),
     proc_macro_deps = all_crate_deps(
-        proc_macro = True,
+        proc_macro_dev = True,
     ),
     size = "large",
     timeout = "short",
