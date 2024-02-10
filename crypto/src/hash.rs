@@ -1,9 +1,11 @@
 use anyhow::Result;
+#[cfg(feature = "argon2")]
 use argon2::{Config, Variant, Version};
 use ring::digest::{Context, SHA1_FOR_LEGACY_USE_ONLY, SHA256};
 
 /// Hash plaintext using Argon2, mostly used for passwords.
 /// It uses the two version, Argon2d for GPU attacks and Argon2i for auxiliary channel attacks.
+#[cfg(feature = "argon2")]
 pub fn argon2(data: &[u8], vanity: &[u8]) -> String {
     argon2::hash_encoded(
         data,
@@ -35,7 +37,12 @@ pub fn argon2(data: &[u8], vanity: &[u8]) -> String {
 
 /// Verify if provided hash is matching with the plaintext password.
 /// Using Argon2 to provide checking.
-pub fn check_argon2(hash: String, password: &[u8], vanity: &[u8]) -> Result<bool> {
+#[cfg(feature = "argon2")]
+pub fn check_argon2(
+    hash: String,
+    password: &[u8],
+    vanity: &[u8],
+) -> Result<bool> {
     Ok(argon2::verify_encoded_ext(
         &hash,
         password,
@@ -70,9 +77,11 @@ pub fn sha1(data: &[u8]) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "argon2")]
     use regex_lite::Regex;
 
     #[test]
+    #[cfg(feature = "argon2")]
     fn test_argon2() {
         let pwd = argon2(b"password", b"test");
         assert!(Regex::new(
@@ -89,7 +98,8 @@ mod tests {
 
         assert_eq!(
             hash.unwrap(),
-            "8fced00b6ce281456d69daef5f2b33eaf1a4a29b5923ebe5f1f2c54f5886c7a3".to_string()
+            "8fced00b6ce281456d69daef5f2b33eaf1a4a29b5923ebe5f1f2c54f5886c7a3"
+                .to_string()
         );
     }
 
