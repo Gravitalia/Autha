@@ -6,7 +6,7 @@ fn hash_benchmark(c: &mut Criterion) {
         memory_cost: 262144,
         round: 1,
         lanes: 8,
-        secret: "".to_string(),
+        secret: "KEY".to_string(),
         hash_length: 16,
     };
 
