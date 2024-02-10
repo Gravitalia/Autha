@@ -785,8 +785,7 @@ dependencies = [
  "fpe",
  "hex",
  "log",
- "rand",
- "regex",
+ "regex-lite",
  "ring",
  "rust-argon2",
 ]

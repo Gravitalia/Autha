@@ -1,5 +1,5 @@
 {
-  "checksum": "a2d3a37dcf7f1da6a4ece98916a17c80f30e71d3cdc1a1fe342d602518cbb115",
+  "checksum": "5c080ad29008536139e421c555b45f1cc827e676837f5ba17d56431108ca124d",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -70,56 +70,6 @@
       },
       "license": "0BSD OR MIT OR Apache-2.0"
     },
-    "aes 0.8.3": {
-      "name": "aes",
-      "version": "0.8.3",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/aes/0.8.3/download",
-          "sha256": "ac1f845298e95f983ff1944b728ae08b8cebab80d684f0a832ed0fc74dfa27e2"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "aes",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "aes",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "cfg-if 1.0.0",
-              "target": "cfg_if"
-            },
-            {
-              "id": "cipher 0.4.4",
-              "target": "cipher"
-            }
-          ],
-          "selects": {
-            "cfg(any(target_arch = \"aarch64\", target_arch = \"x86_64\", target_arch = \"x86\"))": [
-              {
-                "id": "cpufeatures 0.2.12",
-                "target": "cpufeatures"
-              }
-            ]
-          }
-        },
-        "edition": "2021",
-        "version": "0.8.3"
-      },
-      "license": "MIT OR Apache-2.0"
-    },
     "aho-corasick 1.1.2": {
       "name": "aho-corasick",
       "version": "1.1.2",
@@ -145,22 +95,6 @@
         "compile_data_glob": [
           "**"
         ],
-        "crate_features": {
-          "common": [
-            "perf-literal",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "memchr 2.7.1",
-              "target": "memchr"
-            }
-          ],
-          "selects": {}
-        },
         "edition": "2021",
         "version": "1.1.2"
       },
@@ -630,66 +564,6 @@
         ],
         "edition": "2018",
         "version": "1.6.0"
-      },
-      "license": "MIT OR Apache-2.0"
-    },
-    "arrayref 0.3.7": {
-      "name": "arrayref",
-      "version": "0.3.7",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/arrayref/0.3.7/download",
-          "sha256": "6b4930d2cb77ce62f89ee5d5289b4ac049559b1c45539271f5ed4fdc7db34545"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "arrayref",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "arrayref",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2015",
-        "version": "0.3.7"
-      },
-      "license": "BSD-2-Clause"
-    },
-    "arrayvec 0.7.4": {
-      "name": "arrayvec",
-      "version": "0.7.4",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/arrayvec/0.7.4/download",
-          "sha256": "96d30a06541fbafbc7f82ed10c06164cfbd2c401138f6addd8404629c4b16711"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "arrayvec",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "arrayvec",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2018",
-        "version": "0.7.4"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -2140,60 +2014,6 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "blake2b_simd 1.0.2": {
-      "name": "blake2b_simd",
-      "version": "1.0.2",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/blake2b_simd/1.0.2/download",
-          "sha256": "23285ad32269793932e830392f2fe2f83e26488fd3ec778883a93c8323735780"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "blake2b_simd",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "blake2b_simd",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "arrayref 0.3.7",
-              "target": "arrayref"
-            },
-            {
-              "id": "arrayvec 0.7.4",
-              "target": "arrayvec"
-            },
-            {
-              "id": "constant_time_eq 0.3.0",
-              "target": "constant_time_eq"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "1.0.2"
-      },
-      "license": "MIT"
-    },
     "block-buffer 0.10.4": {
       "name": "block-buffer",
       "version": "0.10.4",
@@ -3184,36 +3004,6 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
-    "constant_time_eq 0.3.0": {
-      "name": "constant_time_eq",
-      "version": "0.3.0",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/constant_time_eq/0.3.0/download",
-          "sha256": "f7144d30dcf0fafbce74250a3963025d8d52177934239851c917d29f1df280c2"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "constant_time_eq",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "constant_time_eq",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2021",
-        "version": "0.3.0"
-      },
-      "license": "CC0-1.0 OR MIT-0 OR Apache-2.0"
-    },
     "cookie-factory 0.3.2": {
       "name": "cookie-factory",
       "version": "0.3.2",
@@ -3927,40 +3717,12 @@
         "deps": {
           "common": [
             {
-              "id": "aes 0.8.3",
-              "target": "aes"
-            },
-            {
               "id": "anyhow 1.0.79",
               "target": "anyhow"
             },
             {
-              "id": "fpe 0.6.1",
-              "target": "fpe"
-            },
-            {
               "id": "hex 0.4.3",
               "target": "hex"
-            },
-            {
-              "id": "log 0.4.20",
-              "target": "log"
-            },
-            {
-              "id": "rand 0.8.5",
-              "target": "rand"
-            },
-            {
-              "id": "regex 1.10.3",
-              "target": "regex"
-            },
-            {
-              "id": "ring 0.17.7",
-              "target": "ring"
-            },
-            {
-              "id": "rust-argon2 2.1.0",
-              "target": "argon2"
             }
           ],
           "selects": {}
@@ -3970,6 +3732,10 @@
             {
               "id": "criterion 0.5.1",
               "target": "criterion"
+            },
+            {
+              "id": "regex-lite 0.1.5",
+              "target": "regex_lite"
             }
           ],
           "selects": {}
@@ -5590,76 +5356,6 @@
         "version": "1.2.1"
       },
       "license": "MIT OR Apache-2.0"
-    },
-    "fpe 0.6.1": {
-      "name": "fpe",
-      "version": "0.6.1",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/fpe/0.6.1/download",
-          "sha256": "26c4b37de5ae15812a764c958297cfc50f5c010438f60c6ce75d11b802abd404"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "fpe",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "fpe",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "alloc",
-            "default",
-            "num-bigint",
-            "num-integer",
-            "num-traits",
-            "std"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "cbc 0.1.2",
-              "target": "cbc"
-            },
-            {
-              "id": "cipher 0.4.4",
-              "target": "cipher"
-            },
-            {
-              "id": "libm 0.2.8",
-              "target": "libm"
-            },
-            {
-              "id": "num-bigint 0.4.4",
-              "target": "num_bigint"
-            },
-            {
-              "id": "num-integer 0.1.45",
-              "target": "num_integer"
-            },
-            {
-              "id": "num-traits 0.2.17",
-              "target": "num_traits"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.6.1"
-      },
-      "license": "MIT/Apache-2.0"
     },
     "futures 0.3.30": {
       "name": "futures",
@@ -8986,79 +8682,10 @@
         "crate_features": {
           "common": [
             "default",
+            "extra_traits",
             "std"
           ],
-          "selects": {
-            "aarch64-apple-darwin": [
-              "extra_traits"
-            ],
-            "aarch64-apple-ios": [
-              "extra_traits"
-            ],
-            "aarch64-apple-ios-sim": [
-              "extra_traits"
-            ],
-            "aarch64-fuchsia": [
-              "extra_traits"
-            ],
-            "aarch64-linux-android": [
-              "extra_traits"
-            ],
-            "armv7-linux-androideabi": [
-              "extra_traits"
-            ],
-            "i686-apple-darwin": [
-              "extra_traits"
-            ],
-            "i686-linux-android": [
-              "extra_traits"
-            ],
-            "i686-unknown-freebsd": [
-              "extra_traits"
-            ],
-            "powerpc-unknown-linux-gnu": [
-              "extra_traits"
-            ],
-            "riscv32imc-unknown-none-elf": [
-              "extra_traits"
-            ],
-            "riscv64gc-unknown-none-elf": [
-              "extra_traits"
-            ],
-            "s390x-unknown-linux-gnu": [
-              "extra_traits"
-            ],
-            "thumbv7em-none-eabi": [
-              "extra_traits"
-            ],
-            "thumbv8m.main-none-eabi": [
-              "extra_traits"
-            ],
-            "wasm32-unknown-unknown": [
-              "extra_traits"
-            ],
-            "wasm32-wasi": [
-              "extra_traits"
-            ],
-            "x86_64-apple-darwin": [
-              "extra_traits"
-            ],
-            "x86_64-apple-ios": [
-              "extra_traits"
-            ],
-            "x86_64-fuchsia": [
-              "extra_traits"
-            ],
-            "x86_64-linux-android": [
-              "extra_traits"
-            ],
-            "x86_64-unknown-freebsd": [
-              "extra_traits"
-            ],
-            "x86_64-unknown-none": [
-              "extra_traits"
-            ]
-          }
+          "selects": {}
         },
         "deps": {
           "common": [
@@ -9071,65 +8698,6 @@
         },
         "edition": "2015",
         "version": "0.2.152"
-      },
-      "build_script_attrs": {
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT OR Apache-2.0"
-    },
-    "libm 0.2.8": {
-      "name": "libm",
-      "version": "0.2.8",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/libm/0.2.8/download",
-          "sha256": "4ec2a862134d2a7d32d7983ddcdd1c4923530833c9f2ea1a44fc5fa473989058"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "libm",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "libm",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "crate_features": {
-          "common": [
-            "default"
-          ],
-          "selects": {}
-        },
-        "deps": {
-          "common": [
-            {
-              "id": "libm 0.2.8",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.2.8"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -9173,6 +8741,9 @@
             "aarch64-unknown-linux-gnu": [
               "errno"
             ],
+            "aarch64-unknown-nixos-gnu": [
+              "errno"
+            ],
             "arm-unknown-linux-gnueabi": [
               "errno"
             ],
@@ -9183,6 +8754,9 @@
               "errno"
             ],
             "x86_64-unknown-linux-gnu": [
+              "errno"
+            ],
+            "x86_64-unknown-nixos-gnu": [
               "errno"
             ]
           }
@@ -9219,89 +8793,43 @@
         ],
         "crate_features": {
           "common": [
-            "elf",
-            "errno",
             "general",
+            "if_ether",
             "ioctl",
-            "no_std"
+            "net",
+            "netlink",
+            "no_std",
+            "prctl",
+            "xdp"
           ],
           "selects": {
-            "aarch64-linux-android": [
-              "if_ether",
-              "net",
-              "netlink",
-              "prctl",
-              "xdp"
-            ],
             "aarch64-unknown-linux-gnu": [
-              "if_ether",
-              "net",
-              "netlink",
-              "prctl",
-              "xdp"
+              "elf",
+              "errno"
+            ],
+            "aarch64-unknown-nixos-gnu": [
+              "elf",
+              "errno"
             ],
             "arm-unknown-linux-gnueabi": [
-              "if_ether",
-              "net",
-              "netlink",
-              "prctl",
-              "xdp"
-            ],
-            "armv7-linux-androideabi": [
-              "if_ether",
-              "net",
-              "netlink",
-              "prctl",
-              "xdp"
+              "elf",
+              "errno"
             ],
             "armv7-unknown-linux-gnueabi": [
-              "if_ether",
-              "net",
-              "netlink",
-              "prctl",
-              "xdp"
-            ],
-            "i686-linux-android": [
-              "if_ether",
-              "net",
-              "netlink",
-              "prctl",
-              "xdp"
+              "elf",
+              "errno"
             ],
             "i686-unknown-linux-gnu": [
-              "if_ether",
-              "net",
-              "netlink",
-              "prctl",
-              "xdp"
-            ],
-            "powerpc-unknown-linux-gnu": [
-              "if_ether",
-              "net",
-              "netlink",
-              "prctl",
-              "xdp"
-            ],
-            "s390x-unknown-linux-gnu": [
-              "if_ether",
-              "net",
-              "netlink",
-              "prctl",
-              "xdp"
-            ],
-            "x86_64-linux-android": [
-              "if_ether",
-              "net",
-              "netlink",
-              "prctl",
-              "xdp"
+              "elf",
+              "errno"
             ],
             "x86_64-unknown-linux-gnu": [
-              "if_ether",
-              "net",
-              "netlink",
-              "prctl",
-              "xdp"
+              "elf",
+              "errno"
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              "elf",
+              "errno"
             ]
           }
         },
@@ -13105,36 +12633,13 @@
         ],
         "crate_features": {
           "common": [
-            "default",
-            "perf",
-            "perf-backtrack",
-            "perf-cache",
-            "perf-dfa",
-            "perf-inline",
-            "perf-literal",
-            "perf-onepass",
             "std",
-            "unicode",
-            "unicode-age",
-            "unicode-bool",
-            "unicode-case",
-            "unicode-gencat",
-            "unicode-perl",
-            "unicode-script",
-            "unicode-segment"
+            "unicode-bool"
           ],
           "selects": {}
         },
         "deps": {
           "common": [
-            {
-              "id": "aho-corasick 1.1.2",
-              "target": "aho_corasick"
-            },
-            {
-              "id": "memchr 2.7.1",
-              "target": "memchr"
-            },
             {
               "id": "regex-automata 0.4.4",
               "target": "regex_automata"
@@ -13179,40 +12684,17 @@
         "crate_features": {
           "common": [
             "alloc",
-            "dfa-onepass",
-            "hybrid",
             "meta",
-            "nfa-backtrack",
             "nfa-pikevm",
             "nfa-thompson",
-            "perf-inline",
-            "perf-literal",
-            "perf-literal-multisubstring",
-            "perf-literal-substring",
             "std",
             "syntax",
-            "unicode",
-            "unicode-age",
-            "unicode-bool",
-            "unicode-case",
-            "unicode-gencat",
-            "unicode-perl",
-            "unicode-script",
-            "unicode-segment",
-            "unicode-word-boundary"
+            "unicode-bool"
           ],
           "selects": {}
         },
         "deps": {
           "common": [
-            {
-              "id": "aho-corasick 1.1.2",
-              "target": "aho_corasick"
-            },
-            {
-              "id": "memchr 2.7.1",
-              "target": "memchr"
-            },
             {
               "id": "regex-syntax 0.8.2",
               "target": "regex_syntax"
@@ -13290,16 +12772,8 @@
         ],
         "crate_features": {
           "common": [
-            "default",
             "std",
-            "unicode",
-            "unicode-age",
-            "unicode-bool",
-            "unicode-case",
-            "unicode-gencat",
-            "unicode-perl",
-            "unicode-script",
-            "unicode-segment"
+            "unicode-bool"
           ],
           "selects": {}
         },
@@ -13617,53 +13091,6 @@
       },
       "license": null
     },
-    "rust-argon2 2.1.0": {
-      "name": "rust-argon2",
-      "version": "2.1.0",
-      "repository": {
-        "Http": {
-          "url": "https://crates.io/api/v1/crates/rust-argon2/2.1.0/download",
-          "sha256": "9d9848531d60c9cbbcf9d166c885316c24bc0e2a9d3eba0956bb6cbbd79bc6e8"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "argon2",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "argon2",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "base64 0.21.7",
-              "target": "base64"
-            },
-            {
-              "id": "blake2b_simd 1.0.2",
-              "target": "blake2b_simd"
-            },
-            {
-              "id": "constant_time_eq 0.3.0",
-              "target": "constant_time_eq"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "2.1.0"
-      },
-      "license": "MIT/Apache-2.0"
-    },
     "rustc-demangle 0.1.23": {
       "name": "rustc-demangle",
       "version": "0.1.23",
@@ -13884,6 +13311,20 @@
               "termios",
               "time"
             ],
+            "aarch64-unknown-nixos-gnu": [
+              "event",
+              "pipe",
+              "process",
+              "termios",
+              "time"
+            ],
+            "aarch64-unknown-nto-qnx710": [
+              "event",
+              "pipe",
+              "process",
+              "termios",
+              "time"
+            ],
             "arm-unknown-linux-gnueabi": [
               "event",
               "pipe",
@@ -14004,6 +13445,13 @@
               "termios",
               "time"
             ],
+            "x86_64-unknown-nixos-gnu": [
+              "event",
+              "pipe",
+              "process",
+              "termios",
+              "time"
+            ],
             "x86_64-unknown-none": [
               "termios"
             ]
@@ -14028,11 +13476,6 @@
               }
             ],
             "cfg(all(not(rustix_use_libc), not(miri), target_os = \"linux\", target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\"))))": [
-              {
-                "id": "errno 0.3.8",
-                "target": "errno",
-                "alias": "libc_errno"
-              },
               {
                 "id": "linux-raw-sys 0.4.12",
                 "target": "linux_raw_sys"
@@ -21082,6 +20525,12 @@
     "aarch64-unknown-linux-gnu": [
       "aarch64-unknown-linux-gnu"
     ],
+    "aarch64-unknown-nixos-gnu": [
+      "aarch64-unknown-nixos-gnu"
+    ],
+    "aarch64-unknown-nto-qnx710": [
+      "aarch64-unknown-nto-qnx710"
+    ],
     "arm-unknown-linux-gnueabi": [
       "arm-unknown-linux-gnueabi"
     ],
@@ -21113,23 +20562,28 @@
     "cfg(all(any(target_os = \"android\", target_os = \"linux\"), any(target_arch = \"aarch64\", target_arch = \"arm\")))": [
       "aarch64-linux-android",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi"
     ],
     "cfg(all(not(rustix_use_libc), not(miri), target_os = \"linux\", any(target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\"), all(target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"powerpc64\", target_arch = \"riscv64\", target_arch = \"mips\", target_arch = \"mips64\")))))": [
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
       "arm-unknown-linux-gnueabi",
       "armv7-unknown-linux-gnueabi",
       "i686-unknown-linux-gnu",
-      "x86_64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "cfg(all(not(rustix_use_libc), not(miri), target_os = \"linux\", target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"riscv64\", all(rustix_use_experimental_asm, target_arch = \"powerpc64\"), all(rustix_use_experimental_asm, target_arch = \"mips\"), all(rustix_use_experimental_asm, target_arch = \"mips32r6\"), all(rustix_use_experimental_asm, target_arch = \"mips64\"), all(rustix_use_experimental_asm, target_arch = \"mips64r6\"), target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\"))))": [
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
       "arm-unknown-linux-gnueabi",
       "armv7-unknown-linux-gnueabi",
       "i686-unknown-linux-gnu",
-      "x86_64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "cfg(all(not(windows), any(rustix_use_libc, miri, not(all(target_os = \"linux\", any(target_arch = \"x86\", all(target_arch = \"x86_64\", target_pointer_width = \"64\"), all(target_endian = \"little\", any(target_arch = \"arm\", all(target_arch = \"aarch64\", target_pointer_width = \"64\"), target_arch = \"powerpc64\", target_arch = \"riscv64\", target_arch = \"mips\", target_arch = \"mips64\"))))))))": [
       "aarch64-apple-darwin",
@@ -21137,6 +20591,7 @@
       "aarch64-apple-ios-sim",
       "aarch64-fuchsia",
       "aarch64-linux-android",
+      "aarch64-unknown-nto-qnx710",
       "armv7-linux-androideabi",
       "i686-apple-darwin",
       "i686-linux-android",
@@ -21162,6 +20617,7 @@
       "aarch64-apple-ios-sim",
       "aarch64-fuchsia",
       "aarch64-linux-android",
+      "aarch64-unknown-nto-qnx710",
       "armv7-linux-androideabi",
       "i686-apple-darwin",
       "i686-linux-android",
@@ -21185,7 +20641,8 @@
       "aarch64-pc-windows-msvc"
     ],
     "cfg(all(target_arch = \"aarch64\", target_os = \"linux\"))": [
-      "aarch64-unknown-linux-gnu"
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu"
     ],
     "cfg(all(target_arch = \"aarch64\", target_os = \"windows\"))": [
       "aarch64-pc-windows-msvc"
@@ -21209,7 +20666,8 @@
       "i686-pc-windows-msvc"
     ],
     "cfg(all(target_arch = \"x86_64\", target_env = \"gnu\", not(target_abi = \"llvm\"), not(windows_raw_dylib)))": [
-      "x86_64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "cfg(all(target_arch = \"x86_64\", target_env = \"msvc\", not(windows_raw_dylib)))": [
       "x86_64-pc-windows-msvc"
@@ -21220,6 +20678,8 @@
       "aarch64-fuchsia",
       "aarch64-linux-android",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi",
@@ -21232,7 +20692,8 @@
       "x86_64-fuchsia",
       "x86_64-linux-android",
       "x86_64-unknown-freebsd",
-      "x86_64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "cfg(any(target_arch = \"aarch64\", target_arch = \"arm\", target_arch = \"x86\", target_arch = \"x86_64\"))": [
       "aarch64-apple-darwin",
@@ -21242,6 +20703,8 @@
       "aarch64-linux-android",
       "aarch64-pc-windows-msvc",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi",
@@ -21259,6 +20722,7 @@
       "x86_64-pc-windows-msvc",
       "x86_64-unknown-freebsd",
       "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu",
       "x86_64-unknown-none"
     ],
     "cfg(any(target_arch = \"aarch64\", target_arch = \"x86\", target_arch = \"x86_64\"))": [
@@ -21269,6 +20733,8 @@
       "aarch64-linux-android",
       "aarch64-pc-windows-msvc",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "i686-apple-darwin",
       "i686-linux-android",
       "i686-pc-windows-msvc",
@@ -21281,6 +20747,7 @@
       "x86_64-pc-windows-msvc",
       "x86_64-unknown-freebsd",
       "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu",
       "x86_64-unknown-none"
     ],
     "cfg(any(target_arch = \"aarch64\", target_arch = \"x86_64\", target_arch = \"x86\"))": [
@@ -21291,6 +20758,8 @@
       "aarch64-linux-android",
       "aarch64-pc-windows-msvc",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "i686-apple-darwin",
       "i686-linux-android",
       "i686-pc-windows-msvc",
@@ -21303,6 +20772,7 @@
       "x86_64-pc-windows-msvc",
       "x86_64-unknown-freebsd",
       "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu",
       "x86_64-unknown-none"
     ],
     "cfg(any(target_os = \"macos\", target_os = \"ios\"))": [
@@ -21320,6 +20790,8 @@
       "aarch64-fuchsia",
       "aarch64-linux-android",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi",
@@ -21334,7 +20806,8 @@
       "x86_64-fuchsia",
       "x86_64-linux-android",
       "x86_64-unknown-freebsd",
-      "x86_64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "cfg(any(unix, target_os = \"wasi\"))": [
       "aarch64-apple-darwin",
@@ -21343,6 +20816,8 @@
       "aarch64-fuchsia",
       "aarch64-linux-android",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi",
@@ -21358,7 +20833,8 @@
       "x86_64-fuchsia",
       "x86_64-linux-android",
       "x86_64-unknown-freebsd",
-      "x86_64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "cfg(any(windows, unix, target_os = \"redox\"))": [
       "aarch64-apple-darwin",
@@ -21368,6 +20844,8 @@
       "aarch64-linux-android",
       "aarch64-pc-windows-msvc",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi",
@@ -21384,7 +20862,8 @@
       "x86_64-linux-android",
       "x86_64-pc-windows-msvc",
       "x86_64-unknown-freebsd",
-      "x86_64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "cfg(not(all(windows, target_env = \"msvc\", not(target_vendor = \"uwp\"))))": [
       "aarch64-apple-darwin",
@@ -21393,6 +20872,8 @@
       "aarch64-fuchsia",
       "aarch64-linux-android",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi",
@@ -21414,12 +20895,15 @@
       "x86_64-linux-android",
       "x86_64-unknown-freebsd",
       "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu",
       "x86_64-unknown-none"
     ],
     "cfg(not(any(target_os = \"windows\", target_os = \"macos\", target_os = \"ios\")))": [
       "aarch64-fuchsia",
       "aarch64-linux-android",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi",
@@ -21438,6 +20922,7 @@
       "x86_64-linux-android",
       "x86_64-unknown-freebsd",
       "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu",
       "x86_64-unknown-none"
     ],
     "cfg(not(any(windows, target_os = \"hermit\", target_os = \"unknown\")))": [
@@ -21447,6 +20932,8 @@
       "aarch64-fuchsia",
       "aarch64-linux-android",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi",
@@ -21467,6 +20954,7 @@
       "x86_64-linux-android",
       "x86_64-unknown-freebsd",
       "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu",
       "x86_64-unknown-none"
     ],
     "cfg(not(target_arch = \"wasm32\"))": [
@@ -21477,6 +20965,8 @@
       "aarch64-linux-android",
       "aarch64-pc-windows-msvc",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi",
@@ -21498,6 +20988,7 @@
       "x86_64-pc-windows-msvc",
       "x86_64-unknown-freebsd",
       "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu",
       "x86_64-unknown-none"
     ],
     "cfg(not(target_family = \"wasm\"))": [
@@ -21508,6 +20999,8 @@
       "aarch64-linux-android",
       "aarch64-pc-windows-msvc",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi",
@@ -21529,6 +21022,7 @@
       "x86_64-pc-windows-msvc",
       "x86_64-unknown-freebsd",
       "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu",
       "x86_64-unknown-none"
     ],
     "cfg(not(windows))": [
@@ -21538,6 +21032,8 @@
       "aarch64-fuchsia",
       "aarch64-linux-android",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi",
@@ -21559,6 +21055,7 @@
       "x86_64-linux-android",
       "x86_64-unknown-freebsd",
       "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu",
       "x86_64-unknown-none"
     ],
     "cfg(target_arch = \"spirv\")": [],
@@ -21597,6 +21094,8 @@
       "aarch64-fuchsia",
       "aarch64-linux-android",
       "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
       "arm-unknown-linux-gnueabi",
       "armv7-linux-androideabi",
       "armv7-unknown-linux-gnueabi",
@@ -21611,7 +21110,8 @@
       "x86_64-fuchsia",
       "x86_64-linux-android",
       "x86_64-unknown-freebsd",
-      "x86_64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "cfg(windows)": [
       "aarch64-pc-windows-msvc",
@@ -21681,8 +21181,48 @@
     "x86_64-unknown-linux-gnu": [
       "x86_64-unknown-linux-gnu"
     ],
+    "x86_64-unknown-nixos-gnu": [
+      "x86_64-unknown-nixos-gnu"
+    ],
     "x86_64-unknown-none": [
       "x86_64-unknown-none"
     ]
-  }
+  },
+  "direct_deps": [
+    "anyhow 1.0.79",
+    "async-trait 0.1.77",
+    "chrono 0.4.33",
+    "cloudinary 0.4.0",
+    "fast_image_resize 3.0.2",
+    "fern 0.6.2",
+    "futures-executor 0.3.30",
+    "hex 0.4.3",
+    "image 0.24.8",
+    "isolang 2.4.0",
+    "jsonwebtoken 9.2.0",
+    "kafka 0.10.0",
+    "lapin 2.3.1",
+    "lazy_static 1.4.0",
+    "log 0.4.20",
+    "memcache 0.17.2",
+    "prost 0.12.3",
+    "prost-types 0.12.3",
+    "r2d2 0.8.10",
+    "regex-lite 0.1.5",
+    "reqwest 0.11.24",
+    "scylla 0.12.0",
+    "serde 1.0.196",
+    "serde_json 1.0.113",
+    "serde_yaml 0.9.31",
+    "tempfile 3.10.0",
+    "tokio 1.36.0",
+    "tonic 0.10.2",
+    "tonic-build 0.10.2",
+    "totp-lite 2.0.1",
+    "uuid 1.7.0",
+    "warp 0.3.6"
+  ],
+  "direct_dev_deps": [
+    "criterion 0.5.1"
+  ]
 }
