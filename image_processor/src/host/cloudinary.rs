@@ -41,13 +41,17 @@ pub struct Credentials {
 /// SHA1 buffer hash.
 pub async fn upload(credentials: Credentials, buffer: &[u8]) -> Result<String> {
     // Hash buffer image to obtain unique identifier.
-    let hash = sha1(buffer)?;
+    let hash = sha1(buffer);
 
     // Set public ID.
     let options = UploadOptions::new().set_public_id(hash.clone());
 
     // Set credentials.
-    let upload = Upload::new(credentials.key, credentials.cloud_name, credentials.secret);
+    let upload = Upload::new(
+        credentials.key,
+        credentials.cloud_name,
+        credentials.secret,
+    );
 
     // Create temporary file into the memory and write on it.
     let mut temp_file = NamedTempFile::new()?;

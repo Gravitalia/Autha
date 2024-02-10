@@ -4,11 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1"
 aes = { version = "0.8", optional = true }
 fpe = { version = "0.6", optional = true }
 hex = "0"
-log = { version = "0.4", optional = true }
 ring = "0.17"
 rust-argon2 = { version = "2", optional = true }
 
@@ -19,7 +17,6 @@ regex-lite = "0.1"
 [features]
 argon2 = ["rust-argon2"]
 format_preserving = ["aes", "fpe"]
-logging = ["log"]
 
 [[bench]]
 name = "hash_benchmark"

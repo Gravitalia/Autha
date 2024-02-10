@@ -768,11 +768,9 @@ name = "crypto"
 version = "0.1.0"
 dependencies = [
  "aes",
- "anyhow",
  "criterion",
  "fpe",
  "hex",
- "log",
  "regex-lite",
  "ring",
  "rust-argon2",

@@ -26,7 +26,7 @@ pub async fn handle(
     }
 
     // Check that the user has not tried to connect 5 times in the last 5 minutes.
-    let hashed_ip = crypto::hash::sha256(ip.as_bytes()).unwrap_or_default();
+    let hashed_ip = crypto::hash::sha256(ip.as_bytes());
     let rate_limit = if hashed_ip.is_empty() {
         log::warn!("The IP could not be hashed. This can result in massive trying of connection.");
 

@@ -344,11 +344,33 @@ pub async fn update(
         if !is_psw_valid || !crate::router::create::PASSWORD.is_match(&np) {
             return Ok(crate::router::err(super::INVALID_PASSWORD));
         } else {
+            let argon_config = crypto::hash::Argon2Configuration {
+                memory_cost: std::env::var("MEMORY_COST")
+                    .unwrap_or_default()
+                    .parse::<u32>()
+                    .unwrap_or(262144),
+                round: std::env::var("ROUND")
+                    .unwrap_or_default()
+                    .parse::<u32>()
+                    .unwrap_or(1),
+                lanes: 8,
+                secret: std::env::var("KEY")
+                    .unwrap_or_else(|_| "KEY".to_string()),
+                hash_length: std::env::var("HASH_LENGTH")
+                    .unwrap_or_default()
+                    .parse::<u32>()
+                    .unwrap_or(16),
+            };
+
             batch.append_statement(
                 "UPDATE accounts.users SET password = ? WHERE vanity = ?",
             );
             batch_values.push((
-                crypto::hash::argon2(np.as_bytes(), vanity.as_bytes()),
+                crypto::hash::argon2(
+                    argon_config,
+                    np.as_bytes(),
+                    Some(vanity.as_bytes()),
+                )?,
                 vanity.clone(),
             ));
         }

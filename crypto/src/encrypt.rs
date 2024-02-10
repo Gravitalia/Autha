@@ -1,8 +1,8 @@
-use crate::random_bytes;
-use anyhow::Result;
+use crate::{random_bytes, CryptoError, RADIX};
 #[cfg(feature = "format_preserving")]
 use fpe::ff1::{FlexibleNumeralString, Operations, FF1};
 use ring::aead::*;
+use ring::error::Unspecified;
 use std::num::Wrapping;
 
 /// A generator for producing nonces.
@@ -27,15 +27,16 @@ impl NonceGen {
 }
 
 impl NonceSequence for NonceGen {
-    fn advance(&mut self) -> Result<Nonce, ring::error::Unspecified> {
+    fn advance(&mut self) -> Result<Nonce, Unspecified> {
         // ! Warning: doesn't check u128 overflow correctly
         // Also, ring docs explicitly call this
         // out as "reasonable (but probably not ideal)"
         let n = self.current.0;
         self.current += 1;
         if self.current.0 == self.start {
-            return Err(ring::error::Unspecified);
+            return Err(Unspecified);
         }
+
         Ok(Nonce::assume_unique_for_key(
             n.to_le_bytes()[..12].try_into().unwrap_or_default(),
         ))
@@ -44,7 +45,9 @@ impl NonceSequence for NonceGen {
 
 /// Encrypts the provided data using the CHACHA20_POLY1305 algorithm.
 /// Returns a tuple containing the nonce as a hexadecimal string and the encrypted data as a hexadecimal string.
-pub fn chacha20_poly1305(mut data: Vec<u8>) -> Result<(String, String)> {
+pub fn chacha20_poly1305(
+    mut data: Vec<u8>,
+) -> Result<(String, String), Unspecified> {
     // Get CHACHA20 key. The key MUST be 32 bytes (256 bits), otherwise it panics.
     let key = std::env::var("CHACHA20_KEY").unwrap_or_default();
     let key_bytes: &[u8] = if key.is_empty() {
@@ -54,7 +57,8 @@ pub fn chacha20_poly1305(mut data: Vec<u8>) -> Result<(String, String)> {
     };
 
     // Generate crypto-secure 12 random bytes.
-    let nonce_seed: [u8; 12] = random_bytes(12).as_slice().try_into()?;
+    let nonce_seed: [u8; 12] =
+        random_bytes(12).as_slice().try_into().unwrap_or_default();
 
     let mut sealing_key = {
         let key = UnboundKey::new(&CHACHA20_POLY1305, key_bytes)?;
@@ -70,22 +74,26 @@ pub fn chacha20_poly1305(mut data: Vec<u8>) -> Result<(String, String)> {
 /// Encrypts data the provided data using (Format-preserving encryption)
 /// and FF1 (Feistel-based Encryption Mode) with AES256.
 #[cfg(feature = "format_preserving")]
-pub fn format_preserving_encryption(data: Vec<u16>) -> Result<String> {
+pub fn format_preserving_encryption(
+    data: Vec<u16>,
+) -> Result<String, CryptoError> {
     // Get encryption key. The key MUST be 32 bytes (256 bits), otherwise it panics.
-    let mut key = std::env::var("AES256_KEY").unwrap_or_default();
-    if key.is_empty() {
-        key =
-            "4D6A514749614D6C74595A50756956446E5673424142524C4F4451736C515233"
-                .to_string();
-    }
+    let key = std::env::var("AES256_KEY").unwrap_or_else(|_| {
+        "4D6a514749614D6c74595a50756956446e5673424142524c4f4451736c515233"
+            .to_string()
+    });
 
-    let length = data.len();
+    let key_bytes =
+        hex::decode(key).map_err(|_| CryptoError::UnableDecodeHex)?;
 
-    let ff = FF1::<aes::Aes256>::new(&hex::decode(key)?, 256)?;
-    Ok(hex::encode(
-        ff.encrypt(&[], &FlexibleNumeralString::from(data))?
-            .to_be_bytes(256, length),
-    ))
+    let ff = FF1::<aes::Aes256>::new(&key_bytes, RADIX)
+        .map_err(|_| CryptoError::InvalidRadix)?;
+
+    let encrypted_data = ff
+        .encrypt(&[], &FlexibleNumeralString::from(data.clone()))
+        .map_err(|_| CryptoError::ExceedRadix)?;
+
+    Ok(hex::encode(encrypted_data.to_be_bytes(RADIX, data.len())))
 }
 
 #[cfg(test)]
