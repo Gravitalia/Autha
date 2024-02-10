@@ -1,5 +1,3 @@
-// Clippy lint.
-#![deny(missing_docs)]
 //! # crypto
 //!
 //! little library using ring and fpe to encrypt,
@@ -11,6 +9,9 @@
 //! println!("SHA256 of 'Hello world': {}", crypto::hash::sha256(b"Hello world").unwrap_or_default());
 //! ```
 
+#![forbid(unsafe_code)]
+#![deny(dead_code, unused_imports, unused_mut, missing_docs)]
+
 /// Module to decrypt datas.
 pub mod decrypt;
 /// Module to encrypt datas.
@@ -18,19 +19,30 @@ pub mod encrypt;
 /// Module to hash datas.
 pub mod hash;
 
-use rand::rngs::OsRng;
-use rand::Rng;
+use ring::rand::{SecureRandom, SystemRandom};
+const CHARS: &str =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_%?!&";
+const CHARS_LENGTH: u8 = CHARS.len() as u8;
+
+/// Generate random bytes cryptographically-secure PRNG seeded from the system's entropy pool.
+pub fn random_bytes(length: usize) -> Vec<u8> {
+    let mut bytes = vec![0; length];
+
+    let sr = SystemRandom::new();
+    sr.fill(&mut bytes).unwrap_or_default();
+
+    bytes
+}
 
 /// Generate random string with thread-local cryptographically-secure PRNG seeded from the system's entropy pool.
 pub fn random_string(length: usize) -> String {
-    let chars: Vec<char> = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_%?!&"
-        .chars()
-        .collect();
+    let chars: Vec<char> = CHARS.chars().collect();
     let mut result = String::with_capacity(length);
-    let mut rng = OsRng;
 
-    for _ in 0..length {
-        result.push(chars[rng.gen_range(0..62)]);
+    let random_bytes = random_bytes(length);
+
+    for n in 0..length {
+        result.push(chars[(random_bytes[n] % CHARS_LENGTH) as usize]);
     }
 
     result
@@ -42,8 +54,17 @@ mod tests {
     use regex_lite::Regex;
 
     #[test]
+    fn test_random_bytes() {
+        let bytes = random_bytes(20);
+        println!("{:?}", bytes);
+
+        assert_eq!(bytes.len(), 20);
+    }
+
+    #[test]
     fn test_random_string() {
         let str = random_string(20);
+
         assert_eq!(str.len(), 20);
         assert_eq!(
             Regex::new(
