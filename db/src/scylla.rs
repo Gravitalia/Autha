@@ -29,8 +29,7 @@ const CREATE_USERS_TABLE: &str = r#"
         deleted BOOLEAN,
         mfa_code TEXT,
         expire_at TIMESTAMP,
-        PRIMARY KEY (vanity) )
-        WITH cdc = TRUE;
+        PRIMARY KEY (vanity) );
 "#;
 const CREATE_BOTS_TABLE: &str = r#"
     CREATE TABLE IF NOT EXISTS accounts.bots (
