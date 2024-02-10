@@ -1,45 +1,37 @@
-[package]
-name = "autha"
+[workspace]
+resolver = "2"
+members = [
+    "autha",
+    "crypto",
+    "db",
+    "image_processor",
+]
+
+[workspace.package]
 version = "3.0.0"
+description = "fast and safe authorization delegation and account management API"
+homepage = "https://account.gravitalia.com"
+readme = "README.md"
 edition = "2021"
+license = "MPL"
 
-[dependencies]
-serde = { version = "1", features = ["derive"] }
-tonic = { version = "0.10", features = [ "default" ] }
-tokio = { version = "1.36", features = ["rt-multi-thread"] }
-warp = "0.3"
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = false
+debug = false
 
-crypto = { path = "../crypto" }
-db = { path = "../db", features = ["logging", "cassandra", "memcached", "apache_kafka", "rabbitmq"] }
-image_processor = { path = "../image_processor" }
+[profile.dev]
+opt-level = "z"
+debug = true
 
-anyhow = "1"
-hex = "0.4"
-jsonwebtoken = "9.2"
-lazy_static = "1"
-prost = "0.12"
-prost-types = "0.12"
-regex-lite = "0"
-reqwest = { version = "0.11", features = ["json"] }
-serde_json = "1"
-serde_yaml = "0.9"
-totp-lite = "2"
-uuid = { version = "1.7", features = ["v4"] }
-isolang = { version = "2.4", features = ["list_languages"] }
-chrono = "0.4"
+[profile.dev.package.crypto]
+opt-level = 3
 
-fern = "0.6"
-log = "0.4"
+[profile.bench.package.crypto]
+opt-level = 3
 
-opentelemetry = { version = "0.21", optional = true }
-opentelemetry-otlp = { version = "0.14", features = ["tonic"], optional = true }
-opentelemetry_sdk =  { version = "0.21", features = ["rt-tokio"], optional = true }
-prometheus = { version = "0.13", features = ["process"], optional = true }
-
-[build-dependencies]
-tonic-build = { version = "0.10", features = [ "prost" ] }
-
-[features]
-kafka = ["db/apache_kafka"]
-rabbitmq = ["db/rabbitmq"]
-telemetry = ["opentelemetry", "opentelemetry-otlp", "opentelemetry_sdk", "prometheus"]
+[profile.release.package.image_processor]
+opt-level = "z"
