@@ -6,7 +6,7 @@
 //! # Hash with SHA.
 //!
 //! ```rust
-//! println!("SHA256 of 'Hello world': {}", crypto::hash::sha256(b"Hello world").unwrap_or_default());
+//! println!("SHA256 of 'Hello world': {}", crypto::hash::sha256(b"Hello world"));
 //! ```
 
 #![forbid(unsafe_code)]
