@@ -239,6 +239,23 @@ pub async fn handle(
 
     // Create user on database.
     if let Some(query) = CREATE_USER.get() {
+        let argon_config = crypto::hash::Argon2Configuration {
+            memory_cost: std::env::var("MEMORY_COST")
+                .unwrap_or_default()
+                .parse::<u32>()
+                .unwrap_or(262144),
+            round: std::env::var("ROUND")
+                .unwrap_or_default()
+                .parse::<u32>()
+                .unwrap_or(1),
+            lanes: 8,
+            secret: std::env::var("KEY").unwrap_or_else(|_| "KEY".to_string()),
+            hash_length: std::env::var("HASH_LENGTH")
+                .unwrap_or_default()
+                .parse::<u32>()
+                .unwrap_or(16),
+        };
+
         if let Err(error) = scylla
             .connection
             .execute(
@@ -248,8 +265,9 @@ pub async fn handle(
                     &hashed_email,
                     &body.username,
                     &crypto::hash::argon2(
+                        argon_config,
                         body.password.as_bytes(),
-                        body.vanity.as_bytes(),
+                        Some(body.vanity.as_bytes()),
                     )?,
                     &body.locale,
                     &phone.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
