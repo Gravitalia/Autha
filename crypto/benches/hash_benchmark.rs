@@ -2,8 +2,16 @@ use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use crypto::hash::*;
 
 fn hash_benchmark(c: &mut Criterion) {
+    let config = Argon2Configuration {
+        memory_cost: 262144,
+        round: 1,
+        lanes: 8,
+        secret: "".to_string(),
+        hash_length: 16,
+    };
+
     c.bench_function("argon2id", |b| {
-        b.iter(|| argon2("password".as_bytes(), b"test"))
+        b.iter(|| argon2(config.clone(), "password".as_bytes(), Some(b"test")))
     });
 }
 
