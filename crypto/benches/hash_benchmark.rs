@@ -2,7 +2,7 @@ use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use crypto::hash::*;
 
 fn hash_benchmark(c: &mut Criterion) {
-    c.bench_function("hash", |b| {
+    c.bench_function("argon2id", |b| {
         b.iter(|| argon2("password".as_bytes(), b"test"))
     });
 }
@@ -10,14 +10,18 @@ fn hash_benchmark(c: &mut Criterion) {
 fn sha256_digest_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("throughput");
     group.throughput(Throughput::Bytes(32));
-    group.bench_function("sha256_digest", |b| b.iter(|| sha256(b"Internet Protocol")));
+    group.bench_function("sha256_digest", |b| {
+        b.iter(|| sha256(b"Internet Protocol"))
+    });
     group.finish();
 }
 
 fn sha1_digest_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("throughput");
     group.throughput(Throughput::Bytes(20));
-    group.bench_function("sha1_digest", |b| b.iter(|| sha1(b"Internet Protocol")));
+    group.bench_function("sha1_digest", |b| {
+        b.iter(|| sha1(b"Internet Protocol"))
+    });
     group.finish();
 }
 

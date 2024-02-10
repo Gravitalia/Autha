@@ -7,6 +7,10 @@ rust_library(
     name = "crypto",
     srcs = glob(["src/**/*.rs"]),
     aliases = aliases(),
+    crate_features = [
+        "argon2",
+        "format_preserving",
+    ],
     deps = all_crate_deps(
         normal = True,
     ),
@@ -20,11 +24,15 @@ rust_library(
 rust_test(
     name = "crypto_test",
     crate = ":crypto",
+    crate_features = [
+        "argon2",
+        "format_preserving",
+    ],
     deps = all_crate_deps(
-        normal = True,
+        normal_dev = True,
     ),
     proc_macro_deps = all_crate_deps(
-        proc_macro = True,
+        proc_macro_dev = True,
     ),
     size = "large",
     timeout = "short",

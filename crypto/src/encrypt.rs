@@ -1,6 +1,7 @@
+use crate::random_bytes;
 use anyhow::Result;
+#[cfg(feature = "format_preserving")]
 use fpe::ff1::{FlexibleNumeralString, Operations, FF1};
-use rand::{rngs::OsRng, RngCore};
 use ring::aead::*;
 use std::num::Wrapping;
 
@@ -36,7 +37,7 @@ impl NonceSequence for NonceGen {
             return Err(ring::error::Unspecified);
         }
         Ok(Nonce::assume_unique_for_key(
-            n.to_le_bytes()[..12].try_into().unwrap(),
+            n.to_le_bytes()[..12].try_into().unwrap_or_default(),
         ))
     }
 }
@@ -53,30 +54,29 @@ pub fn chacha20_poly1305(mut data: Vec<u8>) -> Result<(String, String)> {
     };
 
     // Generate crypto-secure 12 random bytes.
-    let mut os_rng = OsRng;
-    let mut nonce_seed = [0u8; 12];
-    os_rng.fill_bytes(&mut nonce_seed);
+    let nonce_seed: [u8; 12] = random_bytes(12).as_slice().try_into()?;
 
     let mut sealing_key = {
-        let key = UnboundKey::new(&CHACHA20_POLY1305, key_bytes).unwrap();
+        let key = UnboundKey::new(&CHACHA20_POLY1305, key_bytes)?;
         let nonce_gen = NonceGen::new(nonce_seed);
         SealingKey::new(key, nonce_gen)
     };
 
-    sealing_key
-        .seal_in_place_append_tag(Aad::empty(), &mut data)
-        .unwrap();
+    sealing_key.seal_in_place_append_tag(Aad::empty(), &mut data)?;
 
     Ok((hex::encode(nonce_seed), hex::encode(data)))
 }
 
 /// Encrypts data the provided data using (Format-preserving encryption)
 /// and FF1 (Feistel-based Encryption Mode) with AES256.
+#[cfg(feature = "format_preserving")]
 pub fn format_preserving_encryption(data: Vec<u16>) -> Result<String> {
     // Get encryption key. The key MUST be 32 bytes (256 bits), otherwise it panics.
     let mut key = std::env::var("AES256_KEY").unwrap_or_default();
     if key.is_empty() {
-        key = "4D6A514749614D6C74595A50756956446E5673424142524C4F4451736C515233".to_string();
+        key =
+            "4D6A514749614D6C74595A50756956446E5673424142524C4F4451736C515233"
+                .to_string();
     }
 
     let length = data.len();
@@ -99,16 +99,14 @@ mod tests {
 
         // Encrypt and get nonce and encrypted text.
         let (hex_nonce, encrypted) =
-            chacha20_poly1305(plaintext.as_bytes().to_vec()).unwrap_or_default();
+            chacha20_poly1305(plaintext.as_bytes().to_vec()).unwrap();
 
         // Convert nonce as hex to nonce in 12-bytes.
-        let nonce: [u8; 12] = hex::decode(hex_nonce)
-            .unwrap_or_default()
-            .try_into()
-            .unwrap_or_default();
+        let nonce: [u8; 12] =
+            hex::decode(hex_nonce).unwrap().try_into().unwrap();
         let decrypted =
-            chacha20_poly1305_decrypt(nonce, hex::decode(encrypted).unwrap_or_default())
-                .unwrap_or_default();
+            chacha20_poly1305_decrypt(nonce, hex::decode(encrypted).unwrap())
+                .unwrap();
 
         assert_eq!(decrypted, plaintext.to_string())
     }
