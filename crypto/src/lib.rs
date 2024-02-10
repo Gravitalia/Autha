@@ -20,6 +20,39 @@ pub mod encrypt;
 pub mod hash;
 
 use ring::rand::{SecureRandom, SystemRandom};
+use std::error::Error;
+use std::fmt;
+
+/// Error type for crypto errors.
+#[derive(Debug)]
+pub enum CryptoError {
+    /// An error with absolutely no details.
+    Unspecified,
+    /// An error when converting bytes to `String`.
+    UTF8Error,
+    /// Failed decoding hex value.
+    UnableDecodeHex,
+    /// Related to `fpe` crate.
+    InvalidRadix,
+    /// Related to `fpe` crate.
+    ExceedRadix,
+}
+
+impl fmt::Display for CryptoError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            CryptoError::Unspecified => write!(f, "Unknown error"),
+            CryptoError::UTF8Error => write!(f, "Bytes to `String` conversion failed."),
+            CryptoError::UnableDecodeHex => write!(f, "This error is linked to the `hex` crate. It is impossible to decode an input value."),
+            CryptoError::InvalidRadix => write!(f, "This error is linked to the `fpe` crate. The radix entered exceeds the maximum value (2..2^16)."),
+            CryptoError::ExceedRadix => write!(f, "This error is linked to the `fpe` crate. The input radix is too small for the expected output radix, increase the radix."),
+        }
+    }
+}
+
+impl Error for CryptoError {}
+
+const RADIX: u32 = 256;
 const CHARS: &str =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_%?!&";
 const CHARS_LENGTH: u8 = CHARS.len() as u8;
