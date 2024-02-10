@@ -1,4 +1,5 @@
 use anyhow::Result;
+#[cfg(feature = "format_preserving")]
 use fpe::ff1::{FlexibleNumeralString, Operations, FF1};
 use ring::aead::*;
 
@@ -25,22 +26,26 @@ pub fn chacha20_poly1305(
     match opening_key.open_in_place(Aad::empty(), &mut data) {
         Ok(res) => String::from_utf8(res.to_vec()),
         Err(_) => {
+            #[cfg(feature = "logging")]
             log::error!(
                 "Cannot decrypt ChaCha20-Poly1205 data, got an error during opening. Have you decoded hex before call the function?"
             );
 
             Ok("".to_string())
-        }
+        },
     }
 }
 
 /// Decrypts the provided data using the Format-preserving encryption
 /// with FF1 and AES256.
+#[cfg(feature = "format_preserving")]
 pub fn format_preserving_encryption(data: Vec<u16>) -> Result<String> {
     // Get encryption key. The key MUST be 32 bytes (256 bits), otherwise it panics.
     let mut key = std::env::var("AES256_KEY").unwrap_or_default();
     if key.is_empty() {
-        key = "4D6A514749614D6C74595A50756956446E5673424142524C4F4451736C515233".to_string();
+        key =
+            "4D6A514749614D6C74595A50756956446E5673424142524C4F4451736C515233"
+                .to_string();
     }
 
     let length = data.len();
