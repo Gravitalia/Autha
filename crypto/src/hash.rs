@@ -1,12 +1,11 @@
-use anyhow::Result;
 #[cfg(feature = "argon2")]
-use argon2::{Config, Variant, Version};
+use argon2::{Config, Error, Variant, Version};
 use ring::digest::{Context, SHA1_FOR_LEGACY_USE_ONLY, SHA256};
 
 /// Hash plaintext using Argon2, mostly used for passwords.
 /// It uses the two version, Argon2d for GPU attacks and Argon2i for auxiliary channel attacks.
 #[cfg(feature = "argon2")]
-pub fn argon2(data: &[u8], vanity: &[u8]) -> String {
+pub fn argon2(data: &[u8], vanity: &[u8]) -> Result<String, Error> {
     argon2::hash_encoded(
         data,
         crate::random_string(16).as_bytes(),
@@ -32,7 +31,6 @@ pub fn argon2(data: &[u8], vanity: &[u8]) -> String {
                 .unwrap_or(16),
         },
     )
-    .unwrap()
 }
 
 /// Verify if provided hash is matching with the plaintext password.
@@ -42,36 +40,36 @@ pub fn check_argon2(
     hash: String,
     password: &[u8],
     vanity: &[u8],
-) -> Result<bool> {
-    Ok(argon2::verify_encoded_ext(
+) -> Result<bool, Error> {
+    argon2::verify_encoded_ext(
         &hash,
         password,
         std::env::var("KEY")
             .unwrap_or_else(|_| "KEY".to_string())
             .as_bytes(),
         vanity,
-    )?)
+    )
 }
 
 /// Compute the SHA256 digest for the bytes data.
-pub fn sha256(data: &[u8]) -> Result<String> {
+pub fn sha256(data: &[u8]) -> String {
     let mut context = Context::new(&SHA256);
 
     context.update(data);
 
-    Ok(hex::encode(context.finish()))
+    hex::encode(context.finish())
 }
 
 /// Compute the SHA1 digest for the bytes data.
 ///
 /// # Warning
 /// This should only be used when security is not a priority.
-pub fn sha1(data: &[u8]) -> Result<String> {
+pub fn sha1(data: &[u8]) -> String {
     let mut context = Context::new(&SHA1_FOR_LEGACY_USE_ONLY);
 
     context.update(data);
 
-    Ok(hex::encode(context.finish()))
+    hex::encode(context.finish())
 }
 
 #[cfg(test)]
@@ -83,7 +81,8 @@ mod tests {
     #[test]
     #[cfg(feature = "argon2")]
     fn test_argon2() {
-        let pwd = argon2(b"password", b"test");
+        let pwd = argon2(b"password", b"test").unwrap();
+
         assert!(Regex::new(
             r"[$]argon2(i)?(d)?[$]v=[0-9]{1,2}[$]m=[0-9]+,t=[0-9]{1,},p=[0-9]{1,}[$].*"
         )
@@ -97,7 +96,7 @@ mod tests {
         let hash = sha256(b"rainbow");
 
         assert_eq!(
-            hash.unwrap(),
+            hash,
             "8fced00b6ce281456d69daef5f2b33eaf1a4a29b5923ebe5f1f2c54f5886c7a3"
                 .to_string()
         );
@@ -108,7 +107,7 @@ mod tests {
         let hash = sha1(b"hello world!");
 
         assert_eq!(
-            hash.unwrap(),
+            hash,
             "430ce34d020724ed75a196dfc2ad67c77772d169".to_string()
         );
     }
