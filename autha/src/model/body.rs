@@ -67,6 +67,8 @@ pub struct OAuth {
     pub client_secret: String,
     /// Temporary authorization code created before.
     pub code: String,
+    /// Unhashed code for PCKE.
+    pub code_verifier: Option<String>,
     /// Must be authorization_code.
     grant_type: String,
     /// Redirect URL to be followed by the user.

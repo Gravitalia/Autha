@@ -211,10 +211,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .and(warp::body::json())
         .and_then(router::update_user);
 
-    // OAuth
+    // OAuth.
     let create_oauth = warp::path("oauth2")
         .and(warp::path("authorize"))
-        .and(warp::post())
+        .and(warp::get())
         .and(router::with_metric())
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
