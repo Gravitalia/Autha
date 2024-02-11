@@ -1,15 +1,8 @@
-use super::model::User;
-use anyhow::{bail, Context, Result};
-use async_trait::async_trait;
+use anyhow::{Context, Result};
 use scylla::{
-    frame::Compression, prepared_statement::PreparedStatement,
-    transport::session::PoolSize, IntoTypedRows, Session, SessionBuilder,
+    frame::Compression, transport::session::PoolSize, Session, SessionBuilder,
 };
 use std::num::NonZeroUsize;
-use std::sync::OnceLock;
-
-/// Prepared query to get user faster.
-static GET_USER: OnceLock<PreparedStatement> = OnceLock::new();
 
 // Define constants for table creation and queries.
 const CREATE_USERS_TABLE: &str = r#"
@@ -104,21 +97,9 @@ pub struct Scylla {
     pub connection: Session,
 }
 
-/// Define a trait for the ScyllaManager with methods to interact with Scylla or Cassandra.
-#[async_trait]
-pub trait ScyllaManager {
-    /// Create every needed tables, if not exists.
-    async fn create_tables(&self) -> Result<()>;
-    /// Get a user in the Scylla database without cache.
-    async fn get_user(&self, vanity: &str) -> Result<User>;
-    /// Create a new scylla batch to perform mutliple requests.
-    fn new_batch(&self) -> scylla::batch::Batch;
-}
-
-#[async_trait]
-impl ScyllaManager for Scylla {
+impl Scylla {
     /// Create tables on "accounts" keyspace.
-    async fn create_tables(&self) -> Result<()> {
+    pub async fn create_tables(&self) -> Result<()> {
         for table in TABLES_TO_CREATE.iter() {
             self.connection
                 .query(table.to_string(), &[])
@@ -133,35 +114,11 @@ impl ScyllaManager for Scylla {
                 .context(format!("Failed to create index: {}", index))?;
         }
 
-        let get_user = self
-            .connection
-            .prepare(
-                "SELECT username, vanity, avatar, bio, email, birthdate, phone, verified, deleted, flags FROM accounts.users WHERE vanity = ?"
-            )
-            .await?;
-            GET_USER.get_or_init(|| get_user);
-
         Ok(())
     }
 
-    async fn get_user(&self, vanity: &str) -> Result<User> {
-        if let Some(rows) = self
-            .connection
-            .execute(GET_USER.get_or_init(|| unreachable!()), vec![vanity])
-            .await?
-            .rows
-        {
-            if rows.is_empty() {
-                bail!("no user found")
-            } else {
-                Ok(rows.into_typed::<User>().collect::<Vec<_>>()[0].clone()?)
-            }
-        } else {
-            bail!("no user found")
-        }
-    }
-
-    fn new_batch(&self) -> scylla::batch::Batch {
+    /// Create a new scylla batch to perform mutliple requests.
+    pub fn new_batch(&self) -> scylla::batch::Batch {
         scylla::batch::Batch::default()
     }
 }
