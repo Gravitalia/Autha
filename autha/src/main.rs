@@ -160,7 +160,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     };
 
     // Create needed tables.
-    if let Err(error) = scylladb.create_tables().await {
+    if let Err(error) = helpers::queries::create_tables(&scylladb).await {
         log::error!("Failed to create tables: {}", error);
     } else {
         log::trace!("Successfully created tables, if they didn't exist.");
