@@ -1,6 +1,6 @@
 mod pool;
 
-use anyhow::{anyhow, Result};
+use crate::DbError;
 use pool::MemcacheConnectionManager;
 use r2d2::Pool;
 
@@ -35,33 +35,19 @@ pub struct MemcachePool {
     pub connection: Option<Pool<MemcacheConnectionManager>>,
 }
 
-/// Define a trait for the MemcacheManager with methods to interact with Memcached.
-pub trait MemcacheManager {
-    /// Get data from a given key.
-    fn get<T: ToString>(&self, key: T) -> Result<Option<String>>;
-    /// Set data in Memcached and return the key.
-    fn set<T: ToString, V: Into<SetValue> + Clone>(
-        &self,
-        key: T,
-        value: V,
-    ) -> Result<String>;
-    /// Delete data based on the key.
-    fn delete<T: ToString>(&self, key: T) -> Result<()>;
-}
-
-impl MemcacheManager for MemcachePool {
+impl MemcachePool {
     /// Retrieve data from Memcached based on the key.
-    fn get<T: ToString>(&self, key: T) -> Result<Option<String>> {
+    pub fn get<T: ToString>(&self, key: T) -> Result<Option<String>, DbError> {
         let connection = self
             .connection
             .as_ref()
-            .ok_or_else(|| anyhow!("No connection pool"))?
+            .ok_or_else(|| DbError::NoPool)?
             .get()
             .map_err(|error| {
                 #[cfg(feature = "logging")]
                 log::error!("Error while getting connection: {:?}", error);
 
-                error
+                DbError::R2D2(error)
             })?;
 
         connection
@@ -74,26 +60,27 @@ impl MemcacheManager for MemcachePool {
             .map_err(|error| {
                 #[cfg(feature = "logging")]
                 log::error!("Error while retrieving data: {:?}", error);
-                error.into()
+
+                DbError::Memcached(error)
             })
     }
 
     /// Store data in Memcached and return the key.
-    fn set<T: ToString, V: Into<SetValue> + Clone>(
+    pub fn set<T: ToString, V: Into<SetValue> + Clone>(
         &self,
         key: T,
         value: V,
-    ) -> Result<String> {
+    ) -> Result<String, DbError> {
         let connection = self
             .connection
             .as_ref()
-            .ok_or_else(|| anyhow!("No connection pool"))?
+            .ok_or_else(|| DbError::NoPool)?
             .get()
             .map_err(|error| {
                 #[cfg(feature = "logging")]
                 log::error!("Error while getting connection: {:?}", error);
 
-                error
+                DbError::R2D2(error)
             })?;
 
         let result = match value.clone().into() {
@@ -119,22 +106,22 @@ impl MemcacheManager for MemcachePool {
                 #[cfg(feature = "logging")]
                 log::error!("Error while setting data: {:?}", error);
 
-                error.into()
+                DbError::Memcached(error)
             })
     }
 
     /// Delete data from Memcached based on the key.
-    fn delete<T: ToString>(&self, key: T) -> Result<()> {
+    pub fn delete<T: ToString>(&self, key: T) -> Result<(), DbError> {
         let connection = self
             .connection
             .as_ref()
-            .ok_or_else(|| anyhow!("No connection pool"))?
+            .ok_or_else(|| DbError::NoPool)?
             .get()
             .map_err(|error| {
                 #[cfg(feature = "logging")]
                 log::error!("Error while getting connection: {:?}", error);
 
-                error
+                DbError::R2D2(error)
             })?;
 
         connection
@@ -146,7 +133,8 @@ impl MemcacheManager for MemcachePool {
             .map_err(|error| {
                 #[cfg(feature = "logging")]
                 log::error!("Error while deleting data: {:?}", error);
-                error
+
+                DbError::Memcached(error)
             })?;
 
         Ok(())
@@ -157,7 +145,7 @@ impl MemcacheManager for MemcachePool {
 pub fn init(
     hosts: Vec<String>,
     pool_size: u32,
-) -> Result<Pool<MemcacheConnectionManager>> {
+) -> Result<Pool<MemcacheConnectionManager>, r2d2::Error> {
     let manager = pool::MemcacheConnectionManager::new(format!(
         "memcache://{}?timeout=2&use_udp=true",
         hosts[0]

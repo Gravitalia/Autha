@@ -1,6 +1,3 @@
-#[allow(unused_imports)]
-use anyhow::Result;
-
 /// `kafka` module contains functionalities related to Kafka communication.
 #[cfg(feature = "apache_kafka")]
 pub mod kafka;
@@ -53,7 +50,10 @@ pub fn empty() -> Broker {
 ///
 /// A Result containing a new instance of `Broker` with a Kafka connection pool.
 #[cfg(feature = "apache_kafka")]
-pub fn with_kafka(hosts: Vec<String>, pool_size: u32) -> Result<Broker> {
+pub fn with_kafka(
+    hosts: Vec<String>,
+    pool_size: u32,
+) -> Result<Broker, r2d2::Error> {
     Ok(Broker::Kafka(KafkaPool {
         connection: kafka::init(hosts, pool_size)?,
     }))
@@ -70,7 +70,10 @@ pub fn with_kafka(hosts: Vec<String>, pool_size: u32) -> Result<Broker> {
 ///
 /// A Result containing a new instance of `Broker` with a RabbitMQ connection pool.
 #[cfg(feature = "rabbitmq")]
-pub fn with_rabbitmq(hosts: Vec<String>, pool_size: u32) -> Result<Broker> {
+pub fn with_rabbitmq(
+    hosts: Vec<String>,
+    pool_size: u32,
+) -> Result<Broker, r2d2::Error> {
     Ok(Broker::RabbitMQ(RabbitPool {
         connection: rabbitmq::init(hosts, pool_size)?,
     }))
