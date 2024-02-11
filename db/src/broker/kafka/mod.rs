@@ -11,14 +11,9 @@ pub struct KafkaPool {
     pub connection: Pool<KafkaConnectionManager>,
 }
 
-/// Define a trait for the KafkaManager with methods to interact with Kafka.
-pub trait KafkaManager {
+impl KafkaPool {
     /// Publish datas to a topic with Kafka.
-    fn publish(&self, topic: &str, content: &str) -> Result<()>;
-}
-
-impl KafkaManager for KafkaPool {
-    fn publish(&self, topic: &str, content: &str) -> Result<()> {
+    pub fn publish(&self, topic: &str, content: &str) -> Result<()> {
         let mut connection = self.connection.get().map_err(|error| {
             #[cfg(feature = "logging")]
             log::error!("Error while getting connection: {:?}", error);
