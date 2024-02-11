@@ -4,7 +4,6 @@ mod router;
 
 #[macro_use]
 extern crate lazy_static;
-use db::scylla::ScyllaManager;
 use std::error::Error;
 use std::sync::Arc;
 use warp::Filter;
