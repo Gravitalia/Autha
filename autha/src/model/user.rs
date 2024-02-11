@@ -1,4 +1,5 @@
-use scylla::macros::FromRow;
+use db::libscylla as scylla;
+use db::libscylla::macros::FromRow;
 use serde::{Deserialize, Serialize};
 
 /// Represents the user details as saved in the databases.

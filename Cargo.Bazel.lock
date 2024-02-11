@@ -1,5 +1,5 @@
 {
-  "checksum": "e4d500998102afde3d8349d454fc3c0a003e16a48f65fa9e0b076fbf0d1bd487",
+  "checksum": "dd45cb7ee010c0f65959328b99d7e137304b482b71869bcbeed3c358ae9d02a9",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -4173,7 +4173,6 @@
         "crate_features": {
           "common": [
             "apache_kafka",
-            "async-trait",
             "cassandra",
             "futures-executor",
             "kafka",
@@ -4230,15 +4229,6 @@
           "selects": {}
         },
         "edition": "2021",
-        "proc_macro_deps": {
-          "common": [
-            {
-              "id": "async-trait 0.1.77",
-              "target": "async_trait"
-            }
-          ],
-          "selects": {}
-        },
         "version": "0.1.0"
       },
       "license": null

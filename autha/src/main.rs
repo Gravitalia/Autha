@@ -4,7 +4,6 @@ mod router;
 
 #[macro_use]
 extern crate lazy_static;
-use db::scylla::ScyllaManager;
 use std::error::Error;
 use std::sync::Arc;
 use warp::Filter;
@@ -161,7 +160,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     };
 
     // Create needed tables.
-    if let Err(error) = scylladb.create_tables().await {
+    if let Err(error) = helpers::queries::create_tables(&scylladb).await {
         log::error!("Failed to create tables: {}", error);
     } else {
         log::trace!("Successfully created tables, if they didn't exist.");
