@@ -51,8 +51,8 @@ pub(super) fn init(
 ) -> Result<Pool<KafkaConnectionManager>, r2d2::Error> {
     let manager = pool::KafkaConnectionManager::new(hosts);
 
-    Ok(pool::r2d2::Pool::builder()
+    pool::r2d2::Pool::builder()
         .max_size(pool_size)
         .min_idle(Some(2))
-        .build(manager)?)
+        .build(manager)
 }

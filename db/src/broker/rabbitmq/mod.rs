@@ -30,7 +30,7 @@ impl RabbitPool {
         let channel = connection
             .create_channel()
             .await
-            .map_err(|error| DbError::RabbitMQ(error))?;
+            .map_err(DbError::RabbitMQ)?;
 
         channel
             .basic_publish(
@@ -41,9 +41,9 @@ impl RabbitPool {
                 BasicProperties::default(),
             )
             .await
-            .map_err(|error| DbError::RabbitMQ(error))?
+            .map_err(DbError::RabbitMQ)?
             .await // Wait for this specific ack/nack.
-            .map_err(|error| DbError::RabbitMQ(error))?;
+            .map_err(DbError::RabbitMQ)?;
 
         Ok(())
     }
@@ -59,8 +59,8 @@ pub(super) fn init(
         &ConnectionProperties::default(),
     );
 
-    Ok(r2d2::Pool::builder()
+    r2d2::Pool::builder()
         .max_size(pool_size)
         .min_idle(Some(1))
-        .build(manager)?)
+        .build(manager)
 }
