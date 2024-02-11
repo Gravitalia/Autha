@@ -1,5 +1,5 @@
 {
-  "checksum": "dd45cb7ee010c0f65959328b99d7e137304b482b71869bcbeed3c358ae9d02a9",
+  "checksum": "518ce03b60c8c864d3609770816aae83e5401706fa5b57afac259b0a8b266acb",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -4182,17 +4182,12 @@
             "memcache",
             "memcached",
             "rabbitmq",
-            "scylla",
-            "serde"
+            "scylla"
           ],
           "selects": {}
         },
         "deps": {
           "common": [
-            {
-              "id": "anyhow 1.0.79",
-              "target": "anyhow"
-            },
             {
               "id": "futures-executor 0.3.30",
               "target": "futures_executor"
@@ -4220,10 +4215,6 @@
             {
               "id": "scylla 0.12.0",
               "target": "scylla"
-            },
-            {
-              "id": "serde 1.0.196",
-              "target": "serde"
             }
           ],
           "selects": {}

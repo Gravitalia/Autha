@@ -1,5 +1,5 @@
 use anyhow::Result;
-use db::memcache::{MemcacheManager, MemcachePool};
+use db::memcache::MemcachePool;
 use db::scylla::Scylla;
 use std::sync::Arc;
 use warp::reply::{Json, WithStatus};

@@ -1,6 +1,6 @@
 mod pool;
 
-use anyhow::Result;
+use crate::DbError;
 use lapin::options::BasicPublishOptions;
 use lapin::{BasicProperties, ConnectionProperties};
 use pool::LapinConnectionManager;
@@ -15,13 +15,22 @@ pub struct RabbitPool {
 
 impl RabbitPool {
     /// Publish datas to a topic with RabbitMQ.
-    pub async fn publish(&self, topic: &str, content: &str) -> Result<()> {
+    pub async fn publish(
+        &self,
+        topic: &str,
+        content: &str,
+    ) -> Result<(), DbError> {
         let connection = self.connection.get().map_err(|error| {
+            #[cfg(feature = "logging")]
             log::error!("Error while getting connection: {:?}", error);
-            error
+
+            DbError::Unspecified
         })?;
 
-        let channel = connection.create_channel().await?;
+        let channel = connection
+            .create_channel()
+            .await
+            .map_err(DbError::RabbitMQ)?;
 
         channel
             .basic_publish(
@@ -31,8 +40,10 @@ impl RabbitPool {
                 content.as_bytes(),
                 BasicProperties::default(),
             )
-            .await?
-            .await?; // Wait for this specific ack/nack.
+            .await
+            .map_err(DbError::RabbitMQ)?
+            .await // Wait for this specific ack/nack.
+            .map_err(DbError::RabbitMQ)?;
 
         Ok(())
     }
@@ -42,14 +53,14 @@ impl RabbitPool {
 pub(super) fn init(
     hosts: Vec<String>,
     pool_size: u32,
-) -> Result<Pool<LapinConnectionManager>> {
+) -> Result<Pool<LapinConnectionManager>, r2d2::Error> {
     let manager = pool::LapinConnectionManager::new(
         &hosts[0],
         &ConnectionProperties::default(),
     );
 
-    Ok(r2d2::Pool::builder()
+    r2d2::Pool::builder()
         .max_size(pool_size)
         .min_idle(Some(1))
-        .build(manager)?)
+        .build(manager)
 }

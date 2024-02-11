@@ -1,6 +1,6 @@
 mod pool;
 
-use anyhow::Result;
+use crate::DbError;
 use pool::KafkaConnectionManager;
 use r2d2::Pool;
 
@@ -13,12 +13,12 @@ pub struct KafkaPool {
 
 impl KafkaPool {
     /// Publish datas to a topic with Kafka.
-    pub fn publish(&self, topic: &str, content: &str) -> Result<()> {
+    pub fn publish(&self, topic: &str, content: &str) -> Result<(), DbError> {
         let mut connection = self.connection.get().map_err(|error| {
             #[cfg(feature = "logging")]
             log::error!("Error while getting connection: {:?}", error);
 
-            error
+            DbError::R2D2(error)
         })?;
 
         connection
@@ -39,7 +39,7 @@ impl KafkaPool {
                     error
                 );
 
-                error.into()
+                DbError::Kafka(error)
             })
     }
 }
@@ -48,11 +48,11 @@ impl KafkaPool {
 pub(super) fn init(
     hosts: Vec<String>,
     pool_size: u32,
-) -> Result<Pool<KafkaConnectionManager>> {
+) -> Result<Pool<KafkaConnectionManager>, r2d2::Error> {
     let manager = pool::KafkaConnectionManager::new(hosts);
 
-    Ok(pool::r2d2::Pool::builder()
+    pool::r2d2::Pool::builder()
         .max_size(pool_size)
         .min_idle(Some(2))
-        .build(manager)?)
+        .build(manager)
 }

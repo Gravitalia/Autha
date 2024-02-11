@@ -3,7 +3,7 @@ use crate::helpers::{
     token,
 };
 use anyhow::{bail, Result};
-use db::memcache::{MemcacheManager, MemcachePool};
+use db::memcache::MemcachePool;
 use db::scylla::Scylla;
 use regex_lite::Regex;
 use warp::reply::{Json, WithStatus};

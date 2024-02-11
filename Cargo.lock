@@ -838,7 +838,6 @@ dependencies = [
 name = "db"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "futures-executor",
  "kafka",
  "lapin",
@@ -846,7 +845,6 @@ dependencies = [
  "memcache",
  "r2d2",
  "scylla",
- "serde",
 ]
 
 [[package]]
