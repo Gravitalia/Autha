@@ -2,7 +2,7 @@ use crate::model::user::User;
 use anyhow::{bail, Result};
 use db::broker::Broker;
 use db::libscylla::{batch::Batch, IntoTypedRows};
-use db::memcache::{MemcacheManager, MemcachePool};
+use db::memcache::MemcachePool;
 use db::scylla::Scylla;
 use std::sync::Arc;
 use warp::reply::{Json, WithStatus};

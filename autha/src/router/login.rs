@@ -1,7 +1,7 @@
 use crate::router::create::{EMAIL, MIN_PASSWORD_LENGTH, PASSWORD};
 use anyhow::{anyhow, Result};
 use db::libscylla::frame::value::CqlTimestamp;
-use db::memcache::{MemcacheManager, MemcachePool};
+use db::memcache::MemcachePool;
 use db::scylla::Scylla;
 use std::time::{SystemTime, UNIX_EPOCH};
 use warp::reply::{Json, WithStatus};
