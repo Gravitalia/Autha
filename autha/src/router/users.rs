@@ -1,7 +1,7 @@
 use crate::model::user::User;
 use anyhow::{bail, Result};
 use db::broker::Broker;
-use db::libscylla::IntoTypedRows;
+use db::libscylla::{batch::Batch, IntoTypedRows};
 use db::memcache::{MemcacheManager, MemcachePool};
 use db::scylla::Scylla;
 use std::sync::Arc;
@@ -183,7 +183,7 @@ pub async fn update(
     };
 
     // New batch to perform multiple requests at the same time.
-    let mut batch = scylla.new_batch();
+    let mut batch = Batch::default();
     let mut batch_values: Vec<(String, String)> = Vec::new();
 
     // Update username (firstname and lastname).
