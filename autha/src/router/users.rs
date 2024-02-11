@@ -1,16 +1,13 @@
+use crate::model::user::User;
 use anyhow::{bail, Result};
-#[cfg(feature = "kafka")]
-use db::broker::kafka::KafkaManager;
-#[cfg(feature = "rabbitmq")]
-use db::broker::rabbitmq::RabbitManager;
 use db::broker::Broker;
+use db::libscylla::IntoTypedRows;
 use db::memcache::{MemcacheManager, MemcachePool};
-use db::model::User;
-use db::scylla::{Scylla, ScyllaManager};
+use db::scylla::Scylla;
 use std::sync::Arc;
 use warp::reply::{Json, WithStatus};
 
-use crate::helpers::queries::CREATE_SALT;
+use crate::helpers::queries::{CREATE_SALT, GET_USER};
 
 const IMAGE_WIDTH: u32 = 224;
 const IMAGE_HEIGHT: u32 = 224;
@@ -26,7 +23,20 @@ pub async fn get_user(
     if let Some(cached) = memcached.get(vanity)? {
         Ok(serde_json::from_str::<User>(&cached[..])?)
     } else {
-        let user = scylla.get_user(vanity).await?;
+        let user = if let Some(rows) = scylla
+            .connection
+            .execute(GET_USER.get_or_init(|| unreachable!()), vec![vanity])
+            .await?
+            .rows
+        {
+            if rows.is_empty() {
+                bail!("no user found")
+            } else {
+                rows.into_typed::<User>().collect::<Vec<_>>()[0].clone()?
+            }
+        } else {
+            bail!("no user found")
+        };
 
         // Save user into cache if not exists in it.
         memcached.set(vanity, serde_json::to_string(&user)?)?;
