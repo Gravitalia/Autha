@@ -1,15 +1,19 @@
-use anyhow::Result;
-use db::libscylla::prepared_statement::PreparedStatement;
+use db::libscylla::{
+    prepared_statement::PreparedStatement, transport::errors::QueryError,
+};
 use std::sync::OnceLock;
 
 pub static CREATE_USER: OnceLock<PreparedStatement> = OnceLock::new();
 pub static CREATE_TOKEN: OnceLock<PreparedStatement> = OnceLock::new();
 pub static CREATE_SALT: OnceLock<PreparedStatement> = OnceLock::new();
 pub static CREATE_OAUTH: OnceLock<PreparedStatement> = OnceLock::new();
+pub static GET_USER: OnceLock<PreparedStatement> = OnceLock::new();
 
 /// Init prepared query to properly balance.
 /// This should improve the performance of queries, as well as providing better balancing.
-pub async fn init(scylla: &std::sync::Arc<db::scylla::Scylla>) -> Result<()> {
+pub async fn init(
+    scylla: &std::sync::Arc<db::scylla::Scylla>,
+) -> Result<(), QueryError> {
     // Create user.
     let create_query = scylla
     .connection
@@ -43,6 +47,15 @@ pub async fn init(scylla: &std::sync::Arc<db::scylla::Scylla>) -> Result<()> {
         )
         .await?;
     CREATE_OAUTH.get_or_init(|| create_oauth);
+
+    // Get user.
+    let get_user = scylla
+            .connection
+            .prepare(
+                "SELECT username, vanity, avatar, bio, email, birthdate, phone, verified, deleted, flags FROM accounts.users WHERE vanity = ?"
+            )
+            .await?;
+    GET_USER.get_or_init(|| get_user);
 
     Ok(())
 }
