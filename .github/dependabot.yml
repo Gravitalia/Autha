@@ -9,3 +9,12 @@ updates:
     labels:
       - "dependencies"
       - "rust"
+  - package-ecosystem: "npm"
+    directory: "/front"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "realhinome"
+    labels:
+      - "dependencies"
+      - "nodejs"
