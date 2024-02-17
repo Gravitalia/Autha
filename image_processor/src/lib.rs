@@ -1,3 +1,12 @@
+#![forbid(unsafe_code)]
+#![deny(
+    dead_code,
+    unused_imports,
+    unused_mut,
+    missing_docs,
+    missing_debug_implementations
+)]
+
 //! # image_processor
 //!
 //! fast and efficient image resizer and encoder (WebP only).
@@ -21,9 +30,6 @@
 //!     },
 //! );
 //! ```
-
-#![forbid(unsafe_code)]
-#![deny(dead_code, unused_imports, unused_mut, missing_docs)]
 
 /// Publish an image into a selected host.
 /// Hosts are: Cloudinary, S3.
