@@ -34,7 +34,7 @@ pub fn resize(
     }
 
     let img =
-        image::load_from_memory(buffer).map_err(ImageError::ImageError)?;
+        image::load_from_memory(buffer).map_err(ImageError::Image)?;
 
     let img_width = img.width();
     let img_height = img.height();

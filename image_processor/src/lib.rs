@@ -41,7 +41,7 @@ pub enum ImageError {
     /// Error from `fast_image_resize` crate.
     ImageBufferError(ImgBufError),
     /// Error from `image` crate.
-    ImageError(ImgError),
+    Image(ImgError),
     /// Error from `std::io` (Input/Output).
     FailedIo(IoError),
     /// Error when transcoding image to another format.
@@ -60,7 +60,7 @@ impl fmt::Display for ImageError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             ImageError::ImageBufferError(error) => write!(f, "{}", error),
-            ImageError::ImageError(error) => write!(f, "{}", error),
+            ImageError::Image(error) => write!(f, "{}", error),
             ImageError::FailedIo(error) => write!(f, "{}", error),
             ImageError::FailedEncode => {
                 write!(f, "Error during transcoding to JPEG")
