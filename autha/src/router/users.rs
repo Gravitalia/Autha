@@ -58,24 +58,19 @@ pub async fn get(
 
     if id == "@me" {
         if let Some(tok) = token {
-            id = match crate::helpers::token::get(&scylla, &tok).await {
-                Ok(vanity) => vanity,
+            id = match super::vanity_from_token(&scylla, &tok).await {
+                Ok(data) => {
+                    if data.scopes.is_some() {
+                        is_jwt = true;
+                    }
+                    
+                    data.vanity
+                },
                 Err(error) => {
                     log::error!("Cannot retrive user token: {}", error);
-
-                    // If no user token has been found, try with JWT.
-                    // JWT is used for OAuth2.
-                    match crate::helpers::token::get_jwt_data(&tok) {
-                        Ok(vanity) => {
-                            is_jwt = true;
-                            vanity.0
-                        },
-                        Err(_) => {
-                            return Ok(super::err(super::INVALID_TOKEN));
-                        },
-                    }
-                },
-            }
+                    return Ok(super::err(super::INVALID_TOKEN));
+                }
+            };
         } else {
             return Ok(super::err(super::MISSING_AUTHORIZATION_HEADER));
         }
