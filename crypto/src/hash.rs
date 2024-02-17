@@ -3,7 +3,7 @@ use argon2::{Config, Error, Variant, Version};
 use ring::digest::{Context, SHA1_FOR_LEGACY_USE_ONLY, SHA256};
 
 /// Configuration for Argon2id.
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct Argon2Configuration {
     /// Amount of memory used in KB.
     pub memory_cost: u32,
@@ -19,6 +19,22 @@ pub struct Argon2Configuration {
 
 /// Hash plaintext using Argon2, mostly used for passwords.
 /// It uses the two version, Argon2d for GPU attacks and Argon2i for auxiliary channel attacks.
+///
+/// # Examples
+///
+/// ```rust
+/// use crypto::hash::{argon2, Argon2Configuration};
+///
+/// let config = Argon2Configuration {
+///     memory_cost: 262144,
+///     round: 1,
+///     lanes: 8,
+///     secret: "KEY".to_string(),
+///     hash_length: 16,
+/// };
+///
+/// println!("SuperPassword is {}", argon2(config, b"SuperPassword", None).unwrap());
+/// ```
 #[cfg(feature = "argon2")]
 pub fn argon2(
     config: Argon2Configuration,
@@ -43,11 +59,30 @@ pub fn argon2(
 
 /// Verify if provided hash is matching with the plaintext password.
 /// Using Argon2 to provide checking.
+///
+/// # Examples
+///
+///```rust
+/// use crypto::hash::{argon2, Argon2Configuration, check_argon2};
+///
+/// let plaintext = b"Password1234";
+///
+/// let config = Argon2Configuration {
+///     memory_cost: 262144,
+///     round: 1,
+///     lanes: 8,
+///     secret: "KEY".to_string(),
+///     hash_length: 16,
+/// };
+/// let hashed_password = argon2(config, plaintext, None).unwrap();
+///
+/// println!("Is that working? {:?}", check_argon2(hashed_password, plaintext, None));
+/// ```
 #[cfg(feature = "argon2")]
 pub fn check_argon2(
     hash: String,
     password: &[u8],
-    vanity: &[u8],
+    associated_data: Option<&[u8]>,
 ) -> Result<bool, Error> {
     argon2::verify_encoded_ext(
         &hash,
@@ -55,11 +90,20 @@ pub fn check_argon2(
         std::env::var("KEY")
             .unwrap_or_else(|_| "KEY".to_string())
             .as_bytes(),
-        vanity,
+        associated_data.unwrap_or(&[]),
     )
 }
 
 /// Compute the SHA256 digest for the bytes data.
+///
+/// # Examples
+///
+/// ```rust
+/// use crypto::hash::sha256;
+///
+/// let plaintext = "1234";
+/// println!("{} is {} when hashed with SHA256", plaintext, sha256(plaintext.as_bytes()));
+/// ```
 pub fn sha256(data: &[u8]) -> String {
     let mut context = Context::new(&SHA256);
 
@@ -72,6 +116,15 @@ pub fn sha256(data: &[u8]) -> String {
 ///
 /// # Warning
 /// This should only be used when security is not a priority.
+///
+/// # Examples
+///
+/// ```rust
+/// use crypto::hash::sha1;
+///
+/// let plaintext = "1234";
+/// println!("{} is {} when hashed with SHA1", plaintext, sha1(plaintext.as_bytes()));
+/// ```
 pub fn sha1(data: &[u8]) -> String {
     let mut context = Context::new(&SHA1_FOR_LEGACY_USE_ONLY);
 
@@ -104,7 +157,7 @@ mod tests {
         )
         .unwrap()
         .is_match(&pwd));
-        assert!(check_argon2(pwd, b"password", b"test").unwrap_or(false));
+        assert!(check_argon2(pwd, b"password", Some(b"test")).unwrap_or(false));
     }
 
     #[test]
