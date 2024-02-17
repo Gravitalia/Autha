@@ -26,3 +26,16 @@ pub struct User {
     /// Bitfields representing the user's badges and privileges.
     pub flags: i32,
 }
+
+/// Represents the data contained in a token.
+#[derive(Debug, Clone)]
+pub struct Token {
+    /// User or bot token.
+    pub token: String,
+    /// Unique and inalienable identifier of the user or bot.
+    pub vanity: String,
+    /// If it is a robot.
+    pub is_bot: bool,
+    /// In the case of OAuth 2.0 (Bearer token), list token accesses.
+    pub scopes: Option<Vec<String>>,
+}
