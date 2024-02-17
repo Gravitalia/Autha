@@ -17,24 +17,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: latest
-      - name: Mount yarn cache
+      - name: Mount NPM cache
         uses: actions/cache@v3
         with:
           path: front/node_modules
-          key: node-${{ hashFiles('front/yarn.lock') }}
+          key: node-${{ hashFiles('front/package.json') }}
           restore-keys: |
             node-
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: install
-          dir: front
+        run: npm install
+        working-directory: ./front
       - name: Build Nuxt
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: build
-          dir: front
+        run: npm run build
+        working-directory: ./front
         env:
           NITRO_PRESET: cloudflare
       - name: Deploy to Cloudflare Workers
