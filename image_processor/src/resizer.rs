@@ -1,9 +1,8 @@
-use anyhow::{bail, Result};
+use crate::ImageError;
 use fast_image_resize as fr;
 use image::codecs::jpeg::JpegEncoder;
 use image::{ColorType, ImageEncoder};
-use std::io::BufWriter;
-use std::num::NonZeroU32;
+use std::{io::BufWriter, num::NonZeroU32};
 
 /// Image resizer.
 ///
@@ -29,12 +28,13 @@ pub fn resize(
     buffer: &[u8],
     mut width: Option<u32>,
     mut height: Option<u32>,
-) -> Result<BufWriter<Vec<u8>>> {
+) -> Result<BufWriter<Vec<u8>>, ImageError> {
     if width.is_none() && height.is_none() {
-        bail!("missing width or height")
+        return Err(ImageError::MissingWidthOrHeight);
     }
 
-    let img = image::load_from_memory(buffer)?;
+    let img =
+        image::load_from_memory(buffer).map_err(ImageError::ImageError)?;
 
     let img_width = img.width();
     let img_height = img.height();
@@ -42,19 +42,20 @@ pub fn resize(
     // Proportion the right size according to the data to maintain a good ratio.
     if width.is_some() && height.is_none() {
         height = Some(
-            (f64::from(width.unwrap_or_default()) / f64::from(img_width) * f64::from(img_height))
-                as u32,
+            (f64::from(width.unwrap_or_default()) / f64::from(img_width)
+                * f64::from(img_height)) as u32,
         );
     } else if width.is_none() && height.is_some() {
         width = Some(
-            (f64::from(height.unwrap_or_default()) / f64::from(img_height) * f64::from(img_width))
-                as u32,
+            (f64::from(height.unwrap_or_default()) / f64::from(img_height)
+                * f64::from(img_width)) as u32,
         );
     }
 
-    // If resized image is squared but not original one, warn user.
+    // If resized image is squared but not original one.
     if img_width != img_height && width == height {
-        log::warn!("For the moment, there is no cropping to remove excess parts. The final rendered square will represent the squashed original image.");
+        // For the moment, there is no cropping to remove excess parts.
+        // The final rendered square will represent the squashed original image.
     }
 
     let mut src_image = fr::Image::from_vec_u8(
@@ -62,36 +63,47 @@ pub fn resize(
         NonZeroU32::new(img_height).unwrap(),
         img.to_rgba8().into_raw(),
         fr::PixelType::U8x4,
-    )?;
+    )
+    .map_err(ImageError::ImageBufferError)?;
 
     // Multiple RGB channels of source image by alpha channel.
     let alpha_mul_div = fr::MulDiv::default();
-    alpha_mul_div.multiply_alpha_inplace(&mut src_image.view_mut())?;
+    alpha_mul_div
+        .multiply_alpha_inplace(&mut src_image.view_mut())
+        .map_err(ImageError::UnsupportedPixel)?;
 
     // Create container for data of destination image
     let dst_width = NonZeroU32::new(width.unwrap_or_default()).unwrap();
     let dst_height = NonZeroU32::new(height.unwrap_or_default()).unwrap();
-    let mut dst_image = fr::Image::new(dst_width, dst_height, src_image.pixel_type());
+    let mut dst_image =
+        fr::Image::new(dst_width, dst_height, src_image.pixel_type());
 
     // Get mutable view of destination image data.
     let mut dst_view = dst_image.view_mut();
 
     // Create Resizer instance and resize source image
     // into buffer of destination image.
-    let mut resizer = fr::Resizer::new(fr::ResizeAlg::Convolution(fr::FilterType::Lanczos3));
-    resizer.resize(&src_image.view(), &mut dst_view)?;
+    let mut resizer =
+        fr::Resizer::new(fr::ResizeAlg::Convolution(fr::FilterType::Lanczos3));
+    resizer
+        .resize(&src_image.view(), &mut dst_view)
+        .map_err(|_| ImageError::Unspecified)?;
 
     // Divide RGB channels of destination image by alpha.
-    alpha_mul_div.divide_alpha_inplace(&mut dst_view)?;
+    alpha_mul_div
+        .divide_alpha_inplace(&mut dst_view)
+        .map_err(ImageError::UnsupportedPixel)?;
 
     // Convert into JPEG.
     let mut result_buf = BufWriter::new(Vec::new());
-    JpegEncoder::new(&mut result_buf).write_image(
-        dst_image.buffer(),
-        dst_width.get(),
-        dst_height.get(),
-        ColorType::Rgba8,
-    )?;
+    JpegEncoder::new(&mut result_buf)
+        .write_image(
+            dst_image.buffer(),
+            dst_width.get(),
+            dst_height.get(),
+            ColorType::Rgba8,
+        )
+        .map_err(|_| ImageError::FailedEncode)?;
 
     Ok(result_buf)
 }
