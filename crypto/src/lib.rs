@@ -1,16 +1,31 @@
+#![forbid(unsafe_code)]
+#![deny(
+    dead_code,
+    unused_imports,
+    unused_mut,
+    missing_docs,
+    missing_debug_implementations
+)]
+
 //! # crypto
 //!
 //! little library using ring and fpe to encrypt,
 //! decrypt and hash informations for Gravitalia.
+//!
+//! Supported hashing method:
+//! - argon2;
+//! - sha1;
+//! - sha256.
+//!
+//! Supported encryption method:
+//! - chacha20;
+//! - fpe with AES256.
 //!
 //! # Hash with SHA.
 //!
 //! ```rust
 //! println!("SHA256 of 'Hello world': {}", crypto::hash::sha256(b"Hello world"));
 //! ```
-
-#![forbid(unsafe_code)]
-#![deny(dead_code, unused_imports, unused_mut, missing_docs)]
 
 /// Module to decrypt datas.
 pub mod decrypt;
@@ -58,6 +73,14 @@ const CHARS: &str =
 const CHARS_LENGTH: u8 = CHARS.len() as u8;
 
 /// Generate random bytes cryptographically-secure PRNG seeded from the system's entropy pool.
+///
+/// # Examples
+///
+/// ```rust
+/// use crypto::random_bytes;
+///
+/// println!("Crypto-secure 12 random bytes: {:?}", random_bytes(12));
+/// ```
 pub fn random_bytes(length: usize) -> Vec<u8> {
     let mut bytes = vec![0; length];
 
@@ -68,6 +91,14 @@ pub fn random_bytes(length: usize) -> Vec<u8> {
 }
 
 /// Generate random string with thread-local cryptographically-secure PRNG seeded from the system's entropy pool.
+///
+/// # Examples
+///
+/// ```rust
+/// use crypto::random_string;
+///
+/// println!("Crypto-secure 12 characters: {}", random_string(12));
+/// ```
 pub fn random_string(length: usize) -> String {
     let chars: Vec<char> = CHARS.chars().collect();
     let mut result = String::with_capacity(length);
