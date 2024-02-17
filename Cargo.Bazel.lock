@@ -1,5 +1,5 @@
 {
-  "checksum": "7bb3600b11dc67a74e1377f7adf62059343b0c59e91d5332e69b10bbf03a2a1c",
+  "checksum": "ae4d84070b6752230203e72432c5ab9fdb95bfdf1a400fa5a5c066c4db1af388",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -70,13 +70,13 @@
       },
       "license": "0BSD OR MIT OR Apache-2.0"
     },
-    "aes 0.8.3": {
+    "aes 0.8.4": {
       "name": "aes",
-      "version": "0.8.3",
+      "version": "0.8.4",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/aes/0.8.3/download",
-          "sha256": "ac1f845298e95f983ff1944b728ae08b8cebab80d684f0a832ed0fc74dfa27e2"
+          "url": "https://crates.io/api/v1/crates/aes/0.8.4/download",
+          "sha256": "b169f7a6d4742236a0a00c541b845991d0ac43e546831af1249753ab4c3aa3a0"
         }
       },
       "targets": [
@@ -116,7 +116,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.8.3"
+        "version": "0.8.4"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -1586,7 +1586,7 @@
               "target": "tokio"
             },
             {
-              "id": "tonic 0.10.2",
+              "id": "tonic 0.11.0",
               "target": "tonic"
             },
             {
@@ -3838,7 +3838,7 @@
         "deps": {
           "common": [
             {
-              "id": "aes 0.8.3",
+              "id": "aes 0.8.4",
               "target": "aes"
             },
             {
@@ -16709,13 +16709,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "tonic 0.10.2": {
+    "tonic 0.11.0": {
       "name": "tonic",
-      "version": "0.10.2",
+      "version": "0.11.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/tonic/0.10.2/download",
-          "sha256": "d560933a0de61cf715926b9cac824d4c883c2c43142f787595e48280c40a1d0e"
+          "url": "https://crates.io/api/v1/crates/tonic/0.11.0/download",
+          "sha256": "76c4eb7a4e9ef9d4763600161f12f5070b92a578e1b634db88a6887844c91a13"
         }
       },
       "targets": [
@@ -16831,7 +16831,7 @@
           ],
           "selects": {}
         },
-        "version": "0.10.2"
+        "version": "0.11.0"
       },
       "license": "MIT"
     },
