@@ -1,4 +1,5 @@
 use anyhow::Result;
+use crypto::random_string;
 use db::memcache::MemcachePool;
 use db::scylla::Scylla;
 use std::sync::Arc;
@@ -10,8 +11,9 @@ const VALID_SCOPE: [&str; 1] = ["identity"];
 const MAX_CODE_CHALLENGE_LENGTH: u8 = 128;
 const MIN_CODE_CHALLENGE_LENGTH: u8 = 43;
 
-/// Route to create an authorization code to obtain an access token.
-pub async fn create(
+/// This route allows you to create an `authorization code` and then obtain an access token linked to a user.
+/// This is an implementation made for a grant type specified on `authorization_code`.
+pub async fn authorize(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
     query: crate::model::query::OAuth,
@@ -99,13 +101,39 @@ pub async fn create(
     ))
 }
 
-/// Get a json web token (JWT) access token from authorization code.
-pub async fn get_token(
+/// Manages the various resources of the OAuth route in order to generate access tokens.
+pub async fn grant(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
     body: crate::model::body::OAuth,
 ) -> Result<WithStatus<Json>> {
-    let data = match memcached.get(&body.code)? {
+    match body.grant_type.as_str() {
+        "authorization_code" => {
+            authorization_code(scylla, memcached, body).await
+        },
+        _ => Ok(super::err("Invalid grant_type")),
+    }
+}
+
+/// Handle creation of `access_token` from an authorization code.
+pub async fn authorization_code(
+    scylla: Arc<Scylla>,
+    memcached: MemcachePool,
+    body: crate::model::body::OAuth,
+) -> Result<WithStatus<Json>> {
+    if body.client_id.is_none()
+        || body.client_secret.is_none()
+        || body.redirect_uri.is_none()
+    {
+        return Ok(super::err("Invalid body"));
+    }
+
+    let code = match body.code {
+        Some(code) => code,
+        None => return Ok(super::err("Missing code")),
+    };
+
+    let data = match memcached.get(&code)? {
         Some(r) => Vec::from_iter(r.split('+').map(|x| x.to_string())),
         None => vec![],
     };
@@ -130,7 +158,7 @@ pub async fn get_token(
             _ => return Ok(super::err(super::INTERNAL_SERVER_ERROR)),
         };
 
-    if &body.client_id != client_id {
+    if &body.client_id.unwrap_or_default() != client_id {
         return Ok(super::err(super::INVALID_BOT));
     } else if code_challenge.is_some() && body.code_verifier.is_none() {
         return Ok(super::err("You must use `code_verifier`"));
@@ -169,6 +197,7 @@ pub async fn get_token(
     }
 
     let (deleted, redirect_uris, client_secret) = bot[0].clone().unwrap();
+    let url = body.redirect_uri.unwrap_or_default();
 
     if deleted {
         return Ok(super::err("Bot has been deleted"));
@@ -176,16 +205,16 @@ pub async fn get_token(
     // Also check if redirect_uri is still valid.
     // This can be useful in cases where an intruder has modified the redirection
     // URLs and the developer has become aware of this.
-    else if redirect_uris.iter().any(|x| x == &body.redirect_uri)
+    else if redirect_uris.iter().any(|x| x == &url)
         && redirect_uris.iter().any(|x| x == redirect_uri)
     {
         return Ok(super::err("Invalid redirect_uri"));
-    } else if client_secret != body.client_secret {
+    } else if client_secret != body.client_secret.unwrap_or_default() {
         return Ok(super::err("Invalid client_secret"));
     }
 
     // Deleted used authorization code.
-    memcached.delete(body.code)?;
+    memcached.delete(code)?;
 
     let scopes: Vec<String> =
         scope.split_whitespace().map(|x| x.to_string()).collect();
@@ -194,27 +223,27 @@ pub async fn get_token(
     let (expires_in, access_token) =
         crate::helpers::token::create_jwt(user_id.to_string(), scopes.clone())?;
 
+    let refresh_token = random_string(128);
     if let Some(query) = CREATE_OAUTH.get() {
         scylla
             .connection
             .execute(
                 query,
-                (&access_token, &user_id, &client_id, scopes, false),
+                (&refresh_token, &user_id, &client_id, scopes, false),
             )
             .await?;
     } else {
         log::error!("Prepared queries do not appear to be initialized.");
     }
 
-    // To do: refresh token.
-
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::response::AccessToken {
             access_token,
             expires_in,
-            refresh_token: String::default(),
-            refresh_token_expires_in: 0,
+            refresh_token,
+            refresh_token_expires_in: 5_184_000, // 60 days.
             scope: scope.to_string(),
+            token_type: "bearer".to_string(),
         }),
         warp::http::StatusCode::CREATED,
     ))
