@@ -5,6 +5,7 @@ use std::io::Write;
 use tempfile::NamedTempFile;
 
 /// Cloudinary credentials structure to upload images.
+#[derive(Debug)]
 pub struct Credentials {
     /// Cloudinary API key.
     pub key: String,
