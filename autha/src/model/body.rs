@@ -57,20 +57,28 @@ pub struct UserPatch {
     pub mfa: Option<String>,
 }
 
-/// Represents the body structure for create access token.
+/// Represents the body structure for creating an access token.
 #[derive(Deserialize)]
-#[allow(dead_code)]
 pub struct OAuth {
-    /// Application (bot) vanity/unique identifier.
-    pub client_id: String,
-    /// Application (bot) secret key.
-    pub client_secret: String,
-    /// Temporary authorization code created before.
-    pub code: String,
-    /// Unhashed code for PCKE.
+    /// The unique identifier (vanity) for the application (bot).
+    /// Required when `grant_type` is set to `authorization_code` or `client_credentials`.
+    pub client_id: Option<String>,
+    /// The secret key of the application (bot).
+    /// Required when `grant_type` is set to `authorization_code` or `client_credentials`.
+    pub client_secret: Option<String>,
+    /// The temporary authorization code previously generated.
+    /// Required when `grant_type` is set to `authorization_code`.
+    pub code: Option<String>,
+    /// The unhashed code used for Proof Key for Code Exchange (PKCE).
+    /// If applicable.
     pub code_verifier: Option<String>,
-    /// Must be authorization_code.
-    grant_type: String,
+    /// The type of grant being requested.
+    /// Must be: `authorization_code` or `refresh_token`.
+    pub grant_type: String,
     /// Redirect URL to be followed by the user.
-    pub redirect_uri: String,
+    /// Required when `grant_type` is set to `authorization_code`.
+    pub redirect_uri: Option<String>,
+    /// Refresh code.
+    /// Required when `grant_type` is set to `refresh_token`.
+    pub refresh_token: Option<String>,
 }
