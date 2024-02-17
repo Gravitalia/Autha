@@ -139,7 +139,7 @@ pub async fn handle(
     if !crypto::hash::check_argon2(
         password,
         body.password.as_bytes(),
-        vanity.as_bytes(),
+        Some(vanity.as_bytes()),
     )? {
         return Ok(crate::router::err(super::INVALID_PASSWORD));
     }

@@ -165,7 +165,7 @@ pub async fn update(
         if crypto::hash::check_argon2(
             password,
             psw.as_bytes(),
-            vanity.as_bytes(),
+            Some(vanity.as_bytes()),
         )? {
             is_psw_valid = true;
         } else {
