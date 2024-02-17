@@ -3,12 +3,14 @@ pub mod login;
 pub mod oauth;
 pub mod users;
 
+use anyhow::{anyhow, Result};
 use db::{memcache::MemcachePool, scylla::Scylla};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 use warp::{reply::Response, Filter, Rejection, Reply};
 
 use crate::helpers::route_telemetry;
+use crate::model::user::Token;
 
 // Error constants.
 const ERROR_RATE_LIMITED: &str = "You are being rate limited.";
@@ -27,6 +29,35 @@ const INVALID_BOT: &str = "Invalid client_id";
 #[derive(Debug)]
 struct UnknownError;
 impl warp::reject::Reject for UnknownError {}
+
+/// Gets the user's vanity from the supplied token.
+#[inline(always)]
+async fn vanity_from_token(scylla: &Arc<Scylla>, token: &str) -> Result<Token> {
+    if token.starts_with("Bearer ") {
+        let jwt_claims = crate::helpers::token::get_jwt_data(&token.replace("Bearer ", ""))
+            .map_err(|_| anyhow!("invalid token"))?;
+
+        Ok(Token {
+            token: token.to_string(),
+            vanity: jwt_claims.0,
+            is_bot: false,
+            scopes: Some(jwt_claims.1),
+        })
+    } else if token.starts_with("Bot ") {
+        Err(anyhow!("bots are not supported"))
+    } else {
+        let vanity = crate::helpers::token::get(scylla, token)
+            .await
+            .map_err(|_| anyhow!("invalid token"))?;
+
+        Ok(Token {
+            token: token.to_string(),
+            vanity,
+            is_bot: false,
+            scopes: None,
+        })
+    }
+}
 
 /// Create a Warp response for errors messages.
 /// Should be used in routes.
@@ -215,7 +246,7 @@ pub async fn create_token(
 ) -> Result<Response, Rejection> {
     let current_seconds = crate::helpers::get_current_seconds();
 
-    match oauth::create(scylla, memcached, query, token).await {
+    match oauth::authorize(scylla, memcached, query, token).await {
         Ok(r) => {
             let res = r.into_response();
 
@@ -237,7 +268,7 @@ pub async fn access_token(
 ) -> Result<Response, Rejection> {
     let current_seconds = crate::helpers::get_current_seconds();
 
-    match oauth::get_token(scylla, memcached, body).await {
+    match oauth::grant(scylla, memcached, body).await {
         Ok(r) => {
             let res = r.into_response();
 
