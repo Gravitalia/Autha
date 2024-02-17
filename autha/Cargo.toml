@@ -37,7 +37,7 @@ opentelemetry_sdk =  { version = "0.21", features = ["rt-tokio"], optional = tru
 prometheus = { version = "0.13", features = ["process"], optional = true }
 
 [build-dependencies]
-tonic-build = { version = "0.10", features = [ "prost" ] }
+tonic-build = { version = "0.11", features = [ "prost" ] }
 
 [features]
 kafka = ["db/apache_kafka"]
