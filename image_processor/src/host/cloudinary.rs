@@ -1,4 +1,4 @@
-use anyhow::Result;
+use crate::ImageError;
 use cloudinary::upload::{Source::Path, Upload, UploadOptions};
 use crypto::hash::sha1;
 use std::io::Write;
@@ -39,7 +39,10 @@ pub struct Credentials {
 ///
 /// # Returns
 /// SHA1 buffer hash.
-pub async fn upload(credentials: Credentials, buffer: &[u8]) -> Result<String> {
+pub async fn upload(
+    credentials: Credentials,
+    buffer: &[u8],
+) -> Result<String, ImageError> {
     // Hash buffer image to obtain unique identifier.
     let hash = sha1(buffer);
 
@@ -54,14 +57,18 @@ pub async fn upload(credentials: Credentials, buffer: &[u8]) -> Result<String> {
     );
 
     // Create temporary file into the memory and write on it.
-    let mut temp_file = NamedTempFile::new()?;
-    temp_file.write_all(buffer)?;
+    let mut temp_file =
+        NamedTempFile::new().map_err(|_| ImageError::Unspecified)?;
+    temp_file.write_all(buffer).map_err(ImageError::FailedIo)?;
 
     // Then, get Pathbuf of the file.
     let path_buf = temp_file.path().to_path_buf();
 
     // Upload image on Cloudinary.
-    upload.image(Path(path_buf), &options).await?;
+    upload
+        .image(Path(path_buf), &options)
+        .await
+        .map_err(|_| ImageError::FailedUpload)?;
 
     Ok(hash)
 }

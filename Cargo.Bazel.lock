@@ -1,5 +1,5 @@
 {
-  "checksum": "518ce03b60c8c864d3609770816aae83e5401706fa5b57afac259b0a8b266acb",
+  "checksum": "a851a36dbc0bd3e7c83ee73a2db14f8bcd3eeaabe5161ad72f08c980ea265ec9",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -7493,10 +7493,6 @@
         "deps": {
           "common": [
             {
-              "id": "anyhow 1.0.79",
-              "target": "anyhow"
-            },
-            {
               "id": "cloudinary 0.4.0",
               "target": "cloudinary"
             },
@@ -7507,10 +7503,6 @@
             {
               "id": "image 0.24.8",
               "target": "image"
-            },
-            {
-              "id": "log 0.4.20",
-              "target": "log"
             },
             {
               "id": "tempfile 3.10.0",
