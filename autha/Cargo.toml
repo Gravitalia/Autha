@@ -27,6 +27,7 @@ totp-lite = "2"
 uuid = { version = "1.7", features = ["v4"] }
 isolang = { version = "2.4", features = ["list_languages"] }
 chrono = "0.4"
+url = "2.5"
 
 fern = "0.6"
 log = "0.4"
