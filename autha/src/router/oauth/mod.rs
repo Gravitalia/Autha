@@ -1,5 +1,6 @@
-mod refresh;
 mod authorization_code;
+mod client_credentials;
+mod refresh;
 
 use anyhow::Result;
 use db::memcache::MemcachePool;
@@ -146,7 +147,11 @@ pub async fn grant(
 ) -> Result<WithStatus<Json>> {
     match body.grant_type.as_str() {
         "authorization_code" => {
-            authorization_code::authorization_code(scylla, memcached, body).await
+            authorization_code::authorization_code(scylla, memcached, body)
+                .await
+        },
+        "client_credentials" => {
+            client_credentials::client_credentials(scylla, body).await
         },
         "refresh_token" => refresh::refresh_token(scylla, body).await,
         _ => Ok(super::err("Invalid grant_type")),
