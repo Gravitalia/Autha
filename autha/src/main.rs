@@ -165,7 +165,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     } else {
         log::trace!("Successfully created tables, if they didn't exist.");
     }
-    
+
     // Init prepared queries.
     helpers::queries::init(&scylladb).await?;
 
@@ -174,6 +174,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .and(router::with_metric())
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
+        .and(warp::body::content_length_limit(8_000))
         .and(warp::body::json())
         .and(warp::header::optional::<String>("cf-turnstile-token"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
@@ -185,6 +186,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .and(router::with_metric())
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
+        .and(warp::body::content_length_limit(5_000))
         .and(warp::body::json())
         .and(warp::header::optional::<String>("cf-turnstile-token"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
@@ -207,6 +209,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .and(router::with_memcached(memcached_pool.clone()))
         .and(router::with_broker(Arc::clone(&broker)))
         .and(warp::header::<String>("authorization"))
+        .and(warp::body::content_length_limit(60_000_000)) // 600 MB.
         .and(warp::body::json())
         .and_then(router::update_user);
 
@@ -227,7 +230,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .and(router::with_metric())
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
-        .and(warp::body::json())
+        .and(warp::body::content_length_limit(5_000))
+        .and(warp::body::form())
         .and_then(router::access_token);
 
     #[cfg(feature = "telemetry")]
