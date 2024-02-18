@@ -81,4 +81,6 @@ pub struct OAuth {
     /// Refresh code.
     /// Required when `grant_type` is set to `refresh_token`.
     pub refresh_token: Option<String>,
+    /// Bot access granted by the user.
+    pub scope: Option<String>,
 }
