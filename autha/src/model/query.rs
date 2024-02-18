@@ -16,4 +16,6 @@ pub struct OAuth {
     pub redirect_uri: String,
     /// Bot access granted by the user.
     pub scope: String,
+    /// Protect from CSRF.
+    pub state: Option<String>,
 }
