@@ -34,8 +34,9 @@ impl warp::reject::Reject for UnknownError {}
 #[inline(always)]
 async fn vanity_from_token(scylla: &Arc<Scylla>, token: &str) -> Result<Token> {
     if token.starts_with("Bearer ") {
-        let jwt_claims = crate::helpers::token::get_jwt_data(&token.replace("Bearer ", ""))
-            .map_err(|_| anyhow!("invalid token"))?;
+        let jwt_claims =
+            crate::helpers::token::get_jwt_data(&token.replace("Bearer ", ""))
+                .map_err(|_| anyhow!("invalid token"))?;
 
         Ok(Token {
             token: token.to_string(),
@@ -255,7 +256,7 @@ pub async fn create_token(
 
             Ok(res)
         },
-        Err(_) => Err(warp::reject::custom(UnknownError)),
+        Err(error) => Ok(error.into_response()),
     }
 }
 
