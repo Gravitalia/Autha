@@ -128,7 +128,7 @@ pub async fn init(scylla: &Arc<Scylla>) -> Result<(), QueryError> {
     let create_oauth = scylla
         .connection
         .prepare(
-            "INSERT INTO accounts.oauth (id, user_id, bot_id, scope, deleted) VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO accounts.oauth (id, user_id, bot_id, scope, deleted) VALUES (?, ?, ?, ?, ?) USING TTL 5184000"
         )
         .await?;
     CREATE_OAUTH.get_or_init(|| create_oauth);

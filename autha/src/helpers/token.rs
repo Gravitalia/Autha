@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const JWT_TIME: u64 = 604800;
+const JWT_TIME: u64 = 3600; // 1 hour.
 
 /// Json Web Token payload as structure.
 #[derive(Debug, Serialize, Deserialize)]
