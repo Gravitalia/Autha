@@ -1,5 +1,5 @@
 {
-  "checksum": "f96477fca9754cb15a0ea40b733d023367d8a8e9ac097c049b51a7510983296d",
+  "checksum": "5a44bea6ef608091e40200f2e1a94d2967d4af81767f1f48a152d5620c5741c8",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -3854,7 +3854,7 @@
               "target": "hex"
             },
             {
-              "id": "ring 0.17.7",
+              "id": "ring 0.17.8",
               "target": "ring"
             },
             {
@@ -8251,7 +8251,7 @@
           "selects": {
             "cfg(not(target_arch = \"wasm32\"))": [
               {
-                "id": "ring 0.17.7",
+                "id": "ring 0.17.8",
                 "target": "ring"
               }
             ],
@@ -8261,7 +8261,7 @@
                 "target": "js_sys"
               },
               {
-                "id": "ring 0.17.7",
+                "id": "ring 0.17.8",
                 "target": "ring"
               }
             ]
@@ -8573,10 +8573,79 @@
         "crate_features": {
           "common": [
             "default",
-            "extra_traits",
             "std"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              "extra_traits"
+            ],
+            "aarch64-apple-ios": [
+              "extra_traits"
+            ],
+            "aarch64-apple-ios-sim": [
+              "extra_traits"
+            ],
+            "aarch64-fuchsia": [
+              "extra_traits"
+            ],
+            "aarch64-linux-android": [
+              "extra_traits"
+            ],
+            "armv7-linux-androideabi": [
+              "extra_traits"
+            ],
+            "i686-apple-darwin": [
+              "extra_traits"
+            ],
+            "i686-linux-android": [
+              "extra_traits"
+            ],
+            "i686-unknown-freebsd": [
+              "extra_traits"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "extra_traits"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "extra_traits"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "extra_traits"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "extra_traits"
+            ],
+            "thumbv7em-none-eabi": [
+              "extra_traits"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "extra_traits"
+            ],
+            "wasm32-unknown-unknown": [
+              "extra_traits"
+            ],
+            "wasm32-wasi": [
+              "extra_traits"
+            ],
+            "x86_64-apple-darwin": [
+              "extra_traits"
+            ],
+            "x86_64-apple-ios": [
+              "extra_traits"
+            ],
+            "x86_64-fuchsia": [
+              "extra_traits"
+            ],
+            "x86_64-linux-android": [
+              "extra_traits"
+            ],
+            "x86_64-unknown-freebsd": [
+              "extra_traits"
+            ],
+            "x86_64-unknown-none": [
+              "extra_traits"
+            ]
+          }
         },
         "deps": {
           "common": [
@@ -8737,35 +8806,89 @@
         ],
         "crate_features": {
           "common": [
+            "elf",
+            "errno",
             "general",
-            "if_ether",
             "ioctl",
-            "net",
-            "netlink",
-            "no_std",
-            "prctl",
-            "xdp"
+            "no_std"
           ],
           "selects": {
+            "aarch64-linux-android": [
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
+            ],
             "aarch64-unknown-linux-gnu": [
-              "elf",
-              "errno"
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
             ],
             "arm-unknown-linux-gnueabi": [
-              "elf",
-              "errno"
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
+            ],
+            "armv7-linux-androideabi": [
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
             ],
             "armv7-unknown-linux-gnueabi": [
-              "elf",
-              "errno"
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
+            ],
+            "i686-linux-android": [
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
             ],
             "i686-unknown-linux-gnu": [
-              "elf",
-              "errno"
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
+            ],
+            "x86_64-linux-android": [
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
             ],
             "x86_64-unknown-linux-gnu": [
-              "elf",
-              "errno"
+              "if_ether",
+              "net",
+              "netlink",
+              "prctl",
+              "xdp"
             ]
           }
         },
@@ -12771,13 +12894,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "ring 0.17.7": {
+    "ring 0.17.8": {
       "name": "ring",
-      "version": "0.17.7",
+      "version": "0.17.8",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/ring/0.17.7/download",
-          "sha256": "688c63d65483050968b2a8937f7995f443e27041a0f7700aa59b0822aedebb74"
+          "url": "https://crates.io/api/v1/crates/ring/0.17.8/download",
+          "sha256": "c17fa4cb658e3583423e915b9f3acc01cceaee1860e33d59ebae66adc3a2dc0d"
         }
       },
       "targets": [
@@ -12824,11 +12947,15 @@
         "deps": {
           "common": [
             {
+              "id": "cfg-if 1.0.0",
+              "target": "cfg_if"
+            },
+            {
               "id": "getrandom 0.2.12",
               "target": "getrandom"
             },
             {
-              "id": "ring 0.17.7",
+              "id": "ring 0.17.8",
               "target": "build_script_build"
             },
             {
@@ -12845,7 +12972,7 @@
             ],
             "cfg(all(target_arch = \"aarch64\", target_os = \"windows\"))": [
               {
-                "id": "windows-sys 0.48.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ],
@@ -12858,7 +12985,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.17.7"
+        "version": "0.17.8"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -12873,7 +13000,7 @@
           ],
           "selects": {}
         },
-        "links": "ring_core_0_17_7"
+        "links": "ring_core_0_17_8"
       },
       "license": null
     },
@@ -13382,7 +13509,7 @@
               "target": "log"
             },
             {
-              "id": "ring 0.17.7",
+              "id": "ring 0.17.8",
               "target": "ring"
             },
             {
@@ -13410,7 +13537,7 @@
         "link_deps": {
           "common": [
             {
-              "id": "ring 0.17.7",
+              "id": "ring 0.17.8",
               "target": "ring"
             }
           ],
@@ -13611,7 +13738,7 @@
         "deps": {
           "common": [
             {
-              "id": "ring 0.17.7",
+              "id": "ring 0.17.8",
               "target": "ring"
             },
             {
@@ -13916,7 +14043,7 @@
         "deps": {
           "common": [
             {
-              "id": "ring 0.17.7",
+              "id": "ring 0.17.8",
               "target": "ring"
             },
             {
