@@ -16,8 +16,8 @@ It implements an account creation, connection and authorization delegation syste
 > We want to guarantee our users **increased security**. This way, all users can see how we store data and also help us to improve the cryptographic systems.
 
 - `Argon2`, `ChaCha20Poly1305`, `SHA-3` and `FPE` (with `AES`) are the hashing and cryptographic systems used;
-- Short expiration time (< `5 min.`) for auhtorization code;
-- JWT with asymmetric key and low data;
+- Short expiration time (< `5 min.`) for authorization code;
+- JWT with asymetric key and low data;
 - One-Time Usage auhtorization code;
 - PKCE support.
 
