@@ -1,5 +1,5 @@
 {
-  "checksum": "5a44bea6ef608091e40200f2e1a94d2967d4af81767f1f48a152d5620c5741c8",
+  "checksum": "4af3d920420cd87f35b16491080c4e051f527719c5f3149face0fdf2c4201910",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -7406,13 +7406,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "image 0.24.8": {
+    "image 0.24.9": {
       "name": "image",
-      "version": "0.24.8",
+      "version": "0.24.9",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/image/0.24.8/download",
-          "sha256": "034bbe799d1909622a74d1193aa50147769440040ff36cb2baa947609b0a4e23"
+          "url": "https://crates.io/api/v1/crates/image/0.24.9/download",
+          "sha256": "5690139d2f55868e080017335e4b94cb7414274c74f1669c84fb5feba2c9f69d"
         }
       },
       "targets": [
@@ -7470,9 +7470,9 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.24.8"
+        "version": "0.24.9"
       },
-      "license": "MIT"
+      "license": "MIT OR Apache-2.0"
     },
     "image_processor 0.1.0": {
       "name": "image_processor",
@@ -7505,7 +7505,7 @@
               "target": "fast_image_resize"
             },
             {
-              "id": "image 0.24.8",
+              "id": "image 0.24.9",
               "target": "image"
             },
             {
