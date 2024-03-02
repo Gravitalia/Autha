@@ -52,6 +52,16 @@ use_repo(crate, "crate_index")
 # OCI support.
 bazel_dep(name = "rules_pkg", version = "0.10.1")
 bazel_dep(name = "rules_oci", version = "1.7.4")
+bazel_dep(name = "aspect_bazel_lib", version = "1.36.0")
+
+git_override(
+    module_name = "rules_oci",
+    commit = "e060819b2b19dd827f255900068e134b4914ff63",
+    remote = "https://github.com/archen/rules_oci",
+)
+
+ext = use_extension("@aspect_bazel_lib//lib:extensions.bzl", "toolchains")
+use_repo(ext, "yq_toolchains")  # For checksum verification
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.toolchains(
