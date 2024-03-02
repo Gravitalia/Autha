@@ -29,15 +29,6 @@ jobs:
         key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'MODULE', 'Cargo.Bazel.lock') }}
         restore-keys: |
           ${{ runner.os }}-bazel-
-    - name: Update lockfile
-      if: ${{ github.actor == 'dependabot[bot]' }}
-      run: CARGO_BAZEL_REPIN=1 bazel sync --only=crate_index
-      shell: bash
-    - name: Save lockfile
-      uses: stefanzweifel/git-auto-commit-action@v4
-      if: ${{ github.actor == 'dependabot[bot]' && matrix.target == 'ubuntu-latest' }}
-      with:
-        commit_message: 'chore(deps): Update Bazel lockfile'
     - name: Run builds
       run: bazel build //... --strip=always --compilation_mode opt
       shell: bash
