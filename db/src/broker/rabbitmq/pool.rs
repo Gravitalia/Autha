@@ -41,7 +41,7 @@ impl r2d2::ManageConnection for LapinConnectionManager {
     }
 
     fn is_valid(&self, conn: &mut Self::Connection) -> Result<(), Self::Error> {
-        let valid_states = vec![
+        let valid_states = [
             ConnectionState::Initial,
             ConnectionState::Connecting,
             ConnectionState::Connected,
@@ -58,7 +58,7 @@ impl r2d2::ManageConnection for LapinConnectionManager {
 
     fn has_broken(&self, conn: &mut Self::Connection) -> bool {
         let broken_states =
-            vec![ConnectionState::Closed, ConnectionState::Error];
+            [ConnectionState::Closed, ConnectionState::Error];
         broken_states.contains(&conn.status().state())
     }
 }

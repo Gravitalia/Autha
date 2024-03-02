@@ -9,14 +9,19 @@ bazel_dep(name = "platforms", version = "0.0.8")
 bazel_dep(name = "bazel_skylib", version = "1.5.0")
 
 # Protobuf support.
-bazel_dep(name = "rules_proto", version = "6.0.0-rc1")
+bazel_dep(name = "rules_proto", version = "6.0.0-rc2")
+bazel_dep(
+    name = "protobuf",
+    version = "23.1",
+    repo_name = "com_google_protobuf",
+)
 
 proto = use_extension("@rules_proto//proto:repositories.bzl", "proto")
 proto.dependencies()
 proto.toolchain()
 
 # Rust support.
-bazel_dep(name = "rules_rust", version = "0.39.0")
+bazel_dep(name = "rules_rust", version = "0.40.0")
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(edition = "2021")
@@ -45,20 +50,29 @@ crate.from_cargo(
 use_repo(crate, "crate_index")
 
 # OCI support.
-bazel_dep(name = "rules_pkg", version = "0.9.1")
-bazel_dep(name = "rules_oci", version = "1.6.0")
+bazel_dep(name = "rules_pkg", version = "0.10.1")
+bazel_dep(name = "rules_oci", version = "1.7.4")
+bazel_dep(name = "aspect_bazel_lib", version = "1.36.0")
+
+git_override(
+    module_name = "rules_oci",
+    commit = "e060819b2b19dd827f255900068e134b4914ff63",
+    remote = "https://github.com/archen/rules_oci",
+)
+
+ext = use_extension("@aspect_bazel_lib//lib:extensions.bzl", "toolchains")
+use_repo(ext, "yq_toolchains")  # For checksum verification
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.toolchains(
     name = "oci",
-    crane_version = "v0.17.0",
-    zot_version = "",
+    crane_version = "v0.15.2",
 )
 
 oci.pull(
     name = "distroless_cc",
-    tag = "latest",
-    image = "gcr.io/distroless/cc",
+    digest = "sha256:a9056d2232d16e3772bec3ef36b93a5ea9ef6ad4b4ed407631e534b85832cf40",
+    image = "gcr.io/distroless/cc-debian12",
     platforms = [
         "linux/amd64",
         "linux/arm64/v8",

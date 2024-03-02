@@ -1,0 +1,10 @@
+# Required on windows.
+common --enable_platform_specific_config
+startup --windows_enable_symlinks
+build:windows --enable_runfiles
+
+# If bazel7 is not installed.
+build --experimental_enable_bzlmod
+
+build --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect
+build --output_groups=+clippy_checks
