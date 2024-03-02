@@ -84,7 +84,7 @@ pkg_tar(
 # Build image.
 oci_image(
     name = "linux",
-    base = "@distroless_cc",
+    base = "@distroless_static",
     tars = [":layer"],
     entrypoint = ["/autha"],
     exposed_ports = ["1111/tcp"],
