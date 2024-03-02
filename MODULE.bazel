@@ -9,14 +9,19 @@ bazel_dep(name = "platforms", version = "0.0.8")
 bazel_dep(name = "bazel_skylib", version = "1.5.0")
 
 # Protobuf support.
-bazel_dep(name = "rules_proto", version = "6.0.0-rc1")
+bazel_dep(name = "rules_proto", version = "6.0.0-rc2")
+bazel_dep(
+    name = "protobuf",
+    version = "23.1",
+    repo_name = "com_google_protobuf",
+)
 
 proto = use_extension("@rules_proto//proto:repositories.bzl", "proto")
 proto.dependencies()
 proto.toolchain()
 
 # Rust support.
-bazel_dep(name = "rules_rust", version = "0.39.0")
+bazel_dep(name = "rules_rust", version = "0.40.0")
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(edition = "2021")
@@ -45,23 +50,21 @@ crate.from_cargo(
 use_repo(crate, "crate_index")
 
 # OCI support.
-bazel_dep(name = "rules_pkg", version = "0.9.1")
-bazel_dep(name = "rules_oci", version = "1.6.0")
+bazel_dep(name = "rules_pkg", version = "0.10.1")
+bazel_dep(name = "rules_oci", version = "1.7.4")
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
 oci.toolchains(
     name = "oci",
-    crane_version = "v0.17.0",
-    zot_version = "",
+    crane_version = "v0.18.0",
 )
 
 oci.pull(
-    name = "distroless_cc",
-    tag = "latest",
-    image = "gcr.io/distroless/cc",
+    name = "distroless_static",
+    image = "gcr.io/distroless/static-debian11",
+    digest = "sha256:838bef786af4d013a468d6c36215822ec8680ae36051fdbbd471981dba4093c1",
     platforms = [
-        "linux/amd64",
         "linux/arm64/v8",
     ],
 )
-use_repo(oci, "distroless_cc")
+use_repo(oci, "distroless_static")
