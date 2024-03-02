@@ -60,11 +60,12 @@ oci.toolchains(
 )
 
 oci.pull(
-    name = "distroless_static",
-    image = "gcr.io/distroless/static-debian11",
-    digest = "sha256:838bef786af4d013a468d6c36215822ec8680ae36051fdbbd471981dba4093c1",
+    name = "distroless_cc",
+    digest = "sha256:8aad707f96620ee89e27febef51b01c6ff244277a3560fcfcfbe68633ef09193",
+    image = "gcr.io/distroless/cc",
     platforms = [
-        "linux/arm64/v8",
+        "linux/amd64",
+        "linux/arm64",
     ],
 )
-use_repo(oci, "distroless_static")
+use_repo(oci, "distroless_cc")
