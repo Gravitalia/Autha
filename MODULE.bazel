@@ -61,11 +61,11 @@ oci.toolchains(
 
 oci.pull(
     name = "distroless_cc",
-    digest = "sha256:8aad707f96620ee89e27febef51b01c6ff244277a3560fcfcfbe68633ef09193",
+    digest = "sha256:83e56fe32f54fd028d26afe19ac5500741f20cfe081b26ee26f2c98c55f707c9",
     image = "gcr.io/distroless/cc",
     platforms = [
         "linux/amd64",
-        "linux/arm64",
+        "linux/arm64/v8",
     ],
 )
 use_repo(oci, "distroless_cc")
