@@ -14,8 +14,9 @@ const TOKEN_LENGTH: usize = 65;
 /// Json Web Token payload as structure.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    /// Recipient of the token. Typically client id.
-    pub aud: String,
+    /// Recipient of the token.
+    /// Diverges from the "aud" (audience) since it is not required to validate it.
+    pub client_id: String,
     /// Time after which the JWT expires.
     pub exp: u64,
     /// Issuer of the JWT.
@@ -38,9 +39,8 @@ pub async fn create(
     let id = crypto::random_string(TOKEN_LENGTH);
 
     // Get actual timestamp to save exact date of connection.
-    let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)?
-        .as_millis() as i64;
+    let timestamp =
+        SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() as i64;
 
     // Encrypt IP adress before save it.
     let (nonce, encrypted) =
@@ -108,8 +108,7 @@ pub fn create_jwt(
     scope: Vec<String>,
 ) -> Result<(u64, String)> {
     let private_key = EncodingKey::from_rsa_pem(
-        std::env::var("RSA_PRIVATE_KEY")?
-            .as_bytes(),
+        std::env::var("RSA_PRIVATE_KEY")?.as_bytes(),
     )?;
 
     let now = SystemTime::now().duration_since(UNIX_EPOCH)?;
@@ -119,7 +118,7 @@ pub fn create_jwt(
         encode(
             &Header::new(Algorithm::RS256),
             &Claims {
-                aud: client_id,
+                client_id,
                 sub: user_id,
                 scope,
                 exp: now.as_secs() + JWT_TIME,
@@ -133,10 +132,8 @@ pub fn create_jwt(
 
 /// Retrieves JSON data from the JWT and checks whether the token is valid.
 pub fn get_jwt(token: &str) -> Result<Claims> {
-    let public_key = DecodingKey::from_rsa_pem(
-        std::env::var("RSA_PUBLIC_KEY")?
-            .as_bytes(),
-    )?;
+    let public_key =
+        DecodingKey::from_rsa_pem(std::env::var("RSA_PUBLIC_KEY")?.as_bytes())?;
 
     let data = decode::<Claims>(
         token,
