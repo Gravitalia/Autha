@@ -34,15 +34,17 @@ impl warp::reject::Reject for UnknownError {}
 #[inline(always)]
 async fn vanity_from_token(scylla: &Arc<Scylla>, token: &str) -> Result<Token> {
     if token.starts_with("Bearer ") {
-        let jwt_claims =
+        let claims =
             crate::helpers::token::get_jwt(&token.replace("Bearer ", ""))
-                .map_err(|_| anyhow!("invalid token"))?;
+                .map_err(|error| {
+                    anyhow!(format!("invalid token: {}", error))
+                })?;
 
         Ok(Token {
             token: token.to_string(),
-            vanity: jwt_claims.sub,
-            is_bot: false,
-            scopes: Some(jwt_claims.scope),
+            vanity: claims.sub.clone(),
+            is_bot: claims.client_id == claims.sub, // this means it has been created with client_credidentials.
+            scopes: Some(claims.scope),
         })
     } else if token.starts_with("Bot ") {
         Err(anyhow!("bots are not supported"))
