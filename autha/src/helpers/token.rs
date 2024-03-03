@@ -9,20 +9,23 @@ use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 const JWT_TIME: u64 = 3600; // 1 hour.
+const TOKEN_LENGTH: usize = 65;
 
 /// Json Web Token payload as structure.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    /// User vanity.
-    pub sub: String,
-    /// Scope allowed for the token.
-    pub scope: Vec<String>,
-    /// Expiration date.
+    /// Recipient of the token. Typically client id.
+    pub aud: String,
+    /// Time after which the JWT expires.
     pub exp: u64,
-    /// The issuer. Should be gravitalia or autha.
-    iss: String,
-    /// Issuing date.
-    iat: u64,
+    /// Issuer of the JWT.
+    pub iss: String,
+    /// Time at which the JWT was issued.
+    pub iat: u64,
+    /// Custom claim. Granted permissions to the token.
+    pub scope: Vec<String>,
+    /// Subject of the JWT. User unique identifier called `vanity`.
+    pub sub: String,
 }
 
 /// Create a 14-day valid user token into database.
@@ -32,12 +35,11 @@ pub async fn create(
     user_id: &String,
     ip: String,
 ) -> Result<String> {
-    let id = crypto::random_string(65);
+    let id = crypto::random_string(TOKEN_LENGTH);
 
     // Get actual timestamp to save exact date of connection.
     let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards")
+        .duration_since(UNIX_EPOCH)?
         .as_millis() as i64;
 
     // Encrypt IP adress before save it.
@@ -90,7 +92,7 @@ pub async fn get(scylla: &Arc<Scylla>, token: &str) -> Result<String> {
         bail!("no token exists")
     }
 
-    let (vanity, deleted) = rows[0].clone().unwrap();
+    let (vanity, deleted) = rows[0].clone().unwrap_or_default();
 
     if deleted {
         bail!("revoked token")
@@ -101,15 +103,14 @@ pub async fn get(scylla: &Arc<Scylla>, token: &str) -> Result<String> {
 
 /// Create a Json Web Token for access token during seven days.
 pub fn create_jwt(
+    client_id: String,
     user_id: String,
     scope: Vec<String>,
 ) -> Result<(u64, String)> {
     let private_key = EncodingKey::from_rsa_pem(
-        std::env::var("RSA_PRIVATE_KEY")
-            .expect("Missing env `RSA_PRIVATE_KEY`")
+        std::env::var("RSA_PRIVATE_KEY")?
             .as_bytes(),
-    )
-    .expect("Failed to load private key");
+    )?;
 
     let now = SystemTime::now().duration_since(UNIX_EPOCH)?;
 
@@ -118,9 +119,10 @@ pub fn create_jwt(
         encode(
             &Header::new(Algorithm::RS256),
             &Claims {
+                aud: client_id,
                 sub: user_id,
                 scope,
-                exp: now.as_secs() + JWT_TIME, // Valid for 7 days.
+                exp: now.as_secs() + JWT_TIME,
                 iss: "https://account.gravitalia.com".to_string(),
                 iat: now.as_secs(),
             },
@@ -130,21 +132,19 @@ pub fn create_jwt(
 }
 
 /// Retrieves JSON data from the JWT and checks whether the token is valid.
-pub fn get_jwt_data(token: &str) -> Result<(String, Vec<String>)> {
+pub fn get_jwt(token: &str) -> Result<Claims> {
     let public_key = DecodingKey::from_rsa_pem(
-        std::env::var("RSA_PUBLIC_KEY")
-            .expect("Missing env `RSA_PUBLIC_KEY`")
+        std::env::var("RSA_PUBLIC_KEY")?
             .as_bytes(),
-    )
-    .expect("Failed to load public key");
+    )?;
 
-    let claims = decode::<Claims>(
+    let data = decode::<Claims>(
         token,
         &public_key,
         &Validation::new(Algorithm::RS256),
     )?;
 
-    if claims.claims.exp
+    if data.claims.exp
         <= std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
@@ -153,5 +153,5 @@ pub fn get_jwt_data(token: &str) -> Result<(String, Vec<String>)> {
         bail!("expired token")
     }
 
-    Ok((claims.claims.sub, claims.claims.scope))
+    Ok(data.claims)
 }
