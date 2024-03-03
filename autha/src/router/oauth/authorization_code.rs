@@ -38,20 +38,23 @@ pub async fn authorization_code(
         return Ok(crate::router::err("Invalid code"));
     }
 
-    let (client_id, redirect_uri, user_id, scope, code_challenge) =
-        match data.as_slice() {
-            [client_id, redirect_uri, user_id, scope] => {
-                (client_id, redirect_uri, user_id, scope, None)
-            },
-            [client_id, redirect_uri, user_id, scope, code_challenge] => (
-                client_id,
-                redirect_uri,
-                user_id,
-                scope,
-                Some(code_challenge),
-            ),
-            _ => return Ok(crate::router::err(crate::router::INTERNAL_SERVER_ERROR)),
-        };
+    let (client_id, redirect_uri, user_id, scope, code_challenge) = match data
+        .as_slice()
+    {
+        [client_id, redirect_uri, user_id, scope] => {
+            (client_id, redirect_uri, user_id, scope, None)
+        },
+        [client_id, redirect_uri, user_id, scope, code_challenge] => (
+            client_id,
+            redirect_uri,
+            user_id,
+            scope,
+            Some(code_challenge),
+        ),
+        _ => {
+            return Ok(crate::router::err(crate::router::INTERNAL_SERVER_ERROR))
+        },
+    };
 
     if &body.client_id.unwrap_or_default() != client_id {
         return Ok(crate::router::err(crate::router::INVALID_BOT));
@@ -115,11 +118,14 @@ pub async fn authorization_code(
         scope.split_whitespace().map(|x| x.to_string()).collect();
 
     // Create access token.
-    let (expires_in, access_token) =
-        crate::helpers::token::create_jwt(user_id.to_string(), scopes.clone())?;
+    let (expires_in, access_token) = crate::helpers::token::create_jwt(
+        client_id.to_string(),
+        user_id.to_string(),
+        scopes.clone(),
+    )?;
 
     // Generate crypto-secure random 512 bytes string.
-    let refresh_token = random_string(512);
+    let refresh_token = random_string(super::REFRESH_TOKEN_LENGTH);
     if let Some(query) = CREATE_OAUTH.get() {
         scylla
             .connection
