@@ -209,7 +209,7 @@ async fn main() {
         .and(router::with_memcached(memcached_pool.clone()))
         .and(router::with_broker(Arc::clone(&broker)))
         .and(warp::header::<String>("authorization"))
-        .and(warp::body::content_length_limit(60_000_000)) // 600 MB.
+        .and(warp::body::content_length_limit(1024 * 500)) // 500kb.
         .and(warp::body::json())
         .and_then(router::update_user);
 
