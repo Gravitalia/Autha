@@ -4,12 +4,11 @@ mod router;
 
 #[macro_use]
 extern crate lazy_static;
-use std::error::Error;
 use std::sync::Arc;
 use warp::Filter;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+async fn main() {
     // Set logger with Fern.
     fern::Dispatch::new()
         .format(|out, message, record| {
@@ -33,7 +32,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .level_for("hyper", log::LevelFilter::Error)
         .level_for("warp_server", log::LevelFilter::Info)
         .chain(std::io::stdout())
-        .apply()?;
+        .apply()
+        .expect("Cannot apply fern to log");
 
     // Read configuration file.
     let config = helpers::config::read();
@@ -48,7 +48,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     #[cfg(feature = "telemetry")]
     if let Some(url) = config.jaeger_url {
         log::info!("Tracing requests activated with Jaeger.");
-        helpers::telemetry::init_tracer(&url)?;
+        helpers::telemetry::init_tracer(&url).unwrap();
         opentelemetry::global::tracer("tracing-jaeger");
     }
 
@@ -167,7 +167,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     }
 
     // Init prepared queries.
-    helpers::queries::init(&scylladb).await?;
+    helpers::queries::init(&scylladb).await.unwrap();
 
     let create_route = warp::path("create")
         .and(warp::post())
@@ -234,6 +234,16 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         .and(warp::body::form())
         .and_then(router::access_token);
 
+    let revoke_token = warp::path("oauth2")
+        .and(warp::path("token"))
+        .and(warp::path("revoke"))
+        .and(warp::post())
+        .and(router::with_metric())
+        .and(router::with_scylla(Arc::clone(&scylladb)))
+        .and(warp::body::content_length_limit(5_000))
+        .and(warp::body::form())
+        .and_then(router::oauth::revoke::revoke);
+
     #[cfg(feature = "telemetry")]
     let metrics =
         warp::path("metrics").and_then(helpers::telemetry::metrics_handler);
@@ -252,10 +262,9 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
                 .or(update_user_route)
                 .or(create_oauth)
                 .or(access_token)
+                .or(revoke_token)
                 .or(metrics)),
     )
     .run(([0, 0, 0, 0], config.port))
     .await;
-
-    Ok(())
 }
