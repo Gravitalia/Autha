@@ -35,14 +35,14 @@ impl warp::reject::Reject for UnknownError {}
 async fn vanity_from_token(scylla: &Arc<Scylla>, token: &str) -> Result<Token> {
     if token.starts_with("Bearer ") {
         let jwt_claims =
-            crate::helpers::token::get_jwt_data(&token.replace("Bearer ", ""))
+            crate::helpers::token::get_jwt(&token.replace("Bearer ", ""))
                 .map_err(|_| anyhow!("invalid token"))?;
 
         Ok(Token {
             token: token.to_string(),
-            vanity: jwt_claims.0,
+            vanity: jwt_claims.sub,
             is_bot: false,
-            scopes: Some(jwt_claims.1),
+            scopes: Some(jwt_claims.scope),
         })
     } else if token.starts_with("Bot ") {
         Err(anyhow!("bots are not supported"))
@@ -113,7 +113,7 @@ pub fn with_metric(
 }
 
 /// Handler of route to create a user.
-#[inline]
+#[inline(always)]
 pub async fn create_user(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
@@ -191,7 +191,7 @@ pub async fn login_user(
 }
 
 /// Handler of route to get a user.
-#[inline]
+#[inline(always)]
 pub async fn get_user(
     vanity: String,
     scylla: Arc<Scylla>,
@@ -214,7 +214,7 @@ pub async fn get_user(
 }
 
 /// Handler of route to update its account.
-#[inline]
+#[inline(always)]
 pub async fn update_user(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
@@ -238,7 +238,7 @@ pub async fn update_user(
 }
 
 /// Handler of route to create an authorization token.
-#[inline]
+#[inline(always)]
 pub async fn create_token(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
@@ -261,7 +261,7 @@ pub async fn create_token(
 }
 
 /// Handler of route to get access token after created authorization token.
-#[inline]
+#[inline(always)]
 pub async fn access_token(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
