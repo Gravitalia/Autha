@@ -1,6 +1,5 @@
 use db::libscylla::{
-    batch::Batch, prepared_statement::PreparedStatement,
-    transport::errors::QueryError,
+    prepared_statement::PreparedStatement, transport::errors::QueryError,
 };
 use db::scylla::Scylla;
 use std::sync::{Arc, OnceLock};
@@ -107,21 +106,13 @@ pub async fn create_tables(scylla: &Arc<Scylla>) -> Result<(), QueryError> {
         "CREATE INDEX IF NOT EXISTS ON accounts.tokens ( user_id );",
     ];
 
-    // Create batch to perform only one big call.
-    let mut batch = Batch::default();
-    let mut batch_value: Vec<()> = vec![];
-
     for table in tables.iter() {
-        batch.append_statement(*table);
-        batch_value.push(());
+        scylla.connection.query(*table, &[]).await?;
     }
 
     for index in indexes.iter() {
-        batch.append_statement(*index);
-        batch_value.push(());
+        scylla.connection.query(*index, &[]).await?;
     }
-
-    scylla.connection.batch(&batch, batch_value).await?;
 
     Ok(())
 }
