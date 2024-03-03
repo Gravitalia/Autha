@@ -1,6 +1,7 @@
 mod authorization_code;
 mod client_credentials;
 mod refresh;
+pub mod revoke;
 
 use anyhow::Result;
 use db::memcache::MemcachePool;
