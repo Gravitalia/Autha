@@ -60,16 +60,19 @@ pub async fn get(
         if let Some(tok) = token {
             id = match super::vanity_from_token(&scylla, &tok).await {
                 Ok(data) => {
-                    if data.scopes.is_some() {
+                    if let Some(scopes) = data.scopes {
+                        if !scopes.iter().any(|s| *s == "identity") {
+                            return Ok(super::err("insufficient_scope The request requires higher privileges than provided by the access token."));
+                        }
                         is_jwt = true;
                     }
-                    
+
                     data.vanity
                 },
                 Err(error) => {
                     log::error!("Cannot retrive user token: {}", error);
                     return Ok(super::err(super::INVALID_TOKEN));
-                }
+                },
             };
         } else {
             return Ok(super::err(super::MISSING_AUTHORIZATION_HEADER));
