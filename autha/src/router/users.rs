@@ -448,9 +448,9 @@ pub async fn update(
 
             match <std::sync::Arc<Broker> as Into<Broker>>::into(broker) {
                 #[cfg(feature = "kafka")]
-                Broker::Kafka(func) => func.publish("user", &new_user)?,
+                Broker::Kafka(func) => func.publish("user", &new_user).map_err(|_| crate::router::Errors::Unspecified)?,
                 #[cfg(feature = "rabbitmq")]
-                Broker::RabbitMQ(func) => func.publish("user", &new_user).await?,
+                Broker::RabbitMQ(func) => func.publish("user", &new_user).await.map_err(|_| crate::router::Errors::Unspecified)?,
                 _ => log::warn!("No service has been notified of the change in profile of {}", vanity),
             }
 
