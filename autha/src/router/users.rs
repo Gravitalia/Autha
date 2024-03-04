@@ -444,7 +444,7 @@ pub async fn update(
                 verified: false,
                 deleted: false,
                 flags: 0,
-            })?;
+            }).map_err(|_| crate::router::Errors::Unspecified)?;
 
             match <std::sync::Arc<Broker> as Into<Broker>>::into(broker) {
                 #[cfg(feature = "kafka")]
