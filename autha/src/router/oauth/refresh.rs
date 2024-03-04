@@ -17,22 +17,29 @@ pub async fn refresh_token(
     let rows = scylla
         .connection
         .query(
-            "SELECT user_id, scope, deleted FROM accounts.oauth WHERE id = ?",
+            "SELECT user_id, bot_id, scope, deleted FROM accounts.oauth WHERE id = ?",
             vec![&refresh_token],
         )
         .await?
-        .rows_typed::<(String, Vec<String>, bool)>()?
+        .rows_typed::<(String, String, Vec<String>, bool)>()?
         .collect::<Vec<_>>();
 
-    let (user_id, scopes, deleted) = rows[0].clone()?;
+    if rows.is_empty() {
+        return Ok(crate::router::err("Invalid refresh_token"));
+    }
+
+    let (user_id, client_id, scopes, deleted) = rows[0].clone()?;
 
     if deleted {
         return Ok(crate::router::err("Expired refresh_token"));
     }
 
     // Create access token.
-    let (expires_in, access_token) =
-        crate::helpers::token::create_jwt(user_id, scopes.clone())?;
+    let (expires_in, access_token) = crate::helpers::token::create_jwt(
+        client_id.to_string(),
+        user_id,
+        scopes.clone(),
+    )?;
 
     Ok(warp::reply::with_status(
         warp::reply::json(&crate::model::response::AccessToken {

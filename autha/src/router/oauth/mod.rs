@@ -1,6 +1,7 @@
 mod authorization_code;
 mod client_credentials;
 mod refresh;
+pub mod revoke;
 
 use anyhow::Result;
 use db::memcache::MemcachePool;
@@ -13,6 +14,7 @@ use warp::{
 };
 
 const VALID_SCOPE: [&str; 1] = ["identity"];
+const REFRESH_TOKEN_LENGTH: usize = 512;
 
 /// This route allows you to create an `authorization code` and then obtain an access token linked to a user.
 /// This is an implementation made for a grant type specified on `authorization_code`.

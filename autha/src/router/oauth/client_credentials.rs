@@ -57,6 +57,7 @@ pub async fn client_credentials(
 
     // Create access token.
     let (expires_in, access_token) = crate::helpers::token::create_jwt(
+        client_id.clone(),
         client_id,
         scopes.iter().map(|scope| scope.to_string()).collect(),
     )?;

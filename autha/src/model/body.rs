@@ -84,3 +84,15 @@ pub struct OAuth {
     /// Bot access granted by the user.
     pub scope: Option<String>,
 }
+
+/// Represents the body structure for revoke access token and refresh token.
+#[derive(Deserialize)]
+#[allow(dead_code)]
+pub struct Revoke {
+    /// Access token or refresh token.
+    /// One of the two must be used to revoke the both.
+    pub token: String,
+    /// Should be access_token or refresh_token.
+    /// Due to automatic detection, it is not necessary to use it.
+    refresh_token: Option<String>,
+}
