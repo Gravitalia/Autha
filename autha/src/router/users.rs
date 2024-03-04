@@ -4,8 +4,8 @@ use db::broker::Broker;
 use db::libscylla::{batch::Batch, IntoTypedRows};
 use db::memcache::MemcachePool;
 use db::scylla::Scylla;
-use std::sync::Arc;
-use warp::reply::{Json, WithStatus};
+use std::{convert::Infallible, sync::Arc};
+use warp::{reply::Reply, Rejection};
 
 use crate::helpers::queries::{CREATE_SALT, GET_USER};
 
@@ -48,11 +48,11 @@ pub async fn get_user(
 /// Handle get user route.
 /// This route allow using ID parameters as "@me" to get actual users.
 pub async fn get(
+    mut id: String,
     scylla: std::sync::Arc<Scylla>,
     memcached: MemcachePool,
-    mut id: String,
     token: Option<String>,
-) -> Result<WithStatus<Json>> {
+) -> Result<impl Reply, Infallible> {
     let mut is_jwt = false;
     let is_me = id == "@me";
 
@@ -110,12 +110,16 @@ pub async fn get(
             email: if is_jwt || !is_me {
                 None
             } else {
-                Some(crypto::decrypt::format_preserving_encryption(
-                    hex::decode(user.email.unwrap_or_default())?
-                        .chunks_exact(1)
-                        .map(|chunk| u16::from_le_bytes([chunk[0], 0]))
-                        .collect(),
-                )?)
+                Some(
+                    crypto::decrypt::format_preserving_encryption(
+                        hex::decode(user.email.unwrap_or_default())
+                            .unwrap_or_default()
+                            .chunks_exact(1)
+                            .map(|chunk| u16::from_le_bytes([chunk[0], 0]))
+                            .collect(),
+                    )
+                    .unwrap_or_default(),
+                )
             },
             birthdate: None,
             phone: None,
@@ -134,7 +138,7 @@ pub async fn update(
     broker: Arc<db::broker::Broker>,
     token: String,
     body: crate::model::body::UserPatch,
-) -> Result<WithStatus<Json>> {
+) -> Result<impl Reply, Rejection> {
     let vanity = match crate::helpers::token::get(&scylla, &token).await {
         Ok(vanity) => vanity,
         Err(error) => {
@@ -149,12 +153,14 @@ pub async fn update(
             "SELECT username, email, password, avatar, bio FROM accounts.users WHERE vanity = ?",
             vec![&vanity],
         )
-        .await?
-        .rows_typed::<(String, String, String, Option<String>, Option<String>)>()?
+        .await
+        .map_err(|_| crate::router::Errors::Unspecified)?
+        .rows_typed::<(String, String, String, Option<String>, Option<String>)>()
+        .map_err(|_| crate::router::Errors::Unspecified)?
         .collect::<Vec<_>>();
 
     let (mut username, mut email, password, mut avatar, mut bio) =
-        rows[0].clone()?;
+        rows[0].clone().unwrap_or_default();
     let mut birthdate: Option<String> = None;
     let mut phone: Option<String> = None;
 
@@ -164,7 +170,9 @@ pub async fn update(
             password,
             psw.as_bytes(),
             Some(vanity.as_bytes()),
-        )? {
+        )
+        .map_err(|_| crate::router::Errors::Unspecified)?
+        {
             is_psw_valid = true;
         } else {
             return Ok(crate::router::err(super::INVALID_PASSWORD));
@@ -177,7 +185,7 @@ pub async fn update(
         query.clone()
     } else {
         log::error!("Prepared queries do not appear to be initialized.");
-        bail!("cannot create salt")
+        return Err(crate::router::Errors::Unspecified.into());
     };
 
     // New batch to perform multiple requests at the same time.
@@ -210,7 +218,8 @@ pub async fn update(
             let config: crate::model::config::Config =
                 crate::helpers::config::read();
             let resized_img =
-                image_processor::resizer::resize(&a, Some(224), Some(224))?;
+                image_processor::resizer::resize(&a, Some(224), Some(224))
+                    .map_err(|_| crate::router::Errors::Unspecified)?;
             let credentials = image_processor::host::cloudinary::Credentials {
                 key: "".to_string(),
                 cloud_name: "".to_string(),
@@ -222,7 +231,8 @@ pub async fn update(
                     remini_url,
                     resized_img.buffer(),
                 )
-                .await?
+                .await
+                .map_err(|_| crate::router::Errors::Unspecified)?
                 {
                     return Ok(crate::router::err(
                         "Avatar appears to contain nudity",
@@ -235,7 +245,8 @@ pub async fn update(
                             Some(IMAGE_HEIGHT),
                             credentials,
                         )
-                        .await?,
+                        .await
+                        .map_err(|_| crate::router::Errors::Unspecified)?,
                     );
                 }
             } else {
@@ -246,7 +257,8 @@ pub async fn update(
                         Some(IMAGE_HEIGHT),
                         credentials,
                     )
-                    .await?,
+                    .await
+                    .map_err(|_| crate::router::Errors::Unspecified)?,
                 );
             }
         }
@@ -259,7 +271,8 @@ pub async fn update(
         } else {
             let hashed_email = crypto::encrypt::format_preserving_encryption(
                 e.encode_utf16().collect(),
-            )?;
+            )
+            .map_err(|_| crate::router::Errors::Unspecified)?;
 
             // Check if email is already in use.
             if !scylla
@@ -268,7 +281,8 @@ pub async fn update(
                     "SELECT vanity FROM accounts.users WHERE email = ?",
                     vec![&hashed_email],
                 )
-                .await?
+                .await
+                .map_err(|_| crate::router::Errors::Unspecified)?
                 .rows
                 .unwrap_or_default()
                 .is_empty()
@@ -290,15 +304,17 @@ pub async fn update(
 
             if 13
                 > crate::helpers::get_age(
-                    dates[0].parse::<i16>()?,
-                    dates[1].parse::<i8>()?,
-                    dates[2].parse::<i8>()?,
-                )?
+                    dates[0].parse::<i16>().unwrap_or_default(),
+                    dates[1].parse::<i8>().unwrap_or_default(),
+                    dates[2].parse::<i8>().unwrap_or_default(),
+                )
+                .map_err(|_| crate::router::Errors::Unspecified)?
             {
                 return Ok(crate::router::err(super::INVALID_BIRTHDATE));
             } else {
                 let (nonce, encrypted) =
-                    crypto::encrypt::chacha20_poly1305(birth.into())?;
+                    crypto::encrypt::chacha20_poly1305(birth.into())
+                        .map_err(|_| crate::router::Errors::Unspecified)?;
                 let uuid = uuid::Uuid::new_v4();
 
                 batch.append_statement(insert_salt_query.clone());
@@ -316,7 +332,8 @@ pub async fn update(
             return Ok(super::err(super::INVALID_PHONE));
         } else {
             let (nonce, encrypted) =
-                crypto::encrypt::chacha20_poly1305(number.into())?;
+                crypto::encrypt::chacha20_poly1305(number.into())
+                    .map_err(|_| crate::router::Errors::Unspecified)?;
             let uuid = uuid::Uuid::new_v4();
 
             batch.append_statement(insert_salt_query.clone());
@@ -333,7 +350,8 @@ pub async fn update(
             return Ok(crate::router::err(super::INVALID_PASSWORD));
         } else {
             let (nonce, encrypted) =
-                crypto::encrypt::chacha20_poly1305(mfa.into())?;
+                crypto::encrypt::chacha20_poly1305(mfa.into())
+                    .map_err(|_| crate::router::Errors::Unspecified)?;
             let uuid = uuid::Uuid::new_v4();
 
             batch.append_statement(insert_salt_query);
@@ -378,18 +396,24 @@ pub async fn update(
                     argon_config,
                     np.as_bytes(),
                     Some(vanity.as_bytes()),
-                )?,
+                )
+                .map_err(|_| crate::router::Errors::Unspecified)?,
                 vanity.clone(),
             ));
         }
     }
 
     // Prepare a batch to take advantage of good load balancing.
-    let prepared_batch = scylla.connection.prepare_batch(&batch).await?;
+    let prepared_batch = scylla
+        .connection
+        .prepare_batch(&batch)
+        .await
+        .map_err(|_| crate::router::Errors::Unspecified)?;
     scylla
         .connection
         .batch(&prepared_batch, batch_values)
-        .await?;
+        .await
+        .map_err(|_| crate::router::Errors::Unspecified)?;
 
     match scylla
     .connection.
@@ -431,7 +455,7 @@ pub async fn update(
             }
 
             // Delete cached user.
-            memcached.delete(vanity)?;
+            memcached.delete(vanity).map_err(|_| crate::router::Errors::Unspecified)?;
 
             Ok(warp::reply::with_status(
                 warp::reply::json(&crate::model::error::Error {

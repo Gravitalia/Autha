@@ -6,6 +6,7 @@ pub mod revoke;
 use anyhow::Result;
 use db::memcache::MemcachePool;
 use db::scylla::Scylla;
+use std::convert::Infallible;
 use std::sync::Arc;
 use url::Url;
 use warp::{
@@ -146,8 +147,8 @@ pub async fn grant(
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
     body: crate::model::body::OAuth,
-) -> Result<WithStatus<Json>> {
-    match body.grant_type.as_str() {
+) -> Result<impl Reply, Infallible> {
+    match match body.grant_type.as_str() {
         "authorization_code" => {
             authorization_code::authorization_code(scylla, memcached, body)
                 .await
@@ -157,5 +158,14 @@ pub async fn grant(
         },
         "refresh_token" => refresh::refresh_token(scylla, body).await,
         _ => Ok(super::err("Invalid grant_type")),
+    } {
+        Ok(response) => Ok(response),
+        Err(error) => {
+            log::error!(
+                "Failed to generate access or refresh token: {}",
+                error
+            );
+            Ok(super::err(super::INTERNAL_SERVER_ERROR))
+        },
     }
 }

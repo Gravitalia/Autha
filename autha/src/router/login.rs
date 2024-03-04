@@ -1,10 +1,14 @@
 use crate::router::create::{EMAIL, MIN_PASSWORD_LENGTH, PASSWORD};
-use anyhow::{anyhow, Result};
-use db::libscylla::frame::value::CqlTimestamp;
-use db::memcache::MemcachePool;
-use db::scylla::Scylla;
-use std::time::{SystemTime, UNIX_EPOCH};
-use warp::reply::{Json, WithStatus};
+use anyhow::anyhow;
+use db::{
+    libscylla::frame::value::CqlTimestamp, memcache::MemcachePool,
+    scylla::Scylla,
+};
+use std::{
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    time::{SystemTime, UNIX_EPOCH},
+};
+use warp::{reject::Rejection, reply::Reply};
 
 /// Handle login route.
 pub async fn handle(
@@ -12,8 +16,9 @@ pub async fn handle(
     memcached: MemcachePool,
     body: crate::model::body::Login,
     token: Option<String>,
-    ip: String,
-) -> Result<WithStatus<Json>> {
+    forwarded: Option<String>,
+    ip: Option<SocketAddr>,
+) -> Result<impl Reply, Rejection> {
     // Make pre-check to avoid unnecessary requests.
     if !EMAIL.is_match(&body.email) {
         return Ok(super::err(super::INVALID_EMAIL));
@@ -25,6 +30,14 @@ pub async fn handle(
         return Ok(super::err(super::INVALID_PASSWORD));
     }
 
+    let ip = forwarded.unwrap_or_else(|| {
+        ip.unwrap_or_else(|| {
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
+        })
+        .ip()
+        .to_string()
+    });
+
     // Check that the user has not tried to connect 5 times in the last 5 minutes.
     let hashed_ip = crypto::hash::sha256(ip.as_bytes());
     let rate_limit = if hashed_ip.is_empty() {
@@ -32,7 +45,10 @@ pub async fn handle(
 
         0
     } else {
-        match memcached.get(format!("account_login_{}", hashed_ip))? {
+        match memcached
+            .get(format!("account_login_{}", hashed_ip))
+            .map_err(|_| crate::router::Errors::Unspecified)?
+        {
             Some(r) => r.parse::<u16>().unwrap_or(0),
             None => 0,
         }
@@ -88,7 +104,8 @@ pub async fn handle(
 
     let hashed_email = crypto::encrypt::format_preserving_encryption(
         body.email.encode_utf16().collect(),
-    )?;
+    )
+    .map_err(|_| crate::router::Errors::Unspecified)?;
 
     let rows = scylla
         .connection
@@ -96,8 +113,10 @@ pub async fn handle(
             "SELECT vanity, password, deleted, mfa_code, expire_at, locale FROM accounts.users WHERE email = ?",
             vec![&hashed_email],
         )
-        .await?
-        .rows_typed::<(String, String, bool, Option<String>, CqlTimestamp, String)>()?
+        .await
+        .map_err(|_| crate::router::Errors::Unspecified)?
+        .rows_typed::<(String, String, bool, Option<String>, CqlTimestamp, String)>()
+        .map_err(|_| crate::router::Errors::Unspecified)?
         .collect::<Vec<_>>();
 
     // Check if email is in use. Otherwise return error.
@@ -122,7 +141,8 @@ pub async fn handle(
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis()
-        .try_into()?;
+        .try_into()
+        .map_err(|_| crate::router::Errors::Unspecified)?;
 
     if deleted && expire.0 == 0 {
         // Account is totaly suspended and can't be recovered.
@@ -140,7 +160,9 @@ pub async fn handle(
         password,
         body.password.as_bytes(),
         Some(vanity.as_bytes()),
-    )? {
+    )
+    .map_err(|_| crate::router::Errors::Unspecified)?
+    {
         return Ok(crate::router::err(super::INVALID_PASSWORD));
     }
 
@@ -155,7 +177,8 @@ pub async fn handle(
         let res = scylla
             .connection
             .query("SELECT salt FROM accounts.salts WHERE id = ?", vec![salt])
-            .await?
+            .await
+            .map_err(|_| crate::router::Errors::Unspecified)?
             .rows
             .unwrap_or_default();
 
@@ -167,10 +190,13 @@ pub async fn handle(
         let nonce: [u8; 12] = hex::decode(
             res[0].columns[0]
                 .as_ref()
-                .ok_or_else(|| anyhow!("No reference"))?
+                .ok_or_else(|| anyhow!("No reference"))
+                .map_err(|_| crate::router::Errors::Unspecified)?
                 .as_text()
-                .ok_or_else(|| anyhow!("Cannot convert to string"))?,
-        )?
+                .ok_or_else(|| anyhow!("Cannot convert to string"))
+                .map_err(|_| crate::router::Errors::Unspecified)?,
+        )
+        .map_err(|_| crate::router::Errors::Unspecified)?
         .try_into()
         .unwrap_or_default();
 
@@ -181,9 +207,13 @@ pub async fn handle(
             crypto::decrypt::chacha20_poly1305(
                 nonce,
                 cypher.as_bytes().to_vec(),
-            )?
+            )
+            .map_err(|_| crate::router::Errors::Unspecified)?
             .as_ref(),
-            SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map_err(|_| crate::router::Errors::Unspecified)?
+                .as_secs(),
         ) != body.mfa.unwrap_or_default()
         {
             return Ok(crate::router::err("Invalid MFA"));

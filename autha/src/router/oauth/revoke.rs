@@ -4,7 +4,7 @@ use db::scylla::Scylla;
 use regex_lite::Regex;
 use serde::Serialize;
 use std::{convert::Infallible, sync::Arc};
-use warp::http::StatusCode;
+use warp::{http::StatusCode, Reply};
 
 use crate::helpers::{queries::GET_USER_REFRESH_TOKEN, token::get_jwt};
 
@@ -30,7 +30,7 @@ lazy_static! {
 pub async fn revoke(
     scylla: Arc<Scylla>,
     body: crate::model::body::Revoke,
-) -> Result<impl warp::Reply, Infallible> {
+) -> Result<impl Reply, Infallible> {
     if JWT.is_match(&body.token) {
         let claims = match get_jwt(&body.token) {
             Ok(claims) => claims,
