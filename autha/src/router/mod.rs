@@ -5,11 +5,13 @@ pub mod users;
 
 use anyhow::{anyhow, Result};
 use db::{memcache::MemcachePool, scylla::Scylla};
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::sync::Arc;
-use warp::{reply::Response, Filter, Rejection, Reply};
+use std::{convert::Infallible, sync::Arc};
+use warp::{
+    http::StatusCode, reject::Reject, reply::Response, Filter, Rejection, Reply,
+};
 
 use crate::helpers::route_telemetry;
+use crate::model::error::Error;
 use crate::model::user::Token;
 
 // Error constants.
@@ -27,8 +29,58 @@ const INVALID_BOT: &str = "Invalid client_id";
 
 /// Define errors
 #[derive(Debug)]
-struct UnknownError;
-impl warp::reject::Reject for UnknownError {}
+#[allow(dead_code)]
+pub enum Errors {
+    /// An error with absolutely no details.
+    Unspecified,
+    /// Requester exceed limits of the route.
+    ExceedRateLimit,
+}
+impl Reject for Errors {}
+
+// This function receives a `Rejection` and tries to return a custom
+// value, otherwise simply passes the rejection along.
+pub async fn handle_rejection(
+    err: Rejection,
+) -> Result<impl Reply, Infallible> {
+    let code;
+    let message;
+
+    if err.is_not_found() {
+        code = StatusCode::NOT_FOUND;
+        message = "NOT_FOUND";
+    } else if let Some(autha_error) = err.find::<Errors>() {
+        match autha_error {
+            Errors::Unspecified => {
+                code = StatusCode::METHOD_NOT_ALLOWED;
+                message = "Method not allowed";
+            },
+            Errors::ExceedRateLimit => {
+                code = StatusCode::TOO_MANY_REQUESTS;
+                message = ERROR_RATE_LIMITED;
+            },
+        }
+    } else if err.find::<warp::reject::MethodNotAllowed>().is_some() {
+        code = StatusCode::METHOD_NOT_ALLOWED;
+        message = "Method not allowed";
+    } else if err.find::<warp::reject::PayloadTooLarge>().is_some() {
+        code = StatusCode::METHOD_NOT_ALLOWED;
+        message = "Content is too large.";
+    } else {
+        log::error!("{:?}", err);
+
+        code = StatusCode::INTERNAL_SERVER_ERROR;
+        message = INTERNAL_SERVER_ERROR;
+    }
+
+    Ok(warp::reply::with_status(
+        warp::reply::json(&Error {
+            error: true,
+            message: message.into(),
+        }),
+        code,
+    ))
+}
 
 /// Gets the user's vanity from the supplied token.
 #[inline(always)]
@@ -66,7 +118,7 @@ async fn vanity_from_token(scylla: &Arc<Scylla>, token: &str) -> Result<Token> {
 /// Should be used in routes.
 fn err<T: ToString>(message: T) -> warp::reply::WithStatus<warp::reply::Json> {
     warp::reply::with_status(
-        warp::reply::json(&crate::model::error::Error {
+        warp::reply::json(&Error {
             error: true,
             message: message.to_string(),
         }),
@@ -114,131 +166,6 @@ pub fn with_metric(
         .untuple_one()
 }
 
-/// Handler of route to create a user.
-#[inline(always)]
-pub async fn create_user(
-    scylla: Arc<Scylla>,
-    memcached: MemcachePool,
-    body: crate::model::body::Create,
-    cf_token: Option<String>,
-    forwarded: Option<String>,
-    ip: Option<SocketAddr>,
-) -> Result<Response, Rejection> {
-    let current_seconds = crate::helpers::get_current_seconds();
-
-    match create::handle(
-        scylla,
-        memcached,
-        body,
-        cf_token,
-        forwarded.unwrap_or_else(|| {
-            ip.unwrap_or_else(|| {
-                SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
-            })
-            .ip()
-            .to_string()
-        }),
-    )
-    .await
-    {
-        Ok(r) => {
-            let res = r.into_response();
-
-            // Increment and add values of prometheus.
-            route_telemetry(&res.status().to_string(), current_seconds);
-
-            Ok(res)
-        },
-        Err(_) => Err(warp::reject::custom(UnknownError)),
-    }
-}
-
-/// Handler of route to login a user.
-#[inline]
-pub async fn login_user(
-    scylla: Arc<Scylla>,
-    memcached: MemcachePool,
-    body: crate::model::body::Login,
-    cf_token: Option<String>,
-    forwarded: Option<String>,
-    ip: Option<SocketAddr>,
-) -> Result<Response, Rejection> {
-    let current_seconds = crate::helpers::get_current_seconds();
-
-    match login::handle(
-        scylla,
-        memcached,
-        body,
-        cf_token,
-        forwarded.unwrap_or_else(|| {
-            ip.unwrap_or_else(|| {
-                SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
-            })
-            .ip()
-            .to_string()
-        }),
-    )
-    .await
-    {
-        Ok(r) => {
-            let res = r.into_response();
-
-            // Increment and add values of prometheus.
-            route_telemetry(&res.status().to_string(), current_seconds);
-
-            Ok(res)
-        },
-        Err(_) => Err(warp::reject::custom(UnknownError)),
-    }
-}
-
-/// Handler of route to get a user.
-#[inline(always)]
-pub async fn get_user(
-    vanity: String,
-    scylla: Arc<Scylla>,
-    memcached: MemcachePool,
-    token: Option<String>,
-) -> Result<Response, Rejection> {
-    let current_seconds = crate::helpers::get_current_seconds();
-
-    match users::get(scylla, memcached, vanity, token).await {
-        Ok(r) => {
-            let res = r.into_response();
-
-            // Increment and add values of prometheus.
-            route_telemetry(&res.status().to_string(), current_seconds);
-
-            Ok(res)
-        },
-        Err(_) => Err(warp::reject::custom(UnknownError)),
-    }
-}
-
-/// Handler of route to update its account.
-#[inline(always)]
-pub async fn update_user(
-    scylla: Arc<Scylla>,
-    memcached: MemcachePool,
-    broker: Arc<db::broker::Broker>,
-    token: String,
-    body: crate::model::body::UserPatch,
-) -> Result<Response, Rejection> {
-    let current_seconds = crate::helpers::get_current_seconds();
-
-    match users::update(scylla, memcached, broker, token, body).await {
-        Ok(r) => {
-            let res = r.into_response();
-
-            // Increment and add values of prometheus.
-            route_telemetry(&res.status().to_string(), current_seconds);
-
-            Ok(res)
-        },
-        Err(_) => Err(warp::reject::custom(UnknownError)),
-    }
-}
-
 /// Handler of route to create an authorization token.
 #[inline(always)]
 pub async fn create_token(
@@ -259,27 +186,5 @@ pub async fn create_token(
             Ok(res)
         },
         Err(error) => Ok(error.into_response()),
-    }
-}
-
-/// Handler of route to get access token after created authorization token.
-#[inline(always)]
-pub async fn access_token(
-    scylla: Arc<Scylla>,
-    memcached: MemcachePool,
-    body: crate::model::body::OAuth,
-) -> Result<Response, Rejection> {
-    let current_seconds = crate::helpers::get_current_seconds();
-
-    match oauth::grant(scylla, memcached, body).await {
-        Ok(r) => {
-            let res = r.into_response();
-
-            // Increment and add values of prometheus.
-            route_telemetry(&res.status().to_string(), current_seconds);
-
-            Ok(res)
-        },
-        Err(_) => Err(warp::reject::custom(UnknownError)),
     }
 }

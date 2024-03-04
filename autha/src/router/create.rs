@@ -2,11 +2,10 @@ use crate::helpers::{
     queries::{CREATE_SALT, CREATE_USER},
     token,
 };
-use anyhow::{bail, Result};
-use db::memcache::MemcachePool;
-use db::scylla::Scylla;
+use db::{memcache::MemcachePool, scylla::Scylla};
 use regex_lite::Regex;
-use warp::reply::{Json, WithStatus};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use warp::{reject::Rejection, reply::Reply};
 
 const MAX_USERNAME_LENGTH: u8 = 25;
 pub(super) const MIN_PASSWORD_LENGTH: u8 = 8;
@@ -51,8 +50,9 @@ pub async fn handle(
     memcached: MemcachePool,
     body: crate::model::body::Create,
     token: Option<String>,
-    ip: String,
-) -> Result<WithStatus<Json>> {
+    forwarded: Option<String>,
+    ip: Option<SocketAddr>,
+) -> Result<impl Reply, Rejection> {
     // Use tokio task if async do not work.
     // Email verification via regex.
     if !EMAIL.is_match(&body.email) {
@@ -85,6 +85,14 @@ pub async fn handle(
         return Ok(super::err("Invalid locale"));
     }
 
+    let ip = forwarded.unwrap_or_else(|| {
+        ip.unwrap_or_else(|| {
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 80)
+        })
+        .ip()
+        .to_string()
+    });
+
     // Check if user have already created account 5 minutes ago.
     let hashed_ip = crypto::hash::sha256(ip.as_bytes());
     if hashed_ip.is_empty() {
@@ -92,11 +100,13 @@ pub async fn handle(
             "The IP could not be hashed. This can result in the uncontrolled creation of accounts."
         );
     } else {
-        let rate_limit =
-            match memcached.get(format!("account_create_{}", hashed_ip))? {
-                Some(r) => r.parse::<u16>().unwrap_or(0),
-                None => 0,
-            };
+        let rate_limit = match memcached
+            .get(format!("account_create_{}", hashed_ip))
+            .map_err(|_| crate::router::Errors::Unspecified)?
+        {
+            Some(r) => r.parse::<u16>().unwrap_or(0),
+            None => 0,
+        };
 
         if rate_limit >= 1 {
             return Ok(warp::reply::with_status(
@@ -142,7 +152,8 @@ pub async fn handle(
 
     let hashed_email = crypto::encrypt::format_preserving_encryption(
         body.email.encode_utf16().collect(),
-    )?;
+    )
+    .map_err(|_| crate::router::Errors::Unspecified)?;
 
     // Check if account with this email already exists.
     if !scylla
@@ -151,7 +162,8 @@ pub async fn handle(
             "SELECT vanity FROM accounts.users WHERE email = ?",
             vec![&hashed_email],
         )
-        .await?
+        .await
+        .map_err(|_| crate::router::Errors::Unspecified)?
         .rows
         .unwrap_or_default()
         .is_empty()
@@ -166,7 +178,8 @@ pub async fn handle(
             "SELECT vanity FROM accounts.users WHERE vanity = ?",
             vec![&body.vanity],
         )
-        .await?
+        .await
+        .map_err(|_| crate::router::Errors::Unspecified)?
         .rows
         .unwrap_or_default()
         .is_empty()
@@ -185,17 +198,22 @@ pub async fn handle(
             return Ok(super::err(super::INVALID_PHONE));
         } else {
             let (nonce, encrypted) =
-                crypto::encrypt::chacha20_poly1305(number.into())?;
+                crypto::encrypt::chacha20_poly1305(number.into())
+                    .map_err(|_| crate::router::Errors::Unspecified)?;
 
             let uuid = uuid::Uuid::new_v4();
 
             if let Some(query) = CREATE_SALT.get() {
-                scylla.connection.execute(query, (&uuid, &nonce)).await?;
+                scylla
+                    .connection
+                    .execute(query, (&uuid, &nonce))
+                    .await
+                    .map_err(|_| crate::router::Errors::Unspecified)?;
             } else {
                 log::error!(
                     "Prepared queries do not appear to be initialized."
                 );
-                bail!("cannot create salt")
+                return Err(crate::router::Errors::Unspecified.into());
             }
 
             // Set primary key (to get nonce) and encrypted phone.
@@ -214,22 +232,28 @@ pub async fn handle(
                     dates[0].parse::<i16>().unwrap_or_default(),
                     dates[1].parse::<i8>().unwrap_or_default(),
                     dates[2].parse::<i8>().unwrap_or_default(),
-                )?
+                )
+                .map_err(|_| crate::router::Errors::Unspecified)?
         {
             return Ok(super::err(super::INVALID_BIRTHDATE));
         } else {
             let (nonce, encrypted) =
-                crypto::encrypt::chacha20_poly1305(birth.into())?;
+                crypto::encrypt::chacha20_poly1305(birth.into())
+                    .map_err(|_| crate::router::Errors::Unspecified)?;
 
             let uuid = uuid::Uuid::new_v4().to_string();
 
             if let Some(query) = CREATE_SALT.get() {
-                scylla.connection.execute(query, (&uuid, &nonce)).await?;
+                scylla
+                    .connection
+                    .execute(query, (&uuid, &nonce))
+                    .await
+                    .map_err(|_| crate::router::Errors::Unspecified)?;
             } else {
                 log::error!(
                     "Prepared queries do not appear to be initialized."
                 );
-                bail!("cannot create salt")
+                return Err(crate::router::Errors::Unspecified.into());
             }
 
             // Set primary key (to get nonce) and encrypted birthdate.
@@ -268,7 +292,8 @@ pub async fn handle(
                         argon_config,
                         body.password.as_bytes(),
                         Some(body.vanity.as_bytes()),
-                    )?,
+                    )
+                    .map_err(|_| crate::router::Errors::Unspecified)?,
                     &body.locale,
                     &phone.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
                     &birthdate.unwrap_or_default(), // Never insert directly a null value, otherwhise it will create a tombestone.
