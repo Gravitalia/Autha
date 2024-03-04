@@ -24,6 +24,10 @@ pub async fn refresh_token(
         .rows_typed::<(String, String, Vec<String>, bool)>()?
         .collect::<Vec<_>>();
 
+    if rows.is_empty() {
+        return Ok(crate::router::err("Invalid refresh_token"));
+    }
+
     let (user_id, client_id, scopes, deleted) = rows[0].clone()?;
 
     if deleted {
