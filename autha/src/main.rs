@@ -241,7 +241,8 @@ async fn main() {
         .and(router::with_metric())
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(warp::body::content_length_limit(5_000))
-        .and(warp::body::form())
+        // This should NOT be json but form do not work.
+        .and(warp::body::json())
         .and_then(router::oauth::revoke::revoke);
 
     #[cfg(feature = "telemetry")]
