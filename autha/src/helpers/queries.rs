@@ -21,7 +21,7 @@ pub async fn init(scylla: &Arc<Scylla>) -> Result<(), QueryError> {
         ("INSERT INTO accounts.salts (id, salt) VALUES (?, ?)", &CREATE_SALT),
         ("INSERT INTO accounts.oauth (id, user_id, bot_id, scope, deleted) VALUES (?, ?, ?, ?, ?) USING TTL 5184000", &CREATE_OAUTH),
         ("SELECT username, vanity, avatar, bio, email, birthdate, phone, verified, deleted, flags FROM accounts.users WHERE vanity = ?", &GET_USER),
-        ("SELECT id, user_id, bot_id, scope, deleted FROM accounts.oauth WHERE user_id = ?", &GET_USER_REFRESH_TOKEN)
+        ("SELECT bot_id, deleted, id, scope FROM accounts.oauth WHERE user_id = ?", &GET_USER_REFRESH_TOKEN)
     ];
 
     for (query, lock) in &prepared_queries {
