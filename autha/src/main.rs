@@ -179,7 +179,7 @@ async fn main() {
         .and(warp::header::optional::<String>("cf-turnstile-token"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
         .and(warp::addr::remote())
-        .and_then(router::create_user);
+        .and_then(router::create::handle);
 
     let login_route = warp::path("login")
         .and(warp::post())
@@ -191,7 +191,7 @@ async fn main() {
         .and(warp::header::optional::<String>("cf-turnstile-token"))
         .and(warp::header::optional::<String>("X-Forwarded-For"))
         .and(warp::addr::remote())
-        .and_then(router::login_user);
+        .and_then(router::login::handle);
 
     let get_user_route = warp::path!("users" / String)
         .and(warp::get())
@@ -199,7 +199,7 @@ async fn main() {
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
         .and(warp::header::optional::<String>("authorization"))
-        .and_then(router::get_user);
+        .and_then(router::users::get);
 
     let update_user_route = warp::path("users")
         .and(warp::path("@me"))
@@ -211,7 +211,7 @@ async fn main() {
         .and(warp::header::<String>("authorization"))
         .and(warp::body::content_length_limit(1024 * 500)) // 500kb.
         .and(warp::body::json())
-        .and_then(router::update_user);
+        .and_then(router::users::update);
 
     // OAuth.
     let create_oauth = warp::path("oauth2")
@@ -232,7 +232,7 @@ async fn main() {
         .and(router::with_memcached(memcached_pool.clone()))
         .and(warp::body::content_length_limit(5_000))
         .and(warp::body::form())
-        .and_then(router::access_token);
+        .and_then(router::oauth::grant); // router::access_token
 
     let revoke_token = warp::path("oauth2")
         .and(warp::path("token"))
@@ -264,7 +264,8 @@ async fn main() {
                 .or(create_oauth)
                 .or(access_token)
                 .or(revoke_token)
-                .or(metrics)),
+                .or(metrics))
+            .recover(router::handle_rejection),
     )
     .run(([0, 0, 0, 0], config.port))
     .await;
