@@ -1,0 +1,75 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//front:nuxt/package_json.bzl", "bin")
+
+npm_link_all_packages(
+    name = "node_modules",
+)
+
+SRCS = [
+    "package.json",
+    "nuxt.config.ts",
+    "app.vue",
+    "tsconfig.json",
+]
+
+BUILD_DEPS = [":node_modules/" + d for d in [
+    "@nuxt/devtools",
+    "@nuxt/image",
+    "@nuxt/test-utils",
+    "@nuxtjs/color-mode",
+    "@nuxtjs/eslint-config-typescript",
+    #"@nuxtjs/i18n",
+    "@nuxtjs/turnstile",
+    "@pinia/nuxt",
+    "@typescript-eslint/parser",
+    "@unocss/nuxt",
+    "eslint",
+    "eslint-config-prettier",
+    "eslint-plugin-prettier",
+    "eslint-plugin-vue",
+    "node-fetch",
+    "nuxt",
+    "pinia",
+    "prettier",
+    "typescript",
+    "vitest",
+    "vue",
+    "vue-router",
+    "std-env",
+    "@vue/compiler-sfc",
+    "@nuxt/kit",
+    "magic-string",
+]]
+
+bin.nuxt(
+    name = "front",
+    args = [
+        "build",
+    ],
+    srcs = SRCS + BUILD_DEPS + glob([
+        "assets/**",
+        "components/**/*.vue",
+        "locales/*.json",
+        "middleware/*.ts",
+        "pages/**/*.vue",
+        "plugins/*.ts",
+        "public/**",
+        "static/*",
+        "stores/*.ts",
+        "server/*.ts",
+        "types/*.ts",
+        "modules/*.ts",
+    ]),
+    visibility = ["//visibility:public"],
+    chdir = package_name(),
+    out_dirs = ["dist", ".output", ".nuxt"],
+)
+
+js_binary(
+    name = "preview",
+    data = [":front"],
+    visibility = ["//visibility:public"],
+    entry_point = ".output/server/index.mjs",
+    chdir = package_name(),
+)
