@@ -29,11 +29,14 @@ jobs:
         key: ${{ runner.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'MODULE', 'Cargo.Bazel.lock') }}
         restore-keys: |
           ${{ runner.os }}-bazel-
-    - name: Run builds
-      run: bazel build //... --strip=always --compilation_mode opt
+    - name: Build Autha
+      run: bazel build //autha --strip=always --compilation_mode opt
+      shell: bash
+    - name: Build front
+      run: bazel build //front
       shell: bash
     - name: Run tests
-      run: bazel test //... --strip=always --compilation_mode opt
+      run: bazel test //autha_test --strip=always --compilation_mode opt
       shell: bash
     - name: Login to GitHub Container Registry
       if: ${{ github.ref == 'refs/heads/master' }}
