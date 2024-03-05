@@ -68,7 +68,7 @@ export default defineNuxtConfig({
         storageKey: "mode",
       },
     ],
-    [
+    /*[
       "@nuxtjs/i18n",
       {
         defaultLocale: "en",
@@ -102,7 +102,7 @@ export default defineNuxtConfig({
         ],
         baseUrl: "https://account.gravitalia.com",
       },
-    ],
+    ],*/
     "~/modules/purge-comments",
   ],
 
