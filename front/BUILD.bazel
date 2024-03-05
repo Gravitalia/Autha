@@ -1,110 +1,77 @@
-load("@crate_index//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_push")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("@rules_proto//proto:defs.bzl", "proto_library")
-load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//front:nuxt/package_json.bzl", "bin")
 
-package(default_visibility = ["//visibility:public"])
-
-proto_library(
-    name = "remini_proto",
-    srcs = ["proto/remini.proto"],
-    visibility = ["//visibility:public"],
+npm_link_all_packages(
+    name = "node_modules",
 )
 
-CUSTOM_CRATES = [
-    "//crypto",
-    "//db",
-    "//image_processor",
-    ":proto_build_script",
+SRCS = [
+    "package.json",
+    "nuxt.config.ts",
+    "app.vue",
+    "tsconfig.json",
 ]
 
-rust_binary(
-    name = "autha",
-    srcs = glob(["src/**/*.rs"]),
-    aliases = aliases(),
-    crate_features = [
-        "kafka",
+BUILD_DEPS = [":node_modules/" + d for d in [
+    "@nuxt/devtools",
+    "@nuxt/image",
+    "@nuxt/test-utils",
+    "@nuxtjs/color-mode",
+    "@nuxtjs/eslint-config-typescript",
+    #"@nuxtjs/i18n",
+    "@nuxtjs/turnstile",
+    "@pinia/nuxt",
+    "@typescript-eslint/parser",
+    "@unocss/nuxt",
+    "eslint",
+    "eslint-config-prettier",
+    "eslint-plugin-prettier",
+    "eslint-plugin-vue",
+    "node-fetch",
+    "nuxt",
+    "pinia",
+    "prettier",
+    "typescript",
+    "vitest",
+    "vue",
+    "vue-router",
+    "std-env",
+    "@vue/compiler-sfc",
+    "@nuxt/kit",
+    "magic-string",
+]]
+
+bin.nuxt(
+    name = "front",
+    args = [
+        "build",
     ],
-    deps = CUSTOM_CRATES + all_crate_deps(
-        normal = True,
-    ),
-    proc_macro_deps = all_crate_deps(
-        proc_macro = True,
-    ),
-    rustc_flags = [
-        "-Copt-level=3",
-        "-Cstrip=symbols",
-        "-Cpanic=abort",
-        "-Clto=fat",
-        "-Cembed-bitcode=yes",
-        "-Ccodegen-units=1",
-        "-Cdebuginfo=none",
-    ],
+    srcs = SRCS + BUILD_DEPS + glob([
+        "assets/**",
+        "components/**/*.vue",
+        "locales/*.json",
+        "middleware/*.ts",
+        "pages/**/*.vue",
+        "plugins/*.ts",
+        "public/**",
+        "static/*",
+        "stores/*.ts",
+        "server/*.ts",
+        "types/*.ts",
+        "modules/*.ts",
+    ]),
     visibility = ["//visibility:public"],
+    chdir = package_name(),
+    out_dirs = ["dist", ".output", ".nuxt"],
 )
 
-rust_test(
-    name = "autha_test",
-    crate = ":autha",
-    deps = CUSTOM_CRATES + all_crate_deps(
-        normal = True,
-    ),
-    proc_macro_deps = all_crate_deps(
-        proc_macro = True,
-    ),
-    size = "medium",
-    timeout = "short",
+"""
+js_binary(
+    name = "preview",
+    data = [":front"],
+    visibility = ["//visibility:public"],
+    entry_point = ".output/server/index.mjs",
+    chdir = package_name(),
 )
-
-cargo_build_script(
-    name = "proto_build_script",
-    srcs = ["build.rs"],
-    build_script_env = {
-        "PROTOC": "$(execpath @com_google_protobuf//:protoc)",
-    },
-    data = [
-        ":remini_proto",
-        "@com_google_protobuf//:protoc",
-    ],
-    deps = all_crate_deps(
-        build = True,
-    ),
-)
-
-# Build and publish to Docker.
-
-# Compress binary to layer.
-pkg_tar(
-    name = "layer",
-    srcs = [":autha"],
-)
-
-# Build image.
-oci_image(
-    name = "linux",
-    base = "@distroless_cc",
-    tars = [":layer"],
-    entrypoint = ["/autha"],
-    #exposed_ports = ["1111/tcp"],
-)
-
-# Add multiple images.
-oci_image_index(
-    name = "images",
-    images = [
-        ":linux",
-    ],
-)
-
-# Publish to Docker Hub.
-oci_push(
-    name = "push",
-    image = ":images",
-    repository = "ghcr.io/gravitalia/autha",
-    remote_tags = [
-        "latest",
-        "3.0.0",
-    ]
-)
+"""
