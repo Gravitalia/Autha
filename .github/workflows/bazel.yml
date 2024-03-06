@@ -32,9 +32,6 @@ jobs:
     - name: Build Autha
       run: bazel build //autha --strip=always --compilation_mode opt
       shell: bash
-    - name: Build front
-      run: sudo bazel build //front
-      shell: bash
     - name: Run tests
       run: bazel test //autha_test --strip=always --compilation_mode opt
       shell: bash
