@@ -49,6 +49,31 @@ crate.from_cargo(
 )
 use_repo(crate, "crate_index")
 
+# Node support.
+bazel_dep(name = "aspect_rules_js", version = "1.38.0")
+bazel_dep(name = "rules_nodejs", version = "6.0.5")
+bazel_dep(name = "aspect_rules_ts", version = "2.2.0")
+
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
+node.toolchain(node_version = "18.8.0")
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
+npm.npm_translate_lock(
+    name = "npm",
+    npmrc = "//front:.npmrc",
+    pnpm_lock = "//front:pnpm-lock.yaml",
+    verify_node_modules_ignored = "//:.bazelignore",
+)
+use_repo(npm, "npm")
+
+rules_ts_ext = use_extension(
+    "@aspect_rules_ts//ts:extensions.bzl",
+    "ext",
+    dev_dependency = True,
+)
+rules_ts_ext.deps()
+use_repo(rules_ts_ext, "npm_typescript")
+
 # OCI support.
 bazel_dep(name = "rules_pkg", version = "0.10.1")
 bazel_dep(name = "rules_oci", version = "1.7.4")

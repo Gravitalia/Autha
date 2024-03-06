@@ -1,0 +1,8 @@
+.cargo
+.git
+example/
+target/
+
+front/node_modules
+front/.nuxt
+front/.output

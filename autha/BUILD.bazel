@@ -87,6 +87,7 @@ oci_image(
     base = "@distroless_cc",
     tars = [":layer"],
     entrypoint = ["/autha"],
+    #exposed_ports = ["1111/tcp"],
 )
 
 # Add multiple images.
