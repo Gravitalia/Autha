@@ -33,7 +33,7 @@ jobs:
       run: bazel build //autha --strip=always --compilation_mode opt
       shell: bash
     - name: Run tests
-      run: bazel test //autha_test --strip=always --compilation_mode opt
+      run: bazel test //autha:autha_test --strip=always --compilation_mode opt
       shell: bash
     - name: Login to GitHub Container Registry
       if: ${{ github.ref == 'refs/heads/master' }}
