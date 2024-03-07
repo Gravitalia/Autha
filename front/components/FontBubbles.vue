@@ -5,6 +5,9 @@
     h-48
     xl:w-80
     xl:h-80
+    2xl:w-96
+    2xl:h-96
+    transform-gpu
     blur-5xl
     bg-primary
     fixed
@@ -18,7 +21,10 @@
     h-48
     xl:w-80
     xl:h-80
+    2xl:w-96
+    2xl:h-96
     blur-5xl
+    transform-gpu
     bg-secondary
     fixed
     top-0
