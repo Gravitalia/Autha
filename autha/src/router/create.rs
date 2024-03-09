@@ -1,11 +1,12 @@
-use crate::helpers::{
+use crate::{helpers::{
     queries::{CREATE_SALT, CREATE_USER},
     token,
-};
+}, model::user::User};
 use db::{memcache::MemcachePool, scylla::Scylla};
 use regex_lite::Regex;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::{net::{IpAddr, Ipv4Addr, SocketAddr}, sync::Arc};
 use warp::{reject::Rejection, reply::Reply};
+use db::broker::Broker;
 
 const MAX_USERNAME_LENGTH: u8 = 25;
 pub(super) const MIN_PASSWORD_LENGTH: u8 = 8;
@@ -48,6 +49,7 @@ lazy_static! {
 pub async fn handle(
     scylla: std::sync::Arc<Scylla>,
     memcached: MemcachePool,
+    broker: Arc<Broker>,
     body: crate::model::body::Create,
     token: Option<String>,
     forwarded: Option<String>,
@@ -222,7 +224,7 @@ pub async fn handle(
     }
 
     let mut birthdate: Option<String> = None;
-    if let Some(birth) = body.birthdate {
+    if let Some(birth) = body.birthdate.clone() {
         let dates: Vec<&str> = birth.split('-').collect();
 
         // Check if user is 13 years old at least.
@@ -319,6 +321,46 @@ pub async fn handle(
         memcached.set(format!("account_create_{}", hashed_ip), 1)
     {
         log::warn!("Cannot set global rate limiter when create. This could lead to massive spam! Error: {}", error);
+    }
+
+    #[cfg(any(feature = "kafka", feature = "rabbitmq"))]
+    {
+        use crate::model::broker::Message;
+        use chrono::Utc;
+        use crypto::random_string;
+
+        let topic = format!("{}.autha.user", std::env::var("SERVICE_NAME").unwrap_or("gravitalia".to_string()));
+        let new_user = serde_json::to_string(
+            &Message {
+                id: random_string(36),
+                datacontenttype: "application/json; charset=utf-8".to_string(),
+                data: User {
+                    username: body.username,
+                    vanity: body.vanity.clone(),
+                    avatar: None,
+                    bio: None,
+                    email: None,
+                    birthdate: body.birthdate,
+                    phone: None,
+                    verified: false,
+                    deleted: false,
+                    flags: 0,
+                },
+                source: format!("//autha.gravitalia.com/users/{}", body.vanity),
+                specversion: "1.0".to_string(),
+                time: Some(Utc::now().to_rfc3339()),
+                r#type: "com.gravitalia.autha.user.v1.new_account".to_string(),
+            }
+        ).map_err(|_| crate::router::Errors::Unspecified)?;
+        
+        match <std::sync::Arc<Broker> as Into<Broker>>::into(broker) {
+            #[cfg(feature = "kafka")]
+            Broker::Kafka(func) => func.publish(&topic, &new_user).map_err(|_| crate::router::Errors::Unspecified)?,
+            #[cfg(feature = "rabbitmq")]
+            Broker::RabbitMQ(func) => func.publish(&topic, &new_user).await.map_err(|_| crate::router::Errors::Unspecified)?,
+            // Won't happend.
+            _ => {},
+        }
     }
 
     Ok(warp::reply::with_status(
