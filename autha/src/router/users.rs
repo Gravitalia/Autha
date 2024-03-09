@@ -132,10 +132,11 @@ pub async fn get(
 }
 
 /// Handle users modifications route.
+#[allow(unused)]
 pub async fn update(
     scylla: std::sync::Arc<Scylla>,
     memcached: MemcachePool,
-    broker: Arc<db::broker::Broker>,
+    broker: Arc<Broker>,
     token: String,
     body: crate::model::body::UserPatch,
 ) -> Result<impl Reply, Rejection> {
@@ -430,28 +431,46 @@ pub async fn update(
         )
     ).await {
         Ok(_) => {
-            log::trace!("User {} modified his profile", vanity);
+            log::trace!("User {} modified his profile.", vanity);
 
             #[cfg(any(feature = "kafka", feature = "rabbitmq"))]
-            let new_user = serde_json::to_string(&User {
-                username,
-                vanity: vanity.clone(),
-                avatar,
-                bio,
-                email: None,
-                birthdate: None,
-                phone: None,
-                verified: false,
-                deleted: false,
-                flags: 0,
-            }).map_err(|_| crate::router::Errors::Unspecified)?;
+            {
+                use crate::model::broker::Message;
+                use chrono::Utc;
+                use crypto::random_string;
 
-            match <std::sync::Arc<Broker> as Into<Broker>>::into(broker) {
-                #[cfg(feature = "kafka")]
-                Broker::Kafka(func) => func.publish("user", &new_user).map_err(|_| crate::router::Errors::Unspecified)?,
-                #[cfg(feature = "rabbitmq")]
-                Broker::RabbitMQ(func) => func.publish("user", &new_user).await.map_err(|_| crate::router::Errors::Unspecified)?,
-                _ => log::warn!("No service has been notified of the change in profile of {}", vanity),
+                let topic = format!("{}.autha.user", std::env::var("SERVICE_NAME").unwrap_or("gravitalia".to_string()));
+                let new_user = serde_json::to_string(
+                    &Message {
+                        id: random_string(36),
+                        datacontenttype: "application/json; charset=utf-8".to_string(),
+                        data: User {
+                            username,
+                            vanity: vanity.clone(),
+                            avatar,
+                            bio,
+                            email: None,
+                            birthdate: None,
+                            phone: None,
+                            verified: false,
+                            deleted: false,
+                            flags: 0,
+                        },
+                        source: format!("//autha.gravitalia.com/users/{}", vanity),
+                        specversion: "1.0".to_string(),
+                        time: Some(Utc::now().to_rfc3339()),
+                        r#type: "com.gravitalia.autha.user.v1.userModified".to_string(),
+                    }
+                ).map_err(|_| crate::router::Errors::Unspecified)?;
+                
+                match <std::sync::Arc<Broker> as Into<Broker>>::into(broker) {
+                    #[cfg(feature = "kafka")]
+                    Broker::Kafka(func) => func.publish(&topic, &new_user).map_err(|_| crate::router::Errors::Unspecified)?,
+                    #[cfg(feature = "rabbitmq")]
+                    Broker::RabbitMQ(func) => func.publish(&topic, &new_user).await.map_err(|_| crate::router::Errors::Unspecified)?,
+                    // Won't happend.
+                    _ => {},
+                }
             }
 
             // Delete cached user.
