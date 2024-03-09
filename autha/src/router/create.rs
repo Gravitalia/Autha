@@ -1,7 +1,7 @@
-use crate::{helpers::{
+use crate::helpers::{
     queries::{CREATE_SALT, CREATE_USER},
     token,
-}, model::user::User};
+};
 use db::{memcache::MemcachePool, scylla::Scylla};
 use regex_lite::Regex;
 use std::{net::{IpAddr, Ipv4Addr, SocketAddr}, sync::Arc};
@@ -46,6 +46,7 @@ lazy_static! {
 }
 
 /// Handle create route and check if everything is valid.
+#[allow(unused)]
 pub async fn handle(
     scylla: std::sync::Arc<Scylla>,
     memcached: MemcachePool,
@@ -325,7 +326,7 @@ pub async fn handle(
 
     #[cfg(any(feature = "kafka", feature = "rabbitmq"))]
     {
-        use crate::model::broker::Message;
+        use crate::model::{broker::Message, user::User};
         use chrono::Utc;
         use crypto::random_string;
 
