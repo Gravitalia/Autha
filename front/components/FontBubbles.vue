@@ -1,3 +1,7 @@
+<script setup>
+/* eslint vue/valid-attribute-name: "off" */
+</script>
+
 <template>
   <div
     rounded-full
