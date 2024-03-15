@@ -174,6 +174,7 @@ async fn main() {
         .and(router::with_metric())
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
+        .and(router::with_broker(Arc::clone(&broker)))
         .and(warp::body::content_length_limit(8_000))
         .and(warp::body::json())
         .and(warp::header::optional::<String>("cf-turnstile-token"))
