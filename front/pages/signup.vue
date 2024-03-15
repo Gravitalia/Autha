@@ -161,6 +161,9 @@ async function signup() {
   <!-- Blurry effect in background. -->
   <FontBubbles />
 
+  <!-- Banner prevention. -->
+  <Banner :content="$t('services_unavailable')" :can-close="false" />
+
   <!-- Centered card containing inputs to connect. -->
   <div absolute w-96vw h-98vh container flex-col>
     <div
