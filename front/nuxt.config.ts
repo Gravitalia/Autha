@@ -6,26 +6,28 @@ export default defineNuxtConfig({
     head: {
       charset: "utf-8",
       viewport: "width=device-width,initial-scale=1",
-      title: "Gravitalia",
+      title: "Gravitalia Account",
       htmlAttrs: {
         lang: "en",
       },
       meta: [
         { property: "og:type", content: "website" },
-        { property: "og:site_name", content: "Gravitalia" },
-        { property: "og:title", content: "Gravitalia" },
+        { property: "og:site_name", content: "Gravitalia Account" },
+        { property: "og:title", content: "Gravitalia Account" },
         { property: "og:image", content: "/favicon.webp" },
         {
           name: "og:description",
-          content: "Gravitalia, let us connect you to the Christmas spirit! 🎅",
+          content:
+            "One account, multiple services. Your Gravitalia Account links services, without them knowing everything about you.",
         },
-        { name: "theme-color", content: "#CA2555" },
+        { name: "theme-color", content: "#8b5cf6" },
         { name: "robots", content: "index, follow" },
         { name: "twitter:card", content: "summary" },
         { name: "twitter:site", content: "@gravitalianews" },
         {
           name: "description",
-          content: "Gravitalia, let us connect you to the Christmas spirit! 🎅",
+          content:
+            "One account, multiple services. Your Gravitalia Account links services, without them knowing everything about you.",
         },
       ],
       script: [
@@ -68,7 +70,7 @@ export default defineNuxtConfig({
         storageKey: "mode",
       },
     ],
-    /*[
+    [
       "@nuxtjs/i18n",
       {
         defaultLocale: "en",
@@ -102,7 +104,7 @@ export default defineNuxtConfig({
         ],
         baseUrl: "https://account.gravitalia.com",
       },
-    ],*/
+    ],
     "~/modules/purge-comments",
   ],
 
