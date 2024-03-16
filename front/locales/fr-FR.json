@@ -25,6 +25,8 @@
   "password": "Mot de passe",
   "create_account": "Créer un compte",
   "lost_account": "Votre compte n'est pas accessible ?",
+  "warning": "Avertissement",
+  "services_unavailable": "Les services de gestion de compte ne sont actuellement pas disponibles.",
 
   "next": "Suivant",
   "previous": "Précédent",
