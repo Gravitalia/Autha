@@ -27,7 +27,8 @@ export default defineConfig({
 
     input:
       "w-64 lg:w-72 h-7 text-sm text-zinc-700 dark:text-zinc-200 dark:placeholder:text-zinc-300 outline-none bg-transparent border border-zinc-400 dark:border-zinc-700 border-b-2 border-x-0 border-t-0",
-    "text-link": "text-violet-600 dark:text-violet-500 hover:text-violet-700 dark:hover:text-violet-600 no-underline hover:underline",
+    "text-link":
+      "text-violet-600 dark:text-violet-500 hover:text-violet-700 dark:hover:text-violet-600 no-underline hover:underline",
 
     container: "flex justify-center items-center",
   },
