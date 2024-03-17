@@ -50,6 +50,13 @@
   "terms_of_use": "Conditions Générales d'Utilisation",
   "date": "Date d’effet :",
 
+  "wants_access_account": "veut accéder à votre compte",
+  "cancel": "Annuler",
+  "authorize": "Autoriser",
+  "scopes": {
+    "identity": "Accéder à votre pseudo et avatar"
+  },
+
   "terms": {
     "welcome": "Bienvenue sur Gravitalia ! Ces présentes conditions régissent l’utilisation des services proposés, incluant les interfaces de programmation (API) ainsi que les obligations légales de nos deux partis.",
     "description": "Gravitalia propose des lieux de partage, de mise en contact mais aussi des outils numériques ou physiques ayant pour but d’améliorer le respect de la vie privée.",
