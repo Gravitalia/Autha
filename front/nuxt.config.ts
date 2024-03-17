@@ -112,6 +112,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       API_URL: "http://localhost:1111",
+      CDN_URL:
+        "https://res.cloudinary.com/dimtq5hwr/image/upload/s--9FX9gdAw--",
     },
     email: "support@gravitalia.com",
   },

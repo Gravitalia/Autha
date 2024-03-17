@@ -50,6 +50,13 @@
   "terms_of_use": "Terms of Use",
   "date": "Effective date:",
 
+  "wants_access_account": "wants access to your account",
+  "cancel": "Cancel",
+  "authorize": "Authorize",
+  "scopes": {
+    "identity": "Access to username and avatar"
+  },
+
   "terms": {
     "welcome": "Welcome on Gravitalia! These terms and conditions govern the use of the services offered, including the programming interfaces (APIs) and the legal obligations of both parties.",
     "description": "Gravitalia offers places to share, to connect but also digital or physical tools to improve privacy.",
