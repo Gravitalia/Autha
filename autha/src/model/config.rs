@@ -26,6 +26,25 @@ pub struct Database {
     pub rabbitmq: Option<Connection>,
 }
 
+/// Supported platforms for image hosting.
+#[derive(Deserialize, Debug, Clone)]
+pub enum Platforms {
+    Cloudinary,
+}
+
+/// Represents the SaaS.
+#[derive(Deserialize, Debug, Clone)]
+pub struct Image {
+    /// The platform selected to host images.
+    pub platform: Platforms,
+    /// The platform's API key.
+    pub key: String,
+    /// For Cloudinary, the cloud name.
+    pub cloud_name: Option<String>,
+    /// The platform's API secret.
+    pub secret: String,
+}
+
 /// Represents the configuration structure expected from the 'config.yaml' file.
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
@@ -37,6 +56,8 @@ pub struct Config {
     pub(crate) remini_url: Option<String>,
     /// The database configuration.
     pub database: Database,
+    /// SaaS to host, modify and save images.
+    pub image_delivery: Option<Image>,
     /// Wether to start /metric endpoint.
     pub prometheus: Option<bool>,
     /// Jaeger traces in OpenTelemetry OTLP format URL (should be port 4317).
