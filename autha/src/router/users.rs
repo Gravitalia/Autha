@@ -218,26 +218,44 @@ pub async fn update(
         } else {
             let config: crate::model::config::Config =
                 crate::helpers::config::read();
-            let resized_img =
-                image_processor::resizer::resize(&a, Some(224), Some(224))
-                    .map_err(|_| crate::router::Errors::Unspecified)?;
-            let credentials = image_processor::host::cloudinary::Credentials {
-                key: "".to_string(),
-                cloud_name: "".to_string(),
-                secret: "".to_string(),
-            };
 
-            if let Some(remini_url) = config.remini_url {
-                if crate::helpers::machine_learning::is_nude(
-                    remini_url,
-                    resized_img.buffer(),
-                )
-                .await
-                .map_err(|_| crate::router::Errors::Unspecified)?
-                {
-                    return Ok(crate::router::err(
-                        "Avatar appears to contain nudity",
-                    ));
+            if let Some(hoister) = config.image_delivery {
+                let resized_img =
+                    image_processor::resizer::resize(&a, Some(224), Some(224))
+                        .map_err(|_| crate::router::Errors::Unspecified)?;
+                let credentials = match hoister.platform {
+                    crate::model::config::Platforms::Cloudinary => {
+                        image_processor::host::cloudinary::Credentials {
+                            key: hoister.key,
+                            cloud_name: hoister.cloud_name.unwrap_or_default(),
+                            secret: hoister.secret,
+                        }
+                    },
+                };
+
+                if let Some(remini_url) = config.remini_url {
+                    if crate::helpers::machine_learning::is_nude(
+                        remini_url,
+                        resized_img.buffer(),
+                    )
+                    .await
+                    .map_err(|_| crate::router::Errors::Unspecified)?
+                    {
+                        return Ok(crate::router::err(
+                            "Avatar appears to contain nudity",
+                        ));
+                    } else {
+                        avatar = Some(
+                            image_processor::resize_and_upload(
+                                &a,
+                                Some(IMAGE_WIDTH),
+                                Some(IMAGE_HEIGHT),
+                                credentials,
+                            )
+                            .await
+                            .map_err(|_| crate::router::Errors::Unspecified)?,
+                        );
+                    }
                 } else {
                     avatar = Some(
                         image_processor::resize_and_upload(
@@ -250,17 +268,6 @@ pub async fn update(
                         .map_err(|_| crate::router::Errors::Unspecified)?,
                     );
                 }
-            } else {
-                avatar = Some(
-                    image_processor::resize_and_upload(
-                        &a,
-                        Some(IMAGE_WIDTH),
-                        Some(IMAGE_HEIGHT),
-                        credentials,
-                    )
-                    .await
-                    .map_err(|_| crate::router::Errors::Unspecified)?,
-                );
             }
         }
     }
@@ -462,7 +469,7 @@ pub async fn update(
                         r#type: "com.gravitalia.autha.user.v1.userModified".to_string(),
                     }
                 ).map_err(|_| crate::router::Errors::Unspecified)?;
-                
+
                 match <std::sync::Arc<Broker> as Into<Broker>>::into(broker) {
                     #[cfg(feature = "kafka")]
                     Broker::Kafka(func) => func.publish(&topic, &new_user).map_err(|_| crate::router::Errors::Unspecified)?,
