@@ -12,16 +12,19 @@ database:
     username: cassandra
     password: cassandra
     hosts:
-      - cassandra:9042
+      - scylla:9042
     pool_size: 10
   memcached:
     hosts:
       - memcached:11211
     pool_size: 10
-  rabbitmq:
+  kafka:
     hosts:
-      - amqp://rabbitmq:5672/%2f
-    pool_size: 5
+      - kafka:9092
+    pool_size: 3
 
-services: # List of Gravitalia's connected services.
-  - http://gravitalia:8888
+image_delivery:
+  platform: Cloudinary # Only support Cloudinary.
+  cloud_name: aaaaa1234
+  key: "111111111111111"
+  secret: SECRET
