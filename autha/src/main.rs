@@ -5,7 +5,25 @@ mod router;
 #[macro_use]
 extern crate lazy_static;
 use std::sync::Arc;
-use warp::Filter;
+use warp::{
+    http::{Method, Response},
+    Filter,
+};
+
+/// Create CORS headers.
+pub fn cors() -> warp::cors::Cors {
+    warp::cors()
+        .allow_any_origin()
+        .allow_methods(&[
+            Method::OPTIONS,
+            Method::GET,
+            Method::POST,
+            Method::PATCH,
+            Method::DELETE,
+        ])
+        .allow_header("*")
+        .build()
+}
 
 #[tokio::main]
 async fn main() {
@@ -233,7 +251,7 @@ async fn main() {
         .and(router::with_memcached(memcached_pool.clone()))
         .and(warp::body::content_length_limit(5_000))
         .and(warp::body::form())
-        .and_then(router::oauth::grant); // router::access_token
+        .and_then(router::oauth::grant);
 
     let revoke_token = warp::path("oauth2")
         .and(warp::path("token"))
@@ -255,10 +273,17 @@ async fn main() {
     warp::serve(
         warp::any()
             .and(warp::options())
-            .map(|| "OK")
-            .or(warp::head()
-                .map(|| "OK")
-                .or(create_route)
+            .map(|| {
+                Response::builder()
+                    .header("Access-Control-Allow-Origin", "*")
+                    .header("Access-Control-Allow-Headers", "*")
+                    .header(
+                        "Access-Control-Allow-Methods",
+                        "GET, POST, PATCH, DELETE",
+                    )
+                    .body("OK")
+            })
+            .or(create_route
                 .or(login_route)
                 .or(get_user_route)
                 .or(update_user_route)
@@ -266,7 +291,8 @@ async fn main() {
                 .or(access_token)
                 .or(revoke_token)
                 .or(metrics))
-            .recover(router::handle_rejection),
+            .recover(router::handle_rejection)
+            .with(cors()),
     )
     .run(([0, 0, 0, 0], config.port))
     .await;
