@@ -1,0 +1,18 @@
+[package]
+name = "autha-limits"
+version.workspace = true
+homepage.workspace = true
+readme.workspace = true
+edition.workspace = true
+license.workspace = true
+description = """
+Local sliding windows rate limiting algorithm implementation.
+"""
+
+[dependencies]
+dashmap = "5"
+warp = { workspace = true, optional = true }
+
+[features]
+default = ["warp"]
+warp = ["dep:warp"]
