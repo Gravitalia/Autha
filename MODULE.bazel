@@ -41,6 +41,7 @@ crate.from_cargo(
     cargo_lockfile = "//:Cargo.lock",
     manifests = [
         "//:Cargo.toml",
+        "//autha-limits:Cargo.toml",
         "//autha:Cargo.toml",
         "//crypto:Cargo.toml",
         "//db:Cargo.toml",
