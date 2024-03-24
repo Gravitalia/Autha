@@ -4,7 +4,7 @@ mod router;
 
 #[macro_use]
 extern crate lazy_static;
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 use warp::{
     http::{Method, Response},
     Filter,
@@ -187,6 +187,12 @@ async fn main() {
     // Init prepared queries.
     helpers::queries::init(&scylladb).await.unwrap();
 
+    // Rate-limiters per method.
+    let get_limiter =
+        Arc::new(autha_limits::RateLimiter::new(100, Duration::from_secs(60)));
+    let patch_limiter =
+        Arc::new(autha_limits::RateLimiter::new(5, Duration::from_secs(30)));
+
     let create_route = warp::path("create")
         .and(warp::post())
         .and(router::with_metric())
@@ -215,6 +221,7 @@ async fn main() {
     let get_user_route = warp::path!("users" / String)
         .and(warp::get())
         .and(router::with_metric())
+        .and(autha_limits::warp::rate_limiter(Arc::clone(&get_limiter)))
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
         .and(warp::header::optional::<String>("authorization"))
@@ -224,6 +231,7 @@ async fn main() {
         .and(warp::path("@me"))
         .and(warp::patch())
         .and(router::with_metric())
+        .and(autha_limits::warp::rate_limiter(Arc::clone(&patch_limiter)))
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
         .and(router::with_broker(Arc::clone(&broker)))
@@ -237,6 +245,7 @@ async fn main() {
         .and(warp::path("authorize"))
         .and(warp::get())
         .and(router::with_metric())
+        .and(autha_limits::warp::rate_limiter(Arc::clone(&get_limiter)))
         .and(router::with_scylla(Arc::clone(&scylladb)))
         .and(router::with_memcached(memcached_pool.clone()))
         .and(warp::header::<String>("authorization"))
