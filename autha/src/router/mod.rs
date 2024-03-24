@@ -60,6 +60,9 @@ pub async fn handle_rejection(
                 message = ERROR_RATE_LIMITED;
             },
         }
+    } else if err.find::<autha_limits::warp::RateLimited>().is_some() {
+        code = StatusCode::TOO_MANY_REQUESTS;
+        message = ERROR_RATE_LIMITED;
     } else if err.find::<warp::reject::MethodNotAllowed>().is_some() {
         code = StatusCode::METHOD_NOT_ALLOWED;
         message = "Method not allowed";
@@ -169,6 +172,7 @@ pub fn with_metric(
 /// Handler of route to create an authorization token.
 #[inline(always)]
 pub async fn create_token(
+    _: (),
     scylla: Arc<Scylla>,
     memcached: MemcachePool,
     token: String,

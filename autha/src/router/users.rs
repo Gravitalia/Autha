@@ -49,6 +49,7 @@ pub async fn get_user(
 /// This route allow using ID parameters as "@me" to get actual users.
 pub async fn get(
     mut id: String,
+    _: (),
     scylla: std::sync::Arc<Scylla>,
     memcached: MemcachePool,
     token: Option<String>,
@@ -134,6 +135,7 @@ pub async fn get(
 /// Handle users modifications route.
 #[allow(unused)]
 pub async fn update(
+    _: (),
     scylla: std::sync::Arc<Scylla>,
     memcached: MemcachePool,
     broker: Arc<Broker>,

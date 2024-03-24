@@ -7,24 +7,25 @@ edition = "2021"
 serde = { version = "1", features = ["derive"] }
 tonic = { version = "0.11", features = ["default"] }
 tokio = { version = "1.36", features = ["rt-multi-thread"] }
-warp = { version = "0.3", default-features = false }
+warp = { workspace = true }
 
 crypto = { path = "../crypto", features = ["argon2", "format_preserving"] }
 db = { path = "../db", features = ["logging", "cassandra", "memcached", "apache_kafka", "rabbitmq"] }
 image_processor = { path = "../image_processor" }
+autha-limits = { path = "../autha-limits", features = ["warp"] }
 
 anyhow = "1"
 hex = "0.4"
-jsonwebtoken = "9.3"
+jsonwebtoken = "9.2"
 lazy_static = "1"
 prost = "0.12"
 prost-types = "0.12"
 regex-lite = "0"
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.11", features = ["json"] }
 serde_json = "1"
 serde_yaml = "0.9"
 totp-lite = "2"
-uuid = { version = "1.8", features = ["v4"] }
+uuid = { version = "1.7", features = ["v4"] }
 isolang = { version = "2.4", features = ["list_languages"] }
 chrono = "0.4"
 url = "2.5"
@@ -32,15 +33,16 @@ url = "2.5"
 fern = "0.6"
 log = "0.4"
 
-opentelemetry = { version = "0.22", optional = true }
-opentelemetry-otlp = { version = "0.15", features = ["tonic"], optional = true }
-opentelemetry_sdk =  { version = "0.22", features = ["rt-tokio"], optional = true }
+opentelemetry = { version = "0.21", optional = true }
+opentelemetry-otlp = { version = "0.14", features = ["tonic"], optional = true }
+opentelemetry_sdk =  { version = "0.21", features = ["rt-tokio"], optional = true }
 prometheus = { version = "0.13", features = ["process"], optional = true }
 
 [build-dependencies]
 tonic-build = { version = "0.11", features = [ "prost" ] }
 
 [features]
+default = ["kafka"]
 kafka = ["db/apache_kafka"]
 rabbitmq = ["db/rabbitmq"]
 telemetry = ["opentelemetry", "opentelemetry-otlp", "opentelemetry_sdk", "prometheus"]
