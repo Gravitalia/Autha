@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "autha",
+    "autha-limits",
     "crypto",
     "db",
     "image_processor",
@@ -35,3 +36,6 @@ opt-level = 3
 
 [profile.release.package.image_processor]
 opt-level = "z"
+
+[workspace.dependencies]
+warp = { version = "0.3", default-features = false }
