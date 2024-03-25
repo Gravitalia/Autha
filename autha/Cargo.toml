@@ -35,7 +35,7 @@ log = "0.4"
 
 opentelemetry = { version = "0.21", optional = true }
 opentelemetry-otlp = { version = "0.14", features = ["tonic"], optional = true }
-opentelemetry_sdk =  { version = "0.21", features = ["rt-tokio"], optional = true }
+opentelemetry_sdk =  { version = "0.22", features = ["rt-tokio"], optional = true }
 prometheus = { version = "0.13", features = ["process"], optional = true }
 
 [build-dependencies]
