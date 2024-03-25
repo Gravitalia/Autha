@@ -16,7 +16,7 @@ autha-limits = { path = "../autha-limits", features = ["warp"] }
 
 anyhow = "1"
 hex = "0.4"
-jsonwebtoken = "9.2"
+jsonwebtoken = "9.3"
 lazy_static = "1"
 prost = "0.12"
 prost-types = "0.12"
