@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 image = { version = "0.24", default-features = false, features = ["jpeg", "png", "webp"] }
-fast_image_resize = "3.0"
 tempfile = "3.10.0"
 
 cloudinary = "0.4.0"
