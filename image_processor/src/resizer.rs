@@ -1,20 +1,82 @@
 use crate::ImageError;
-use fast_image_resize as fr;
-use image::codecs::jpeg::JpegEncoder;
-use image::{ColorType, ImageEncoder};
-use std::{io::BufWriter, num::NonZeroU32};
+use image::{
+    imageops::FilterType::Lanczos3, load_from_memory, DynamicImage, ImageFormat,
+};
+use std::io::Cursor;
+
+/// Lossless compression algorithms.
+#[derive(Debug)]
+pub enum Lossless {
+    /// Avif encoder. More performant than WebP.
+    Avif,
+    /// PNG encoder.
+    Png,
+    /// WebP encoder.
+    WebP,
+}
+
+/// Lossy compression algorithms.
+#[derive(Debug)]
+pub enum Lossy {
+    /// Jpeg encoder.
+    Jpeg(u8),
+}
+
+/// Type of algorithm to choose for compression.
+#[derive(Debug)]
+pub enum Encode {
+    /// Lossless, high-quality compression.
+    Lossless(Lossless),
+    /// Lossy compression, lightweight result.
+    Lossy(Lossy),
+}
+
+/// Data required for compression.
+#[derive(Debug)]
+pub struct Encoder {
+    /// Algorithm used for compression.
+    pub encoder: Encode,
+    /// Width of the output image.
+    pub width: Option<u32>,
+    /// Height of the output image.
+    pub height: Option<u32>,
+    /// AVIF only.
+    /// `rav1e` speed parameter.
+    pub speed: Option<u8>,
+}
+
+fn image_encoder(
+    image: DynamicImage,
+    width: u32,
+    height: u32,
+    _quality: Option<u8>,
+    format: ImageFormat,
+) -> Result<Vec<u8>, ImageError> {
+    let mut output: Cursor<Vec<u8>> = Cursor::new(Vec::new());
+    image
+        .resize(width, height, Lanczos3)
+        .write_to(&mut output, format)
+        .map_err(|_| ImageError::FailedEncode)?;
+
+    Ok(output.into_inner())
+}
 
 /// Image resizer.
 ///
 /// # Example
 /// ```no_run
 /// use std::io::Write;
+/// use image_processor::resizer::{Encode, Encoder, Lossless};
 ///
 /// let mut file = std::fs::File::create("example/processed.jpg").unwrap();
 /// let buff = image_processor::resizer::resize(
 ///     &std::fs::read("example/image.jpg").unwrap(),
-///     Some(256),
-///     None,
+///     Encoder {
+///         encoder: Encode::Lossless(Lossless::Png),
+///         width: Some(256),
+///         height: None,
+///         speed: None
+///     },
 /// );
 ///
 /// file.write_all(buff.unwrap().buffer()).unwrap();
@@ -23,87 +85,60 @@ use std::{io::BufWriter, num::NonZeroU32};
 ///
 /// # Returns
 ///
-/// Resized image buffer as JPEG.
-pub fn resize(
-    buffer: &[u8],
-    mut width: Option<u32>,
-    mut height: Option<u32>,
-) -> Result<BufWriter<Vec<u8>>, ImageError> {
-    if width.is_none() && height.is_none() {
+/// Resized image buffer.
+pub fn resize(buffer: &[u8], options: Encoder) -> Result<Vec<u8>, ImageError> {
+    if options.width.is_none() && options.width.is_none() {
         return Err(ImageError::MissingWidthOrHeight);
     }
 
-    let img =
-        image::load_from_memory(buffer).map_err(ImageError::Image)?;
+    let img = load_from_memory(buffer).map_err(ImageError::Image)?;
 
-    let img_width = img.width();
-    let img_height = img.height();
+    let mut img_width = img.width();
+    let mut img_height = img.height();
 
     // Proportion the right size according to the data to maintain a good ratio.
-    if width.is_some() && height.is_none() {
-        height = Some(
-            (f64::from(width.unwrap_or_default()) / f64::from(img_width)
-                * f64::from(img_height)) as u32,
-        );
-    } else if width.is_none() && height.is_some() {
-        width = Some(
-            (f64::from(height.unwrap_or_default()) / f64::from(img_height)
-                * f64::from(img_width)) as u32,
-        );
+    if options.width.is_some() && options.height.is_none() {
+        img_height = (f64::from(options.width.unwrap_or_default())
+            / f64::from(img_width)
+            * f64::from(img_height)) as u32;
+    } else if options.width.is_none() && options.height.is_some() {
+        img_width = (f64::from(options.height.unwrap_or_default())
+            / f64::from(img_height)
+            * f64::from(img_width)) as u32;
     }
 
-    // If resized image is squared but not original one.
-    if img_width != img_height && width == height {
-        // For the moment, there is no cropping to remove excess parts.
-        // The final rendered square will represent the squashed original image.
+    match options.encoder {
+        crate::resizer::Encode::Lossy(encoder) => match encoder {
+            crate::resizer::Lossy::Jpeg(quality) => image_encoder(
+                img,
+                img_width,
+                img_height,
+                Some(quality),
+                ImageFormat::Jpeg,
+            ),
+        },
+        crate::resizer::Encode::Lossless(encoder) => match encoder {
+            crate::resizer::Lossless::Avif => image_encoder(
+                img,
+                img_width,
+                img_height,
+                None,
+                ImageFormat::Avif,
+            ),
+            crate::resizer::Lossless::Png => image_encoder(
+                img,
+                img_width,
+                img_height,
+                None,
+                ImageFormat::Png,
+            ),
+            crate::resizer::Lossless::WebP => image_encoder(
+                img,
+                img_width,
+                img_height,
+                None,
+                ImageFormat::WebP,
+            ),
+        },
     }
-
-    let mut src_image = fr::Image::from_vec_u8(
-        NonZeroU32::new(img_width).unwrap(),
-        NonZeroU32::new(img_height).unwrap(),
-        img.to_rgba8().into_raw(),
-        fr::PixelType::U8x4,
-    )
-    .map_err(ImageError::ImageBufferError)?;
-
-    // Multiple RGB channels of source image by alpha channel.
-    let alpha_mul_div = fr::MulDiv::default();
-    alpha_mul_div
-        .multiply_alpha_inplace(&mut src_image.view_mut())
-        .map_err(ImageError::UnsupportedPixel)?;
-
-    // Create container for data of destination image
-    let dst_width = NonZeroU32::new(width.unwrap_or_default()).unwrap();
-    let dst_height = NonZeroU32::new(height.unwrap_or_default()).unwrap();
-    let mut dst_image =
-        fr::Image::new(dst_width, dst_height, src_image.pixel_type());
-
-    // Get mutable view of destination image data.
-    let mut dst_view = dst_image.view_mut();
-
-    // Create Resizer instance and resize source image
-    // into buffer of destination image.
-    let mut resizer =
-        fr::Resizer::new(fr::ResizeAlg::Convolution(fr::FilterType::Lanczos3));
-    resizer
-        .resize(&src_image.view(), &mut dst_view)
-        .map_err(|_| ImageError::Unspecified)?;
-
-    // Divide RGB channels of destination image by alpha.
-    alpha_mul_div
-        .divide_alpha_inplace(&mut dst_view)
-        .map_err(ImageError::UnsupportedPixel)?;
-
-    // Convert into JPEG.
-    let mut result_buf = BufWriter::new(Vec::new());
-    JpegEncoder::new(&mut result_buf)
-        .write_image(
-            dst_image.buffer(),
-            dst_width.get(),
-            dst_height.get(),
-            ColorType::Rgba8,
-        )
-        .map_err(|_| ImageError::FailedEncode)?;
-
-    Ok(result_buf)
 }
