@@ -118,13 +118,7 @@ pub fn resize(buffer: &[u8], options: Encoder) -> Result<Vec<u8>, ImageError> {
             ),
         },
         crate::resizer::Encode::Lossless(encoder) => match encoder {
-            crate::resizer::Lossless::Avif => image_encoder(
-                img,
-                img_width,
-                img_height,
-                None,
-                ImageFormat::Avif,
-            ),
+            crate::resizer::Lossless::Avif => Err(ImageError::UnsupportedFormat),
             crate::resizer::Lossless::Png => image_encoder(
                 img,
                 img_width,
