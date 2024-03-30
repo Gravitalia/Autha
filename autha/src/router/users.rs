@@ -1,17 +1,22 @@
+use crate::helpers::queries::{CREATE_SALT, GET_USER};
 use crate::model::user::User;
 use anyhow::{bail, Result};
-use db::broker::Broker;
-use db::libscylla::{batch::Batch, IntoTypedRows};
-use db::memcache::MemcachePool;
-use db::scylla::Scylla;
+use db::{
+    broker::Broker,
+    libscylla::{batch::Batch, IntoTypedRows},
+    memcache::MemcachePool,
+    scylla::Scylla,
+};
+use image_processor::{
+    host::cloudinary::upload,
+    resizer::{resize, Encode, Encoder, Lossy},
+};
 use std::{convert::Infallible, sync::Arc};
 use warp::{reply::Reply, Rejection};
 
-use crate::helpers::queries::{CREATE_SALT, GET_USER};
-
 const IMAGE_WIDTH: u32 = 224;
 const IMAGE_HEIGHT: u32 = 224;
-const _IMAGE_QUALITY: f32 = 70.0;
+const IMAGE_QUALITY: u8 = 60;
 
 /// Get a user with its vanity via a cache or the database.
 #[inline]
@@ -222,9 +227,16 @@ pub async fn update(
                 crate::helpers::config::read();
 
             if let Some(hoister) = config.image_delivery {
-                let resized_img =
-                    image_processor::resizer::resize(&a, Some(224), Some(224))
-                        .map_err(|_| crate::router::Errors::Unspecified)?;
+                let resized_img = resize(
+                    &a,
+                    Encoder {
+                        encoder: Encode::Lossy(Lossy::Jpeg(IMAGE_QUALITY)),
+                        width: Some(IMAGE_WIDTH),
+                        height: Some(IMAGE_HEIGHT),
+                        speed: None,
+                    },
+                )
+                .map_err(|_| crate::router::Errors::Unspecified)?;
                 let credentials = match hoister.platform {
                     crate::model::config::Platforms::Cloudinary => {
                         image_processor::host::cloudinary::Credentials {
@@ -238,7 +250,7 @@ pub async fn update(
                 if let Some(remini_url) = config.remini_url {
                     if crate::helpers::machine_learning::is_nude(
                         remini_url,
-                        resized_img.buffer(),
+                        &resized_img,
                     )
                     .await
                     .map_err(|_| crate::router::Errors::Unspecified)?
@@ -248,26 +260,16 @@ pub async fn update(
                         ));
                     } else {
                         avatar = Some(
-                            image_processor::resize_and_upload(
-                                &a,
-                                Some(IMAGE_WIDTH),
-                                Some(IMAGE_HEIGHT),
-                                credentials,
-                            )
-                            .await
-                            .map_err(|_| crate::router::Errors::Unspecified)?,
+                            upload(credentials, &resized_img).await.map_err(
+                                |_| crate::router::Errors::Unspecified,
+                            )?,
                         );
                     }
                 } else {
                     avatar = Some(
-                        image_processor::resize_and_upload(
-                            &a,
-                            Some(IMAGE_WIDTH),
-                            Some(IMAGE_HEIGHT),
-                            credentials,
-                        )
-                        .await
-                        .map_err(|_| crate::router::Errors::Unspecified)?,
+                        upload(credentials, &resized_img)
+                            .await
+                            .map_err(|_| crate::router::Errors::Unspecified)?,
                     );
                 }
             }
