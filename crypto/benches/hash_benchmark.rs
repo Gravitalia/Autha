@@ -1,5 +1,8 @@
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
-use crypto::hash::*;
+use crypto::hash::{
+    argon2::*,
+    sha::{sha1, sha256},
+};
 
 fn hash_benchmark(c: &mut Criterion) {
     let config = Argon2Configuration {
