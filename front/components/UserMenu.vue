@@ -75,7 +75,7 @@ onMounted(() => {
     <div
       w-46
       xl:w-64
-      rounded-md
+      rounded
       shadow-lg
       py-1
       bg-zinc-50
