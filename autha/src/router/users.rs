@@ -1,6 +1,7 @@
 use crate::helpers::queries::{CREATE_SALT, GET_USER};
 use crate::model::user::User;
 use anyhow::{bail, Result};
+use crypto::hash::argon2::{argon2, check_argon2, Argon2Configuration};
 use db::{
     broker::Broker,
     libscylla::{batch::Batch, IntoTypedRows},
@@ -174,7 +175,10 @@ pub async fn update(
 
     let mut is_psw_valid = false;
     if let Some(psw) = body.password {
-        if crypto::hash::check_argon2(
+        if check_argon2(
+            std::env::var("KEY")
+                .unwrap_or_else(|_| "KEY".to_string())
+                .as_bytes(),
             password,
             psw.as_bytes(),
             Some(vanity.as_bytes()),
@@ -282,6 +286,8 @@ pub async fn update(
             return Ok(crate::router::err(super::INVALID_EMAIL));
         } else {
             let hashed_email = crypto::encrypt::format_preserving_encryption(
+                std::env::var("AES256_KEY")
+                    .unwrap_or_else(|_| super::DEFAULT_AES_KEY.to_string()),
                 e.encode_utf16().collect(),
             )
             .map_err(|_| crate::router::Errors::Unspecified)?;
@@ -382,7 +388,7 @@ pub async fn update(
         if !is_psw_valid || !crate::router::create::PASSWORD.is_match(&np) {
             return Ok(crate::router::err(super::INVALID_PASSWORD));
         } else {
-            let argon_config = crypto::hash::Argon2Configuration {
+            let argon_config = Argon2Configuration {
                 memory_cost: std::env::var("MEMORY_COST")
                     .unwrap_or_default()
                     .parse::<u32>()
@@ -404,12 +410,8 @@ pub async fn update(
                 "UPDATE accounts.users SET password = ? WHERE vanity = ?",
             );
             batch_values.push((
-                crypto::hash::argon2(
-                    argon_config,
-                    np.as_bytes(),
-                    Some(vanity.as_bytes()),
-                )
-                .map_err(|_| crate::router::Errors::Unspecified)?,
+                argon2(argon_config, np.as_bytes(), Some(vanity.as_bytes()))
+                    .map_err(|_| crate::router::Errors::Unspecified)?,
                 vanity.clone(),
             ));
         }

@@ -73,16 +73,26 @@ pub fn chacha20_poly1305(
 
 /// Encrypts data the provided data using (Format-preserving encryption)
 /// and FF1 (Feistel-based Encryption Mode) with AES256.
+///
+/// # Examples
+/// ```rs
+/// use crypto::encrypt::::format_preserving_encryption;
+///
+/// // Private 32-byte key.
+/// let key = "4D6a514749614D6c74595a50756956446e5673424142524c4f4451736c515233".to_string();
+///
+/// let plaintext = "private data";
+/// let encrypted = format_preserving_encryption(plaintext.encode_utf16().collect()).unwrap();
+/// println!("{:?} will always be {:?}", plaintext, encrypted);
+/// ```
+///
+/// # Panics.
+/// Key MUST be 32 bytes (256 bits), otherwise it panics.
 #[cfg(feature = "format_preserving")]
 pub fn format_preserving_encryption(
+    key: String,
     data: Vec<u16>,
 ) -> Result<String, CryptoError> {
-    // Get encryption key. The key MUST be 32 bytes (256 bits), otherwise it panics.
-    let key = std::env::var("AES256_KEY").unwrap_or_else(|_| {
-        "4D6a514749614D6c74595a50756956446e5673424142524c4f4451736c515233"
-            .to_string()
-    });
-
     let key_bytes =
         hex::decode(key).map_err(|_| CryptoError::UnableDecodeHex)?;
 
