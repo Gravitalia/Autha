@@ -1,5 +1,6 @@
 use crate::router::create::{EMAIL, MIN_PASSWORD_LENGTH, PASSWORD};
 use anyhow::anyhow;
+use crypto::hash::{argon2::check_argon2, sha::sha256};
 use db::{
     libscylla::frame::value::CqlTimestamp, memcache::MemcachePool,
     scylla::Scylla,
@@ -39,7 +40,7 @@ pub async fn handle(
     });
 
     // Check that the user has not tried to connect 5 times in the last 5 minutes.
-    let hashed_ip = crypto::hash::sha256(ip.as_bytes());
+    let hashed_ip = sha256(ip.as_bytes());
     let rate_limit = if hashed_ip.is_empty() {
         log::warn!("The IP could not be hashed. This can result in massive trying of connection.");
 
@@ -103,6 +104,8 @@ pub async fn handle(
     }
 
     let hashed_email = crypto::encrypt::format_preserving_encryption(
+        std::env::var("AES256_KEY")
+            .unwrap_or_else(|_| super::DEFAULT_AES_KEY.to_string()),
         body.email.encode_utf16().collect(),
     )
     .map_err(|_| crate::router::Errors::Unspecified)?;
@@ -156,7 +159,10 @@ pub async fn handle(
     }
 
     // Check if passwords are matching.
-    if !crypto::hash::check_argon2(
+    if !check_argon2(
+        std::env::var("KEY")
+            .unwrap_or_else(|_| "KEY".to_string())
+            .as_bytes(),
         password,
         body.password.as_bytes(),
         Some(vanity.as_bytes()),

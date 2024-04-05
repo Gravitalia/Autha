@@ -27,6 +27,9 @@ const INVALID_BIRTHDATE: &str = "Too young";
 const INVALID_PHONE: &str = "Invalid phone";
 const INVALID_BOT: &str = "Invalid client_id";
 
+const DEFAULT_AES_KEY: &str =
+    "4D6a514749614D6c74595a50756956446e5673424142524c4f4451736c515233";
+
 /// Define errors
 #[derive(Debug)]
 #[allow(dead_code)]

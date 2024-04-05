@@ -2,11 +2,18 @@ use crate::helpers::{
     queries::{CREATE_SALT, CREATE_USER},
     token,
 };
+use crypto::hash::{
+    argon2::{argon2, Argon2Configuration},
+    sha::sha256,
+};
+use db::broker::Broker;
 use db::{memcache::MemcachePool, scylla::Scylla};
 use regex_lite::Regex;
-use std::{net::{IpAddr, Ipv4Addr, SocketAddr}, sync::Arc};
+use std::{
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    sync::Arc,
+};
 use warp::{reject::Rejection, reply::Reply};
-use db::broker::Broker;
 
 const MAX_USERNAME_LENGTH: u8 = 25;
 pub(super) const MIN_PASSWORD_LENGTH: u8 = 8;
@@ -97,7 +104,7 @@ pub async fn handle(
     });
 
     // Check if user have already created account 5 minutes ago.
-    let hashed_ip = crypto::hash::sha256(ip.as_bytes());
+    let hashed_ip = sha256(ip.as_bytes());
     if hashed_ip.is_empty() {
         log::warn!(
             "The IP could not be hashed. This can result in the uncontrolled creation of accounts."
@@ -154,6 +161,8 @@ pub async fn handle(
     }
 
     let hashed_email = crypto::encrypt::format_preserving_encryption(
+        std::env::var("AES256_KEY")
+            .unwrap_or_else(|_| super::DEFAULT_AES_KEY.to_string()),
         body.email.encode_utf16().collect(),
     )
     .map_err(|_| crate::router::Errors::Unspecified)?;
@@ -266,7 +275,7 @@ pub async fn handle(
 
     // Create user on database.
     if let Some(query) = CREATE_USER.get() {
-        let argon_config = crypto::hash::Argon2Configuration {
+        let argon_config = Argon2Configuration {
             memory_cost: std::env::var("MEMORY_COST")
                 .unwrap_or_default()
                 .parse::<u32>()
@@ -291,7 +300,7 @@ pub async fn handle(
                     &body.vanity,
                     &hashed_email,
                     &body.username,
-                    &crypto::hash::argon2(
+                    &argon2(
                         argon_config,
                         body.password.as_bytes(),
                         Some(body.vanity.as_bytes()),
@@ -330,35 +339,42 @@ pub async fn handle(
         use chrono::Utc;
         use crypto::random_string;
 
-        let topic = format!("{}.autha.user", std::env::var("SERVICE_NAME").unwrap_or("gravitalia".to_string()));
-        let new_user = serde_json::to_string(
-            &Message {
-                id: random_string(36),
-                datacontenttype: "application/json; charset=utf-8".to_string(),
-                data: User {
-                    username: body.username,
-                    vanity: body.vanity.clone(),
-                    avatar: None,
-                    bio: None,
-                    email: None,
-                    birthdate: body.birthdate,
-                    phone: None,
-                    verified: false,
-                    deleted: false,
-                    flags: 0,
-                },
-                source: format!("//autha.gravitalia.com/users/{}", body.vanity),
-                specversion: "1.0".to_string(),
-                time: Some(Utc::now().to_rfc3339()),
-                r#type: "com.gravitalia.autha.user.v1.new_account".to_string(),
-            }
-        ).map_err(|_| crate::router::Errors::Unspecified)?;
-        
+        let topic = format!(
+            "{}.autha.user",
+            std::env::var("SERVICE_NAME").unwrap_or("gravitalia".to_string())
+        );
+        let new_user = serde_json::to_string(&Message {
+            id: random_string(36),
+            datacontenttype: "application/json; charset=utf-8".to_string(),
+            data: User {
+                username: body.username,
+                vanity: body.vanity.clone(),
+                avatar: None,
+                bio: None,
+                email: None,
+                birthdate: body.birthdate,
+                phone: None,
+                verified: false,
+                deleted: false,
+                flags: 0,
+            },
+            source: format!("//autha.gravitalia.com/users/{}", body.vanity),
+            specversion: "1.0".to_string(),
+            time: Some(Utc::now().to_rfc3339()),
+            r#type: "com.gravitalia.autha.user.v1.new_account".to_string(),
+        })
+        .map_err(|_| crate::router::Errors::Unspecified)?;
+
         match <std::sync::Arc<Broker> as Into<Broker>>::into(broker) {
             #[cfg(feature = "kafka")]
-            Broker::Kafka(func) => func.publish(&topic, &new_user).map_err(|_| crate::router::Errors::Unspecified)?,
+            Broker::Kafka(func) => func
+                .publish(&topic, &new_user)
+                .map_err(|_| crate::router::Errors::Unspecified)?,
             #[cfg(feature = "rabbitmq")]
-            Broker::RabbitMQ(func) => func.publish(&topic, &new_user).await.map_err(|_| crate::router::Errors::Unspecified)?,
+            Broker::RabbitMQ(func) => func
+                .publish(&topic, &new_user)
+                .await
+                .map_err(|_| crate::router::Errors::Unspecified)?,
             // Won't happend.
             _ => {},
         }

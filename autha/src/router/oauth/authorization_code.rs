@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crypto::random_string;
+use crypto::{hash::sha::sha256, random_string};
 use db::memcache::MemcachePool;
 use db::scylla::Scylla;
 use std::sync::Arc;
@@ -72,8 +72,7 @@ pub async fn authorization_code(
         }
 
         if let Some(code_challenge) = code_challenge {
-            if *code_challenge != crypto::hash::sha256(code_verifier.as_bytes())
-            {
+            if *code_challenge != sha256(code_verifier.as_bytes()) {
                 return Ok(crate::router::err("Invalid `code_verifier`"));
             }
         }
