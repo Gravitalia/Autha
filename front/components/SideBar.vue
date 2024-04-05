@@ -1,11 +1,10 @@
-<script setup lang="ts">
-import { ref } from "vue";
+<script setup>
 import { useUser } from "../stores/user";
 
 const user = useUser();
 user.fetchUser();
 
-const isSideBarOpened: Ref<boolean> = ref(false);
+const isSideBarOpened = ref(false);
 const path = useRoute().path;
 
 // Logout user using Pinia, then redercting user to the login page.
@@ -25,20 +24,20 @@ async function logout() {
     mt-2
     ml-3
     text-sm
-    text-zinc-500
+    text-zinc-700
     rounded
     sm:hidden
     hover:bg-zinc-100
     focus:outline-none
     focus:ring-2
     focus:ring-zinc-200
-    dark:text-zinc-400
+    dark:text-zinc-200
     dark:hover:bg-zinc-700
     dark:focus:ring-zinc-600
     type="button"
     @click="isSideBarOpened = !isSideBarOpened"
   >
-    <span sr-only>Open sidebar</span>
+    <span sr-only>{{ $t("screen_reader.open_sidebar") }}</span>
     <svg
       w-6
       h-6
@@ -314,6 +313,34 @@ async function logout() {
 
           <span ml-3 text-base>{{ $t("logout") }}</span>
         </button>
+
+        <hr h-px my-8 bg-zinc-200 border-0 dark:bg-zinc-700 />
+
+        <UserMenu />
+      </div>
+
+      <!-- Message prevention. -->
+      <div p-4 mt-16 rounded-lg bg-amber-50 dark:bg-amber-700>
+        <div flex items-center mb-3>
+          <span
+            bg-violet-100
+            text-violet-800
+            text-sm
+            font-semibold
+            mr-2
+            px-2.5
+            py-0.5
+            rounded
+            dark:bg-violet-300
+            dark:text-violet-900
+          >
+            {{ $t("security") }}
+          </span>
+        </div>
+
+        <p mb-3 text-sm text-amber-800 dark:text-white>
+          {{ $t("security_message") }}
+        </p>
       </div>
     </div>
   </aside>

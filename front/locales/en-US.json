@@ -3,6 +3,11 @@
   "something_went_wrong": "Something went wrong",
   "return_home": "Return home",
 
+  "screen_reader": {
+    "loading": "Loading...",
+    "open_sidebar": "Open sidebar"
+  },
+
   "sign_in": "Sign in",
 
   "error": {
@@ -46,8 +51,12 @@
   "data": "Data",
   "oauth": "OAuth",
   "logout": "Logout",
+  "account": "Account",
+  "security_message": "Always check that you're on the right site before entering your details! For us it's always: gravitalia.com!",
 
+  "p_policy": "Privacy policy",
   "terms_of_use": "Terms of Use",
+  "terms_of_service": "Terms of Service",
   "date": "Effective date:",
 
   "wants_access_account": "wants access to your account",
