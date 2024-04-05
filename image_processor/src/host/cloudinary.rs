@@ -1,6 +1,6 @@
 use crate::ImageError;
 use cloudinary::upload::{Source::Path, Upload, UploadOptions};
-use crypto::hash::sha1;
+use crypto::hash::sha::sha1;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
