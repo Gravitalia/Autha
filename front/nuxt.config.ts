@@ -112,6 +112,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       API_URL: "http://localhost:1111",
+      AVATAR_COLORS: ["#e8554a", "#3ea865", "#3051a6"],
       CDN_URL:
         "https://res.cloudinary.com/dimtq5hwr/image/upload/s--9FX9gdAw--",
     },
