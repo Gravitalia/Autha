@@ -24,7 +24,7 @@
 //! # Hash with SHA.
 //!
 //! ```rust
-//! println!("SHA256 of 'Hello world': {}", crypto::hash::sha256(b"Hello world"));
+//! println!("SHA256 of 'Hello world': {}", crypto::hash::sha::sha256(b"Hello world"));
 //! ```
 
 /// Module to decrypt datas.
