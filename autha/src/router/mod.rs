@@ -3,15 +3,13 @@ pub mod login;
 pub mod oauth;
 pub mod users;
 
+use crate::model::{error::Error, user::Token};
 use anyhow::{anyhow, Result};
 use db::{memcache::MemcachePool, scylla::Scylla};
 use std::{convert::Infallible, sync::Arc};
 use warp::{
     http::StatusCode, reject::Reject, reply::Response, Filter, Rejection, Reply,
 };
-
-use crate::model::{error::Error, user::Token};
-use crate::telemetry::metrics::HTTP_REQUESTS;
 
 // Error constants.
 const ERROR_RATE_LIMITED: &str = "You are being rate limited.";
@@ -166,7 +164,7 @@ pub fn with_metric(
     warp::any()
         .map(|| {
             #[cfg(feature = "telemetry")]
-            HTTP_REQUESTS.inc();
+            crate::telemetry::metrics::HTTP_REQUESTS.inc();
         })
         .untuple_one()
 }

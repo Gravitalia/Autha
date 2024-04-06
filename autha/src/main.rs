@@ -1,11 +1,3 @@
-// Copyright 2024 Gravitalia.
-//
-// Licensed under the Mozilla Public License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// https://www.mozilla.org/en-US/MPL/2.0/
-
 mod helpers;
 mod model;
 mod router;
@@ -83,7 +75,7 @@ async fn main() {
             log::info!("Tracing requests activated with Jaeger.");
             telemetry::tracing::init(url)
                 .expect("Failed to initialise tracer.");
-            tracer("tracing-jaeger");
+            opentelemetry::global::tracer("tracing-jaeger");
         }
     }
 
@@ -291,8 +283,7 @@ async fn main() {
         .and_then(router::oauth::revoke::revoke);
 
     #[cfg(feature = "telemetry")]
-    let metrics =
-        warp::path("metrics").and_then(helpers::telemetry::metrics_handler);
+    let metrics = warp::path("metrics").and_then(telemetry::metrics::handler);
     #[cfg(not(feature = "telemetry"))]
     let metrics = warp::path("metrics").map(|| "no metrics");
 
