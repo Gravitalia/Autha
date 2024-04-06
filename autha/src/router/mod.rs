@@ -3,16 +3,13 @@ pub mod login;
 pub mod oauth;
 pub mod users;
 
+use crate::model::{error::Error, user::Token};
 use anyhow::{anyhow, Result};
 use db::{memcache::MemcachePool, scylla::Scylla};
 use std::{convert::Infallible, sync::Arc};
 use warp::{
     http::StatusCode, reject::Reject, reply::Response, Filter, Rejection, Reply,
 };
-
-use crate::helpers::route_telemetry;
-use crate::model::error::Error;
-use crate::model::user::Token;
 
 // Error constants.
 const ERROR_RATE_LIMITED: &str = "You are being rate limited.";
@@ -167,7 +164,7 @@ pub fn with_metric(
     warp::any()
         .map(|| {
             #[cfg(feature = "telemetry")]
-            crate::helpers::telemetry::HTTP_REQUESTS.inc();
+            crate::telemetry::metrics::HTTP_REQUESTS.inc();
         })
         .untuple_one()
 }
@@ -181,14 +178,9 @@ pub async fn create_token(
     token: String,
     query: crate::model::query::OAuth,
 ) -> Result<Response, Rejection> {
-    let current_seconds = crate::helpers::get_current_seconds();
-
     match oauth::authorize(scylla, memcached, query, token).await {
         Ok(r) => {
             let res = r.into_response();
-
-            // Increment and add values of prometheus.
-            route_telemetry(&res.status().to_string(), current_seconds);
 
             Ok(res)
         },

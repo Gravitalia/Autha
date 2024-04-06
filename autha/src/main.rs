@@ -1,6 +1,7 @@
 mod helpers;
 mod model;
 mod router;
+mod telemetry;
 
 #[macro_use]
 extern crate lazy_static;
@@ -58,16 +59,24 @@ async fn main() {
 
     // Initialize telemetry.
     #[cfg(feature = "telemetry")]
-    if config.prometheus.unwrap_or_default() {
-        log::info!("Metrics are enabled using Prometheus.");
-        helpers::telemetry::register_custom_metrics();
-    }
+    {
+        if config
+            .telemetry
+            .clone()
+            .unwrap_or_default()
+            .prometheus
+            .unwrap_or_default()
+        {
+            log::info!("Metrics are enabled using Prometheus.");
+            telemetry::metrics::register_custom_metrics();
+        }
 
-    #[cfg(feature = "telemetry")]
-    if let Some(url) = config.jaeger_url {
-        log::info!("Tracing requests activated with Jaeger.");
-        helpers::telemetry::init_tracer(&url).unwrap();
-        opentelemetry::global::tracer("tracing-jaeger");
+        if let Some(url) = config.telemetry.unwrap_or_default().jaeger {
+            log::info!("Tracing requests activated with Jaeger.");
+            telemetry::tracing::init(url)
+                .expect("Failed to initialise tracer.");
+            opentelemetry::global::tracer("tracing-jaeger");
+        }
     }
 
     // Initialize databases.
@@ -274,8 +283,7 @@ async fn main() {
         .and_then(router::oauth::revoke::revoke);
 
     #[cfg(feature = "telemetry")]
-    let metrics =
-        warp::path("metrics").and_then(helpers::telemetry::metrics_handler);
+    let metrics = warp::path("metrics").and_then(telemetry::metrics::handler);
     #[cfg(not(feature = "telemetry"))]
     let metrics = warp::path("metrics").map(|| "no metrics");
 

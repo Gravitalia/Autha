@@ -45,6 +45,17 @@ pub struct Image {
     pub secret: String,
 }
 
+/// Telemetry tool settings (metrics, tracing, logging).
+#[derive(Deserialize, Default, Debug, Clone)]
+pub struct Telemetry {
+    /// Wether to start `/metric` endpoint.
+    pub prometheus: Option<bool>,
+    /// Jaeger request tracer URL. Port should be `6831`.
+    pub jaeger: Option<String>,
+    /// Grafana Loki log aggregation system URL. It should be `http://127.0.0.1:3100`.
+    pub loki: Option<String>,
+}
+
 /// Represents the configuration structure expected from the 'config.yaml' file.
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
@@ -58,10 +69,8 @@ pub struct Config {
     pub database: Database,
     /// SaaS to host, modify and save images.
     pub image_delivery: Option<Image>,
-    /// Wether to start /metric endpoint.
-    pub prometheus: Option<bool>,
-    /// Jaeger traces in OpenTelemetry OTLP format URL (should be port 4317).
-    pub jaeger_url: Option<String>,
+    /// Telemetry tools: prometheus, jaeger, loki.
+    pub telemetry: Option<Telemetry>,
 }
 
 /// Represents non-private informations transmitted on login to make
