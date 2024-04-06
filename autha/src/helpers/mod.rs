@@ -3,8 +3,6 @@ pub mod format;
 pub mod machine_learning;
 pub mod queries;
 pub mod request;
-#[cfg(feature = "telemetry")]
-pub mod telemetry;
 pub mod token;
 
 use anyhow::Result;
