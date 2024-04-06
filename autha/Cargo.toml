@@ -34,9 +34,10 @@ fern = "0.6"
 log = "0.4"
 
 opentelemetry = { version = "0.22", optional = true }
-opentelemetry-otlp = { version = "0.15", features = ["tonic"], optional = true }
+opentelemetry-jaeger = { version = "0.21.0", features = ["rt-tokio"], optional = true }
 opentelemetry_sdk =  { version = "0.22", features = ["rt-tokio"], optional = true }
 prometheus = { version = "0.13", features = ["process"], optional = true }
+tracing-loki = { version = "0.2", optional = true }
 
 [build-dependencies]
 tonic-build = { version = "0.11", features = [ "prost" ] }
@@ -45,4 +46,4 @@ tonic-build = { version = "0.11", features = [ "prost" ] }
 default = ["kafka"]
 kafka = ["db/apache_kafka"]
 rabbitmq = ["db/rabbitmq"]
-telemetry = ["opentelemetry", "opentelemetry-otlp", "opentelemetry_sdk", "prometheus"]
+telemetry = ["opentelemetry", "opentelemetry-jaeger", "opentelemetry_sdk", "prometheus", "tracing-loki"]
