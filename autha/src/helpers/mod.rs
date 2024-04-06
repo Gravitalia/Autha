@@ -36,30 +36,6 @@ pub fn get_age(year: i16, month: i8, day: i8) -> Result<i32> {
     )
 }
 
-/// Get the current timestamp in seconds
-#[inline]
-pub fn get_current_seconds() -> f64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs_f64()
-}
-
-/// Get the current timestamp in seconds
-#[inline]
-#[allow(unused_variables)]
-pub fn route_telemetry(status: &str, seconds: f64) {
-    #[cfg(feature = "telemetry")]
-    telemetry::RESPONSE_CODE_COLLECTOR
-        .with_label_values(&[status, "POST"])
-        .inc();
-
-    #[cfg(feature = "telemetry")]
-    telemetry::RESPONSE_TIME_COLLECTOR
-        .with_label_values(&[])
-        .observe(get_current_seconds() - seconds);
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
