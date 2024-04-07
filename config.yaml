@@ -1,11 +1,9 @@
 # Define port for the HTTP API.
 port: 1111
 
-# Remini server URL.
+# Machine learning to detect the presence of nudity in avatars.
+# You can remove this line if you do not want to verify.
 remini_url: http://remini:50051
-# Telemetry
-prometheus: true
-jaeger_url: http://jaeger:4317
 
 database:
   scylla:
@@ -28,3 +26,8 @@ image_delivery:
   cloud_name: aaaaa1234
   key: "111111111111111"
   secret: SECRET
+
+telemetry:
+  prometheus: true # Deploys `/metrics` route containing metrics for Prometheus (cpu, ram, number of requests, status, time, etc.).
+  jaeger: http://jaeger:6831 # Tracing using Jaeger port for thrift-compact protocol.
+  loki: http://loki:3100 # Logging using Grafana Loki port for HTTP communications.
