@@ -14,6 +14,7 @@ Autha has been designed to be safe, fast and efficient.
 [![Autha/bazel](https://github.com/Gravitalia/Autha/actions/workflows/bazel.yml/badge.svg)](https://github.com/Gravitalia/Autha/actions/workflows/bazel.yml) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FGravitalia%2FAutha.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FGravitalia%2FAutha?ref=badge_shield)
 
 ## Feature highlights
+
 - Support multi-factor authentication via TOTP ([RFC 6238](https://datatracker.ietf.org/doc/html/rfc6238))
 - Support telemetry ([Prometheus](https://prometheus.io/), [Jaeger](https://www.jaegertracing.io/) and Grafana [Loki](https://grafana.com/oss/loki/))
 
