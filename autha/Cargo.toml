@@ -1,6 +1,6 @@
 [package]
 name = "autha"
-version = "3.0.0"
+version = "3.0.1"
 edition = "2021"
 
 [dependencies]
@@ -30,8 +30,8 @@ isolang = { version = "2.4", features = ["list_languages"] }
 chrono = "0.4"
 url = "2.5"
 
-fern = "0.6"
-log = "0.4"
+tracing = "0.1"
+tracing-subscriber = "0.3"
 
 opentelemetry = { version = "0.22", optional = true }
 opentelemetry-jaeger = { version = "0.21.0", features = ["rt-tokio"], optional = true }
