@@ -3,6 +3,7 @@ use crypto::{hash::sha::sha256, random_string};
 use db::memcache::MemcachePool;
 use db::scylla::Scylla;
 use std::sync::Arc;
+use tracing::error;
 use warp::reply::{Json, WithStatus};
 
 use crate::helpers::queries::CREATE_OAUTH;
@@ -134,7 +135,7 @@ pub async fn authorization_code(
             )
             .await?;
     } else {
-        log::error!("Prepared queries do not appear to be initialized.");
+        error!("Prepared queries do not appear to be initialized.");
     }
 
     Ok(warp::reply::with_status(

@@ -9,6 +9,7 @@ use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     time::{SystemTime, UNIX_EPOCH},
 };
+use tracing::{error, warn};
 use warp::{reject::Rejection, reply::Reply};
 
 /// Handle login route.
@@ -42,7 +43,7 @@ pub async fn handle(
     // Check that the user has not tried to connect 5 times in the last 5 minutes.
     let hashed_ip = sha256(ip.as_bytes());
     let rate_limit = if hashed_ip.is_empty() {
-        log::warn!("The IP could not be hashed. This can result in massive trying of connection.");
+        warn!("The IP could not be hashed. This can result in massive trying of connection.");
 
         0
     } else {
@@ -69,7 +70,7 @@ pub async fn handle(
     if let Err(error) =
         memcached.set(format!("account_login_{}", hashed_ip), rate_limit + 1)
     {
-        log::warn!("Cannot set global rate limiter when create. This could lead to massive spam! Error: {}", error)
+        warn!("Cannot set global rate limiter when create. This could lead to massive spam! Error: {}", error)
     }
 
     // Check if Cloudflare Turnstile token is valid.
@@ -91,7 +92,7 @@ pub async fn handle(
                     }
                 },
                 Err(error) => {
-                    log::error!(
+                    error!(
                         "Cannot make Cloudflare Turnstile request: {}",
                         error
                     );
@@ -189,7 +190,7 @@ pub async fn handle(
             .unwrap_or_default();
 
         if res.is_empty() {
-            log::error!("Cannot get salt for decrypt MFA code.");
+            error!("Cannot get salt for decrypt MFA code.");
             return Ok(super::err(super::INTERNAL_SERVER_ERROR));
         }
 
@@ -230,7 +231,7 @@ pub async fn handle(
     {
         Ok(res) => res,
         Err(error) => {
-            log::error!("Cannot create user token: {}", error);
+            error!("Cannot create user token: {}", error);
             return Ok(super::err("Cannot create token"));
         },
     };

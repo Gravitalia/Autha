@@ -6,8 +6,8 @@ pub mod revoke;
 use anyhow::Result;
 use db::memcache::MemcachePool;
 use db::scylla::Scylla;
-use std::convert::Infallible;
-use std::sync::Arc;
+use std::{convert::Infallible, sync::Arc};
+use tracing::error;
 use url::Url;
 use warp::{
     http::Uri,
@@ -161,10 +161,7 @@ pub async fn grant(
     } {
         Ok(response) => Ok(response),
         Err(error) => {
-            log::error!(
-                "Failed to generate access or refresh token: {}",
-                error
-            );
+            error!("Failed to generate access or refresh token: {}", error);
             Ok(super::err(super::INTERNAL_SERVER_ERROR))
         },
     }

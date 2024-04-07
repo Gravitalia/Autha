@@ -1,6 +1,7 @@
 use anyhow::{bail, Result};
 use remini::remini_client::ReminiClient;
 use remini::Request;
+use tracing::error;
 
 pub mod remini {
     tonic::include_proto!("remini");
@@ -20,7 +21,7 @@ pub async fn is_nude(url: String, buffer: &[u8]) -> Result<bool> {
         .into_inner();
 
     if response.error {
-        log::error!(
+        error!(
             "gRPC Remini Predict haven't achieved request: {}",
             response.message
         );

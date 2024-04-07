@@ -6,6 +6,8 @@ mod telemetry;
 #[macro_use]
 extern crate lazy_static;
 use std::{sync::Arc, time::Duration};
+use tracing::{error, info, trace, warn};
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt};
 use warp::{
     http::{Method, Response},
     Filter,
@@ -28,38 +30,14 @@ pub fn cors() -> warp::cors::Cors {
 
 #[tokio::main]
 async fn main() {
-    // Set logger with Fern.
-    fern::Dispatch::new()
-        .format(|out, message, record| {
-            out.finish(format_args!(
-                "[{} {}] {}",
-                helpers::format::format_rfc3339(
-                    std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .expect("Time went backwards")
-                        .as_secs()
-                ),
-                record.level(),
-                message
-            ))
-        })
-        .level(if cfg!(debug_assertions) {
-            log::LevelFilter::Trace
-        } else {
-            log::LevelFilter::Info
-        })
-        .level_for("hyper", log::LevelFilter::Error)
-        .level_for("warp_server", log::LevelFilter::Info)
-        .chain(std::io::stdout())
-        .apply()
-        .expect("Cannot apply fern to log");
-
     // Read configuration file.
     let config = helpers::config::read();
 
     // Initialize telemetry.
     #[cfg(feature = "telemetry")]
     {
+        use url::Url;
+
         if config
             .telemetry
             .clone()
@@ -67,16 +45,52 @@ async fn main() {
             .prometheus
             .unwrap_or_default()
         {
-            log::info!("Metrics are enabled using Prometheus.");
+            info!("Metrics are enabled using Prometheus.");
             telemetry::metrics::register_custom_metrics();
         }
 
-        if let Some(url) = config.telemetry.unwrap_or_default().jaeger {
-            log::info!("Tracing requests activated with Jaeger.");
+        if let Some(url) = config.clone().telemetry.unwrap_or_default().jaeger {
+            info!("Tracing requests activated with Jaeger.");
             telemetry::tracing::init(url)
                 .expect("Failed to initialise tracer.");
             opentelemetry::global::tracer("tracing-jaeger");
         }
+
+        if let Some(url) = config.telemetry.unwrap_or_default().loki {
+            let (loki_layer, task) = tracing_loki::builder()
+                .label("lang", "rust")
+                .unwrap()
+                .extra_field("pid", std::process::id().to_string())
+                .unwrap()
+                .build_url(
+                    Url::parse(&url)
+                        .expect("Failed to convert String to URL for logging."),
+                )
+                .unwrap();
+
+            let fmt_layer = fmt::layer()
+                .with_file(true)
+                .with_line_number(true)
+                .with_thread_ids(true);
+
+            tracing_subscriber::registry()
+                .with(loki_layer)
+                .with(fmt_layer)
+                .init();
+
+            // Spawn background task to deliver logs.
+            tokio::spawn(task);
+        }
+    }
+
+    #[cfg(not(feature = "telemetry"))]
+    {
+        let fmt_layer = fmt::layer()
+            .with_file(true)
+            .with_line_number(true)
+            .with_thread_ids(true);
+
+        tracing_subscriber::registry().with(fmt_layer).init();
     }
 
     // Initialize databases.
@@ -94,13 +108,13 @@ async fn main() {
     .await
     {
         Ok(pool) => {
-            log::info!("Cassandra/ScyllaDB connection created successfully.");
+            info!("Cassandra/ScyllaDB connection created successfully.");
 
             Arc::new(db::scylla::Scylla { connection: pool })
         },
         Err(error) => {
             // A connection failure renders the entire API unstable and unusable.
-            log::error!(
+            error!(
                 "Cannot initialize Apache Cassandra or ScyllaDB connection: {}",
                 error
             );
@@ -113,7 +127,7 @@ async fn main() {
         config.database.memcached.pool_size,
     ) {
         Ok(pool) => {
-            log::info!("Memcached pool connection created successfully.");
+            info!("Memcached pool connection created successfully.");
 
             db::memcache::MemcachePool {
                 connection: Some(pool),
@@ -123,7 +137,7 @@ async fn main() {
             // In the event that establishing a connections pool encounters any difficulties, it will be duly logged.
             // Such a scenario might lead to suboptimal performance in specific requests.
             // It makes also impossible to create temporary code, for instance, for OAuth requests.
-            log::warn!(
+            warn!(
                 "Cannot initialize Memcached pool, this could result in poor performance: {}",
                 error
             );
@@ -138,7 +152,7 @@ async fn main() {
         config.database.rabbitmq.as_ref(),
     ) {
         (Some(_), Some(_)) => {
-            log::error!("You have declared Kafka and RabbitMQ. Only a broker message can be used. No broker messages will be started, and other services will receive no data.");
+            error!("You have declared Kafka and RabbitMQ. Only a broker message can be used. No broker messages will be started, and other services will receive no data.");
             Arc::new(db::broker::empty())
         },
         #[cfg(feature = "kafka")]
@@ -148,11 +162,11 @@ async fn main() {
                 kafka_conn.pool_size,
             ) {
                 Ok(broker) => {
-                    log::info!("Kafka pool connection created successfully.");
+                    info!("Kafka pool connection created successfully.");
                     Arc::new(broker)
                 },
                 Err(error) => {
-                    log::error!("Could not initialize Kafka pool: {}", error);
+                    error!("Could not initialize Kafka pool: {}", error);
                     Arc::new(db::broker::empty())
                 },
             }
@@ -164,22 +178,17 @@ async fn main() {
                 rabbit_conn.pool_size,
             ) {
                 Ok(broker) => {
-                    log::info!(
-                        "RabbitMQ pool connection created successfully."
-                    );
+                    info!("RabbitMQ pool connection created successfully.");
                     Arc::new(broker)
                 },
                 Err(error) => {
-                    log::error!(
-                        "Could not initialize RabbitMQ pool: {}",
-                        error
-                    );
+                    error!("Could not initialize RabbitMQ pool: {}", error);
                     Arc::new(db::broker::empty())
                 },
             }
         },
         _ => {
-            log::warn!(
+            warn!(
                 "No message broker set; other services will not be notified of user changes."
             );
             Arc::new(db::broker::empty())
@@ -188,9 +197,9 @@ async fn main() {
 
     // Create needed tables.
     if let Err(error) = helpers::queries::create_tables(&scylladb).await {
-        log::error!("Failed to create tables: {}", error);
+        error!("Failed to create tables: {}", error);
     } else {
-        log::trace!("Successfully created tables, if they didn't exist.");
+        trace!("Successfully created tables, if they didn't exist.");
     }
 
     // Init prepared queries.
