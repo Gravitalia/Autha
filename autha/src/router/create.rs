@@ -13,6 +13,7 @@ use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     sync::Arc,
 };
+use tracing::{error, warn};
 use warp::{reject::Rejection, reply::Reply};
 
 const MAX_USERNAME_LENGTH: u8 = 25;
@@ -106,7 +107,7 @@ pub async fn handle(
     // Check if user have already created account 5 minutes ago.
     let hashed_ip = sha256(ip.as_bytes());
     if hashed_ip.is_empty() {
-        log::warn!(
+        warn!(
             "The IP could not be hashed. This can result in the uncontrolled creation of accounts."
         );
     } else {
@@ -148,7 +149,7 @@ pub async fn handle(
                     }
                 },
                 Err(error) => {
-                    log::error!(
+                    error!(
                         "Cannot make Cloudflare Turnstile request: {}",
                         error
                     );
@@ -222,9 +223,7 @@ pub async fn handle(
                     .await
                     .map_err(|_| crate::router::Errors::Unspecified)?;
             } else {
-                log::error!(
-                    "Prepared queries do not appear to be initialized."
-                );
+                error!("Prepared queries do not appear to be initialized.");
                 return Err(crate::router::Errors::Unspecified.into());
             }
 
@@ -262,9 +261,7 @@ pub async fn handle(
                     .await
                     .map_err(|_| crate::router::Errors::Unspecified)?;
             } else {
-                log::error!(
-                    "Prepared queries do not appear to be initialized."
-                );
+                error!("Prepared queries do not appear to be initialized.");
                 return Err(crate::router::Errors::Unspecified.into());
             }
 
@@ -313,16 +310,16 @@ pub async fn handle(
             )
             .await
         {
-            log::error!("Cannot create user: {}", error);
+            error!("Cannot create user: {}", error);
         }
     } else {
-        log::error!("Prepared queries do not appear to be initialized.");
+        error!("Prepared queries do not appear to be initialized.");
     }
 
     let token = match token::create(&scylla, &body.vanity, ip).await {
         Ok(res) => res,
         Err(error) => {
-            log::error!("Cannot create user token: {}", error);
+            error!("Cannot create user token: {}", error);
             return Ok(super::err("Cannot create token"));
         },
     };
@@ -330,7 +327,7 @@ pub async fn handle(
     if let Err(error) =
         memcached.set(format!("account_create_{}", hashed_ip), 1)
     {
-        log::warn!("Cannot set global rate limiter when create. This could lead to massive spam! Error: {}", error);
+        warn!("Cannot set global rate limiter when create. This could lead to massive spam! Error: {}", error);
     }
 
     #[cfg(any(feature = "kafka", feature = "rabbitmq"))]

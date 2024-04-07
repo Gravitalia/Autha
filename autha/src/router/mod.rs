@@ -7,6 +7,7 @@ use crate::model::{error::Error, user::Token};
 use anyhow::{anyhow, Result};
 use db::{memcache::MemcachePool, scylla::Scylla};
 use std::{convert::Infallible, sync::Arc};
+use tracing::error;
 use warp::{
     http::StatusCode, reject::Reject, reply::Response, Filter, Rejection, Reply,
 };
@@ -70,7 +71,7 @@ pub async fn handle_rejection(
         code = StatusCode::METHOD_NOT_ALLOWED;
         message = "Content is too large.";
     } else {
-        log::error!("{:?}", err);
+        error!("{:?}", err);
 
         code = StatusCode::INTERNAL_SERVER_ERROR;
         message = INTERNAL_SERVER_ERROR;

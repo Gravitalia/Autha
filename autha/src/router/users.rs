@@ -13,6 +13,7 @@ use image_processor::{
     resizer::{resize, Encode, Encoder, Lossy},
 };
 use std::{convert::Infallible, sync::Arc};
+use tracing::{error, trace};
 use warp::{reply::Reply, Rejection};
 
 const IMAGE_WIDTH: u32 = 224;
@@ -77,7 +78,7 @@ pub async fn get(
                     data.vanity
                 },
                 Err(error) => {
-                    log::error!("Cannot retrive user token: {}", error);
+                    error!("Cannot retrive user token: {}", error);
                     return Ok(super::err(super::INVALID_TOKEN));
                 },
             };
@@ -151,7 +152,7 @@ pub async fn update(
     let vanity = match crate::helpers::token::get(&scylla, &token).await {
         Ok(vanity) => vanity,
         Err(error) => {
-            log::error!("Cannot retrive user token: {}", error);
+            error!("Cannot retrive user token: {}", error);
             return Ok(super::err(super::INVALID_TOKEN));
         },
     };
@@ -196,7 +197,7 @@ pub async fn update(
     let insert_salt_query = if let Some(query) = CREATE_SALT.get() {
         query.clone()
     } else {
-        log::error!("Prepared queries do not appear to be initialized.");
+        error!("Prepared queries do not appear to be initialized.");
         return Err(crate::router::Errors::Unspecified.into());
     };
 
@@ -444,7 +445,7 @@ pub async fn update(
         )
     ).await {
         Ok(_) => {
-            log::trace!("User {} modified his profile.", vanity);
+            trace!("User {} modified his profile.", vanity);
 
             #[cfg(any(feature = "kafka", feature = "rabbitmq"))]
             {

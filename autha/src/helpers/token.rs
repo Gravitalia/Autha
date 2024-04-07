@@ -7,6 +7,7 @@ use jsonwebtoken::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
+use tracing::error;
 
 const JWT_TIME: u64 = 3600; // 1 hour.
 const TOKEN_LENGTH: usize = 65;
@@ -69,7 +70,7 @@ pub async fn create(
             )
             .await?;
     } else {
-        log::error!("Prepared queries do not appear to be initialized.");
+        error!("Prepared queries do not appear to be initialized.");
     }
 
     Ok(id)

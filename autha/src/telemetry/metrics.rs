@@ -2,6 +2,7 @@ use prometheus::{
     Encoder, HistogramOpts, HistogramVec, IntCounter, IntCounterVec, Opts,
     Registry,
 };
+use tracing::error;
 
 lazy_static! {
     pub static ref REGISTRY: Registry = Registry::new();
@@ -43,12 +44,12 @@ pub async fn handler() -> Result<impl warp::Reply, warp::Rejection> {
 
     let mut buffer = Vec::new();
     if let Err(e) = encoder.encode(&REGISTRY.gather(), &mut buffer) {
-        log::error!("Could not encode custom metrics: {}", e);
+        error!("Could not encode custom metrics: {}", e);
     };
     let mut res = match String::from_utf8(buffer.clone()) {
         Ok(v) => v,
         Err(e) => {
-            log::error!("Custom metrics could not be from_utf8'd: {}", e);
+            error!("Custom metrics could not be from_utf8'd: {}", e);
             String::default()
         },
     };
@@ -56,12 +57,12 @@ pub async fn handler() -> Result<impl warp::Reply, warp::Rejection> {
 
     let mut buffer = Vec::new();
     if let Err(e) = encoder.encode(&prometheus::gather(), &mut buffer) {
-        log::error!("Could not encode prometheus metrics: {}", e);
+        error!("Could not encode prometheus metrics: {}", e);
     };
     let res_custom = match String::from_utf8(buffer.clone()) {
         Ok(v) => v,
         Err(e) => {
-            log::error!("Prometheus metrics could not be from_utf8'd: {}", e);
+            error!("Prometheus metrics could not be from_utf8'd: {}", e);
             String::default()
         },
     };
