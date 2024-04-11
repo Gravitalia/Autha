@@ -15,12 +15,3 @@ name = "rust"
 
   [analyzers.meta]
   msrv = "stable"
-
-[[analyzers]]
-name = "docker"
-
-  [analyzers.meta]
-  dockerfile_paths = ["Dockerfile"]
-
-[[transformers]]
-name = "prettier"
