@@ -1,4 +1,7 @@
 {
+  "gravitalia_account": "Compte Gravitalia",
+  "gravitalia_description": "Un compte, plusieurs services. Votre compte Gravitalia relie les services, sans qu'ils ne sachent tout de vous.",
+
   "page_not_found": "Page non trouvée",
   "something_went_wrong": "Quelque chose n'a pas bien fonctionné",
   "return_home": "Retour à l'accueil",
