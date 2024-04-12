@@ -15,20 +15,20 @@ export default defineNuxtConfig({
         { property: "og:site_name", content: "Gravitalia Account" },
         { property: "og:title", content: "Gravitalia Account" },
         { property: "og:image", content: "/favicon.webp" },
-        {
+        /*{
           name: "og:description",
           content:
             "One account, multiple services. Your Gravitalia Account links services, without them knowing everything about you.",
-        },
+        },*/
         { name: "theme-color", content: "#8b5cf6" },
         { name: "robots", content: "index, follow" },
         { name: "twitter:card", content: "summary" },
         { name: "twitter:site", content: "@gravitalianews" },
-        {
+        /*{
           name: "description",
           content:
             "One account, multiple services. Your Gravitalia Account links services, without them knowing everything about you.",
-        },
+        },*/
       ],
       script: [
         {
