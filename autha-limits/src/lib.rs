@@ -84,8 +84,8 @@ mod tests {
     use crate::RateLimiter;
     use std::{thread::sleep, time::Duration};
 
-    const IP: &'static str = "0.0.0.0";
-    const OTHER_IP: &'static str = "1.1.1.1";
+    const IP: &str = "0.0.0.0";
+    const OTHER_IP: &str = "1.1.1.1";
 
     #[test]
     fn test_duration() {
