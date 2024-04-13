@@ -51,18 +51,18 @@ resource "azurerm_container_group" "gravitalia" {
 
   container {
     name   = "autha"
-    image  = "ghcr.io/gravitalia/autha:3.0.0"
-    cpu    = 0.5
-    memory = 1
+    image  = var.image
+    cpu    = var.cpu_cores
+    memory = var.memory_in_gb
 
     ports {
-      port     = 80
+      port     = var.port
       protocol = "TCP"
     }
 
     volume {
       name                 = "config"
-      mount_path           = "/"
+      mount_path           = "/config/"
       read_only            = true
       share_name           = azurerm_storage_share.gravitalia.name
       storage_account_name = azurerm_storage_account.gravitalia.name
@@ -70,15 +70,16 @@ resource "azurerm_container_group" "gravitalia" {
     }
 
     environment_variables = {
-      MEMORY_COST = 8192
-      ROUND       = 1
-      HASH_LENGTH = 16
+      MEMORY_COST = var.argon2_memory_cost
+      ROUND       = var.argon2_round
+      HASH_LENGTH = var.argon2_hash_length
+      CONFIG_PATH = "./config/config.yaml"
     }
 
     secure_environment_variables = {
-      CHACHA20_KEY = "4D6A514749614D6C74595A50756956446E5673424142524C4F4451736C515233"
-      AES256_KEY   = "4D6a514749614D6c74595a50756956446e5673424142524c4f4451736c515233"
-      KEY          = "SECRET"
+      CHACHA20_KEY = var.chacha20_key
+      AES256_KEY   = var.aes_key
+      KEY          = var.argon2_key
     }
   }
 }
