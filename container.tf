@@ -31,7 +31,7 @@ resource "azurerm_storage_account" "gravitalia" {
 resource "azurerm_storage_share" "gravitalia" {
   name                 = "gravitalia-share"
   storage_account_name = azurerm_storage_account.gravitalia.name
-  quota                = 1
+  quota                = 30
 }
 
 resource "azurerm_storage_share_file" "gravitalia" {
@@ -48,6 +48,39 @@ resource "azurerm_container_group" "gravitalia" {
   ip_address_type     = "Public"
   dns_name_label      = "gravitalia"
   os_type             = "Linux"
+
+  container {
+    name   = "scylla"
+    image  = "scylladb/scylla:latest"
+    cpu    = 1
+    memory = 1
+
+    ports {
+      port     = 9042
+      protocol = "TCP"
+    }
+
+    volume {
+      name                 = "scylla"
+      mount_path           = "/scylla"
+      read_only            = false
+      share_name           = azurerm_storage_share.gravitalia.name
+      storage_account_name = azurerm_storage_account.gravitalia.name
+      storage_account_key  = azurerm_storage_account.gravitalia.primary_access_key
+    }
+  }
+
+  container {
+    name   = "memcached"
+    image  = "memcached:alpine"
+    cpu    = 1
+    memory = 1
+
+    ports {
+      port     = 11211
+      protocol = "TCP"
+    }
+  }
 
   container {
     name   = "autha"
