@@ -16,7 +16,7 @@ const FILE_NAME: &str = "config.yaml";
 pub fn read() -> Config {
     let config: Config = serde_yaml::from_reader(
         File::open(
-            std::env::var("CONFIG_PATH").unwrap_or(FILE_NAME.to_string()),
+            std::env::var("CONFIG_PATH").unwrap_or_else(|_| FILE_NAME.to_string()),
         )
         .expect("Failed to open config.yaml file"),
     )
