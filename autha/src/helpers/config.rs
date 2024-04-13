@@ -1,7 +1,6 @@
 use crate::model::config::Config;
 use std::fs::File;
 
-/// The name of the configuration file.
 const FILE_NAME: &str = "config.yaml";
 
 /// Reads the configuration file and returns the parsed configuration.
@@ -14,14 +13,14 @@ const FILE_NAME: &str = "config.yaml";
 ///
 /// This function may panic if the `config.yaml` file cannot be found or if its
 /// contents cannot be deserialized into a `Config` struct.
-///
-/// # Returns
-///
-/// The parsed `Config` struct representing the configuration from the file.
 pub fn read() -> Config {
-    let config: Config =
-        serde_yaml::from_reader(File::open(FILE_NAME).expect("Failed to open config.yaml file"))
-            .expect("Failed to deserialize config.yaml contents");
+    let config: Config = serde_yaml::from_reader(
+        File::open(
+            std::env::var("CONFIG_PATH").unwrap_or_else(|_| FILE_NAME.to_string()),
+        )
+        .expect("Failed to open config.yaml file"),
+    )
+    .expect("Failed to deserialize config.yaml contents");
 
     config
 }
