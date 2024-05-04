@@ -72,6 +72,23 @@ onMounted(() => {
   </div>
 
   <div v-if="isMenuOpened" absolute pt-12 ml-6 xl:pt-0 xl:ml-66>
+    <!--
+      <svg
+        class="absolute bottom-17"
+        width="22"
+        height="13"
+        viewBox="0 0 30 20"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <polygon
+          fill-white
+          stroke-zinc-300
+          dark:fill-dark
+          dark:stroke-dark
+          points="15, 0 30, 20 0, 20"
+        />
+      </svg>
+    -->
     <div
       w-46
       xl:w-64
@@ -90,26 +107,7 @@ onMounted(() => {
       role="menu"
       aria-orientation="horizontal"
     >
-      <!--
-            <svg
-            -rotate-90
-            absolute
-            bottom-4
-            width="22"
-            height="13"
-            viewBox="0 0 30 20"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <polygon
-              fill-white
-              stroke-zinc-300
-              dark:fill-dark
-              dark:stroke-dark
-              points="15, 0 30, 20 0, 20"
-            />
-          </svg>
-          -->
-      <div flex px-4 p-2 grid gap-10 xl:gap-6 grid-cols-2 xl:grid-cols-3>
+      <div flex px-5 p-2 grid gap-10 xl:gap-6 grid-cols-2 xl:grid-cols-3>
         <NuxtLink
           to="/"
           flex
