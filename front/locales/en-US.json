@@ -52,10 +52,23 @@
   "about": "About",
   "security": "Security",
   "data": "Data",
-  "oauth": "OAuth",
   "logout": "Logout",
   "account": "Account",
   "security_message": "Always check that you're on the right site before entering your details! For us it's always: gravitalia.com!",
+
+  "oauth": {
+    "title": "OAuth",
+    "description": "Information you provide to third parties through Gravitalia.",
+    "applications": {
+      "title": "Authorized applications",
+      "empty": "Very clean! No authorized apps."
+    },
+    "linked": {
+      "title": "Linked services"
+    }
+  },
+  "linked": "Linked",
+  "uncoupled": "Uncoupled",
 
   "p_policy": "Privacy policy",
   "terms_of_use": "Terms of Use",

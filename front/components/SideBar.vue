@@ -73,11 +73,11 @@ async function logout() {
           <NuxtImg
             alt="Gravitalia"
             src="/favicon.webp"
-            width="40"
+            width="35"
             draggable="false"
           />
 
-          <h3 ml-12 mt-0.5rem absolute>Gravitalia</h3>
+          <h3 ml-12 mt-1.5 absolute>Gravitalia</h3>
 
           <!-- Close sidebar button. -->
           <button
@@ -271,7 +271,7 @@ async function logout() {
             ></path>
           </svg>
 
-          <span ml-3>{{ $t("oauth") }}</span>
+          <span ml-3>{{ $t("oauth.title") }}</span>
         </NuxtLink>
 
         <button

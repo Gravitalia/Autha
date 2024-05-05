@@ -52,14 +52,27 @@
   "about": "À propos",
   "security": "Sécurité",
   "data": "Données",
-  "oauth": "OAuth",
   "logout": "Se déconnecter",
   "account": "Compte",
   "security_message": "Vérifiez toujours que vous vous trouvez sur le bon site avant d'entrer vos données ! Nous, c'est toujours : gravitalia.com !",
 
+  "oauth": {
+    "title": "OAuth",
+    "description": "Informations que vous fournissez à des tiers par l'intermédiaire de Gravitalia.",
+    "applications": {
+      "title": "Applications autorisées",
+      "empty": "Très propre ! Pas d'applications autorisées."
+    },
+    "linked": {
+      "title": "Services liés"
+    }
+  },
+  "linked": "Lié",
+  "uncoupled": "Dissocié",
+
   "p_policy": "Confidentialité",
   "terms_of_use": "Conditions Générales d'Utilisation",
-  "terms_of_service": "Conditions",
+  "terms_of_service": "Conditions d'usage",
   "date": "Date d’effet :",
 
   "wants_access_account": "veut accéder à votre compte",
