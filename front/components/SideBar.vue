@@ -271,7 +271,7 @@ async function logout() {
             ></path>
           </svg>
 
-          <span ml-3>{{ $t("oauth") }}</span>
+          <span ml-3>{{ $t("oauth.title") }}</span>
         </NuxtLink>
 
         <button
