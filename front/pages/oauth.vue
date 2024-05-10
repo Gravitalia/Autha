@@ -5,8 +5,8 @@ const user = useUser();
 user.fetchUser();
 
 // Redirect if user is not connected to the login page.
-if (useCookie("session").value === "" || user.vanity === "")
-  await navigateTo("/signin");
+/*if (useCookie("session").value === "" || user.vanity === "")
+  await navigateTo("/signin");*/
 </script>
 
 <template>
@@ -31,7 +31,14 @@ if (useCookie("session").value === "" || user.vanity === "")
 
       <div w-full flex flex-col xl:flex-row justify-between>
         <div
-          class="w-full xl:w-2xl mt-8 bg-zinc-50 dark:bg-dark border border-gray-900 rounded-lg"
+          w-full
+          xl:w-2xl
+          mt-8
+          bg-zinc-50
+          dark:bg-dark
+          border
+          border-gray-900
+          rounded-lg
         >
           <p pl-6 font-semibold text-lg>{{ $t("oauth.applications.title") }}</p>
           <div p-2 flex flex-col items-center>
@@ -64,7 +71,7 @@ if (useCookie("session").value === "" || user.vanity === "")
                 >{{ $t("linked") }}</span
               >
             </div>
-            <hr class="h-px my-8 bg-gray-600 border-0 dark:bg-gray-700" />
+            <hr h-px my-8 bg-gray-600 border-0 dark:bg-gray-700 />
           </div>
         </div>
       </div>
