@@ -37,7 +37,7 @@
     "@nuxt/image": "^1.7.0",
     "@nuxtjs/color-mode": "^3.4.1",
     "@pinia/nuxt": "^0.5.1",
-    "@unocss/nuxt": "^0.59.3",
+    "@unocss/nuxt": "^0.60.4",
     "pinia": "^2.1.7",
     "sharp": "^0.33.3"
   }
