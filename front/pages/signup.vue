@@ -58,12 +58,12 @@ async function signup() {
     return;
   } else if (vanity.value === "") {
     isError.invalidVanity.value = true;
-    step.value = 2;
+    step.value = 1; // 2
     isButtonDisable.value = false;
     return;
   } else if (password.value === "") {
     isError.missingPassword.value = true;
-    step.value = 2;
+    step.value = 1; // 2
     isButtonDisable.value = false;
     return;
   }
@@ -113,12 +113,12 @@ async function signup() {
         break;
       case "Invalid password":
         isError.invalidPassword.value = true;
-        step.value = 2;
+        step.value = 1; // 2
         break;
       case "Invalid vanity":
       case "Vanity already used":
         isError.invalidVanity.value = true;
-        step.value = 2;
+        step.value = 1; // 2
         break;
       case "Invalid username":
         isError.missingFirstname.value = true;
@@ -181,10 +181,10 @@ async function signup() {
         <div class="h-1.5rem bg-zinc-400 w-0.1rem"></div>
 
         <h3 v-if="step === 0" font-semibold>{{ $t("create_account") }}</h3>
-        <h3 v-else-if="step === 1" font-semibold>
+        <h3 v-else-if="step === -1" font-semibold>
           {{ $t("optional_information") }}
         </h3>
-        <h3 v-else-if="step === 2" font-semibold>
+        <h3 v-else-if="step === 1" font-semibold>
           {{ $t("required_information") }}
         </h3>
       </div>
@@ -192,28 +192,28 @@ async function signup() {
       <div flex-col container>
         <!-- Generic errors. -->
         <LabelError
+          v-if="isError.invalidToken.value"
           mb-42
           text="error.security_token"
-          :cond="isError.invalidToken.value"
         />
         <LabelError
+          v-if="isError.rateLimited.value"
           mb-42
           text="error.rate_limit"
-          :cond="isError.rateLimited.value"
         />
         <LabelError
+          v-if="isError.internalServerError.value"
           mb-42
           text="something_went_wrong"
-          :cond="isError.internalServerError.value"
         />
 
         <!-- 1-step account creation. -->
         <div v-if="step === 0" flex-col container>
           <!-- Firstname error. -->
           <LabelError
+            v-if="isError.missingFirstname.value"
             mb-36
             text="error.missing_firstname"
-            :cond="isError.missingFirstname.value"
           />
 
           <!-- Firstname and name inputs. -->
@@ -246,14 +246,14 @@ async function signup() {
 
           <!-- Email errors. -->
           <LabelError
+            v-if="isError.missingEmail.value"
             mt-6
             text="error.missing_email"
-            :cond="isError.missingEmail.value"
           />
           <LabelError
+            v-if="isError.alreadyUsedEmail.value"
             mt-6
             text="error.email_used"
-            :cond="isError.alreadyUsedEmail.value"
           />
 
           <!-- Email input. -->
@@ -275,7 +275,8 @@ async function signup() {
         </div>
 
         <!-- 2nd step account creation. -->
-        <div v-else-if="step === 1" flex-col container>
+        <!-- Disabled for now. -->
+        <div v-else-if="step === -1" flex-col container>
           <!-- Phone number input. -->
           <input
             v-model="phone"
@@ -288,9 +289,9 @@ async function signup() {
 
           <!-- Birthdate error. -->
           <LabelError
+            v-if="isError.tooYoung.value"
             mt-6
             text="error.too_young"
-            :cond="isError.tooYoung.value"
           />
 
           <!-- Birthdate input. -->
@@ -305,12 +306,12 @@ async function signup() {
         </div>
 
         <!-- 3rd step account creation. -->
-        <div v-else-if="step === 2" flex-col container>
+        <div v-else-if="step === 1" flex-col container>
           <!-- Vanity errors. -->
           <LabelError
+            v-if="isError.invalidVanity.value"
             mb-36
             text="error.vanity_used"
-            :cond="isError.invalidVanity.value"
           />
 
           <!-- Vanity input. -->
@@ -337,14 +338,14 @@ async function signup() {
 
           <!-- Password errors. -->
           <LabelError
+            v-if="isError.missingPassword.value"
             mt-6
             text="error.missing_password_sign_up"
-            :cond="isError.missingPassword.value"
           />
           <LabelError
+            v-if="isError.invalidPassword.value"
             mt-6
             text="error.password_advices"
-            :cond="isError.invalidPassword.value"
           />
 
           <!-- Password input. -->
@@ -383,7 +384,7 @@ async function signup() {
 
           <!-- Buttons on the right. -->
           <button
-            v-if="step < 2"
+            v-if="step < 1"
             font-sans
             font-medium
             btn-base
@@ -408,7 +409,7 @@ async function signup() {
     </div>
 
     <!-- Terms of Service and Privacy Policy acceptance. -->
-    <p v-if="step === 2" mt-96 lg:mt-28rem absolute text-xs>
+    <p v-if="step === 1" mt-96 lg:mt-28rem absolute text-xs>
       {{ $t("accept_our") }}
       <NuxtLink to="/terms" target="_blank" text-blue-500 hover:text-blue-700>{{
         $t("tos")
