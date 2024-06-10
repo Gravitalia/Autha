@@ -49,7 +49,6 @@
   "optional_information": "Informations facultatives",
   "required_information": "Informations requises",
 
-  "about": "À propos",
   "security": "Sécurité",
   "data": "Données",
   "logout": "Se déconnecter",
@@ -69,6 +68,25 @@
   },
   "linked": "Lié",
   "uncoupled": "Dissocié",
+
+  "profile_picture": "Photo de profil",
+  "about": {
+    "title": "À propos",
+    "description": "Des informations sur vous, vos préférences et votre identité numérique.",
+    "public_profile": "Votre profil public",
+    "personal_information": "Informations personnelles"
+  },
+  "update": {
+    "username": {
+      "title": "Modifier le nom",
+      "description": "Votre nom sera modifié sur toutes les plateformes."
+    },
+    "profile_picture": {
+      "title": "Modifier la photo de profil",
+      "import": "Importer une nouvelle photo"
+    }
+  },
+  "save": "Sauvegarder",
 
   "p_policy": "Confidentialité",
   "terms_of_use": "Conditions Générales d'Utilisation",

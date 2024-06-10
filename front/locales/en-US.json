@@ -49,7 +49,6 @@
   "optional_information": "Optional information",
   "required_information": "Required information",
 
-  "about": "About",
   "security": "Security",
   "data": "Data",
   "logout": "Logout",
@@ -69,6 +68,25 @@
   },
   "linked": "Linked",
   "uncoupled": "Uncoupled",
+
+  "profile_picture": "Profile picture",
+  "about": {
+    "title": "About",
+    "description": "Information about you, your preferences and your digital identity.",
+    "public_profile": "Your public profile",
+    "personal_information": "Personal information"
+  },
+  "update": {
+    "username": {
+      "title": "Update username",
+      "description": "Your username will be changed on all platforms."
+    },
+    "profile_picture": {
+      "title": "Update profile picture",
+      "import": "Import a new photo"
+    }
+  },
+  "save": "Save",
 
   "p_policy": "Privacy policy",
   "terms_of_use": "Terms of Use",
