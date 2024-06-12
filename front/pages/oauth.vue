@@ -5,20 +5,19 @@ const user = useUser();
 user.fetchUser();
 
 // Redirect if user is not connected to the login page.
-/*if (useCookie("session").value === "" || user.vanity === "")
-  await navigateTo("/signin");*/
+if (useCookie("session").value === "" || user.vanity === "")
+  await navigateTo("/signin");
 </script>
 
 <template>
   <SideBar />
 
-  <div sm:p-6 sm:ml-64>
+  <div p-6 sm:ml-64>
     <div
       p-3
       xl:px-16
       border-2
-      xl:h-85vh
-      xl:h-90vh
+      lg:h-90vh
       border-gray-200
       border-dashed
       rounded-lg
@@ -30,28 +29,14 @@ user.fetchUser();
       </p>
 
       <div w-full flex flex-col xl:flex-row justify-between>
-        <div
-          w-full
-          xl:w-2xl
-          mt-8
-          bg-zinc-50
-          dark:bg-dark
-          border
-          border-gray-900
-          rounded-lg
-        >
-          <p pl-6 font-semibold text-lg>{{ $t("oauth.applications.title") }}</p>
+        <Card :title="$t('oauth.applications.title')">
           <div p-2 flex flex-col items-center>
-            <!-- We should add a broom later. -->
             <NuxtImg w-56 xl:w-72 src="/cluster.svg" draggable="false" />
             <p pt-1 font-semibold>{{ $t("oauth.applications.empty") }}</p>
           </div>
-        </div>
+        </Card>
 
-        <div
-          class="w-full max-w-xl 2xl:max-w-2xl mt-8 bg-zinc-50 dark:bg-dark border border-gray-900 rounded-lg"
-        >
-          <p pl-6 font-semibold text-lg>{{ $t("oauth.linked.title") }}</p>
+        <Card :title="$t('oauth.linked.title')">
           <div p-2 px-12 flex flex-col items-center>
             <!-- Gravitalia. -->
             <div w-full px-4 py-3 flex items-center justify-between>
@@ -73,7 +58,7 @@ user.fetchUser();
             </div>
             <hr h-px my-8 bg-gray-600 border-0 dark:bg-gray-700 />
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   </div>

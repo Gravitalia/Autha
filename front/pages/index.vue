@@ -105,8 +105,7 @@ async function update() {
       p-3
       xl:px-16
       border-2
-      h-85vh
-      xl:h-90vh
+      lg:h-90vh
       border-gray-200
       border-dashed
       rounded-lg
@@ -117,10 +116,8 @@ async function update() {
         {{ $t("about.description") }}
       </p>
 
-      <!-- bg-gradient-to-r  from-violet-400/20 via-amber-50/20 to-zinc-50 backdrop-blur-3xl -->
       <div w-full flex justify-between grid grid-cols-1 xl:grid-cols-2>
-        <div w-2xl mt-8 bg-zinc-50 border border-gray-900 rounded-lg>
-          <p pl-6 font-semibold text-lg>{{ $t("about.public_profile") }}</p>
+        <Card :title="$t('about.public_profile')">
           <div flex flex-col space-y-3 justify-center items-center>
             <NuxtImg
               v-if="user.avatar && user.avatar.length !== 0"
@@ -209,16 +206,10 @@ async function update() {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
         <!--
-          <div
-            class="w-full max-w-xl 2xl:max-w-2xl mt-8 bg-zinc-50 dark:bg-dark border border-gray-900 rounded-lg"
-          >
-            <p pl-6 font-semibold text-lg>
-              {{ $t("about.personal_information") }}
-            </p>
-          </div>
+          <Card :title="$t('about.personal_information')"></Card>
         -->
       </div>
     </div>
