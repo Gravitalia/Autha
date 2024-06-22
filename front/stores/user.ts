@@ -6,6 +6,7 @@ const EMPTY_USER: User = {
   avatar: null,
   bio: null,
   email: "",
+  password: null,
   verified: false,
   deleted: false,
   flags: 0,
@@ -20,7 +21,7 @@ export const useUser = defineStore("user", {
      * @param forceFetching fetch for user even if cached.
      * @returns {Promise<void>}
      */
-    async fetchUser(forceFetching = false) {
+    async fetchUser(forceFetching: boolean = false) {
       // Get session cookie.
       const session: string = useCookie("session").value ?? "";
       if (!forceFetching && (session === "" || this.vanity !== "")) return;
