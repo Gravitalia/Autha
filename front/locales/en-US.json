@@ -88,6 +88,13 @@
   },
   "save": "Save",
 
+  "logged_as": "Logged in as {'@'}{vanity}",
+  "access": {
+    "title": "Confirm access",
+    "warn": "You'll be able to change the most crucial information in your account!"
+  },
+  "confirm": "Confirm",
+
   "p_policy": "Privacy policy",
   "terms_of_use": "Terms of Use",
   "terms_of_service": "Terms of Service",

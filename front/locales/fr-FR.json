@@ -88,6 +88,13 @@
   },
   "save": "Sauvegarder",
 
+  "logged_as": "Connecté en tant que {'@'}{vanity}",
+  "access": {
+    "title": "Confirmer l'accès",
+    "warn": "Vous allez pouvoir modifier les informations les plus cruciales de votre compte !"
+  },
+  "confirm": "Confirmer",
+
   "p_policy": "Confidentialité",
   "terms_of_use": "Conditions Générales d'Utilisation",
   "terms_of_service": "Conditions d'usage",
