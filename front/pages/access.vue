@@ -18,7 +18,7 @@ const isButtonDisable = ref(false);
 const user = useUser();
 user.fetchUser();
 
-// Redirect if user is not connected to the login page.
+// Redirect to the login page if user is not connected.
 if (useCookie("session").value === "" || user.vanity === "")
   await navigateTo("/signin");
 
