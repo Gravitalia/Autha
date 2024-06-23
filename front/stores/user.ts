@@ -6,6 +6,7 @@ const EMPTY_USER: User = {
   avatar: null,
   bio: null,
   email: "",
+  password: null,
   verified: false,
   deleted: false,
   flags: 0,

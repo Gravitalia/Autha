@@ -12,6 +12,8 @@ export interface User {
   bio: string | null;
   /** @default null */
   email: string | null;
+  /** @default null */
+  password: string | null;
   /** @default false */
   verified: boolean;
   /** @default false */
