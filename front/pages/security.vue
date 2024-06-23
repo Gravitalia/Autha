@@ -52,7 +52,7 @@ async function update() {
     .then((response) => response.json())
     .then((json: Error) => {
       if (!json.error) {
-        for (const key in modals) {
+        for (const key of Object.keys(modals)) {
           modals[key].value = false;
         }
       }
