@@ -49,7 +49,6 @@
   "optional_information": "Optional information",
   "required_information": "Required information",
 
-  "security": "Security",
   "data": "Data",
   "logout": "Logout",
   "account": "Account",
@@ -84,6 +83,12 @@
     "profile_picture": {
       "title": "Update profile picture",
       "import": "Import a new photo"
+    },
+    "email": {
+      "title": "Update e-mail"
+    },
+    "password": {
+      "title": "Update password"
     }
   },
   "save": "Save",
@@ -94,6 +99,14 @@
     "warn": "You'll be able to change the most crucial information in your account!"
   },
   "confirm": "Confirm",
+
+  "connection": "Connection and recovery",
+  "mfa": "Multi-factor authentication",
+  "mfa_soon": "This section will be available soon! It will allow you to add an extra security step during the connection.",
+  "security": {
+    "title": "Security",
+    "description": "Change your account security details."
+  },
 
   "p_policy": "Privacy policy",
   "terms_of_use": "Terms of Use",

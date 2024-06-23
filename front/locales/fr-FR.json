@@ -49,7 +49,6 @@
   "optional_information": "Informations facultatives",
   "required_information": "Informations requises",
 
-  "security": "Sécurité",
   "data": "Données",
   "logout": "Se déconnecter",
   "account": "Compte",
@@ -84,6 +83,12 @@
     "profile_picture": {
       "title": "Modifier la photo de profil",
       "import": "Importer une nouvelle photo"
+    },
+    "email": {
+      "title": "Modifier l'adresse e-mail"
+    },
+    "password": {
+      "title": "Modifier le mot de passe"
     }
   },
   "save": "Sauvegarder",
@@ -94,6 +99,14 @@
     "warn": "Vous allez pouvoir modifier les informations les plus cruciales de votre compte !"
   },
   "confirm": "Confirmer",
+
+  "connection": "Connexion et récupération",
+  "mfa": "Authentification à plusieurs étapes",
+  "mfa_soon": "Cette section sera bientôt disponible ! Elle vous permettra d'ajouter une étape de sécurité supplémentaire lors de la connexion.",
+  "security": {
+    "title": "Sécurité",
+    "description": "Modifiez les données relatives à la sécurité de votre compte."
+  },
 
   "p_policy": "Confidentialité",
   "terms_of_use": "Conditions Générales d'Utilisation",
