@@ -38,6 +38,8 @@ async function update() {
   // Create body.
   const body: { [id: string]: string | number[] } = {};
   body.password = user.password as string;
+  if (email.value !== user.email) body.email = email.value;
+  if (password.value.length !== 0) body.new_password = password.value;
 
   await fetch(
     `${
