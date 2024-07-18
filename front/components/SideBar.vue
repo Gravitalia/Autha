@@ -150,7 +150,7 @@ async function logout() {
             ></path>
           </svg>
 
-          <span ml-3>{{ $t("about") }}</span>
+          <span ml-3>{{ $t("about.title") }}</span>
         </NuxtLink>
 
         <NuxtLink
@@ -189,7 +189,7 @@ async function logout() {
             ></path>
           </svg>
 
-          <span ml-3>{{ $t("security") }}</span>
+          <span ml-3>{{ $t("security.title") }}</span>
         </NuxtLink>
 
         <NuxtLink
@@ -334,7 +334,7 @@ async function logout() {
             dark:bg-violet-300
             dark:text-violet-900
           >
-            {{ $t("security") }}
+            {{ $t("security.title") }}
           </span>
         </div>
 

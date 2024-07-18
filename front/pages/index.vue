@@ -5,7 +5,7 @@ import type { Error } from "../types/index";
 const user = useUser();
 user.fetchUser();
 
-// Redirect if user is not connected to the login page.
+// Redirect to the login page if user is not connected.
 if (useCookie("session").value === "" || user.vanity === "")
   await navigateTo("/signin");
 
@@ -148,7 +148,7 @@ async function update() {
             <span v-else font-semibold>{{ user.username }}</span>
           </div>
 
-          <div py-8 px-32>
+          <div py-8 px-6 xl:px-32>
             <div bg-white rounded>
               <!-- Update username. -->
               <div
@@ -229,7 +229,7 @@ async function update() {
       v-model="name"
       input
       w-full
-      :placeholder="$t('username.title')"
+      :placeholder="$t('username')"
       minlength="1"
       maxlength="25"
     />
