@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-lapin = { version = "2.3", optional = true }
+lapin = { version = "2.4", optional = true }
 log = { version = "0.4", optional = true }
 r2d2 = "0.8"
 memcache = { version = "0.17", optional = true }
