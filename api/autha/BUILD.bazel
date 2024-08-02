@@ -14,10 +14,10 @@ proto_library(
 )
 
 CUSTOM_CRATES = [
-    "//autha-limits",
-    "//crypto",
-    "//db",
-    "//image_processor",
+    "//api/autha-limits",
+    "//api/crypto",
+    "//api/db",
+    "//api/image_processor",
     ":proto_build_script",
 ]
 
