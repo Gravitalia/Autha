@@ -14,10 +14,10 @@ proto_library(
 )
 
 CUSTOM_CRATES = [
-    "//autha-limits",
-    "//crypto",
-    "//db",
-    "//image_processor",
+    "//api/autha-limits",
+    "//api/crypto",
+    "//api/db",
+    "//api/image_processor",
     ":proto_build_script",
 ]
 
@@ -106,6 +106,6 @@ oci_push(
     repository = "ghcr.io/gravitalia/autha",
     remote_tags = [
         "latest",
-        "3.0.0",
+        "3.1.0",
     ]
 )

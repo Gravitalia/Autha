@@ -2,7 +2,7 @@
 
 module(
     name = "autha",
-    version = "3.0",
+    version = "3.1",
 )
 
 bazel_dep(name = "platforms", version = "0.0.8")
@@ -38,14 +38,14 @@ crate = use_extension(
 )
 crate.from_cargo(
     name = "crate_index",
-    cargo_lockfile = "//:Cargo.lock",
+    cargo_lockfile = "//api:Cargo.lock",
     manifests = [
-        "//:Cargo.toml",
-        "//autha-limits:Cargo.toml",
-        "//autha:Cargo.toml",
-        "//crypto:Cargo.toml",
-        "//db:Cargo.toml",
-        "//image_processor:Cargo.toml",
+        "//api:Cargo.toml",
+        "//api/autha-limits:Cargo.toml",
+        "//api/autha:Cargo.toml",
+        "//api/crypto:Cargo.toml",
+        "//api/db:Cargo.toml",
+        "//api/image_processor:Cargo.toml",
     ],
 )
 use_repo(crate, "crate_index")

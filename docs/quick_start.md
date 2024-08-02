@@ -34,7 +34,7 @@ database:
     pool_size: 3
 ```
 
-You can see more paramters on [/config.yaml](https://github.com/Gravitalia/Autha/blob/master/config.yaml).
+You can see more paramters on [/config.yaml](https://github.com/Gravitalia/Autha/blob/master/docker/config.yaml).
 
 2. Create a `docker-compose.yaml` file.
    Write
