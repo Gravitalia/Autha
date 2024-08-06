@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 tonic = { version = "0.11", features = ["default"] }
-tokio = { version = "1.37", features = ["rt-multi-thread"] }
+tokio = { version = "1.39", features = ["rt-multi-thread"] }
 warp = { workspace = true }
 
 crypto = { path = "../crypto", features = ["argon2", "format_preserving"] }
@@ -25,7 +25,7 @@ reqwest = { version = "0.12", features = ["json"] }
 serde_json = "1"
 serde_yaml = "0.9"
 totp-lite = "2"
-uuid = { version = "1.8", features = ["v4"] }
+uuid = { version = "1.10", features = ["v4"] }
 isolang = { version = "2.4", features = ["list_languages"] }
 chrono = "0.4"
 url = "2.5"
