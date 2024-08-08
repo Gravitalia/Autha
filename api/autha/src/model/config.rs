@@ -47,6 +47,7 @@ pub struct Image {
 
 /// Telemetry tool settings (metrics, tracing, logging).
 #[derive(Deserialize, Default, Debug, Clone)]
+#[allow(dead_code)]
 pub struct Telemetry {
     /// Wether to start `/metric` endpoint.
     pub prometheus: Option<bool>,
@@ -58,6 +59,7 @@ pub struct Telemetry {
 
 /// Represents the configuration structure expected from the 'config.yaml' file.
 #[derive(Deserialize, Debug, Clone)]
+#[allow(dead_code)]
 pub struct Config {
     /// The port number for the server.
     pub port: u16,
