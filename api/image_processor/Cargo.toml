@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
-tempfile = "3.10.0"
+tempfile = "3.11"
 
-cloudinary = "0.4.0"
+cloudinary = "0.5"
 
 crypto = { path = "../crypto" }
 

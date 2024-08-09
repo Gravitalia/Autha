@@ -29,6 +29,7 @@ pub struct User {
 
 /// Represents the data contained in a token.
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct Token {
     /// User or bot token.
     pub token: String,

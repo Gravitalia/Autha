@@ -5,11 +5,11 @@ module(
     version = "3.1",
 )
 
-bazel_dep(name = "platforms", version = "0.0.8")
-bazel_dep(name = "bazel_skylib", version = "1.5.0")
+bazel_dep(name = "platforms", version = "0.0.10")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
 
 # Protobuf support.
-bazel_dep(name = "rules_proto", version = "6.0.0-rc2")
+bazel_dep(name = "rules_proto", version = "6.0.2")
 bazel_dep(
     name = "protobuf",
     version = "23.1",
@@ -21,7 +21,7 @@ proto.dependencies()
 proto.toolchain()
 
 # Rust support.
-bazel_dep(name = "rules_rust", version = "0.40.0")
+bazel_dep(name = "rules_rust", version = "0.49.1")
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(edition = "2021")
@@ -51,9 +51,9 @@ crate.from_cargo(
 use_repo(crate, "crate_index")
 
 # Node support.
-bazel_dep(name = "aspect_rules_js", version = "1.38.0")
-bazel_dep(name = "rules_nodejs", version = "6.0.5")
-bazel_dep(name = "aspect_rules_ts", version = "2.2.0")
+bazel_dep(name = "aspect_rules_js", version = "1.41.2")
+bazel_dep(name = "rules_nodejs", version = "6.2.0")
+bazel_dep(name = "aspect_rules_ts", version = "2.4.2")
 
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
 node.toolchain(node_version = "18.8.0")
@@ -76,9 +76,9 @@ rules_ts_ext.deps()
 use_repo(rules_ts_ext, "npm_typescript")
 
 # OCI support.
-bazel_dep(name = "rules_pkg", version = "0.10.1")
-bazel_dep(name = "rules_oci", version = "1.7.4")
-bazel_dep(name = "aspect_bazel_lib", version = "1.36.0")
+bazel_dep(name = "rules_pkg", version = "1.0.1")
+bazel_dep(name = "rules_oci", version = "1.8.0")
+bazel_dep(name = "aspect_bazel_lib", version = "2.7.9")
 
 git_override(
     module_name = "rules_oci",
