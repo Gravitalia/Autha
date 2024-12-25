@@ -1,0 +1,6 @@
+Autha
+-----
+
+Autha is an account manager made for Gravitalia. It comes with features:
+  * Delegation via OAuth2 (RFC 6749);
+  * Support multi-factor authentication via TOTP (RFC 6238).
