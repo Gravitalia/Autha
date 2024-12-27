@@ -29,6 +29,8 @@ tower-http = {version = "0.6.2", features = [
 "cors", "trace", "tracing", "request-id", "sensitive-headers", "tokio",
 ] }
 url = "2.5.4"
+# Error
+thiserror = "2.0"
 # Telemetry
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
