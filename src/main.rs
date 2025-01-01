@@ -14,6 +14,7 @@ use axum::{
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+use std::env;
 use std::future::ready;
 use std::process;
 
@@ -44,7 +45,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // init all telemetry logic.
     let recorder_handle = metrics::setup_metrics_recorder()?;
 
+    // load configuration and let it on memory.
     let status = status::Configuration::read(None)?;
+
+    // init databases connection.
+    let _db = database::Database::new(
+        &env::var("PG_DB").unwrap_or_else(|_| database::DEFAULT_PG_URL.into()),
+    )
+    .await?;
 
     // build our application with a route.
     let app = Router::new()
@@ -63,7 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let listener = tokio::net::TcpListener::bind(format!(
         "0.0.0.0:{}",
-        std::env::var("PORT").unwrap_or(8080.to_string())
+        env::var("PORT").unwrap_or(8080.to_string())
     ))
     .await?;
     tracing::info!("listening on {}", listener.local_addr()?);
