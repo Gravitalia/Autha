@@ -2,3 +2,4 @@
 //! Has all HTTP routes.
 
 pub mod status;
+pub mod create;
