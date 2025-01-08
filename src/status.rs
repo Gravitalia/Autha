@@ -1,6 +1,7 @@
 //! Configuration reader.
 
-use serde::Deserialize;
+use axum::extract::FromRef;
+use serde::{Deserialize, Serialize};
 use tracing::error;
 use url::Url;
 
@@ -8,41 +9,52 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 
 const DEFAULT_STATUS_PATH: &str = "status.json";
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Errors that may occur during the configuration loading process.
 #[derive(thiserror::Error, Debug)]
-pub enum ConfigurationError {
+pub enum Error {
     #[error("URL is invalid: {0}")]
-    UrlError(#[from] url::ParseError),
+    Url(#[from] url::ParseError),
     #[error("Failed to deserialize `status.json`: {0}")]
-    DeserializeError(#[from] serde_json::Error),
+    Deserialize(#[from] serde_json::Error),
     #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
+    Io(#[from] std::io::Error),
 }
 
 /// Structure of the `status.json` file.
-#[derive(Deserialize, Default, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Configuration {
     name: String,
     url: String,
     favicon: Option<String>,
     terms_of_service: String,
     privacy_policy: String,
+    #[serde(skip_deserializing)]
     version: String,
     invite_only: bool,
     background: Option<String>,
 }
 
+impl FromRef<crate::AppState> for Configuration {
+    fn from_ref(app_state: &crate::AppState) -> Configuration {
+        app_state.config.clone()
+    }
+}
+
 impl Configuration {
     /// Reads the `status.json` file from the specified path or the default location.
-    pub fn read(path: Option<PathBuf>) -> Result<Self, ConfigurationError> {
+    pub fn read(path: Option<PathBuf>) -> Result<Self, Error> {
         let file_path = path.unwrap_or_else(|| Path::new(DEFAULT_STATUS_PATH).to_path_buf());
 
         match File::open(&file_path) {
             Ok(file) => {
                 let mut config: Configuration = serde_json::from_reader(file)?;
 
-                // Normalize URLs
+                // set app version.
+                config.version = VERSION.to_owned();
+
+                // normalize URLs.
                 config.url = normalize_url(&config.url)?;
                 config.favicon = config.favicon.map(|f| normalize_url(&f)).transpose()?;
                 config.terms_of_service = normalize_url(&config.terms_of_service)?;
@@ -54,9 +66,9 @@ impl Configuration {
             Err(err) => {
                 error!(error = %err, "`status.json` file cannot be found");
 
-                // Return a default configuration as fallback
+                // return a default configuration as fallback.
                 Ok(Self {
-                    version: env!("CARGO_PKG_VERSION").to_string(),
+                    version: VERSION.to_owned(),
                     ..Default::default()
                 })
             }
@@ -65,7 +77,7 @@ impl Configuration {
 }
 
 /// Normalizes a URL string by ensuring it starts with a valid scheme (`http` or `https`).
-fn normalize_url(url: &str) -> Result<String, ConfigurationError> {
+fn normalize_url(url: &str) -> Result<String, Error> {
     let url_with_scheme = if url.starts_with("http://") || url.starts_with("https://") {
         url.to_string()
     } else {
@@ -75,4 +87,3 @@ fn normalize_url(url: &str) -> Result<String, ConfigurationError> {
     let parsed_url = Url::parse(&url_with_scheme)?;
     Ok(parsed_url.to_string())
 }
-
