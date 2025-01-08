@@ -1,7 +1,7 @@
 [package]
 name = "autha"
 version = "0.1.0"
-description = ""
+description = "fast and safe authorization delegation and account management API"
 homepage = "https://account.gravitalia.com"
 readme = "README.md"
 edition = "2021"
@@ -39,3 +39,10 @@ metrics = "0.24"
 metrics-exporter-prometheus = { version = "0.16", default-features = false, features = ["tracing"] }
 sysinfo = { version = "0.32", default-features = false, features = ["system"] }
 tracing-loki = "0.2"
+# Cryptography
+argon2 = "0.5.3"
+rsa = "0.9.7"
+aes = "0.8.4"
+fpe = "0.6.1"
+# Token
+jsonwebtoken = "9.3.0"
