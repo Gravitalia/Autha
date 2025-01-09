@@ -77,18 +77,14 @@ impl ResponseError {
     }
 
     pub fn into_response(self) -> Result<Response, axum::http::Error> {
-        let body = serde_json::to_string(&self).unwrap_or_else(|_| {
-            serde_json::json!({
-                "title": "Internal server error.",
-                "status": StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
-            })
-            .to_string()
-        });
-
-        Response::builder()
-            .status(self.status)
-            .header(header::CONTENT_TYPE, "application/json")
-            .body(body.into())
+        if let Ok(body) = serde_json::to_string(&self) {
+            Response::builder()
+                .status(self.status)
+                .header(header::CONTENT_TYPE, "application/json")
+                .body(body.into())
+        } else {
+            Ok(internal_server_error())
+        }
     }
 }
 
@@ -135,15 +131,33 @@ impl IntoResponse for ServerError {
                 .errors(validation_errors)
                 .status(StatusCode::BAD_REQUEST)
                 .into_response()
-                .unwrap(),
-            ServerError::ParsingForm(err) => {
-                ResponseError::default()
-                    .title("Parsing error.")
-                    .details(&err.to_string())
-                    .status(StatusCode::BAD_REQUEST)
-                    .into_response()
-                    .unwrap()
-            }
+                .unwrap_or_else(|_| internal_server_error()),
+            ServerError::ParsingForm(err) => ResponseError::default()
+                .title("Parsing error.")
+                .details(&err.to_string())
+                .status(StatusCode::BAD_REQUEST)
+                .into_response()
+                .unwrap_or_else(|_| internal_server_error()),
         }
     }
+}
+
+/// Helper function to create a generic "Internal Server Error" response.
+fn internal_server_error() -> Response {
+    Response::builder()
+        .status(StatusCode::INTERNAL_SERVER_ERROR)
+        .header(header::CONTENT_TYPE, "application/json")
+        .body(
+            serde_json::json!({
+                "type": null,
+                "title": "Internal server error.",
+                "status": StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
+                "detail": null,
+                "instance": null,
+                "errors": null,
+            })
+            .to_string()
+            .into(),
+        )
+        .unwrap_or_else(|_| Response::new("Internal server error".into()))
 }
