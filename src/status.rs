@@ -3,9 +3,12 @@
 use serde::{Deserialize, Serialize};
 use tracing::error;
 use url::Url;
+use axum::extract::FromRef;
 
 use std::fs::File;
 use std::path::{Path, PathBuf};
+
+use crate::AppState;
 
 const DEFAULT_STATUS_PATH: &str = "status.json";
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -35,11 +38,9 @@ pub struct Configuration {
     background: Option<String>,
 }
 
-impl 
-
-<crate::AppState> for Configuration {
-    fn from_ref(app_state: &crate::AppState) -> Configuration {
-        app_state.config.clone()
+impl FromRef<AppState> for Configuration {
+    fn from_ref(state: &AppState) -> Configuration {
+        state.config.clone()
     }
 }
 
