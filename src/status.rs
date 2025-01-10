@@ -1,6 +1,5 @@
 //! Configuration reader.
 
-use axum::extract::FromRef;
 use serde::{Deserialize, Serialize};
 use tracing::error;
 use url::Url;
@@ -36,7 +35,9 @@ pub struct Configuration {
     background: Option<String>,
 }
 
-impl FromRef<crate::AppState> for Configuration {
+impl 
+
+<crate::AppState> for Configuration {
     fn from_ref(app_state: &crate::AppState) -> Configuration {
         app_state.config.clone()
     }
