@@ -6,7 +6,7 @@ pub const DEFAULT_PG_URL: &str = "postgres://postgres:postgres@localhost:5432/au
 /// Custom db structure to pass to Axum.
 #[derive(Clone)]
 pub struct Database {
-    postgres: PgPool,
+    pub postgres: PgPool,
 }
 
 impl Database {
