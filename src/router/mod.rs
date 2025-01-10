@@ -15,9 +15,9 @@ use validator::{Validate, ValidationErrors};
 
 /// A wrapper struct for validating form data.
 #[derive(Debug, Clone, Copy, Default)]
-pub struct ValidatedForm<T>(pub T);
+pub struct Valid<T>(pub T);
 
-impl<T, S> FromRequest<S> for ValidatedForm<T>
+impl<T, S> FromRequest<S> for Valid<T>
 where
     T: DeserializeOwned + Validate,
     S: Send + Sync,
@@ -28,7 +28,7 @@ where
     async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
         let Json(payload) = Json::<T>::from_request(req, state).await?;
         payload.validate()?;
-        Ok(ValidatedForm(payload))
+        Ok(Valid(payload))
     }
 }
 
@@ -40,6 +40,9 @@ pub enum ServerError {
 
     #[error("Error parsing form data: {0}")]
     ParsingForm(#[from] JsonRejection),
+
+    #[error("Internal server error")]
+    Internal(String),
 }
 
 /// Structure for detailed error responses.
@@ -138,6 +141,7 @@ impl IntoResponse for ServerError {
                 .status(StatusCode::BAD_REQUEST)
                 .into_response()
                 .unwrap_or_else(|_| internal_server_error()),
+            ServerError::Internal(_err) => internal_server_error(),
         }
     }
 }
