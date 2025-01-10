@@ -6,7 +6,10 @@ mod router;
 mod status;
 
 use axum::{
-    extract::FromRef, http::{header, Method}, middleware, routing::{get, post}, Router
+    http::{header, Method},
+    middleware,
+    routing::{get, post},
+    Router,
 };
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -19,12 +22,6 @@ use std::process;
 pub(crate) struct AppState {
     config: status::Configuration,
     db: database::Database,
-}
-
-impl FromRef<AppState> for database::Database {
-    fn from_ref(app_state: &AppState) -> database::Database {
-        app_state.db.clone()
-    }
 }
 
 #[tokio::main]
@@ -59,9 +56,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let state = AppState {
         config: status::Configuration::read(None)?,
         db: database::Database::new(
-        &env::var("PG_DB").unwrap_or_else(|_| database::DEFAULT_PG_URL.into()),
-    )
-    .await?,
+            &env::var("PG_DB").unwrap_or_else(|_| database::DEFAULT_PG_URL.into()),
+        )
+        .await?,
     };
 
     // build our application with a route.
