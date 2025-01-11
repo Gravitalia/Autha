@@ -3,11 +3,10 @@ use argon2::{
     Argon2, Params, Version,
 };
 use axum::{extract::State, Json};
-use fpe::ff1::{FlexibleNumeralString, Operations, FF1};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-use crate::database::Database;
+use crate::{database::Database, user::User};
 
 use super::{ServerError, Valid};
 
@@ -24,32 +23,15 @@ pub struct Body {
 
 #[derive(Debug, Serialize)]
 pub struct Response {
-    vanity: String,
+    user: User,
     token: String,
-    locale: String,
 }
 
 pub async fn create(
     State(db): State<Database>,
     Valid(body): Valid<Body>,
 ) -> Result<Json<Response>, ServerError> {
-    let email = {
-        const RADIX: u32 = 256;
-
-        std::env::var("AES_KEY")
-            .ok()
-            .and_then(|key| hex::decode(&key).ok())
-            .and_then(|key| FF1::<aes::Aes256>::new(&key, RADIX).ok())
-            .and_then(|ff| {
-                let email: Vec<u16> = body.email.encode_utf16().collect();
-                let email_length = email.len();
-
-                ff.encrypt(&[], &FlexibleNumeralString::from(email))
-                    .ok()
-                    .map(|encrypted| hex::encode(encrypted.to_be_bytes(RADIX, email_length)))
-            })
-            .unwrap_or_else(|| body.email)
-    };
+    let email = crate::crypto::email_encryption(body.email);
 
     let password = {
         let salt = SaltString::generate(&mut OsRng);
@@ -67,25 +49,25 @@ pub async fn create(
         hash.to_string()
     };
 
-    sqlx::query_scalar!(
-        r#"INSERT INTO "user" (vanity, username, email, password) values ($1, $2, $3, $4)"#,
+    sqlx::query!(
+        r#"INSERT INTO "users" (vanity, username, email, password) values ($1, $2, $3, $4)"#,
+        body.vanity.to_lowercase(),
         body.vanity,
-        body.username,
         email,
         password
     )
-    .fetch_one(&db.postgres)
+    .execute(&db.postgres)
     .await
-    .on_constraint("user_username_key", |_| {
-        ServerError::Internal(String::default())
-    })
-    .on_constraint("user_email_key", |_| {
-        ServerError::Internal(String::default())
-    })?;
+    .map_err(ServerError::Sql)?;
+
+    let user = User::default()
+        .with_vanity(body.vanity.to_lowercase())
+        .get(&db.postgres)
+        .await?;
+    let token = user.generate_token(&db.postgres).await?;
 
     Ok(Json(Response {
-        vanity: String::default(),
-        token: String::default(),
-        locale: String::default(),
+        user: User::default(),
+        token,
     }))
 }
