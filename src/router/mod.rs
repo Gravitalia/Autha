@@ -10,6 +10,7 @@ use axum::{
     Json,
 };
 use serde::{de::DeserializeOwned, Serialize};
+use sqlx::{postgres::PgDatabaseError, Error as SQLxError};
 use thiserror::Error;
 use validator::{Validate, ValidationErrors};
 
@@ -40,6 +41,9 @@ pub enum ServerError {
 
     #[error("Error parsing form data: {0}")]
     ParsingForm(#[from] JsonRejection),
+
+    #[error("SQL request failed: {0}")]
+    Sql(#[from] SQLxError),
 
     #[error("Internal server error")]
     Internal(String),
@@ -113,16 +117,12 @@ struct FieldError {
 
 /// Converts validation errors into a vector of `FieldError`.
 fn parse_validation_errors(errors: &ValidationErrors) -> Vec<FieldError> {
-    errors
-        .field_errors()
-        .iter()
-        .flat_map(|(field, issues)| {
-            issues.iter().map(|issue| FieldError {
-                field: field.to_string(),
-                message: issue.to_string(),
-            })
+    errors.field_errors().iter().flat_map(|(field, issues)| {
+        issues.iter().map(move |issue| FieldError {
+            field: field.to_string(),
+            message: issue.to_string(),
         })
-        .collect()
+    }).collect()
 }
 
 impl IntoResponse for ServerError {
@@ -138,6 +138,16 @@ impl IntoResponse for ServerError {
             ServerError::ParsingForm(err) => ResponseError::default()
                 .title("Parsing error.")
                 .details(&err.to_string())
+                .status(StatusCode::BAD_REQUEST)
+                .into_response()
+                .unwrap_or_else(|_| internal_server_error()),
+            ServerError::Sql(err) => ResponseError::default()
+                .title("Invalid input.")
+                .details(
+                    err.as_database_error()
+                        .and_then(|e| e.downcast_ref::<PgDatabaseError>().detail())
+                        .unwrap_or(&err.to_string()),
+                )
                 .status(StatusCode::BAD_REQUEST)
                 .into_response()
                 .unwrap_or_else(|_| internal_server_error()),
