@@ -4,6 +4,8 @@ mod database;
 mod metrics;
 mod router;
 mod status;
+mod user;
+mod crypto;
 
 use axum::{
     http::{header, Method},
@@ -56,7 +58,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let state = AppState {
         config: status::Configuration::read(None)?,
         db: database::Database::new(
-            &env::var("PG_DB").unwrap_or_else(|_| database::DEFAULT_PG_URL.into()),
+            &env::var("POSTGRES_URL").unwrap_or_else(|_| database::DEFAULT_PG_URL.into()),
         )
         .await?,
     };
