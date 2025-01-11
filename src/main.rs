@@ -4,6 +4,8 @@ mod database;
 mod metrics;
 mod router;
 mod status;
+mod user;
+mod crypto;
 
 use axum::{
     http::{header, Method},
@@ -17,6 +19,12 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use std::env;
 use std::future::ready;
 use std::process;
+
+#[derive(Clone)]
+pub(crate) struct AppState {
+    config: status::Configuration,
+    db: database::Database,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -46,19 +54,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let recorder_handle = metrics::setup_metrics_recorder()?;
 
     // load configuration and let it on memory.
-    let status = status::Configuration::read(None)?;
-
     // init databases connection.
-    let _db = database::Database::new(
-        &env::var("PG_DB").unwrap_or_else(|_| database::DEFAULT_PG_URL.into()),
-    )
-    .await?;
+    let state = AppState {
+        config: status::Configuration::read(None)?,
+        db: database::Database::new(
+            &env::var("POSTGRES_URL").unwrap_or_else(|_| database::DEFAULT_PG_URL.into()),
+        )
+        .await?,
+    };
 
     // build our application with a route.
     let app = Router::new()
         // `GET /status.json` goes to `status`.
         .route("/status.json", get(router::status::status))
-        .with_state(status)
+        // `POST /create` goes to `create`.
+        .route("/create", post(router::create::create))
+        .with_state(state)
         // `GET /metrics`
         .route("/metrics", get(move || ready(recorder_handle.render())))
         .route_layer(middleware::from_fn(metrics::track_metrics))

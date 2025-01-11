@@ -3,9 +3,12 @@
 use serde::{Deserialize, Serialize};
 use tracing::error;
 use url::Url;
+use axum::extract::FromRef;
 
 use std::fs::File;
 use std::path::{Path, PathBuf};
+
+use crate::AppState;
 
 const DEFAULT_STATUS_PATH: &str = "status.json";
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -29,9 +32,16 @@ pub struct Configuration {
     favicon: Option<String>,
     terms_of_service: String,
     privacy_policy: String,
+    #[serde(skip_deserializing)]
     version: String,
     invite_only: bool,
     background: Option<String>,
+}
+
+impl FromRef<AppState> for Configuration {
+    fn from_ref(state: &AppState) -> Configuration {
+        state.config.clone()
+    }
 }
 
 impl Configuration {
