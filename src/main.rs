@@ -21,9 +21,26 @@ use std::future::ready;
 use std::process;
 
 #[derive(Clone)]
-pub(crate) struct AppState {
-    config: status::Configuration,
-    db: database::Database,
+pub struct AppState {
+    pub config: status::Configuration,
+    pub db: database::Database,
+}
+
+/// Create router.
+pub fn app(state: AppState) -> Router {
+    Router::new()
+        // `GET /status.json` goes to `status`.
+        .route("/status.json", get(router::status::status))
+        // `POST /create` goes to `create`.
+        .route("/create", post(router::create::create))
+        .with_state(state)
+        .route_layer(middleware::from_fn(metrics::track_metrics))
+        .route_layer(
+            CorsLayer::new()
+                .allow_origin(Any)
+                .allow_methods([Method::GET, Method::POST, Method::OPTIONS, Method::PATCH])
+                .vary([header::AUTHORIZATION]),
+        )
 }
 
 #[tokio::main]
@@ -64,21 +81,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // build our application with a route.
-    let app = Router::new()
-        // `GET /status.json` goes to `status`.
-        .route("/status.json", get(router::status::status))
-        // `POST /create` goes to `create`.
-        .route("/create", post(router::create::create))
-        .with_state(state)
+    let app = app(state)
         // `GET /metrics`
-        .route("/metrics", get(move || ready(recorder_handle.render())))
-        .route_layer(middleware::from_fn(metrics::track_metrics))
-        .route_layer(
-            CorsLayer::new()
-                .allow_origin(Any)
-                .allow_methods([Method::GET, Method::POST, Method::OPTIONS, Method::PATCH])
-                .vary([header::AUTHORIZATION]),
-        );
+        .route("/metrics", get(move || ready(recorder_handle.render())));
 
     let listener = tokio::net::TcpListener::bind(format!(
         "0.0.0.0:{}",
