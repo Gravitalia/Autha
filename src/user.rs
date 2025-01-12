@@ -1,12 +1,12 @@
 use rand::distributions::{Alphanumeric, DistString};
 use rand::rngs::OsRng;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
 
 const TOKEN_LENGTH: usize = 64;
 
 /// Database user representation.
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct User {
     pub vanity: String,
     pub username: String,
