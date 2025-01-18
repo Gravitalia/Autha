@@ -81,7 +81,6 @@ mod tests {
         http::{self, Request, StatusCode},
     };
     use sqlx::{Pool, Postgres};
-    use status::Configuration;
     use tower::ServiceExt;
     use http_body_util::BodyExt;
 
@@ -89,7 +88,7 @@ mod tests {
     async fn test_create_handler(pool: Pool<Postgres>) {
         let state = AppState {
             db: Database { postgres: pool },
-            config: Configuration::default(),
+            config: status::Configuration::default(),
         };
         let app = app(state);
 
