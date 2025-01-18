@@ -28,6 +28,9 @@ jobs:
       - name: Install SQLx
         run: cargo install sqlx-cli
 
+      - name: Run migrations
+        run: cargo sqlx migrate run
+
       - name: Prepare SQL queries
         run: cargo sqlx prepare
         env:
