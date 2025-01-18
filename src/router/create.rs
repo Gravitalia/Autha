@@ -2,7 +2,7 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, SaltString},
     Argon2, Params, Version,
 };
-use axum::{extract::State, Json};
+use axum::{extract::State, http::StatusCode, Json};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -10,7 +10,7 @@ use crate::{database::Database, user::User};
 
 use super::{ServerError, Valid};
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct Body {
     #[validate(length(min = 2, max = 15))]
     vanity: String,
@@ -21,7 +21,7 @@ pub struct Body {
     _captcha: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Response {
     user: User,
     token: String,
@@ -30,7 +30,7 @@ pub struct Response {
 pub async fn create(
     State(db): State<Database>,
     Valid(body): Valid<Body>,
-) -> Result<Json<Response>, ServerError> {
+) -> Result<(StatusCode, Json<Response>), ServerError> {
     let email = crate::crypto::email_encryption(body.email);
 
     let password = {
@@ -66,8 +66,58 @@ pub async fn create(
         .await?;
     let token = user.generate_token(&db.postgres).await?;
 
-    Ok(Json(Response {
-        user: User::default(),
+    Ok((StatusCode::CREATED, Json(Response {
+        user,
         token,
-    }))
+    })))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::*;
+    use axum::{
+        body::Body as RequestBody,
+        http::{self, Request, StatusCode},
+    };
+    use sqlx::{Pool, Postgres};
+    use tower::ServiceExt;
+    use http_body_util::BodyExt;
+
+    #[sqlx::test]
+    async fn test_create_handler(pool: Pool<Postgres>) {
+        let state = AppState {
+            db: Database { postgres: pool },
+            config: status::Configuration::default(),
+        };
+        let app = app(state);
+
+        let body = Body {
+            vanity: "user".into(),
+            email: "test@gravitalia.com".into(),
+            password: "Password1234".into(),
+            _captcha: None,
+        };
+        let body = serde_json::to_string(&body).unwrap();
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method(http::Method::POST)
+                    .uri("/create")
+                    .header(http::header::CONTENT_TYPE, "application/json")
+                    .body(RequestBody::from(
+                        body
+                    ))
+                    .unwrap()
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::CREATED);
+        
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let body: Response = serde_json::from_slice(&body).unwrap();
+        assert!(body.token.is_ascii());
+        assert_eq!(body.user.vanity, "user");
+    }
 }
