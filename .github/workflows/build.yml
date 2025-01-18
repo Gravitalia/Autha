@@ -30,6 +30,8 @@ jobs:
 
       - name: Run migrations
         run: cargo sqlx migrate run
+        env:
+          DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
 
       - name: Prepare SQL queries
         run: cargo sqlx prepare
