@@ -17,6 +17,9 @@ jobs:
           --health-retries 5
 
     steps:
+      - name: APT dependencies
+        run: sudo apt-get install pkg-config libssl-dev
+      
       - name: Check out repository code
         uses: actions/checkout@v4
 
