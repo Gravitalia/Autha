@@ -31,9 +31,9 @@ jobs:
       - name: Prepare SQL queries
         run: cargo sqlx prepare
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+          DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
 
       - name: Tests
         run: cargo test
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+          DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
