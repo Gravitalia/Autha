@@ -67,7 +67,7 @@ pub async fn create(
     let token = user.generate_token(&db.postgres).await?;
 
     Ok((StatusCode::CREATED, Json(Response {
-        user: User::default(),
+        user,
         token,
     })))
 }
@@ -99,6 +99,7 @@ mod tests {
             password: "Password1234".into(),
             _captcha: None,
         };
+        let body = serde_json::to_string(&body).unwrap();
         let response = app
             .oneshot(
                 Request::builder()
@@ -106,7 +107,7 @@ mod tests {
                     .uri("/create")
                     .header(http::header::CONTENT_TYPE, "application/json")
                     .body(RequestBody::from(
-                        serde_json::to_string(&body).unwrap()
+                        body
                     ))
                     .unwrap()
             )
