@@ -18,7 +18,9 @@ jobs:
 
     steps:
       - name: APT dependencies
-        run: sudo apt-get install pkg-config libssl-dev
+        run: |
+          apt-get update
+          apt-get install -y openssl libssl-dev pkg-config
       
       - name: Check out repository code
         uses: actions/checkout@v4
