@@ -25,6 +25,12 @@ impl User {
         self
     }
 
+    /// Update `email` of [`User`].
+    pub fn with_email(mut self, email: String) -> Self {
+        self.email = email;
+        self
+    }
+
     /// Get data on a user.
     pub async fn get(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
         if !self.vanity.is_empty() {
