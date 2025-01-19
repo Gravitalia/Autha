@@ -10,11 +10,11 @@ const TOKEN_LENGTH: usize = 64;
 pub struct User {
     pub vanity: String,
     pub username: String,
-    #[serde(skip_serializing)]
+    #[serde(skip)]
     pub email: String,
     pub avatar: Option<String>,
     pub flags: i32,
-    #[serde(skip_serializing)]
+    #[serde(skip)]
     pub(crate) password: String,
 }
 
