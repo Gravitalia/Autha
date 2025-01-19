@@ -39,14 +39,14 @@ $$ LANGUAGE plpgsql;
 SELECT trigger_updated_at('"users"');
 
 -- Define a function to delete users based on grace period.
-CREATE OR REPLACE FUNCTION clean_deleted_users()
-RETURNS VOID AS
-$$
-BEGIN
-    DELETE FROM users
-    WHERE (deleted_at IS NOT NULL AND deleted_at + INTERVAL '30 days' < NOW())
-       OR (suspended_at IS NOT NULL AND suspended_at + INTERVAL '15 days' < NOW());
-END;
-$$ LANGUAGE plpgsql;
+-- CREATE OR REPLACE FUNCTION clean_deleted_users()
+--RETURNS VOID AS
+--$$
+--BEGIN
+--    DELETE FROM users
+--    WHERE (deleted_at IS NOT NULL AND deleted_at + INTERVAL '30 days' < NOW())
+--       OR (suspended_at IS NOT NULL AND suspended_at + INTERVAL '15 days' < NOW());
+--END;
+--$$ LANGUAGE plpgsql;
 
-SELECT cron.schedule('daily_cleanup', '0 0 * * *', 'SELECT clean_deleted_users();');
+--SELECT cron.schedule('daily_cleanup', '0 0 * * *', 'SELECT clean_deleted_users();');

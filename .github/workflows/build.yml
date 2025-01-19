@@ -1,0 +1,44 @@
+name: build
+on: push
+
+jobs:
+  autha:
+    runs-on: ubuntu-latest
+    container: rust:1.84-slim-bullseye
+    services:
+      postgres:
+        image: postgres:17.2
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: APT dependencies
+        run: |
+          apt-get update
+          apt-get install -y openssl libssl-dev pkg-config
+      
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Install SQLx
+        run: cargo install sqlx-cli
+
+      - name: Run migrations
+        run: cargo sqlx migrate run
+        env:
+          DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+
+      - name: Prepare SQL queries
+        run: cargo sqlx prepare
+        env:
+          DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+
+      - name: Tests
+        run: cargo test
+        env:
+          DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
