@@ -1,6 +1,7 @@
 //! Route handler module with HTTP routes and validation.
 
 pub mod create;
+pub mod login;
 pub mod status;
 
 use axum::{
@@ -117,12 +118,16 @@ struct FieldError {
 
 /// Converts validation errors into a vector of `FieldError`.
 fn parse_validation_errors(errors: &ValidationErrors) -> Vec<FieldError> {
-    errors.field_errors().iter().flat_map(|(field, issues)| {
-        issues.iter().map(move |issue| FieldError {
-            field: field.to_string(),
-            message: issue.to_string(),
+    errors
+        .field_errors()
+        .iter()
+        .flat_map(|(field, issues)| {
+            issues.iter().map(move |issue| FieldError {
+                field: field.to_string(),
+                message: issue.to_string(),
+            })
         })
-    }).collect()
+        .collect()
 }
 
 impl IntoResponse for ServerError {

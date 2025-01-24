@@ -1,3 +1,4 @@
+mod crypto;
 mod database;
 #[forbid(unsafe_code)]
 #[deny(missing_docs, unused_mut)]
@@ -5,7 +6,6 @@ mod metrics;
 mod router;
 mod status;
 mod user;
-mod crypto;
 
 use axum::{
     http::{header, Method},
@@ -31,6 +31,8 @@ pub fn app(state: AppState) -> Router {
     Router::new()
         // `GET /status.json` goes to `status`.
         .route("/status.json", get(router::status::status))
+        // `POST /login` goes to `login`.
+        .route("/login", post(router::login::login))
         // `POST /create` goes to `create`.
         .route("/create", post(router::create::create))
         .with_state(state)
