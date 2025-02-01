@@ -57,8 +57,7 @@ pub async fn create(
         password
     )
     .execute(&db.postgres)
-    .await
-    .map_err(ServerError::Sql)?;
+    .await?;
 
     let user = User::default()
         .with_vanity(body.vanity.to_lowercase())
