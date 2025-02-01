@@ -14,11 +14,14 @@ use axum::{
     Router,
 };
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::trace::TraceLayer;
+use tower_http::timeout::RequestBodyTimeoutLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use std::env;
 use std::future::ready;
 use std::process;
+use std::time::Duration;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -36,6 +39,7 @@ pub fn app(state: AppState) -> Router {
         // `POST /create` goes to `create`.
         .route("/create", post(router::create::create))
         .with_state(state)
+        .layer(TraceLayer::new_for_http())
         .route_layer(middleware::from_fn(metrics::track_metrics))
         .route_layer(
             CorsLayer::new()
@@ -85,7 +89,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // build our application with a route.
     let app = app(state)
         // `GET /metrics`
-        .route("/metrics", get(move || ready(recorder_handle.render())));
+        .route("/metrics", get(move || ready(recorder_handle.render())))
+        .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(5)));
 
     let listener = tokio::net::TcpListener::bind(format!(
         "0.0.0.0:{}",
