@@ -1,11 +1,12 @@
-mod crypto;
-mod database;
 #[forbid(unsafe_code)]
 #[deny(missing_docs, unused_mut)]
+mod crypto;
+mod database;
 mod metrics;
 mod router;
 mod status;
 mod user;
+mod well_known;
 
 use axum::{
     http::{header, Method},
@@ -14,9 +15,10 @@ use axum::{
     Router,
 };
 use tower_http::cors::{Any, CorsLayer};
-use tower_http::trace::TraceLayer;
 use tower_http::timeout::RequestBodyTimeoutLayer;
+use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use well_known::well_known;
 
 use std::env;
 use std::future::ready;
@@ -38,7 +40,8 @@ pub fn app(state: AppState) -> Router {
         .route("/login", post(router::login::login))
         // `POST /create` goes to `create`.
         .route("/create", post(router::create::create))
-        .with_state(state)
+        .with_state(state.clone())
+        .nest("/.well-known", well_known(state))
         .layer(TraceLayer::new_for_http())
         .route_layer(middleware::from_fn(metrics::track_metrics))
         .route_layer(
