@@ -1,9 +1,9 @@
 //! Configuration reader.
 
+use axum::extract::FromRef;
 use serde::{Deserialize, Serialize};
 use tracing::error;
 use url::Url;
-use axum::extract::FromRef;
 
 use std::fs::File;
 use std::path::{Path, PathBuf};
@@ -28,7 +28,7 @@ pub enum Error {
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Configuration {
     name: String,
-    url: String,
+    pub url: String,
     favicon: Option<String>,
     terms_of_service: String,
     privacy_policy: String,
