@@ -16,6 +16,7 @@ pub struct User {
     pub flags: i32,
     #[serde(skip)]
     pub(crate) password: String,
+    pub created_at: chrono::NaiveDate,
 }
 
 impl User {
@@ -36,7 +37,7 @@ impl User {
         if !self.vanity.is_empty() {
             Ok(sqlx::query_as!(
                     User,
-                    r#"SELECT vanity, username, email, avatar, flags, password FROM users WHERE vanity = $1"#,
+                    r#"SELECT vanity, username, email, avatar, flags, password, created_at FROM users WHERE vanity = $1"#,
                     self.vanity,
                 )
                 .fetch_one(conn)
@@ -44,7 +45,7 @@ impl User {
         } else if !self.email.is_empty() {
             Ok(sqlx::query_as!(
                     User,
-                    "SELECT vanity, username, email, avatar, flags, password FROM users WHERE email = $1",
+                    "SELECT vanity, username, email, avatar, flags, password, created_at FROM users WHERE email = $1",
                     self.email,
                 )
                 .fetch_one(conn)
