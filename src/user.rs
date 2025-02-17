@@ -1,7 +1,8 @@
 use rand::distributions::{Alphanumeric, DistString};
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Pool, Postgres};
+use sqlx::types::JsonValue;
+use sqlx::{Pool, Postgres};
 
 const TOKEN_LENGTH: usize = 64;
 
@@ -17,13 +18,15 @@ pub struct User {
     #[serde(skip)]
     pub(crate) password: String,
     pub created_at: chrono::NaiveDate,
-    pub public_keys: Option<Vec<i32>>,
+    pub public_keys: Option<JsonValue>,
 }
 
-#[derive(Debug, Default, PartialEq, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all(serialize = "camelCase"))]
 pub struct Key {
-    pub id: i32,
-    pub key: String,
+    pub id: String,
+    pub owner: String,
+    pub public_key_pem: String,
     pub created_at: chrono::NaiveDate,
 }
 
@@ -43,7 +46,7 @@ impl User {
     /// Get data on a user.
     pub async fn get(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
         if !self.vanity.is_empty() {
-            Ok(sqlx::query_as!(
+            sqlx::query_as!(
                 User,
                 r#"SELECT 
                     u.vanity,
@@ -53,10 +56,17 @@ impl User {
                     u.flags,
                     u.password,
                     u.created_at,
-                CASE
-                    WHEN COUNT(k.id) = 0 THEN NULL
-                    ELSE ARRAY_AGG(k.id)
-                END AS public_keys
+                    CASE
+                        WHEN COUNT(k.id) = 0 THEN NULL
+                        ELSE JSONB_AGG(
+                            jsonb_build_object(
+                                'id', cast(k.id as TEXT),
+                                'owner', k.user_id,
+                                'public_key_pem', k.key,
+                                'created_at', k.created_at
+                            )
+                        )
+                    END AS public_keys
                 FROM users u
                 LEFT JOIN keys k ON k.user_id = u.vanity
                 WHERE u.vanity = $1
@@ -72,11 +82,11 @@ impl User {
                 self.vanity,
             )
             .fetch_one(conn)
-            .await?)
+            .await
         } else if !self.email.is_empty() {
-            Ok(sqlx::query_as!(
+            sqlx::query_as!(
                 User,
-                r#"SELECT 
+                r#"SELECT
                     u.vanity,
                     u.username,
                     u.email,
@@ -84,29 +94,36 @@ impl User {
                     u.flags,
                     u.password,
                     u.created_at,
-                CASE
-                    WHEN COUNT(k.id) = 0 THEN NULL
-                    ELSE ARRAY_AGG(k.id)
-                END AS public_keys
+                    CASE
+                        WHEN COUNT(k.id) = 0 THEN NULL
+                        ELSE JSONB_AGG(
+                            jsonb_build_object(
+                                'id', cast(k.id as TEXT),
+                                'owner', k.user_id,
+                                'public_key_pem', k.key,
+                                'created_at', k.created_at
+                            )
+                        )
+                    END AS public_keys
                 FROM users u
                 LEFT JOIN keys k ON k.user_id = u.vanity
-                WHERE u.vanity = $1
+                WHERE u.email = $1
                 GROUP BY 
                     u.vanity, 
                     u.username, 
                     u.email, 
                     u.avatar, 
-                    u.flags, 
+                    u.flags,
                     u.password, 
                     u.created_at;
                 "#,
                 self.email,
             )
             .fetch_one(conn)
-            .await?)
+            .await
         } else {
             Err(sqlx::Error::ColumnNotFound(
-                "Missing column 'vanity' or 'email' column".into(),
+                "Missing column 'vanity' or 'email' column".to_owned(),
             ))
         }
     }
