@@ -5,7 +5,7 @@ use axum::Json;
 use serde::{Deserialize, Serialize};
 
 use crate::router::ServerError;
-use crate::user::User;
+use crate::user::{User, Key};
 use crate::AppState;
 
 const ACTIVITY_STREAM: &str = "https://www.w3.org/ns/activitystreams";
@@ -42,15 +42,7 @@ pub struct Response {
     url: String,
     summary: String,
     published: String,
-    public_key: Vec<Key>,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Key {
-    id: String,
-    owner: String,
-    public_key_pem: String,
+    public_keys: Vec<Key>,
 }
 
 pub async fn get(
@@ -61,8 +53,7 @@ pub async fn get(
         .with_vanity(user_id)
         .get(&state.db.postgres)
         .await?;
-    let url = if let Ok(mut url) = url::Url::parse(&state.config.url) {
-        url.set_path(&format!("/users/{}", user.vanity));
+    let url = if let Ok(url) = url::Url::parse(&state.config.url) {
         format!("{}://{}/users/{}",
             url.scheme(),
             url.host().map(|u| u.to_string()).unwrap_or_default(),
@@ -71,19 +62,31 @@ pub async fn get(
     } else {
         user.vanity.clone()
     };
+    let public_keys = if let Some(pk_value) = user.public_keys {
+        let mut keys: Vec<Key> = serde_json::from_str(&pk_value.to_string())
+            .map_err(|_| ServerError::Internal("public keys seems corrupted".to_owned()))?;
+        for key in &mut keys {
+            if url != user.vanity {
+                key.id = format!("{}#{}", url, key.id);
+            }
+        }
+        keys
+    } else {
+        Vec::new()
+    };
 
     Ok(Json(Response {
         context: vec![
-            ACTIVITY_STREAM.to_string(),
-            W3C_SECURITY.to_string(),
+            ACTIVITY_STREAM.to_owned(),
+            W3C_SECURITY.to_owned(),
         ],
         r#type: ActivityType::Person,
         id: user.vanity.clone(),
         username: user.username.clone(),
         name: user.username,
-        url, 
         summary: String::default(),
         published: user.created_at.to_string(),
-        public_key: Vec::new(),
+        public_keys,
+        url,
     }))
 }
