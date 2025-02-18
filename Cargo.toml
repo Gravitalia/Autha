@@ -39,6 +39,9 @@ thiserror = "2.0"
 # Telemetry
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+opentelemetry = { version = "0.28.0", features = ["trace"] }
+opentelemetry_sdk = "0.28.0"
+opentelemetry-otlp = { version="0.28.0",  features = ["grpc-tonic", "metrics"] }
 metrics = "0.24"
 metrics-exporter-prometheus = { version = "0.16", default-features = false, features = ["tracing"] }
 sysinfo = { version = "0.32", default-features = false, features = ["system"] }
