@@ -37,9 +37,9 @@ pub async fn login(
         .verify_password(body.password.as_bytes(), &password)
         .map_err(|_| {
             let error = ValidationError::new("invalid_password").with_message("Password don't match.".into());
-        let mut errors = ValidationErrors::new();
-        errors.add("password", error);
-        errors
+            let mut errors = ValidationErrors::new();
+            errors.add("password", error);
+            errors
         })?;
 
     let token = user.generate_token(&db.postgres).await?;
