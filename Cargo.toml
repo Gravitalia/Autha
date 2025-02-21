@@ -42,10 +42,11 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 opentelemetry = { version = "0.28.0", features = ["trace"] }
 opentelemetry_sdk = "0.28.0"
 opentelemetry-otlp = { version="0.28.0",  features = ["grpc-tonic", "metrics"] }
+opentelemetry-stdout = "0.28.0"
+opentelemetry-appender-tracing = "0.28.1"
 metrics = "0.24"
 metrics-exporter-prometheus = { version = "0.16", default-features = false, features = ["tracing"] }
 sysinfo = { version = "0.32", default-features = false, features = ["system"] }
-tracing-loki = "0.2"
 # Cryptography
 argon2 = "0.5.3"
 rsa = "0.9.7"
