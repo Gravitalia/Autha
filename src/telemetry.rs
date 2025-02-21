@@ -11,12 +11,18 @@ use metrics_exporter_prometheus::{BuildError, Matcher, PrometheusBuilder, Promet
 use opentelemetry::global;
 use opentelemetry::trace::{Span, TraceError, Tracer};
 use opentelemetry::KeyValue;
-use opentelemetry_sdk::trace::SdkTracerProvider;
+use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
+use opentelemetry_sdk::{logs::SdkLogger, trace::SdkTracerProvider};
+use opentelemetry_sdk::logs::SdkLoggerProvider;
 use opentelemetry_sdk::Resource;
 use sysinfo::{Pid, System};
 use tokio::time::sleep;
 
 use std::time::{Duration, Instant};
+
+fn ressources() -> Resource {
+    Resource::builder().with_service_name("autha").build()
+}
 
 /// Create tracer for OLTP.
 pub fn setup_tracer() -> Result<SdkTracerProvider, TraceError> {
@@ -26,7 +32,7 @@ pub fn setup_tracer() -> Result<SdkTracerProvider, TraceError> {
 
     Ok(SdkTracerProvider::builder()
         .with_batch_exporter(exporter)
-        .with_resource(Resource::builder().with_service_name("autha").build())
+        .with_resource(ressources())
         .build())
 }
 
@@ -74,6 +80,15 @@ pub fn setup_metrics_recorder() -> Result<PrometheusHandle, BuildError> {
             EXPONENTIAL_SECONDS,
         )?
         .install_recorder()
+}
+
+pub fn setup_logging() -> OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger> {
+    let exporter = opentelemetry_stdout::LogExporter::default();
+    let provider: SdkLoggerProvider = SdkLoggerProvider::builder()
+        .with_resource(ressources())
+        .with_simple_exporter(exporter)
+        .build();
+    opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge::new(&provider)
 }
 
 /// Track every metrics into one function. Cool.
