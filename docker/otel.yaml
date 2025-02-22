@@ -6,9 +6,10 @@ receivers:
 
 exporters:
   debug:
-
+  otlphttp:
+    endpoint: http://loki:3100/otlp
   otlp:
-    endpoint: jaeger-all-in-one:4317
+    endpoint: jaeger:4317
     tls:
       insecure: true
 
@@ -21,3 +22,7 @@ service:
       receivers: [otlp]
       processors: [batch]
       exporters: [debug, otlp]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlphttp]
