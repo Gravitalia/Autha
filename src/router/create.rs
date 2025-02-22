@@ -10,7 +10,7 @@ use validator::{Validate, ValidationError};
 use super::{ServerError, Valid};
 use crate::{database::Database, user::User};
 
-fn validate_vanity(vanity: &str) -> Result<(), ValidationError> {
+fn validate_id(vanity: &str) -> Result<(), ValidationError> {
     if !Regex::new(r"[A-Za-z0-9\-\.\_\~\!\$\&\'\(\)\*\+\,\;\=](?:[A-Za-z0-9\-\.\_\~\!\$\&\'\(\)\*\+\,\;\=]|(?:%[0-9A-Fa-f]{2}))$")
             .map_err(|_| ValidationError::new("wtf_regex"))?
             .is_match(vanity) {
@@ -24,9 +24,9 @@ fn validate_vanity(vanity: &str) -> Result<(), ValidationError> {
 pub struct Body {
     #[validate(
         length(min = 2, max = 15),
-        custom(function = "validate_vanity", message = "Vanity must be alphanumeric.")
+        custom(function = "validate_id", message = "Vanity must be alphanumeric.")
     )]
-    vanity: String,
+    id: String,
     #[validate(email(message = "Email must be formated."))]
     email: String,
     #[validate(length(min = 8, message = "Password must contain at least 8 characters."))]
@@ -63,9 +63,9 @@ pub async fn create(
     };
 
     sqlx::query!(
-        r#"INSERT INTO "users" (vanity, username, email, password) values ($1, $2, $3, $4)"#,
-        body.vanity.to_lowercase(),
-        body.vanity,
+        r#"INSERT INTO "users" (id, username, email, password) values ($1, $2, $3, $4)"#,
+        body.id.to_lowercase(),
+        body.id,
         email,
         password
     )
@@ -73,7 +73,7 @@ pub async fn create(
     .await?;
 
     let user = User::default()
-        .with_vanity(body.vanity.to_lowercase())
+        .with_id(body.id.to_lowercase())
         .get(&db.postgres)
         .await?;
     let token = user.generate_token(&db.postgres).await?;
@@ -102,7 +102,7 @@ mod tests {
         let app = app(state);
 
         let body = Body {
-            vanity: "user".into(),
+            id: "user".into(),
             email: "test@gravitalia.com".into(),
             password: "Password1234".into(),
             _captcha: None,
@@ -125,6 +125,6 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let body: Response = serde_json::from_slice(&body).unwrap();
         assert!(body.token.is_ascii());
-        assert_eq!(body.user.vanity, "user");
+        assert_eq!(body.user.id, "user");
     }
 }

@@ -42,12 +42,10 @@ pub async fn handler(
         .resource
         .strip_prefix("acct:")
         .ok_or(StatusCode::BAD_REQUEST)?;
-    let (vanity, _domain) = resource
-        .split_once('@')
-        .ok_or(StatusCode::BAD_REQUEST)?;
+    let (vanity, _domain) = resource.split_once('@').ok_or(StatusCode::BAD_REQUEST)?;
 
     let user = User::default()
-        .with_vanity(vanity.to_owned())
+        .with_id(vanity.to_owned())
         .get(&db.postgres)
         .await
         .map_err(|_| StatusCode::NOT_FOUND)?;
@@ -55,12 +53,12 @@ pub async fn handler(
     // Parse given production URL.
     // Then add a custom path pointing to API.
     let mut url = url::Url::parse(&config.url).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    url.set_path(&format!("/users/{}", user.vanity));
+    url.set_path(&format!("/users/{}", user.id));
 
     let response = Response {
         subject: format!(
             "acct:{}@{}",
-            user.vanity,
+            user.id,
             url.host().map(|u| u.to_string()).unwrap_or_default()
         ),
         aliases: Vec::new(),

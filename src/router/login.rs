@@ -36,7 +36,8 @@ pub async fn login(
     Argon2::default()
         .verify_password(body.password.as_bytes(), &password)
         .map_err(|_| {
-            let error = ValidationError::new("invalid_password").with_message("Password don't match.".into());
+            let error = ValidationError::new("invalid_password")
+                .with_message("Password don't match.".into());
             let mut errors = ValidationErrors::new();
             errors.add("password", error);
             errors
@@ -57,7 +58,6 @@ mod tests {
     };
     use sqlx::{Pool, Postgres};
     use tower::ServiceExt;
-    use http_body_util::BodyExt;
 
     #[sqlx::test]
     async fn test_login_handler(pool: Pool<Postgres>) {
@@ -79,10 +79,8 @@ mod tests {
                     .method(http::Method::POST)
                     .uri("/login")
                     .header(http::header::CONTENT_TYPE, "application/json")
-                    .body(RequestBody::from(
-                        body
-                    ))
-                    .unwrap()
+                    .body(RequestBody::from(body))
+                    .unwrap(),
             )
             .await
             .unwrap();
