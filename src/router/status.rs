@@ -34,7 +34,7 @@ mod tests {
                     .method(http::Method::GET)
                     .uri("/status.json")
                     .body(RequestBody::empty())
-                    .unwrap()
+                    .unwrap(),
             )
             .await
             .unwrap();
