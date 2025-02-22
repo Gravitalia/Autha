@@ -6,6 +6,11 @@ Autha is an account manager. It comes with features:
   * Support multi-factor authentication via TOTP (RFC 6238);
   * Support WebFinger (RFC 7033).
 
+> [!WARNING]
+> Telemetry (tracing, logging and metrics) is also included using OTLP.
+> Although, telemetry is deactivable(1) to increase anonymity.
+(1) Simply remove OpenTelemetry (OTLP) from `compose.yaml`.
+
 This server allows you to create, modify, and delete your account.
 It allows users to expose public keys, letting them generate their own tokens.
 
