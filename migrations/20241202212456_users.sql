@@ -1,7 +1,7 @@
 -- User table logic.
 
 CREATE TABLE IF NOT EXISTS users (
-  vanity        TEXT        PRIMARY KEY,
+  id            TEXT        PRIMARY KEY,
   username      TEXT        NOT NULL,
   email         TEXT        UNIQUE NOT NULL,
   password      TEXT        NOT NULL,
