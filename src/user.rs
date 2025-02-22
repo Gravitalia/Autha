@@ -9,7 +9,7 @@ const TOKEN_LENGTH: usize = 64;
 /// Database user representation.
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct User {
-    pub vanity: String,
+    pub id: String,
     pub username: String,
     #[serde(skip)]
     pub email: String,
@@ -32,8 +32,8 @@ pub struct Key {
 
 impl User {
     /// Update `vanity` of [`User`].
-    pub fn with_vanity(mut self, vanity: String) -> Self {
-        self.vanity = vanity;
+    pub fn with_id(mut self, user_id: String) -> Self {
+        self.id = user_id;
         self
     }
 
@@ -45,11 +45,11 @@ impl User {
 
     /// Get data on a user.
     pub async fn get(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
-        if !self.vanity.is_empty() {
+        if !self.id.is_empty() {
             sqlx::query_as!(
                 User,
                 r#"SELECT 
-                    u.vanity,
+                    u.id,
                     u.username,
                     u.email,
                     u.avatar,
@@ -68,10 +68,10 @@ impl User {
                         )
                     END AS public_keys
                 FROM users u
-                LEFT JOIN keys k ON k.user_id = u.vanity
-                WHERE u.vanity = $1
+                LEFT JOIN keys k ON k.user_id = u.id
+                WHERE u.id = $1
                 GROUP BY 
-                    u.vanity, 
+                    u.id, 
                     u.username, 
                     u.email, 
                     u.avatar, 
@@ -79,7 +79,7 @@ impl User {
                     u.password, 
                     u.created_at;
                 "#,
-                self.vanity,
+                self.id,
             )
             .fetch_one(conn)
             .await
@@ -87,7 +87,7 @@ impl User {
             sqlx::query_as!(
                 User,
                 r#"SELECT
-                    u.vanity,
+                    u.id,
                     u.username,
                     u.email,
                     u.avatar,
@@ -106,10 +106,10 @@ impl User {
                         )
                     END AS public_keys
                 FROM users u
-                LEFT JOIN keys k ON k.user_id = u.vanity
+                LEFT JOIN keys k ON k.user_id = u.id
                 WHERE u.email = $1
                 GROUP BY 
-                    u.vanity, 
+                    u.id, 
                     u.username, 
                     u.email, 
                     u.avatar, 
@@ -123,25 +123,25 @@ impl User {
             .await
         } else {
             Err(sqlx::Error::ColumnNotFound(
-                "Missing column 'vanity' or 'email' column".to_owned(),
+                "Missing column 'id' or 'email' column".to_owned(),
             ))
         }
     }
 
     /// Generate a token for this specific user.
     pub async fn generate_token(&self, conn: &Pool<Postgres>) -> Result<String, sqlx::Error> {
-        if self.vanity.is_empty() {
+        if self.id.is_empty() {
             return Err(sqlx::Error::ColumnNotFound(
-                "Missing column 'vanity' column".into(),
+                "Missing column 'id' column".into(),
             ));
         }
 
         let token = Alphanumeric.sample_string(&mut OsRng, TOKEN_LENGTH);
 
         sqlx::query!(
-            r#"INSERT INTO "tokens" (token, user_vanity) values ($1, $2)"#,
+            r#"INSERT INTO "tokens" (token, user_id) values ($1, $2)"#,
             token,
-            self.vanity,
+            self.id,
         )
         .execute(conn)
         .await?;
