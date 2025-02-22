@@ -12,7 +12,8 @@ use opentelemetry::global;
 use opentelemetry::trace::{Span, TraceError, Tracer};
 use opentelemetry::KeyValue;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_sdk::{logs::SdkLogger, trace::SdkTracerProvider};
+use opentelemetry_otlp::LogExporter;
+use opentelemetry_sdk::{logs::{LogError, SdkLogger}, trace::SdkTracerProvider};
 use opentelemetry_sdk::logs::SdkLoggerProvider;
 use opentelemetry_sdk::Resource;
 use sysinfo::{Pid, System};
@@ -56,6 +57,8 @@ pub fn setup_metrics_recorder() -> Result<PrometheusHandle, BuildError> {
     let mut system = System::new_all();
     let pid = Pid::from_u32(std::process::id());
 
+    // Create a loop to update system information.
+    // Wait 5 seconds before update it.
     tokio::spawn(async move {
         loop {
             system.refresh_all();
@@ -82,13 +85,16 @@ pub fn setup_metrics_recorder() -> Result<PrometheusHandle, BuildError> {
         .install_recorder()
 }
 
-pub fn setup_logging() -> OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger> {
-    let exporter = opentelemetry_stdout::LogExporter::default();
+/// Create OLTP exporter for logs.
+pub fn setup_logging() -> Result<OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger>, LogError>  {
+    let exporter = LogExporter::builder()
+        .with_tonic()
+        .build()?;
     let provider: SdkLoggerProvider = SdkLoggerProvider::builder()
         .with_resource(ressources())
-        .with_simple_exporter(exporter)
+        .with_batch_exporter(exporter)
         .build();
-    opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge::new(&provider)
+    Ok(opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge::new(&provider))
 }
 
 /// Track every metrics into one function. Cool.
