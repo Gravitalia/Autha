@@ -11,7 +11,7 @@ mod well_known;
 use axum::body::Bytes;
 use axum::extract::{Path, Request, State};
 use axum::middleware::Next;
-use axum::response::Response;
+use axum::response::Response as AxumResponse;
 use axum::{
     http::{header, Method},
     middleware,
@@ -48,7 +48,7 @@ pub fn app(state: AppState) -> Router {
         Path(user_id): Path<String>,
         mut req: Request,
         next: Next,
-    ) -> Result<Response, ServerError> {
+    ) -> Result<AxumResponse, ServerError> {
         let user_id = if user_id == "@me" {
             match req
                 .headers()
