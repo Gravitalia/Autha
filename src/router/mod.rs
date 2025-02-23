@@ -49,6 +49,9 @@ pub enum ServerError {
 
     #[error("Internal server error")]
     Internal(String),
+    
+    #[error("Invalid 'Authorization' header")]
+    Unauthorized,
 }
 
 /// Structure for detailed error responses.
@@ -158,6 +161,11 @@ impl IntoResponse for ServerError {
                 .into_response()
                 .unwrap_or_else(|_| internal_server_error()),
             ServerError::Internal(_err) => internal_server_error(),
+            ServerError::Unauthorized => ResponseError::default()
+                .title("Missing or invalid 'Authorization' header.")
+                .status(StatusCode::UNAUTHORIZED)
+                .into_response()
+                .unwrap_or_else(|_| internal_server_error())
         }
     }
 }
