@@ -1,7 +1,7 @@
 //! Get and update user data.
 
-use axum::extract::{Path, State};
-use axum::Json;
+use axum::extract::State;
+use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 
 use crate::router::ServerError;
@@ -47,7 +47,7 @@ pub struct Response {
 
 pub async fn get(
     State(state): State<AppState>,
-    Path(user_id): Path<String>,
+    Extension(user_id): Extension<String>,
 ) -> Result<Json<Response>, ServerError> {
     let user = User::default()
         .with_id(user_id)
