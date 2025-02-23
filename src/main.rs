@@ -9,6 +9,9 @@ mod user;
 mod well_known;
 
 use axum::body::Bytes;
+use axum::extract::{Path, Request, State};
+use axum::middleware::Next;
+use axum::response::Response;
 use axum::{
     http::{header, Method},
     middleware,
@@ -16,6 +19,7 @@ use axum::{
     Router,
 };
 use opentelemetry::global;
+use router::ServerError;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::timeout::RequestBodyTimeoutLayer;
@@ -23,8 +27,8 @@ use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse};
 use tower_http::LatencyUnit;
-use tracing_subscriber::{prelude::*, EnvFilter};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{prelude::*, EnvFilter};
 
 use std::env;
 use std::future::ready;
@@ -38,6 +42,38 @@ pub struct AppState {
 
 /// Create router.
 pub fn app(state: AppState) -> Router {
+    // Custom middleware for authentification.
+    async fn auth(
+        State(db): State<database::Database>,
+        Path(user_id): Path<String>,
+        mut req: Request,
+        next: Next,
+    ) -> Result<Response, ServerError> {
+        let user_id = if user_id == "@me" {
+            match req
+                .headers()
+                .get(header::AUTHORIZATION)
+                .and_then(|header| header.to_str().ok())
+            {
+                Some(token) => {
+                    match sqlx::query!("SELECT user_id FROM tokens WHERE token = $1", token)
+                        .fetch_one(&db.postgres)
+                        .await
+                    {
+                        Ok(token_data) => token_data.user_id,
+                        Err(_) => return Err(ServerError::Unauthorized),
+                    }
+                }
+                None => return Err(ServerError::Unauthorized),
+            }
+        } else {
+            user_id
+        };
+
+        req.extensions_mut().insert::<String>(user_id);
+        Ok(next.run(req).await)
+    }
+
     let middleware = ServiceBuilder::new()
         // Add high level tracing/logging to all requests.
         .layer(
@@ -59,14 +95,15 @@ pub fn app(state: AppState) -> Router {
         );
 
     Router::new()
+        // `GET /users/:ID` goes to `get`.
+        .route("/users/{user_id}", get(router::user::get))
+        .route_layer(middleware::from_fn_with_state(state.clone(), auth))
         // `GET /status.json` goes to `status`.
         .route("/status.json", get(router::status::status))
         // `POST /login` goes to `login`.
         .route("/login", post(router::login::login))
         // `POST /create` goes to `create`.
         .route("/create", post(router::create::create))
-        // `GET /users/:ID` goes to `get`.
-        .route("/users/{user_id}", get(router::user::get))
         .with_state(state.clone())
         .nest("/.well-known", well_known::well_known(state))
         .route_layer(middleware::from_fn(telemetry::track))
