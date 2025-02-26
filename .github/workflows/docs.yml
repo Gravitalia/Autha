@@ -1,4 +1,4 @@
-name: polymath/docs
+name: autha/docs
 
 on:
   workflow_dispatch: # Allow manual runs.
