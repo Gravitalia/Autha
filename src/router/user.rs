@@ -47,12 +47,8 @@ pub struct Response {
 
 pub async fn get(
     State(state): State<AppState>,
-    Extension(user_id): Extension<String>,
+    Extension(user): Extension<User>,
 ) -> Result<Json<Response>, ServerError> {
-    let user = User::default()
-        .with_id(user_id)
-        .get(&state.db.postgres)
-        .await?;
     let url = if let Ok(url) = url::Url::parse(&state.config.url) {
         format!(
             "{}://{}/users/{}",
@@ -63,18 +59,6 @@ pub async fn get(
     } else {
         user.id.clone()
     };
-    let public_keys = if let Some(pk_value) = user.public_keys {
-        let mut keys: Vec<Key> = serde_json::from_str(&pk_value.to_string())
-            .map_err(|_| ServerError::Internal("public keys seems corrupted".to_owned()))?;
-        for key in &mut keys {
-            if url != user.id {
-                key.id = format!("{}#{}", url, key.id);
-            }
-        }
-        keys
-    } else {
-        Vec::new()
-    };
 
     Ok(Json(Response {
         context: vec![ACTIVITY_STREAM.to_owned(), W3C_SECURITY.to_owned()],
@@ -84,7 +68,7 @@ pub async fn get(
         name: user.username,
         summary: String::default(),
         published: user.created_at.to_string(),
-        public_keys,
+        public_keys: user.public_keys,
         url,
     }))
 }

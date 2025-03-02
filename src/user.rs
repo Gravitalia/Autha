@@ -1,13 +1,12 @@
 use rand::distributions::{Alphanumeric, DistString};
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
-use sqlx::types::JsonValue;
 use sqlx::{Pool, Postgres};
 
 const TOKEN_LENGTH: usize = 64;
 
 /// Database user representation.
-#[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
 pub struct User {
     pub id: String,
     pub username: String,
@@ -18,10 +17,11 @@ pub struct User {
     #[serde(skip)]
     pub(crate) password: String,
     pub created_at: chrono::NaiveDate,
-    pub public_keys: Option<JsonValue>,
+    #[sqlx(json)]
+    pub public_keys: Vec<Key>,
 }
 
-#[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all(serialize = "camelCase"))]
 pub struct Key {
     pub id: String,
@@ -31,13 +31,15 @@ pub struct Key {
 }
 
 impl User {
-    /// Update `vanity` of [`User`].
+    /// Update `vanity` of en empty [`User`].
+    /// Do not work for fetched users.
     pub fn with_id(mut self, user_id: String) -> Self {
         self.id = user_id;
         self
     }
 
-    /// Update `email` of [`User`].
+    /// Update `email` of an empty [`User`].
+    /// Do not work for fetched users.
     pub fn with_email(mut self, email: String) -> Self {
         self.email = email;
         self
@@ -46,8 +48,7 @@ impl User {
     /// Get data on a user.
     pub async fn get(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
         if !self.id.is_empty() {
-            sqlx::query_as!(
-                User,
+            sqlx::query_as::<_, User>(
                 r#"SELECT 
                     u.id,
                     u.username,
@@ -57,7 +58,7 @@ impl User {
                     u.password,
                     u.created_at,
                     CASE
-                        WHEN COUNT(k.id) = 0 THEN NULL
+                        WHEN COUNT(k.id) = 0 THEN '[]'
                         ELSE JSONB_AGG(
                             jsonb_build_object(
                                 'id', cast(k.id as TEXT),
@@ -78,14 +79,13 @@ impl User {
                     u.flags, 
                     u.password, 
                     u.created_at;
-                "#,
-                self.id,
+                "#
             )
+            .bind(self.id)
             .fetch_one(conn)
             .await
         } else if !self.email.is_empty() {
-            sqlx::query_as!(
-                User,
+            sqlx::query_as::<_, User>(
                 r#"SELECT
                     u.id,
                     u.username,
@@ -95,7 +95,7 @@ impl User {
                     u.password,
                     u.created_at,
                     CASE
-                        WHEN COUNT(k.id) = 0 THEN NULL
+                        WHEN COUNT(k.id) = 0 THEN '[]'
                         ELSE JSONB_AGG(
                             jsonb_build_object(
                                 'id', cast(k.id as TEXT),
@@ -116,9 +116,9 @@ impl User {
                     u.flags,
                     u.password, 
                     u.created_at;
-                "#,
-                self.email,
+                "#
             )
+            .bind(self.email)
             .fetch_one(conn)
             .await
         } else {
