@@ -17,7 +17,7 @@ pub struct User {
     #[serde(skip)]
     pub(crate) password: String,
     pub created_at: chrono::NaiveDate,
-    #[sqlx(json, default)]
+    #[sqlx(json)]
     pub public_keys: Vec<Key>,
 }
 
