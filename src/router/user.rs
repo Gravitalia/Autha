@@ -1,12 +1,15 @@
 //! Get and update user data.
 
 use axum::extract::State;
+use axum::http::StatusCode;
 use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 
 use crate::router::ServerError;
 use crate::user::{Key, User};
 use crate::AppState;
+
+use super::Valid;
 
 const ACTIVITY_STREAM: &str = "https://www.w3.org/ns/activitystreams";
 const W3C_SECURITY: &str = "https://w3id.org/security/v1";
@@ -71,4 +74,36 @@ pub async fn get(
         public_keys: user.public_keys,
         url,
     }))
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+enum TypedKey {
+    One(String),
+    Multiple(Vec<String>),
+}
+
+#[derive(Debug, validator::Validate, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Body {
+    #[serde(alias = "preferredUsername")]
+    #[serde(alias = "username")]
+    #[validate(length(min = 2, max = 50, message = "Name must be 2 to 50 characters long."))]
+    username: Option<String>,
+    #[validate(length(min = 0, max = 255, message = "Biography must be 0 to 255 characters long."))]
+    summary: Option<String>,
+    public_keys: Option<TypedKey>,
+    #[validate(email(message = "Email must be formated."))]
+    email: Option<String>,
+    #[validate(length(min = 8, message = "Password must contain at least 8 characters."))]
+    password: Option<String>,
+}
+
+pub async fn patch(
+    State(state): State<AppState>,
+    Extension(user): Extension<User>,
+    Valid(body): Valid<Body>,
+) -> Result<StatusCode, ServerError> {
+    println!("\n{:?}\n", body);
+    Ok(StatusCode::OK)
 }
