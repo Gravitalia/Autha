@@ -69,8 +69,9 @@ pub fn app(state: AppState) -> Router {
         } else {
             user_id
         };
+        let user = user::User::default().with_id(user_id).get(&db.postgres).await?;
 
-        req.extensions_mut().insert::<String>(user_id);
+        req.extensions_mut().insert::<user::User>(user);
         Ok(next.run(req).await)
     }
 
