@@ -4,6 +4,7 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
+use validator::{ValidationError, ValidationErrors};
 
 use crate::router::ServerError;
 use crate::user::{Key, User};
@@ -81,6 +82,7 @@ pub async fn get(
 enum TypedKey {
     One(String),
     Multiple(Vec<String>),
+    Remove(usize),
 }
 
 #[derive(Debug, validator::Validate, Serialize, Deserialize)]
@@ -90,7 +92,11 @@ pub struct Body {
     #[serde(alias = "username")]
     #[validate(length(min = 2, max = 50, message = "Name must be 2 to 50 characters long."))]
     username: Option<String>,
-    #[validate(length(min = 0, max = 255, message = "Biography must be 0 to 255 characters long."))]
+    #[validate(length(
+        min = 0,
+        max = 255,
+        message = "Biography must be 0 to 255 characters long."
+    ))]
     summary: Option<String>,
     public_keys: Option<TypedKey>,
     #[validate(email(message = "Email must be formated."))]
@@ -100,10 +106,39 @@ pub struct Body {
 }
 
 pub async fn patch(
-    State(state): State<AppState>,
-    Extension(user): Extension<User>,
+    State(_state): State<AppState>,
+    Extension(mut user): Extension<User>,
     Valid(body): Valid<Body>,
 ) -> Result<StatusCode, ServerError> {
-    println!("\n{:?}\n", body);
+    let mut errors = ValidationErrors::new();
+
+    if let Some(username) = body.username {
+        user.username = username;
+    }
+
+    if let Some(_summary) = body.summary {
+        unimplemented!()
+    }
+
+    if let Some(keys) = body.public_keys {
+        match keys {
+            TypedKey::One(_) => unimplemented!(),
+            TypedKey::Multiple(_) => unimplemented!(),
+            TypedKey::Remove(_) => unimplemented!(),
+        }
+    }
+
+    if let Some(email) = body.email {
+        if let Some(password) = body.password {
+            user.email = email;
+        } else {
+            errors.add(
+                "password",
+                ValidationError::new("pwd").with_message("Missing 'password' field.".into()),
+            );
+            return Err(ServerError::Validation(errors));
+        }
+    }
+
     Ok(StatusCode::OK)
 }
