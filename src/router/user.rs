@@ -6,10 +6,10 @@ use serde::{Deserialize, Serialize};
 use validator::{ValidationError, ValidationErrors};
 
 use crate::crypto::check_key;
+use crate::database::Database;
 use crate::router::ServerError;
 use crate::user::{Key, User};
 use crate::AppState;
-use crate::database::Database;
 
 use super::login::check_password;
 use super::Valid;
@@ -118,8 +118,8 @@ pub async fn patch(
         user.username = username;
     }
 
-    if let Some(_summary) = body.summary {
-        unimplemented!()
+    if let Some(summary) = body.summary {
+        user.summary = Some(summary);
     }
 
     let mut pkeys: Vec<Key> = Vec::new();
@@ -133,7 +133,7 @@ pub async fn patch(
                     created_at: chrono::Utc::now().date_naive(),
                     ..Default::default()
                 })
-            },
+            }
             TypedKey::Multiple(keys) => {
                 for key in keys {
                     check_key(&key).map_err(ServerError::Key)?;
@@ -144,29 +144,32 @@ pub async fn patch(
                         ..Default::default()
                     })
                 }
-            },
+            }
             TypedKey::Remove(key) => {
-                sqlx::query!(
+                let _ = sqlx::query!(
                     r#"DELETE FROM keys WHERE id = $1 AND user_id = $2"#,
                     key,
                     user.id,
                 )
                 .execute(&db.postgres)
-                .await?;
-            },
+                .await.map_err(|_| {
+                    errors.add(
+                        "public_keys",
+                        ValidationError::new("pkeys").with_message("Invalid key ID to be deleted.".into()),
+                    );
+                });
+            }
         }
     }
 
-    if let Some(email) = body.email {
-        if let Some(password) = body.password {
-            check_password(&password, &user.password)?;
-            user.email = crate::crypto::email_encryption(email);
-        } else {
-            errors.add(
-                "password",
-                ValidationError::new("pwd").with_message("Missing 'password' field.".into()),
-            );
-        }
+    if let Some((email, password)) = body.email.clone().zip(body.password) {
+        check_password(&password, &user.password)?;
+        user.email = crate::crypto::email_encryption(email);
+    } else if body.email.is_some() {
+        errors.add(
+            "password",
+            ValidationError::new("pwd").with_message("Missing 'password' field.".into()),
+        );
     }
 
     if !errors.is_empty() {
@@ -176,7 +179,7 @@ pub async fn patch(
     // Save keys.
     for key in pkeys.iter_mut() {
         let record = sqlx::query!(
-            r#"INSERT INTO keys (user_id, key) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING RETURNING id"#,
+            r#"INSERT INTO "keys" (user_id, key) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING RETURNING id"#,
             user.id,
             key.public_key_pem,
         )
@@ -189,14 +192,7 @@ pub async fn patch(
     }
 
     // Save other user's data.
-    sqlx::query!(
-        r#"UPDATE users SET username = $1, email = $2 WHERE id = $3"#,
-        user.username,
-        user.email,
-        user.id
-    )
-    .execute(&db.postgres)
-    .await?;
+    user.update(&db.postgres).await?;
 
     Ok(Json(pkeys.into_iter().map(|k| k.id).collect()))
 }
