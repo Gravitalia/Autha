@@ -12,6 +12,7 @@ use axum::body::Bytes;
 use axum::extract::{Path, Request, State};
 use axum::middleware::Next;
 use axum::response::Response as AxumResponse;
+use axum::routing::patch;
 use axum::{
     http::{header, Method},
     middleware,
@@ -45,10 +46,14 @@ pub fn app(state: AppState) -> Router {
     // Custom middleware for authentification.
     async fn auth(
         State(db): State<database::Database>,
-        Path(user_id): Path<String>,
+        user_id: Option<Path<String>>,
         mut req: Request,
         next: Next,
     ) -> Result<AxumResponse, ServerError> {
+        let user_id = match user_id {
+            Some(user_id) => user_id.to_string(),
+            None => "@me".to_owned(),
+        };
         let user_id = if user_id == "@me" {
             match req
                 .headers()
@@ -69,7 +74,11 @@ pub fn app(state: AppState) -> Router {
         } else {
             user_id
         };
-        let user = user::User::default().with_id(user_id).get(&db.postgres).await?;
+        
+        let user = user::User::default()
+            .with_id(user_id)
+            .get(&db.postgres)
+            .await?;
 
         req.extensions_mut().insert::<user::User>(user);
         Ok(next.run(req).await)
@@ -98,6 +107,9 @@ pub fn app(state: AppState) -> Router {
     Router::new()
         // `GET /users/:ID` goes to `get`.
         .route("/users/{user_id}", get(router::user::get))
+        .route("/users/@me", get(router::user::get))
+        // `PATCH /users/@me` goes to `patch`. Authorization required.
+        .route("/users/@me", patch(router::user::patch))
         .route_layer(middleware::from_fn_with_state(state.clone(), auth))
         // `GET /status.json` goes to `status`.
         .route("/status.json", get(router::status::status))

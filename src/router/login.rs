@@ -25,23 +25,28 @@ pub struct Response {
     token: String,
 }
 
-pub async fn login(
-    State(db): State<Database>,
-    Valid(body): Valid<Body>,
-) -> Result<Json<Response>, ServerError> {
-    let email = crate::crypto::email_encryption(body.email);
-    let user = User::default().with_email(email).get(&db.postgres).await?;
-    let password = PasswordHash::new(&user.password).unwrap();
-
+#[inline]
+pub(super) fn check_password(pwd: &str, hash: &str) -> Result<(), ValidationErrors> {
+    let hash = PasswordHash::new(&hash).unwrap();
     Argon2::default()
-        .verify_password(body.password.as_bytes(), &password)
+        .verify_password(pwd.as_bytes(), &hash)
         .map_err(|_| {
             let error = ValidationError::new("invalid_password")
                 .with_message("Password don't match.".into());
             let mut errors = ValidationErrors::new();
             errors.add("password", error);
             errors
-        })?;
+        })
+}
+
+pub async fn login(
+    State(db): State<Database>,
+    Valid(body): Valid<Body>,
+) -> Result<Json<Response>, ServerError> {
+    let email = crate::crypto::email_encryption(body.email);
+    let user = User::default().with_email(email).get(&db.postgres).await?;
+    
+    check_password(&body.password, &user.password)?;
 
     let token = user.generate_token(&db.postgres).await?;
 

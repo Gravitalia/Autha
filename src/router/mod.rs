@@ -47,10 +47,13 @@ pub enum ServerError {
     #[error("SQL request failed: {0}")]
     Sql(#[from] SQLxError),
 
-    #[error("Internal server error")]
+    #[error("invalid public key")]
+    Key(crate::crypto::RsaError),
+
+    #[error("internal server error")]
     Internal(String),
-    
-    #[error("Invalid 'Authorization' header")]
+
+    #[error("invalid 'Authorization' header")]
     Unauthorized,
 }
 
@@ -160,12 +163,18 @@ impl IntoResponse for ServerError {
                 .status(StatusCode::BAD_REQUEST)
                 .into_response()
                 .unwrap_or_else(|_| internal_server_error()),
+            ServerError::Key(_) => ResponseError::default()
+                .title("Invalid key format.")
+                .details("Public key must be PCKS-1 or PCKS-8.")
+                .status(StatusCode::BAD_REQUEST)
+                .into_response()
+                .unwrap_or_else(|_| internal_server_error()),
             ServerError::Internal(_err) => internal_server_error(),
             ServerError::Unauthorized => ResponseError::default()
                 .title("Missing or invalid 'Authorization' header.")
                 .status(StatusCode::UNAUTHORIZED)
                 .into_response()
-                .unwrap_or_else(|_| internal_server_error())
+                .unwrap_or_else(|_| internal_server_error()),
         }
     }
 }
