@@ -1,5 +1,3 @@
-use std::usize;
-
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, SaltString},
     Argon2, Params, Version,
@@ -9,9 +7,10 @@ use regex_lite::Regex;
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
-use super::{ServerError, Valid};
 use crate::user::User;
 use crate::AppState;
+
+use super::{ServerError, Valid};
 
 fn validate_id(vanity: &str) -> Result<(), ValidationError> {
     if !Regex::new(r"[A-Za-z0-9\-\.\_\~\!\$\&\'\(\)\*\+\,\;\=](?:[A-Za-z0-9\-\.\_\~\!\$\&\'\(\)\*\+\,\;\=]|(?:%[0-9A-Fa-f]{2}))$")
@@ -38,7 +37,6 @@ pub struct Body {
         message = "Password must contain at least 8 characters."
     ))]
     password: String,
-    #[validate(length(min = 4, max = 14, message = "Invalid invite code."))]
     invite: Option<String>,
     _captcha: Option<String>,
 }
@@ -58,12 +56,20 @@ fn invalid_code() -> ValidationErrors {
     errors
 }
 
-pub async fn create(
+/// Middleware to handle invite codes.
+pub async fn middleware(
     State(state): State<AppState>,
-    Valid(body): Valid<Body>,
-) -> Result<(StatusCode, Json<Response>), ServerError> {
-    // If invite is required, check it.
+    req: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> Result<axum::response::Response, ServerError> {
     if state.config.invite_only {
+        let (parts, body) = req.into_parts();
+        let body_bytes = axum::body::to_bytes(body, usize::MAX)
+            .await
+            .map_err(|_| ServerError::Internal("Cannot decode body.".to_owned()))?;
+        let body = serde_json::from_slice::<Body>(&body_bytes)
+            .map_err(|_| ServerError::Internal("Cannot decode body.".to_owned()))?;
+
         if let Some(ref invite) = body.invite {
             let is_used = sqlx::query!(
                 r#"SELECT used_at IS NOT NULL AS is_used FROM "invite_codes" WHERE code = $1"#,
@@ -80,10 +86,32 @@ pub async fn create(
         } else {
             return Err(ServerError::Validation(invalid_code()));
         }
-    }
 
-    // Creation logic.
+        let req = axum::extract::Request::from_parts(parts, axum::body::Body::from(body_bytes));
+        let response = next.run(req).await;
+
+        if response.status().is_success() {
+            sqlx::query!(
+                r#"UPDATE "invite_codes" SET used_by = $1, used_at = NOW() WHERE code = $2"#,
+                body.id,
+                body.invite.unwrap_or_default(),
+            )
+            .execute(&state.db.postgres)
+            .await?;
+        }
+
+        Ok(response)
+    } else {
+        Ok(next.run(req).await)
+    }
+}
+
+pub async fn create(
+    State(state): State<AppState>,
+    Valid(body): Valid<Body>,
+) -> Result<(StatusCode, Json<Response>), ServerError> {
     let email = crate::crypto::email_encryption(body.email);
+
     let password = {
         let salt = SaltString::generate(&mut OsRng);
         let params = Params::new(Params::DEFAULT_M_COST * 4, 6, Params::DEFAULT_P_COST, None)
@@ -115,17 +143,6 @@ pub async fn create(
         .get(&state.db.postgres)
         .await?;
     let token = user.generate_token(&state.db.postgres).await?;
-
-    // Set invite code as used.
-    if state.config.invite_only {
-        sqlx::query!(
-            r#"UPDATE "invite_codes" SET used_by = $1, used_at = NOW() WHERE code = $2"#,
-            user.id,
-            body.invite.unwrap_or_default(),
-        )
-        .execute(&state.db.postgres)
-        .await?;
-    }
 
     Ok((StatusCode::CREATED, Json(Response { user, token })))
 }
