@@ -34,7 +34,7 @@ pub struct Configuration {
     privacy_policy: String,
     #[serde(skip_deserializing)]
     version: String,
-    invite_only: bool,
+    pub invite_only: bool,
     background: Option<String>,
 }
 
