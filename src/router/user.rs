@@ -1,15 +1,17 @@
 //! Get and update user data.
 
 use axum::extract::State;
-use axum::http::StatusCode;
 use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 use validator::{ValidationError, ValidationErrors};
 
+use crate::crypto::check_key;
 use crate::router::ServerError;
 use crate::user::{Key, User};
 use crate::AppState;
+use crate::database::Database;
 
+use super::login::check_password;
 use super::Valid;
 
 const ACTIVITY_STREAM: &str = "https://www.w3.org/ns/activitystreams";
@@ -82,7 +84,7 @@ pub async fn get(
 enum TypedKey {
     One(String),
     Multiple(Vec<String>),
-    Remove(usize),
+    Remove(i32),
 }
 
 #[derive(Debug, validator::Validate, Serialize, Deserialize)]
@@ -106,10 +108,10 @@ pub struct Body {
 }
 
 pub async fn patch(
-    State(_state): State<AppState>,
+    State(db): State<Database>,
     Extension(mut user): Extension<User>,
     Valid(body): Valid<Body>,
-) -> Result<StatusCode, ServerError> {
+) -> Result<Json<Vec<String>>, ServerError> {
     let mut errors = ValidationErrors::new();
 
     if let Some(username) = body.username {
@@ -120,25 +122,81 @@ pub async fn patch(
         unimplemented!()
     }
 
+    let mut pkeys: Vec<Key> = Vec::new();
     if let Some(keys) = body.public_keys {
         match keys {
-            TypedKey::One(_) => unimplemented!(),
-            TypedKey::Multiple(_) => unimplemented!(),
-            TypedKey::Remove(_) => unimplemented!(),
+            TypedKey::One(key) => {
+                check_key(&key).map_err(ServerError::Key)?;
+
+                pkeys.push(Key {
+                    public_key_pem: key,
+                    created_at: chrono::Utc::now().date_naive(),
+                    ..Default::default()
+                })
+            },
+            TypedKey::Multiple(keys) => {
+                for key in keys {
+                    check_key(&key).map_err(ServerError::Key)?;
+
+                    pkeys.push(Key {
+                        public_key_pem: key,
+                        created_at: chrono::Utc::now().date_naive(),
+                        ..Default::default()
+                    })
+                }
+            },
+            TypedKey::Remove(key) => {
+                sqlx::query!(
+                    r#"DELETE FROM keys WHERE id = $1 AND user_id = $2"#,
+                    key,
+                    user.id,
+                )
+                .execute(&db.postgres)
+                .await?;
+            },
         }
     }
 
     if let Some(email) = body.email {
         if let Some(password) = body.password {
-            user.email = email;
+            check_password(&password, &user.password)?;
+            user.email = crate::crypto::email_encryption(email);
         } else {
             errors.add(
                 "password",
                 ValidationError::new("pwd").with_message("Missing 'password' field.".into()),
             );
-            return Err(ServerError::Validation(errors));
         }
     }
 
-    Ok(StatusCode::OK)
+    if !errors.is_empty() {
+        return Err(ServerError::Validation(errors));
+    }
+
+    // Save keys.
+    for key in pkeys.iter_mut() {
+        let record = sqlx::query!(
+            r#"INSERT INTO keys (user_id, key) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING RETURNING id"#,
+            user.id,
+            key.public_key_pem,
+        )
+        .fetch_optional(&db.postgres)
+        .await?;
+
+        if let Some(record) = record {
+            key.id = record.id.to_string();
+        }
+    }
+
+    // Save other user's data.
+    sqlx::query!(
+        r#"UPDATE users SET username = $1, email = $2 WHERE id = $3"#,
+        user.username,
+        user.email,
+        user.id
+    )
+    .execute(&db.postgres)
+    .await?;
+
+    Ok(Json(pkeys.into_iter().map(|k| k.id).collect()))
 }
