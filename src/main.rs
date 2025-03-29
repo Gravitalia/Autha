@@ -74,7 +74,7 @@ pub fn app(state: AppState) -> Router {
         } else {
             user_id
         };
-        
+
         let user = user::User::default()
             .with_id(user_id)
             .get(&db.postgres)
@@ -104,19 +104,28 @@ pub fn app(state: AppState) -> Router {
                 .vary([header::AUTHORIZATION]),
         );
 
-    Router::new()
+    let create_router = Router::new()
+        // `POST /create` goes to `create`.
+        .route("/", post(router::create::create))
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            router::create::middleware,
+        ));
+    let users_router = Router::new()
         // `GET /users/:ID` goes to `get`.
-        .route("/users/{user_id}", get(router::user::get))
-        .route("/users/@me", get(router::user::get))
+        .route("/{user_id}", get(router::user::get))
+        .route("/@me", get(router::user::get))
         // `PATCH /users/@me` goes to `patch`. Authorization required.
-        .route("/users/@me", patch(router::user::patch))
-        .route_layer(middleware::from_fn_with_state(state.clone(), auth))
+        .route("/@me", patch(router::user::patch))
+        .route_layer(middleware::from_fn_with_state(state.clone(), auth));
+
+    Router::new()
         // `GET /status.json` goes to `status`.
         .route("/status.json", get(router::status::status))
         // `POST /login` goes to `login`.
         .route("/login", post(router::login::login))
-        // `POST /create` goes to `create`.
-        .route("/create", post(router::create::create))
+        .nest("/create", create_router)
+        .nest("/users", users_router)
         .with_state(state.clone())
         .nest("/.well-known", well_known::well_known(state))
         .route_layer(middleware::from_fn(telemetry::track))
