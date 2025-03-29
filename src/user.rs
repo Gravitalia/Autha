@@ -12,6 +12,7 @@ pub struct User {
     pub username: String,
     #[serde(skip)]
     pub email: String,
+    pub summary: Option<String>,
     pub avatar: Option<String>,
     pub flags: i32,
     #[serde(skip)]
@@ -53,6 +54,7 @@ impl User {
                     u.id,
                     u.username,
                     u.email,
+                    u.summary,
                     u.avatar,
                     u.flags,
                     u.password,
@@ -79,7 +81,7 @@ impl User {
                     u.flags, 
                     u.password, 
                     u.created_at;
-                "#
+                "#,
             )
             .bind(self.id)
             .fetch_one(conn)
@@ -90,6 +92,7 @@ impl User {
                     u.id,
                     u.username,
                     u.email,
+                    u.summary,
                     u.avatar,
                     u.flags,
                     u.password,
@@ -116,7 +119,7 @@ impl User {
                     u.flags,
                     u.password, 
                     u.created_at;
-                "#
+                "#,
             )
             .bind(self.email)
             .fetch_one(conn)
@@ -147,5 +150,25 @@ impl User {
         .await?;
 
         Ok(token)
+    }
+
+    pub async fn update(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
+        if self.id.is_empty() {
+            return Err(sqlx::Error::ColumnNotFound(
+                "Missing column 'id' column".into(),
+            ));
+        }
+        
+        sqlx::query!(
+            r#"UPDATE "users" SET username = $1, email = $2, summary = $3 WHERE id = $4"#,
+            self.username,
+            self.email,
+            self.summary,
+            self.id
+        )
+        .execute(conn)
+        .await?;
+
+        Ok(self)
     }
 }
