@@ -1,8 +1,6 @@
 version: 2
 updates:
   - package-ecosystem: "cargo"
-    groups:
-    directory: "/"
     schedule:
       interval: "daily"
     reviewers:
