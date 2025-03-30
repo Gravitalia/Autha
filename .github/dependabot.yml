@@ -1,15 +1,13 @@
 version: 2
 updates:
   - package-ecosystem: "cargo"
+    groups:
     directory: "/"
     schedule:
       interval: "daily"
     reviewers:
-      - RealHinome
+      - "RealHinome"
+    assignees:
+      - "RealHinome"
     # Disable all updates except security updates
-    ignore:
-      - dependency-name: "*"
-        update-types:
-          - "version-update:semver-major"
-          - "version-update:semver-minor"
-          - "version-update:semver-patch"
+    open-pull-requests-limit: 0
