@@ -6,7 +6,7 @@ use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
-use crate::{database::Database, user::User};
+use crate::{database::Database, totp::generate_totp, user::User};
 
 use super::{ServerError, Valid};
 
@@ -16,6 +16,7 @@ pub struct Body {
     email: String,
     #[validate(length(min = 8, message = "Password must contain at least 8 characters."))]
     password: String,
+    totp: Option<String>,
     _captcha: Option<String>,
 }
 
@@ -28,13 +29,12 @@ pub struct Response {
 #[inline(always)]
 pub(super) fn check_password(pwd: &str, hash: &str) -> Result<(), ValidationErrors> {
     let hash = PasswordHash::new(hash).map_err(|err| {
-            tracing::error!("Password decoding failed! {:?}", err);
-            let error = ValidationError::new("decode")
-                .with_message("Dang... wtf!".into());
-            let mut errors = ValidationErrors::new();
-            errors.add("password", error);
-            errors
-        })?;
+        tracing::error!("Password decoding failed! {:?}", err);
+        let error = ValidationError::new("decode").with_message("Dang... wtf!".into());
+        let mut errors = ValidationErrors::new();
+        errors.add("password", error);
+        errors
+    })?;
     Argon2::default()
         .verify_password(pwd.as_bytes(), &hash)
         .map_err(|_| {
@@ -54,6 +54,28 @@ pub async fn login(
     let user = User::default().with_email(email).get(&db.postgres).await?;
 
     check_password(&body.password, &user.password)?;
+
+    if let Some(ref secret) = user.totp_secret {
+        let mut errors = ValidationErrors::new();
+
+        if let Some(code) = body.totp {
+            if generate_totp(secret, 30, 6).unwrap() != code {
+                errors.add(
+                    "totp",
+                    ValidationError::new("invalid_totp").with_message("Invalid totp.".into()),
+                );
+            }
+        } else {
+            errors.add(
+                "totp",
+                ValidationError::new("invalid_totp").with_message("Missing 'totp' field.".into()),
+            );
+        }
+
+        if !errors.is_empty() {
+            return Err(ServerError::Validation(errors));
+        }
+    }
 
     let token = user.generate_token(&db.postgres).await?;
 
