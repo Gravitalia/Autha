@@ -25,9 +25,16 @@ pub struct Response {
     token: String,
 }
 
-#[inline]
+#[inline(always)]
 pub(super) fn check_password(pwd: &str, hash: &str) -> Result<(), ValidationErrors> {
-    let hash = PasswordHash::new(&hash).unwrap();
+    let hash = PasswordHash::new(hash).map_err(|err| {
+            tracing::error!("Password decoding failed! {:?}", err);
+            let error = ValidationError::new("decode")
+                .with_message("Dang... wtf!".into());
+            let mut errors = ValidationErrors::new();
+            errors.add("password", error);
+            errors
+        })?;
     Argon2::default()
         .verify_password(pwd.as_bytes(), &hash)
         .map_err(|_| {
@@ -45,7 +52,7 @@ pub async fn login(
 ) -> Result<Json<Response>, ServerError> {
     let email = crate::crypto::email_encryption(body.email);
     let user = User::default().with_email(email).get(&db.postgres).await?;
-    
+
     check_password(&body.password, &user.password)?;
 
     let token = user.generate_token(&db.postgres).await?;
