@@ -1,0 +1,24 @@
+[package]
+name = "autha-cli"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+debug = false
+
+[profile.dev]
+opt-level = "z"
+debug = true
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+clap_builder = { version = "4.5", features = ["cargo"] }
+clap_derive = "4.5"
+sqlx = { version= "0.8.3", features = ["postgres", "runtime-tokio"] }
+tokio = { version = "*", features = ["full"] }
+rand = "0.8"
