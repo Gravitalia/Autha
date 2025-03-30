@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   username      TEXT        NOT NULL,
   email         TEXT        UNIQUE NOT NULL,
   password      TEXT        NOT NULL,
+  totp_secret   TEXT,
   summary       TEXT,
   avatar        TEXT,
   flags         INT         NOT NULL DEFAULT 0,
