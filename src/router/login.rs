@@ -104,6 +104,7 @@ mod tests {
         let body = Body {
             email: "test@gravitalia.com".into(),
             password: "Password1234".into(),
+            totp: None,
             _captcha: None,
         };
         let body = serde_json::to_string(&body).unwrap();
