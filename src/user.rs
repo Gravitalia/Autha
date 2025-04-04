@@ -12,6 +12,7 @@ pub struct User {
     pub username: String,
     #[serde(skip)]
     pub email: String,
+    #[serde(skip)]
     pub totp_secret: Option<String>,
     pub summary: Option<String>,
     pub avatar: Option<String>,
