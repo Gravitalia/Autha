@@ -12,6 +12,8 @@ pub struct User {
     pub username: String,
     #[serde(skip)]
     pub email: String,
+    #[serde(skip)]
+    pub totp_secret: Option<String>,
     pub summary: Option<String>,
     pub avatar: Option<String>,
     pub flags: i32,
@@ -54,6 +56,7 @@ impl User {
                     u.id,
                     u.username,
                     u.email,
+                    u.totp_secret,
                     u.summary,
                     u.avatar,
                     u.flags,
@@ -92,6 +95,7 @@ impl User {
                     u.id,
                     u.username,
                     u.email,
+                    u.totp_secret,
                     u.summary,
                     u.avatar,
                     u.flags,
@@ -158,7 +162,7 @@ impl User {
                 "Missing column 'id' column".into(),
             ));
         }
-        
+
         sqlx::query!(
             r#"UPDATE "users" SET username = $1, email = $2, summary = $3 WHERE id = $4"#,
             self.username,

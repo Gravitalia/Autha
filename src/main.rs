@@ -5,6 +5,7 @@ mod database;
 mod router;
 mod status;
 mod telemetry;
+mod totp;
 mod user;
 mod well_known;
 
