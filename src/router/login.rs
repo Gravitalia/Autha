@@ -59,7 +59,7 @@ pub async fn login(
         let mut errors = ValidationErrors::new();
 
         if let Some(code) = body.totp {
-            if generate_totp(secret, 30, 6).unwrap() != code {
+            if generate_totp(secret, 30, 6).map_err(ServerError::Internal)? != code {
                 errors.add(
                     "totp",
                     ValidationError::new("invalid_totp").with_message("Invalid totp.".into()),
