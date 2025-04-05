@@ -8,6 +8,7 @@ use validator::{ValidationError, ValidationErrors};
 use crate::crypto::check_key;
 use crate::database::Database;
 use crate::router::ServerError;
+use crate::totp::generate_totp;
 use crate::user::{Key, User};
 use crate::AppState;
 
@@ -100,6 +101,8 @@ pub struct Body {
         message = "Biography must be 0 to 255 characters long."
     ))]
     summary: Option<String>,
+    totp_secret: Option<String>,
+    totp_code: Option<String>,
     public_keys: Option<TypedKey>,
     #[validate(email(message = "Email must be formated."))]
     email: Option<String>,
@@ -120,6 +123,28 @@ pub async fn patch(
 
     if let Some(summary) = body.summary {
         user.summary = Some(summary);
+    }
+
+    if let Some(((secret, password), code)) = body.totp_secret.clone().zip(body.password.clone()).zip(body.totp_code.clone()) {
+        check_password(&password, &user.password)?;
+        if generate_totp(&secret, 30, 6).map_err(ServerError::Internal)? == code {
+            user.totp_secret = Some(secret);
+        } else {
+            errors.add(
+                "totp_code",
+                ValidationError::new("totp").with_message("TOTP code is wrong.".into()),
+            );
+        }
+    } else if body.totp_secret.is_some() {
+        errors.add(
+            "password",
+            ValidationError::new("pwd").with_message("Missing 'password' or 'totp_code' field.".into()),
+        );
+    } else if body.totp_code.is_some() {
+        errors.add(
+            "password",
+            ValidationError::new("secret").with_message("Missing 'password' or 'totp_secret' field.".into()),
+        );
     }
 
     let mut pkeys: Vec<Key> = Vec::new();
@@ -152,10 +177,12 @@ pub async fn patch(
                     user.id,
                 )
                 .execute(&db.postgres)
-                .await.map_err(|_| {
+                .await
+                .map_err(|_| {
                     errors.add(
                         "public_keys",
-                        ValidationError::new("pkeys").with_message("Invalid key ID to be deleted.".into()),
+                        ValidationError::new("pkeys")
+                            .with_message("Invalid key ID to be deleted.".into()),
                     );
                 });
             }

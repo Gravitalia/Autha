@@ -16,7 +16,8 @@ pub struct Body {
     email: String,
     #[validate(length(min = 8, message = "Password must contain at least 8 characters."))]
     password: String,
-    totp: Option<String>,
+    #[serde(rename = "totpCode")]
+    totp_code: Option<String>,
     _captcha: Option<String>,
 }
 
@@ -58,17 +59,17 @@ pub async fn login(
     if let Some(ref secret) = user.totp_secret {
         let mut errors = ValidationErrors::new();
 
-        if let Some(code) = body.totp {
+        if let Some(code) = body.totp_code {
             if generate_totp(secret, 30, 6).map_err(ServerError::Internal)? != code {
                 errors.add(
-                    "totp",
-                    ValidationError::new("invalid_totp").with_message("Invalid totp.".into()),
+                    "totpCode",
+                    ValidationError::new("invalid_totp").with_message("TOTP code is wrong.".into()),
                 );
             }
         } else {
             errors.add(
-                "totp",
-                ValidationError::new("invalid_totp").with_message("Missing 'totp' field.".into()),
+                "totpCode",
+                ValidationError::new("invalid_totp").with_message("Missing 'totpCode' field.".into()),
             );
         }
 
@@ -104,7 +105,7 @@ mod tests {
         let body = Body {
             email: "test@gravitalia.com".into(),
             password: "Password1234".into(),
-            totp: None,
+            totp_code: None,
             _captcha: None,
         };
         let body = serde_json::to_string(&body).unwrap();
