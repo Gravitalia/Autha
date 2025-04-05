@@ -126,9 +126,8 @@ pub async fn patch(
     }
 
     if let Some(((secret, password), code)) = body.totp_secret.clone().zip(body.password.clone()).zip(body.totp_code.clone()) {
-        println!("test");
         check_password(&password, &user.password)?;
-        if generate_totp(&secret, 30, 6).unwrap() == code {
+        if generate_totp(&secret, 30, 6).map_err(ServerError::Internal)? == code {
             user.totp_secret = Some(secret);
         } else {
             errors.add(
