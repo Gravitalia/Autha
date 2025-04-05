@@ -164,10 +164,11 @@ impl User {
         }
 
         sqlx::query!(
-            r#"UPDATE "users" SET username = $1, email = $2, summary = $3 WHERE id = $4"#,
+            r#"UPDATE "users" SET username = $1, email = $2, summary = $3, totp_secret = $4 WHERE id = $5"#,
             self.username,
             self.email,
             self.summary,
+            self.totp_secret,
             self.id
         )
         .execute(conn)
