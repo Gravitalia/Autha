@@ -102,6 +102,7 @@ pub fn app(state: AppState) -> Router {
             CorsLayer::new()
                 .allow_origin(Any)
                 .allow_methods([Method::GET, Method::POST, Method::OPTIONS, Method::PATCH])
+                .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE])
                 .vary([header::AUTHORIZATION]),
         );
 
