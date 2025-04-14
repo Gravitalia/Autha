@@ -39,7 +39,7 @@ thiserror = "2.0"
 # Telemetry
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-opentelemetry = { version = "0.28.0", features = ["trace"] }
+opentelemetry = { version = "0.29.1", features = ["trace"] }
 opentelemetry_sdk = "0.28.0"
 opentelemetry-otlp = { version="0.28.0",  features = ["grpc-tonic", "metrics"] }
 opentelemetry-appender-tracing = "0.28.1"
