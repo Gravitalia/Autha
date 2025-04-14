@@ -7,4 +7,4 @@ updates:
     reviewers:
       - "RealHinome"
     # Disable all updates except security updates
-    open-pull-requests-limit: 0
+    #open-pull-requests-limit: 0
