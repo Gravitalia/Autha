@@ -49,6 +49,7 @@ sysinfo = { version = "0.34", default-features = false, features = ["system"] }
 # Cryptography
 argon2 = "0.5.3"
 rsa = "0.9.7"
+p256 = "0.13.2"
 aes = "0.8.4"
 fpe = "0.6.1"
 rand = "0.8"
