@@ -48,7 +48,7 @@ pub enum ServerError {
     Sql(#[from] SQLxError),
 
     #[error("invalid public key")]
-    Key(crate::crypto::RsaError),
+    Key(crate::crypto::KeyError),
 
     #[error("internal server error")]
     Internal(String),
