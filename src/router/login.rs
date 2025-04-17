@@ -69,7 +69,8 @@ pub async fn login(
         } else {
             errors.add(
                 "totpCode",
-                ValidationError::new("invalid_totp").with_message("Missing 'totpCode' field.".into()),
+                ValidationError::new("invalid_totp")
+                    .with_message("Missing 'totpCode' field.".into()),
             );
         }
 
@@ -87,14 +88,11 @@ pub async fn login(
 mod tests {
     use super::*;
     use crate::*;
-    use axum::{
-        body::Body as RequestBody,
-        http::{self, Request, StatusCode},
-    };
+    use axum::http::StatusCode;
+    use serde_json::json;
     use sqlx::{Pool, Postgres};
-    use tower::ServiceExt;
 
-    #[sqlx::test]
+    #[sqlx::test(fixtures("../../fixtures/users.sql"))]
     async fn test_login_handler(pool: Pool<Postgres>) {
         let state = AppState {
             db: Database { postgres: pool },
@@ -108,19 +106,19 @@ mod tests {
             totp_code: None,
             _captcha: None,
         };
-        let body = serde_json::to_string(&body).unwrap();
-        let response = app
-            .oneshot(
-                Request::builder()
-                    .method(http::Method::POST)
-                    .uri("/login")
-                    .header(http::header::CONTENT_TYPE, "application/json")
-                    .body(RequestBody::from(body))
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
+        let response =
+            make_request(app.clone(), Method::POST, "/login", json!(body).to_string()).await;
 
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body = Body {
+            email: "admin@gravitalia.com".into(),
+            password: "StRong_Pa§$W0rD".into(),
+            totp_code: None,
+            _captcha: None,
+        };
+        let response = make_request(app, Method::POST, "/login", json!(body).to_string()).await;
+
+        assert_eq!(response.status(), StatusCode::OK);
     }
 }

@@ -25,7 +25,7 @@ pub enum Error {
 }
 
 /// Structure of the `status.json` file.
-#[derive(Serialize, Deserialize, Default, Debug, Clone)]
+#[derive(Serialize, PartialEq, Deserialize, Default, Debug, Clone)]
 pub struct Configuration {
     name: String,
     pub url: String,
