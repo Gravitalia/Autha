@@ -151,13 +151,10 @@ pub async fn create(
 mod tests {
     use super::*;
     use crate::*;
-    use axum::{
-        body::Body as RequestBody,
-        http::{self, Request, StatusCode},
-    };
+    use axum::http::StatusCode;
     use http_body_util::BodyExt;
+    use serde_json::json;
     use sqlx::{Pool, Postgres};
-    use tower::ServiceExt;
 
     #[sqlx::test]
     async fn test_create_handler(pool: Pool<Postgres>) {
@@ -174,18 +171,7 @@ mod tests {
             _captcha: None,
             invite: None,
         };
-        let body = serde_json::to_string(&body).unwrap();
-        let response = app
-            .oneshot(
-                Request::builder()
-                    .method(http::Method::POST)
-                    .uri("/create")
-                    .header(http::header::CONTENT_TYPE, "application/json")
-                    .body(RequestBody::from(body))
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
+        let response = make_request(app, Method::POST, "/create", json!(body).to_string()).await;
 
         assert_eq!(response.status(), StatusCode::CREATED);
 

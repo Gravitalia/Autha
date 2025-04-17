@@ -125,7 +125,12 @@ pub async fn patch(
         user.summary = Some(summary);
     }
 
-    if let Some(((secret, password), code)) = body.totp_secret.clone().zip(body.password.clone()).zip(body.totp_code.clone()) {
+    if let Some(((secret, password), code)) = body
+        .totp_secret
+        .clone()
+        .zip(body.password.clone())
+        .zip(body.totp_code.clone())
+    {
         check_password(&password, &user.password)?;
         if generate_totp(&secret, 30, 6).map_err(ServerError::Internal)? == code {
             user.totp_secret = Some(secret);
@@ -138,12 +143,14 @@ pub async fn patch(
     } else if body.totp_secret.is_some() {
         errors.add(
             "password",
-            ValidationError::new("pwd").with_message("Missing 'password' or 'totp_code' field.".into()),
+            ValidationError::new("pwd")
+                .with_message("Missing 'password' or 'totp_code' field.".into()),
         );
     } else if body.totp_code.is_some() {
         errors.add(
             "password",
-            ValidationError::new("secret").with_message("Missing 'password' or 'totp_secret' field.".into()),
+            ValidationError::new("secret")
+                .with_message("Missing 'password' or 'totp_secret' field.".into()),
         );
     }
 
@@ -222,4 +229,31 @@ pub async fn patch(
     user.update(&db.postgres).await?;
 
     Ok(Json(pkeys.into_iter().map(|k| k.id).collect()))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::*;
+    use axum::http::StatusCode;
+    use http_body_util::BodyExt;
+    use sqlx::{Pool, Postgres};
+
+    const ID: &str = "admin";
+
+    #[sqlx::test(fixtures("../../fixtures/users.sql"))]
+    async fn test_get_user_handler(pool: Pool<Postgres>) {
+        let state = AppState {
+            db: database::Database { postgres: pool },
+            config: status::Configuration::default(),
+        };
+        let app = app(state);
+
+        let path = format!("/users/{}", ID);
+        let response = make_request(app, Method::GET, &path, String::default()).await;
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let body: router::user::Response = serde_json::from_slice(&body).unwrap();
+        assert_eq!(body.id, ID);
+    }
 }
