@@ -36,6 +36,28 @@ use std::env;
 use std::future::ready;
 use std::time::Duration;
 
+/// MUST NEVER be used in production.
+#[cfg(test)]
+pub async fn make_request(
+    app: Router,
+    method: Method,
+    path: &str,
+    body: String,
+) -> axum::http::Response<axum::body::Body> {
+    use tower::util::ServiceExt;
+
+    app.oneshot(
+        Request::builder()
+            .method(method)
+            .uri(path)
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(axum::body::Body::from(body))
+            .unwrap(),
+    )
+    .await
+    .unwrap()
+}
+
 #[derive(Clone)]
 pub struct AppState {
     pub config: status::Configuration,
