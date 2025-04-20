@@ -40,6 +40,8 @@ jobs:
             /root/.cargo/git
             target
             .sqlx
+            /__w/Autha/Autha/target
+            /__w/Autha/Autha/.sqlx
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
@@ -56,8 +58,6 @@ jobs:
         run: cargo sqlx prepare
         env:
           DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
-
-      - run: echo "$PWD"
 
       - name: Tests
         run: cargo test
