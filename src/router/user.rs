@@ -12,7 +12,7 @@ use crate::totp::generate_totp;
 use crate::user::{Key, User};
 use crate::AppState;
 
-use super::login::check_password;
+use super::login::{check_password, check_totp};
 use super::Valid;
 
 const ACTIVITY_STREAM: &str = "https://www.w3.org/ns/activitystreams";
@@ -229,6 +229,26 @@ pub async fn patch(
     user.update(&db.postgres).await?;
 
     Ok(Json(pkeys.into_iter().map(|k| k.id).collect()))
+}
+
+#[derive(Debug, validator::Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteBody {
+    totp_code: Option<String>,
+    #[validate(length(min = 8, message = "Password must contain at least 8 characters."))]
+    password: String,
+}
+
+pub async fn delete(
+    State(db): State<Database>,
+    Extension(user): Extension<User>,
+    Valid(body): Valid<DeleteBody>,
+) -> Result<(), ServerError> {
+    check_password(&body.password, &user.password)?;
+    check_totp(body.totp_code, user.totp_secret.clone())?;
+
+    user.delete(&db.postgres).await?;
+    Ok(())
 }
 
 #[cfg(test)]

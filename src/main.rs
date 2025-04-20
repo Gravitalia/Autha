@@ -13,11 +13,10 @@ use axum::body::Bytes;
 use axum::extract::{Path, Request, State};
 use axum::middleware::Next;
 use axum::response::Response as AxumResponse;
-use axum::routing::patch;
+use axum::routing::{get, post, delete, patch};
+use axum::http::{header, Method};
 use axum::{
-    http::{header, Method},
     middleware,
-    routing::{get, post},
     Router,
 };
 use opentelemetry::global;
@@ -141,6 +140,8 @@ pub fn app(state: AppState) -> Router {
         .route("/@me", get(router::user::get))
         // `PATCH /users/@me` goes to `patch`. Authorization required.
         .route("/@me", patch(router::user::patch))
+        // `DELETE /users/@me` goes to `delete`. Authorization required.
+        .route("/@me", delete(router::user::delete))
         .route_layer(middleware::from_fn_with_state(state.clone(), auth));
 
     Router::new()
