@@ -32,14 +32,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/bin
-            /root/.cargo/bin
+            /usr/local/cargo/bin
             ~/.cargo/registry
-            /root/.cargo/registry
             ~/.cargo/git
-            /root/.cargo/git
-            target
-            .sqlx
             /__w/Autha/Autha/target
             /__w/Autha/Autha/.sqlx
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
