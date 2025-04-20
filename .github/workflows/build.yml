@@ -33,8 +33,11 @@ jobs:
         with:
           path: |
             ~/.cargo/bin
+            /root/.cargo/bin
             ~/.cargo/registry
+            /root/.cargo/registry
             ~/.cargo/git
+            /root/.cargo/git
             target
             .sqlx
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
@@ -53,6 +56,8 @@ jobs:
         run: cargo sqlx prepare
         env:
           DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+
+      - run: echo "$PWD"
 
       - name: Tests
         run: cargo test
