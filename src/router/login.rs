@@ -27,7 +27,7 @@ pub struct Response {
     token: String,
 }
 
-#[inline(always)]
+#[inline]
 pub(super) fn check_password(pwd: &str, hash: &str) -> Result<(), ValidationErrors> {
     let hash = PasswordHash::new(hash).map_err(|err| {
         tracing::error!("Password decoding failed! {:?}", err);
@@ -47,19 +47,12 @@ pub(super) fn check_password(pwd: &str, hash: &str) -> Result<(), ValidationErro
         })
 }
 
-pub async fn login(
-    State(db): State<Database>,
-    Valid(body): Valid<Body>,
-) -> Result<Json<Response>, ServerError> {
-    let email = crate::crypto::email_encryption(body.email);
-    let user = User::default().with_email(email).get(&db.postgres).await?;
-
-    check_password(&body.password, &user.password)?;
-
-    if let Some(ref secret) = user.totp_secret {
+#[inline]
+pub(super) fn check_totp(code: Option<String>, secret: Option<String>) -> Result<(), ServerError> {
+    if let Some(ref secret) = secret {
         let mut errors = ValidationErrors::new();
 
-        if let Some(code) = body.totp_code {
+        if let Some(code) = code {
             if generate_totp(secret, 30, 6).map_err(ServerError::Internal)? != code {
                 errors.add(
                     "totpCode",
@@ -78,6 +71,19 @@ pub async fn login(
             return Err(ServerError::Validation(errors));
         }
     }
+
+    Ok(())
+}
+
+pub async fn login(
+    State(db): State<Database>,
+    Valid(body): Valid<Body>,
+) -> Result<Json<Response>, ServerError> {
+    let email = crate::crypto::email_encryption(body.email);
+    let user = User::default().with_email(email).get(&db.postgres).await?;
+
+    check_password(&body.password, &user.password)?;
+    check_totp(body.totp_code, user.totp_secret.clone())?;
 
     let token = user.generate_token(&db.postgres).await?;
 
