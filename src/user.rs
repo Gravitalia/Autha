@@ -51,83 +51,15 @@ impl User {
     /// Get data on a user.
     pub async fn get(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
         if !self.id.is_empty() {
-            sqlx::query_as::<_, User>(
-                r#"SELECT 
-                    u.id,
-                    u.username,
-                    u.email,
-                    u.totp_secret,
-                    u.summary,
-                    u.avatar,
-                    u.flags,
-                    u.password,
-                    u.created_at,
-                    CASE
-                        WHEN COUNT(k.id) = 0 THEN '[]'
-                        ELSE JSONB_AGG(
-                            jsonb_build_object(
-                                'id', cast(k.id as TEXT),
-                                'owner', k.user_id,
-                                'public_key_pem', k.key,
-                                'created_at', k.created_at
-                            )
-                        )
-                    END AS public_keys
-                FROM users u
-                LEFT JOIN keys k ON k.user_id = u.id
-                WHERE u.id = $1
-                GROUP BY 
-                    u.id, 
-                    u.username, 
-                    u.email, 
-                    u.avatar, 
-                    u.flags, 
-                    u.password, 
-                    u.created_at;
-                "#,
-            )
-            .bind(self.id)
-            .fetch_one(conn)
-            .await
+            sqlx::query_as::<_, User>(&get_by_field_query("id"))
+                .bind(self.id)
+                .fetch_one(conn)
+                .await
         } else if !self.email.is_empty() {
-            sqlx::query_as::<_, User>(
-                r#"SELECT
-                    u.id,
-                    u.username,
-                    u.email,
-                    u.totp_secret,
-                    u.summary,
-                    u.avatar,
-                    u.flags,
-                    u.password,
-                    u.created_at,
-                    CASE
-                        WHEN COUNT(k.id) = 0 THEN '[]'
-                        ELSE JSONB_AGG(
-                            jsonb_build_object(
-                                'id', cast(k.id as TEXT),
-                                'owner', k.user_id,
-                                'public_key_pem', k.key,
-                                'created_at', k.created_at
-                            )
-                        )
-                    END AS public_keys
-                FROM users u
-                LEFT JOIN keys k ON k.user_id = u.id
-                WHERE u.email = $1
-                GROUP BY 
-                    u.id, 
-                    u.username, 
-                    u.email, 
-                    u.avatar, 
-                    u.flags,
-                    u.password, 
-                    u.created_at;
-                "#,
-            )
-            .bind(self.email)
-            .fetch_one(conn)
-            .await
+            sqlx::query_as::<_, User>(&get_by_field_query("email"))
+                .bind(self.email)
+                .fetch_one(conn)
+                .await
         } else {
             Err(sqlx::Error::ColumnNotFound(
                 "Missing column 'id' or 'email' column".to_owned(),
@@ -156,6 +88,7 @@ impl User {
         Ok(token)
     }
 
+    /// Update user data on database using structure.
     pub async fn update(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
         if self.id.is_empty() {
             return Err(sqlx::Error::ColumnNotFound(
@@ -176,4 +109,56 @@ impl User {
 
         Ok(self)
     }
+
+    /// Delete user from database (with 30 days retention).
+    pub async fn delete(self, conn: &Pool<Postgres>) -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            r#"UPDATE "users" SET deleted_at = $1 WHERE id = $2"#,
+            chrono::Utc::now().date_naive(),
+            self.id
+        )
+        .execute(conn)
+        .await?;
+
+        Ok(())
+    }
+}
+
+fn get_by_field_query(field: &str) -> String {
+    format!(
+        r#"SELECT 
+                u.id,
+                u.username,
+                u.email,
+                u.totp_secret,
+                u.summary,
+                u.avatar,
+                u.flags,
+                u.password,
+                u.created_at,
+                CASE
+                    WHEN COUNT(k.id) = 0 THEN '[]'
+                    ELSE JSONB_AGG(
+                        jsonb_build_object(
+                            'id', cast(k.id as TEXT),
+                            'owner', k.user_id,
+                            'public_key_pem', k.key,
+                            'created_at', k.created_at
+                        )
+                    )
+                END AS public_keys
+            FROM users u
+            LEFT JOIN keys k ON k.user_id = u.id
+            WHERE u.{field} = $1
+            GROUP BY 
+                u.id, 
+                u.username, 
+                u.email, 
+                u.avatar, 
+                u.flags, 
+                u.password, 
+                u.created_at;
+            "#,
+        field = field
+    )
 }
