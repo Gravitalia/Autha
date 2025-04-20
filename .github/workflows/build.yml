@@ -42,7 +42,13 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Install SQLx
-        run: cargo install sqlx-cli --version 0.8.5
+        continue-on-error: true
+        run: |
+          if command -v sqlx >/dev/null 2>&1; then
+            echo ""
+          else
+            cargo install sqlx-cli --version 0.8.5
+          fi
 
       - name: Run migrations
         run: cargo sqlx migrate run
