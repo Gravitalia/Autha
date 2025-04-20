@@ -28,8 +28,21 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
 
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/sqlx
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            .sqlx
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
       - name: Install SQLx
-        run: cargo install sqlx-cli
+        run: cargo install sqlx-cli --version 0.8.5
 
       - name: Run migrations
         run: cargo sqlx migrate run
