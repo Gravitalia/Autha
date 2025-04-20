@@ -28,8 +28,27 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
 
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /usr/local/cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            /__w/Autha/Autha/target
+            /__w/Autha/Autha/.sqlx
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
       - name: Install SQLx
-        run: cargo install sqlx-cli
+        continue-on-error: true
+        run: |
+          if command -v sqlx >/dev/null 2>&1; then
+            echo ""
+          else
+            cargo install sqlx-cli --version 0.8.5
+          fi
 
       - name: Run migrations
         run: cargo sqlx migrate run
