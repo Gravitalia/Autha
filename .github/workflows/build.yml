@@ -32,7 +32,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/bin/sqlx
+            ~/.cargo/bin
             ~/.cargo/registry
             ~/.cargo/git
             target
