@@ -141,6 +141,8 @@ pub fn app(state: AppState) -> Router {
         .route("/@me", get(router::user::get))
         // `PATCH /users/@me` goes to `patch`. Authorization required.
         .route("/@me", patch(router::user::patch))
+        // `DELETE /users/@me` goes to `delete`. Authorization required.
+        .route("/@me", delete(router::user::delete))
         .route_layer(middleware::from_fn_with_state(state.clone(), auth));
 
     Router::new()
