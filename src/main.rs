@@ -13,11 +13,10 @@ use axum::body::Bytes;
 use axum::extract::{Path, Request, State};
 use axum::middleware::Next;
 use axum::response::Response as AxumResponse;
-use axum::routing::patch;
+use axum::routing::{get, post, delete, patch};
+use axum::http::{header, Method};
 use axum::{
-    http::{header, Method},
     middleware,
-    routing::{get, post},
     Router,
 };
 use opentelemetry::global;
