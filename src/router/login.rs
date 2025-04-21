@@ -6,9 +6,10 @@ use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
+use crate::ServerError;
 use crate::{database::Database, totp::generate_totp, user::User};
 
-use super::{ServerError, Valid};
+use super::Valid;
 
 #[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct Body {

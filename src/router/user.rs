@@ -7,10 +7,10 @@ use validator::{ValidationError, ValidationErrors};
 
 use crate::crypto::check_key;
 use crate::database::Database;
-use crate::router::ServerError;
 use crate::totp::generate_totp;
 use crate::user::{Key, User};
 use crate::AppState;
+use crate::ServerError;
 
 use super::login::{check_password, check_totp};
 use super::Valid;
