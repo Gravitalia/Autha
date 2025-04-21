@@ -2,6 +2,7 @@
 #[deny(missing_docs, unused_mut)]
 mod crypto;
 mod database;
+mod error;
 mod router;
 mod status;
 mod telemetry;
@@ -11,16 +12,13 @@ mod well_known;
 
 use axum::body::Bytes;
 use axum::extract::{Path, Request, State};
+use axum::http::{header, Method};
 use axum::middleware::Next;
 use axum::response::Response as AxumResponse;
-use axum::routing::{get, post, delete, patch};
-use axum::http::{header, Method};
-use axum::{
-    middleware,
-    Router,
-};
+use axum::routing::{delete, get, patch, post};
+use axum::{middleware, Router};
+use error::ServerError;
 use opentelemetry::global;
-use router::ServerError;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::timeout::RequestBodyTimeoutLayer;
