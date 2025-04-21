@@ -9,8 +9,9 @@ use validator::{Validate, ValidationError, ValidationErrors};
 
 use crate::user::User;
 use crate::AppState;
+use crate::ServerError;
 
-use super::{ServerError, Valid};
+use super::Valid;
 
 fn validate_id(vanity: &str) -> Result<(), ValidationError> {
     if !Regex::new(r"[A-Za-z0-9\-\.\_\~\!\$\&\'\(\)\*\+\,\;\=](?:[A-Za-z0-9\-\.\_\~\!\$\&\'\(\)\*\+\,\;\=]|(?:%[0-9A-Fa-f]{2}))$")
