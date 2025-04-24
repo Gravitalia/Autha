@@ -9,76 +9,9 @@ use crate::crypto::check_key;
 use crate::database::Database;
 use crate::totp::generate_totp;
 use crate::user::{Key, User};
-use crate::AppState;
 use crate::ServerError;
-
-use super::login::{check_password, check_totp};
-use super::Valid;
-
-const ACTIVITY_STREAM: &str = "https://www.w3.org/ns/activitystreams";
-const W3C_SECURITY: &str = "https://w3id.org/security/v1";
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-enum ActivityType {
-    Add,
-    Application,
-    Article,
-    Collection,
-    Create,
-    Image,
-    Like,
-    Link,
-    Note,
-    Object,
-    OrderedCollection,
-    Person,
-    Place,
-    Point,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Response {
-    #[serde(rename = "@context")]
-    context: Vec<String>,
-    r#type: ActivityType,
-    id: String,
-    #[serde(rename = "preferredUsername")]
-    username: String,
-    name: String,
-    url: String,
-    summary: String,
-    published: String,
-    public_keys: Vec<Key>,
-}
-
-pub async fn get(
-    State(state): State<AppState>,
-    Extension(user): Extension<User>,
-) -> Result<Json<Response>, ServerError> {
-    let url = if let Ok(url) = url::Url::parse(&state.config.url) {
-        format!(
-            "{}://{}/users/{}",
-            url.scheme(),
-            url.host().map(|u| u.to_string()).unwrap_or_default(),
-            user.id,
-        )
-    } else {
-        user.id.clone()
-    };
-
-    Ok(Json(Response {
-        context: vec![ACTIVITY_STREAM.to_owned(), W3C_SECURITY.to_owned()],
-        r#type: ActivityType::Person,
-        id: user.id.clone(),
-        username: user.username.clone(),
-        name: user.username,
-        summary: String::default(),
-        published: user.created_at.to_string(),
-        public_keys: user.public_keys,
-        url,
-    }))
-}
+use crate::router::login::check_password;
+use crate::router::Valid;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -110,7 +43,7 @@ pub struct Body {
     password: Option<String>,
 }
 
-pub async fn patch(
+pub async fn handler(
     State(db): State<Database>,
     Extension(mut user): Extension<User>,
     Valid(body): Valid<Body>,
@@ -229,51 +162,4 @@ pub async fn patch(
     user.update(&db.postgres).await?;
 
     Ok(Json(pkeys.into_iter().map(|k| k.id).collect()))
-}
-
-#[derive(Debug, validator::Validate, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteBody {
-    totp_code: Option<String>,
-    #[validate(length(min = 8, message = "Password must contain at least 8 characters."))]
-    password: String,
-}
-
-pub async fn delete(
-    State(db): State<Database>,
-    Extension(user): Extension<User>,
-    Valid(body): Valid<DeleteBody>,
-) -> Result<(), ServerError> {
-    check_password(&body.password, &user.password)?;
-    check_totp(body.totp_code, user.totp_secret.clone())?;
-
-    user.delete(&db.postgres).await?;
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::*;
-    use axum::http::StatusCode;
-    use http_body_util::BodyExt;
-    use sqlx::{Pool, Postgres};
-
-    const ID: &str = "admin";
-
-    #[sqlx::test(fixtures("../../fixtures/users.sql"))]
-    async fn test_get_user_handler(pool: Pool<Postgres>) {
-        let state = AppState {
-            db: database::Database { postgres: pool },
-            config: status::Configuration::default(),
-        };
-        let app = app(state);
-
-        let path = format!("/users/{}", ID);
-        let response = make_request(app, Method::GET, &path, String::default()).await;
-        assert_eq!(response.status(), StatusCode::OK);
-
-        let body = response.into_body().collect().await.unwrap().to_bytes();
-        let body: router::user::Response = serde_json::from_slice(&body).unwrap();
-        assert_eq!(body.id, ID);
-    }
 }

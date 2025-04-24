@@ -11,11 +11,8 @@ mod user;
 mod well_known;
 
 use axum::body::Bytes;
-use axum::extract::{Path, Request, State};
 use axum::http::{header, Method};
-use axum::middleware::Next;
-use axum::response::Response as AxumResponse;
-use axum::routing::{delete, get, patch, post};
+use axum::routing::{get, post};
 use axum::{middleware, Router};
 use error::ServerError;
 use opentelemetry::global;
@@ -41,6 +38,7 @@ pub async fn make_request(
     path: &str,
     body: String,
 ) -> axum::http::Response<axum::body::Body> {
+    use axum::extract::Request;
     use tower::util::ServiceExt;
 
     app.oneshot(
@@ -63,47 +61,6 @@ pub struct AppState {
 
 /// Create router.
 pub fn app(state: AppState) -> Router {
-    // Custom middleware for authentification.
-    async fn auth(
-        State(db): State<database::Database>,
-        user_id: Option<Path<String>>,
-        mut req: Request,
-        next: Next,
-    ) -> Result<AxumResponse, ServerError> {
-        let user_id = match user_id {
-            Some(user_id) => user_id.to_string(),
-            None => "@me".to_owned(),
-        };
-        let user_id = if user_id == "@me" {
-            match req
-                .headers()
-                .get(header::AUTHORIZATION)
-                .and_then(|header| header.to_str().ok())
-            {
-                Some(token) => {
-                    match sqlx::query!("SELECT user_id FROM tokens WHERE token = $1", token)
-                        .fetch_one(&db.postgres)
-                        .await
-                    {
-                        Ok(token_data) => token_data.user_id,
-                        Err(_) => return Err(ServerError::Unauthorized),
-                    }
-                }
-                None => return Err(ServerError::Unauthorized),
-            }
-        } else {
-            user_id
-        };
-
-        let user = user::User::default()
-            .with_id(user_id)
-            .get(&db.postgres)
-            .await?;
-
-        req.extensions_mut().insert::<user::User>(user);
-        Ok(next.run(req).await)
-    }
-
     let middleware = ServiceBuilder::new()
         // Add high level tracing/logging to all requests.
         .layer(
@@ -132,15 +89,6 @@ pub fn app(state: AppState) -> Router {
             state.clone(),
             router::create::middleware,
         ));
-    let users_router = Router::new()
-        // `GET /users/:ID` goes to `get`.
-        .route("/{user_id}", get(router::user::get))
-        .route("/@me", get(router::user::get))
-        // `PATCH /users/@me` goes to `patch`. Authorization required.
-        .route("/@me", patch(router::user::patch))
-        // `DELETE /users/@me` goes to `delete`. Authorization required.
-        .route("/@me", delete(router::user::delete))
-        .route_layer(middleware::from_fn_with_state(state.clone(), auth));
 
     Router::new()
         // `GET /status.json` goes to `status`.
@@ -148,7 +96,7 @@ pub fn app(state: AppState) -> Router {
         // `POST /login` goes to `login`.
         .route("/login", post(router::login::login))
         .nest("/create", create_router)
-        .nest("/users", users_router)
+        .nest("/users", router::users::router(state.clone()))
         .with_state(state.clone())
         .nest("/.well-known", well_known::well_known(state))
         .route_layer(middleware::from_fn(telemetry::track))
