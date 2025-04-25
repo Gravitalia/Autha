@@ -30,7 +30,7 @@ jobs:
       id: "autha-version"
       shell: "bash"
       run: |
-        echo PKG_VERSION=$(awk -F ' = ' '$1 ~ /version/ { gsub(/["]/, "", $2); printf("%s",$2) }' /Cargo.toml) >> $GITHUB_OUTPUT
+        echo PKG_VERSION=$(awk -F ' = ' '$1 ~ /version/ { gsub(/["]/, "", $2); printf("%s",$2) }' ./Cargo.toml) >> $GITHUB_OUTPUT
         
     - name: Build image
       run: |
