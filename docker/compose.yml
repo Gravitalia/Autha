@@ -1,4 +1,14 @@
 services:
+  autha:
+    image: ghcr.io/gravitalia/autha
+    platform: linux/amd64
+    container_name: autha
+    restart: always
+    ports:
+      - 8080:8080
+    volumes:
+      - ../status.json:/status.json
+      
   postgresql:
     image: postgres:17
     container_name: postgresql
