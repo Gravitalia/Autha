@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE \"invite_codes\" SET used_by = $1, used_at = NOW() WHERE code = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7ecfc5ad380ce5451157963414b0600361d7e11c3e80b4ea937c42ee21d47c16"
+}
