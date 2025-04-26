@@ -1,11 +1,9 @@
 //! Telemetry logic.
 //! Support tracing, metrics and logging.
-use axum::{
-    extract::{MatchedPath, Request},
-    http::Version,
-    middleware::Next,
-    response::IntoResponse,
-};
+use axum::extract::{MatchedPath, Request};
+use axum::http::Version;
+use axum::middleware::Next;
+use axum::response::IntoResponse;
 use metrics::{gauge, Unit};
 use metrics_exporter_prometheus::{BuildError, Matcher, PrometheusBuilder, PrometheusHandle};
 use opentelemetry::global;
@@ -13,8 +11,10 @@ use opentelemetry::trace::{Span, TraceError, Tracer};
 use opentelemetry::KeyValue;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 use opentelemetry_otlp::LogExporter;
-use opentelemetry_sdk::{logs::{LogError, SdkLogger}, trace::SdkTracerProvider};
+use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::logs::SdkLoggerProvider;
+use opentelemetry_sdk::logs::{LogError, SdkLogger};
+use opentelemetry_sdk::trace::SdkTracerProvider;
 use opentelemetry_sdk::Resource;
 use sysinfo::{Pid, System};
 use tokio::time::sleep;
@@ -86,9 +86,12 @@ pub fn setup_metrics_recorder() -> Result<PrometheusHandle, BuildError> {
 }
 
 /// Create OLTP exporter for logs.
-pub fn setup_logging() -> Result<OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger>, LogError>  {
+pub fn setup_logging(
+    endpoint: &str,
+) -> Result<OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger>, LogError> {
     let exporter = LogExporter::builder()
         .with_tonic()
+        .with_endpoint(endpoint)
         .build()?;
     let provider: SdkLoggerProvider = SdkLoggerProvider::builder()
         .with_resource(ressources())
