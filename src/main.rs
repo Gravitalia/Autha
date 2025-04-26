@@ -118,7 +118,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_directive("tonic=off".parse().unwrap())
         .add_directive("h2=off".parse().unwrap())
         .add_directive("reqwest=off".parse().unwrap());
-    let layer = telemetry::setup_logging()?.with_filter(filter);
+    let layer =
+        telemetry::setup_logging(&env::var("OTEL_URL").unwrap_or("http://localhost:4317".into()))?
+            .with_filter(filter);
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
