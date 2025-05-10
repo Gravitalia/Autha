@@ -1,21 +1,24 @@
 use argon2::{
-    password_hash::{PasswordHash, PasswordVerifier},
     Argon2,
+    password_hash::{PasswordHash, PasswordVerifier},
 };
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
-use crate::ServerError;
 use crate::{database::Database, totp::generate_totp, user::User};
 
-use super::Valid;
+use super::{ServerError, Valid};
 
 #[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct Body {
     #[validate(email(message = "Email must be formated."))]
     email: String,
-    #[validate(length(min = 8, message = "Password must contain at least 8 characters."))]
+    #[validate(length(
+        min = 8,
+        max = 64,
+        message = "Password must contain at least 8 characters."
+    ))]
     password: String,
     #[serde(rename = "totpCode")]
     totp_code: Option<String>,
@@ -28,7 +31,7 @@ pub struct Response {
     token: String,
 }
 
-#[inline]
+#[inline(always)]
 pub(super) fn check_password(pwd: &str, hash: &str) -> Result<(), ValidationErrors> {
     let hash = PasswordHash::new(hash).map_err(|err| {
         tracing::error!("Password decoding failed! {:?}", err);
@@ -48,12 +51,19 @@ pub(super) fn check_password(pwd: &str, hash: &str) -> Result<(), ValidationErro
         })
 }
 
-#[inline]
-pub(super) fn check_totp(code: Option<String>, secret: Option<String>) -> Result<(), ServerError> {
-    if let Some(ref secret) = secret {
+pub async fn login(
+    State(db): State<Database>,
+    Valid(body): Valid<Body>,
+) -> Result<Json<Response>, ServerError> {
+    let email = crate::crypto::email_encryption(body.email);
+    let user = User::default().with_email(email).get(&db.postgres).await?;
+
+    check_password(&body.password, &user.password)?;
+
+    if let Some(ref secret) = user.totp_secret {
         let mut errors = ValidationErrors::new();
 
-        if let Some(code) = code {
+        if let Some(code) = body.totp_code {
             if generate_totp(secret, 30, 6).map_err(ServerError::Internal)? != code {
                 errors.add(
                     "totpCode",
@@ -72,19 +82,6 @@ pub(super) fn check_totp(code: Option<String>, secret: Option<String>) -> Result
             return Err(ServerError::Validation(errors));
         }
     }
-
-    Ok(())
-}
-
-pub async fn login(
-    State(db): State<Database>,
-    Valid(body): Valid<Body>,
-) -> Result<Json<Response>, ServerError> {
-    let email = crate::crypto::email_encryption(body.email);
-    let user = User::default().with_email(email).get(&db.postgres).await?;
-
-    check_password(&body.password, &user.password)?;
-    check_totp(body.totp_code, user.totp_secret.clone())?;
 
     let token = user.generate_token(&db.postgres).await?;
 
