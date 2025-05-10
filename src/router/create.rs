@@ -14,9 +14,10 @@ use crate::ServerError;
 use super::Valid;
 
 fn validate_id(vanity: &str) -> Result<(), ValidationError> {
-    if !Regex::new(r"[A-Za-z0-9\-\.\_\~\!\$\&\'\(\)\*\+\,\;\=](?:[A-Za-z0-9\-\.\_\~\!\$\&\'\(\)\*\+\,\;\=]|(?:%[0-9A-Fa-f]{2}))$")
-            .map_err(|_| ValidationError::new("wtf_regex"))?
-            .is_match(vanity) {
+    if !Regex::new(r"^[A-Za-z0-9_.]+$")
+        .map_err(|_| ValidationError::new("wtf_regex"))?
+        .is_match(vanity)
+    {
         return Err(ValidationError::new("alphanumerical"));
     }
 
