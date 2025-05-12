@@ -4,9 +4,9 @@ use axum::extract::State;
 use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 
-use crate::user::{Key, User};
 use crate::AppState;
 use crate::ServerError;
+use crate::user::{Key, User};
 
 const ACTIVITY_STREAM: &str = "https://www.w3.org/ns/activitystreams";
 const W3C_SECURITY: &str = "https://w3id.org/security/v1";
@@ -79,8 +79,8 @@ mod tests {
     use http_body_util::BodyExt;
     use sqlx::{Pool, Postgres};
 
-    use crate::*;
     use super::*;
+    use crate::*;
 
     const ID: &str = "admin";
 
@@ -89,6 +89,7 @@ mod tests {
         let state = AppState {
             db: database::Database { postgres: pool },
             config: status::Configuration::default(),
+            ldap: ldap::Ldap::default(),
         };
         let app = app(state);
 

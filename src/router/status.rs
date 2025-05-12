@@ -1,6 +1,6 @@
 //! Public configuration page for front-end identification and customization.
 
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
 
 use crate::status::Configuration;
 
@@ -23,6 +23,7 @@ mod tests {
         let state = AppState {
             db: database::Database { postgres: pool },
             config: config.clone(),
+            ldap: ldap::Ldap::default(),
         };
         let app = app(state);
 
