@@ -108,6 +108,7 @@ mod tests {
         let state = AppState {
             db: Database { postgres: pool },
             config: status::Configuration::default(),
+            ldap: ldap::Ldap::default(),
         };
         let app = app(state);
 

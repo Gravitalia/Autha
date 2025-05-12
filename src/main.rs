@@ -3,6 +3,7 @@
 mod crypto;
 mod database;
 mod error;
+mod ldap;
 mod router;
 mod status;
 mod telemetry;
@@ -11,20 +12,20 @@ mod user;
 mod well_known;
 
 use axum::body::Bytes;
-use axum::http::{header, Method};
+use axum::http::{Method, header};
 use axum::routing::{get, post};
-use axum::{middleware, Router};
+use axum::{Router, middleware};
 use error::ServerError;
 use opentelemetry::global;
 use tower::ServiceBuilder;
+use tower_http::LatencyUnit;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::timeout::RequestBodyTimeoutLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse};
-use tower_http::LatencyUnit;
+use tracing_subscriber::{EnvFilter, prelude::*};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use tracing_subscriber::{prelude::*, EnvFilter};
 
 use std::env;
 use std::future::ready;
@@ -53,10 +54,12 @@ pub async fn make_request(
     .unwrap()
 }
 
+/// State sharing between routes.
 #[derive(Clone)]
 pub struct AppState {
     pub config: status::Configuration,
     pub db: database::Database,
+    pub ldap: ldap::Ldap,
 }
 
 /// Create router.
@@ -138,6 +141,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // initialize metrics.
     let recorder_handle = telemetry::setup_metrics_recorder()?;
 
+    // initialize LDAP.
+    let ldap = ldap::Ldap::new(
+        env::var("LDAP_URL").unwrap_or("ldap://localhost:389".into()),
+        env::var("LDAP_USERNAME").ok(),
+        env::var("LDAP_PASSWORD").ok(),
+    )
+    .await
+    .map_err(|err| {
+        tracing::error!(error = err.to_string(), "LDAP connection failed");
+        ldap::Ldap::default()
+    })
+    .expect(""); // never fails.
+
     // load configuration and let it on memory.
     // init databases connection.
     let state = AppState {
@@ -146,6 +162,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             &env::var("POSTGRES_URL").unwrap_or_else(|_| database::DEFAULT_PG_URL.into()),
         )
         .await?,
+        ldap,
     };
 
     // build our application with a route.

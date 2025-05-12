@@ -1,15 +1,15 @@
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, SaltString},
     Argon2, Params, Version,
+    password_hash::{PasswordHash, PasswordHasher, SaltString, rand_core::OsRng},
 };
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{Json, extract::State, http::StatusCode};
 use regex_lite::Regex;
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
-use crate::user::User;
 use crate::AppState;
 use crate::ServerError;
+use crate::user::User;
 
 use super::Valid;
 
@@ -146,6 +146,14 @@ pub async fn create(
         .await?;
     let token = user.generate_token(&state.db.postgres).await?;
 
+    if let Err(err) = state.ldap.add(user.clone()).await {
+        tracing::error!(
+            user_id = user.id,
+            error = err.to_string(),
+            "user not created on LDAP"
+        );
+    }
+
     Ok((StatusCode::CREATED, Json(Response { user, token })))
 }
 
@@ -163,6 +171,7 @@ mod tests {
         let state = AppState {
             db: database::Database { postgres: pool },
             config: status::Configuration::default(),
+            ldap: ldap::Ldap::default(),
         };
         let app = app(state);
 
