@@ -145,6 +145,14 @@ pub async fn create(
         .await?;
     let token = user.generate_token(&state.db.postgres).await?;
 
+    if let Err(err) = state.ldap.add(user.clone()).await {
+        tracing::error!(
+            user_id = user.id,
+            error = err.to_string(),
+            "user not created on LDAP"
+        );
+    }
+
     Ok((StatusCode::CREATED, Json(Response { user, token })))
 }
 
