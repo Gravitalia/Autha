@@ -1,10 +1,10 @@
 [package]
 name = "autha"
-version = "0.1.0"
+version = "0.1.1"
 description = "fast and safe authorization delegation and account management API"
 homepage = "https://account.gravitalia.com"
 readme = "README.md"
-edition = "2021"
+edition = "2024"
 license = "MPL"
 
 [profile.release]
@@ -20,11 +20,11 @@ opt-level = "z"
 debug = true
 
 [dependencies]
-axum = { version = "0.8.1", features = ["macros"] }
+axum = { version = "0.8.4", features = ["macros"] }
 tokio =  { version = "1.44.2", features = ["rt-multi-thread", "net", "tracing"] }
-serde = "1.0.216"
-serde_json = "1.0.134"
-sqlx = { version = "0.8.2", features = ["runtime-tokio", "postgres", "chrono"] }
+serde = "1.0.219"
+serde_json = "1.0.140"
+sqlx = { version = "0.8.5", features = ["runtime-tokio", "postgres", "chrono"] }
 tower = "0.5.2"
 tower-http = {version = "0.6.2", features = [
 "cors", "trace", "tracing", "request-id", "sensitive-headers", "tokio", "timeout",
@@ -33,7 +33,8 @@ url = "2.5"
 validator = { version = "0.20.0", features = ["derive"] }
 hex = "0.4"
 regex-lite = "0.1"
-chrono = { version = "0.4.39", features = ["serde"] }
+chrono = { version = "0.4.41", features = ["serde"] }
+ldap3 = "0.11.5"
 # Error
 thiserror = "2.0"
 # Telemetry
@@ -44,11 +45,11 @@ opentelemetry_sdk = "0.28.0"
 opentelemetry-otlp = { version="0.28.0",  features = ["grpc-tonic", "metrics"] }
 opentelemetry-appender-tracing = "0.28.1"
 metrics = "0.24"
-metrics-exporter-prometheus = { version = "0.17", default-features = false, features = ["tracing"] }
+metrics-exporter-prometheus = { version = "0.16", default-features = false, features = ["tracing"] }
 sysinfo = { version = "0.34", default-features = false, features = ["system"] }
 # Cryptography
 argon2 = "0.5.3"
-rsa = "0.9.7"
+rsa = "0.9.8"
 p256 = "0.13.2"
 aes = "0.8.4"
 fpe = "0.6.1"
