@@ -4,7 +4,8 @@ Autha
 Autha is an account manager. It comes with features:
   * Human-readable errors (RFC 7807);
   * Support multi-factor authentication via TOTP (RFC 6238);
-  * Support WebFinger (RFC 7033).
+  * Support WebFinger (RFC 7033);
+  * Support LDAP (RFC 4511).
 
 > [!WARNING]
 > Telemetry (tracing, logging and metrics) is also included using OTLP.
@@ -13,5 +14,7 @@ Autha is an account manager. It comes with features:
 
 This server allows you to create, modify, and delete your account.
 It allows users to expose public keys, letting them generate their own tokens.
+
+See documentation (gravitalia.github.io/Autha) for more settings.
 
 Licensed under BSD.
