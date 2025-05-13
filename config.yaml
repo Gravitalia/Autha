@@ -1,0 +1,29 @@
+name: Autha
+address: https://auth.gravitalia.com
+favicon: https://account.gravitalia.com/favicon.webp
+terms_of_service: https://policies.gravitalia.com/terms
+privacy_policy: https://policies.gravitalia.com/privacy
+invite_only: true
+
+postgres:
+  address: postgres:5432
+  database: autha
+  username: postgres
+  password: postgres
+  ssl: false
+
+ldap:
+  address: ldap://openldap:389
+  user: CN=admin,DC=domain,DC=local
+  password: admin
+  base_dn: DC=domain,DC=local
+  additional_users_dn: OU=users
+  users_filter: '(&(uid={user_id}))'
+  additional_groups_dn: 'OU=groups'
+  groups_filter: '(&(member={dn})(objectClass=groupOfNames))'
+
+totp:
+  issuer: autha
+  algorithm: sha1
+  digits: 6
+  period: 30 # in seconds
