@@ -123,7 +123,7 @@ impl Configuration {
             &Path::new(DEFAULT_CONFIG_PATH).to_path_buf()
         };
 
-        match File::open(&file_path) {
+        match File::open(file_path) {
             Ok(file) => {
                 let mut config: Configuration = match serde_yaml::from_reader(file) {
                     Ok(config) => config,
