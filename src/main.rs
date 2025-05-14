@@ -1,3 +1,4 @@
+mod config;
 #[forbid(unsafe_code)]
 #[deny(missing_docs, unused_mut)]
 mod crypto;
@@ -5,27 +6,26 @@ mod database;
 mod error;
 mod ldap;
 mod router;
-mod status;
 mod telemetry;
 mod totp;
 mod user;
 mod well_known;
 
 use axum::body::Bytes;
-use axum::http::{Method, header};
+use axum::http::{header, Method};
 use axum::routing::{get, post};
-use axum::{Router, middleware};
+use axum::{middleware, Router};
 use error::ServerError;
 use opentelemetry::global;
 use tower::ServiceBuilder;
-use tower_http::LatencyUnit;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::timeout::RequestBodyTimeoutLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse};
-use tracing_subscriber::{EnvFilter, prelude::*};
+use tower_http::LatencyUnit;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{prelude::*, EnvFilter};
 
 use std::env;
 use std::future::ready;
@@ -57,7 +57,7 @@ pub async fn make_request(
 /// State sharing between routes.
 #[derive(Clone)]
 pub struct AppState {
-    pub config: status::Configuration,
+    pub config: config::Configuration,
     pub db: database::Database,
     pub ldap: ldap::Ldap,
 }
@@ -148,16 +148,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         env::var("LDAP_PASSWORD").ok(),
     )
     .await
-    .map_err(|err| {
+    .or_else(|err| {
         tracing::error!(error = err.to_string(), "LDAP connection failed");
-        ldap::Ldap::default()
+        Ok::<_, ldap3::LdapError>(ldap::Ldap::default())
     })
     .expect(""); // never fails.
 
     // load configuration and let it on memory.
     // init databases connection.
     let state = AppState {
-        config: status::Configuration::read(None)?,
+        config: config::Configuration::default().read()?,
         db: database::Database::new(
             &env::var("POSTGRES_URL").unwrap_or_else(|_| database::DEFAULT_PG_URL.into()),
         )
