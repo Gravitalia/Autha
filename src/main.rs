@@ -145,8 +145,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = config::Configuration::default().read()?;
 
     // initialize LDAP.
-    let ldap = if let Some(ref config) = config.ldap {
-        ldap::Ldap::new(
+    let ldap = match config.ldap {
+        Some(ref config) => ldap::Ldap::new(
             &config.address,
             config.user.clone(),
             config.password.clone(),
@@ -155,18 +155,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .or_else(|err| {
             tracing::error!(error = err.to_string(), "LDAP connection failed");
             Ok::<_, ldap3::LdapError>(ldap::Ldap::default())
-        })?
-    } else {
-        ldap::Ldap::default()
+        })?,
+        None => ldap::Ldap::default(),
     };
 
-    let db = if let Some(ref config) = config.postgres {
-        database::Database::new(&config.address).await?
-    } else {
-        // A database is required even with LDAP.
-        // PostgreSQL manage user publics keys.
-        tracing::error!("missing `postgres` entry on `config.yaml` file");
-        panic!()
+    let db = match config.postgres {
+        Some(ref config) => {
+            database::Database::new(
+                &config.address,
+                &config
+                    .username
+                    .clone()
+                    .unwrap_or(database::DEFAULT_CREDENTIALS.into()),
+                &config
+                    .password
+                    .clone()
+                    .unwrap_or(database::DEFAULT_CREDENTIALS.into()),
+                &config
+                    .database
+                    .clone()
+                    .unwrap_or(database::DEFAULT_DATABASE_NAME.into()),
+            )
+            .await?
+        }
+        None => {
+            // A database is required even with LDAP.
+            // PostgreSQL manage user publics keys.
+            tracing::error!("missing `postgres` entry on `config.yaml` file");
+            panic!()
+        }
     };
 
     let state = AppState { config, db, ldap };
