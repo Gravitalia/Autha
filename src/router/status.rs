@@ -1,8 +1,8 @@
 //! Public configuration page for front-end identification and customization.
 
-use axum::{Json, extract::State};
+use axum::{extract::State, Json};
 
-use crate::status::Configuration;
+use crate::config::Configuration;
 
 /// Public server status (configuration).
 pub async fn status(State(configuration): State<Configuration>) -> Json<Configuration> {
@@ -18,7 +18,7 @@ mod tests {
 
     #[sqlx::test]
     async fn test_status_handler(pool: Pool<Postgres>) {
-        let config = status::Configuration::default();
+        let config = config::Configuration::default();
         // State pool is useless, but required.
         let state = AppState {
             db: database::Database { postgres: pool },
@@ -31,7 +31,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
-        let body: status::Configuration = serde_json::from_slice(&body).unwrap();
+        let body: config::Configuration = serde_json::from_slice(&body).unwrap();
         assert_eq!(body, config);
     }
 }

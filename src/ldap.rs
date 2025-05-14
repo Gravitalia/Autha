@@ -15,13 +15,12 @@ pub struct Ldap {
 
 impl Ldap {
     /// Create a new [`Ldap3`] connection.
-    pub async fn new<T: ToString>(
-        addr: T,
+    pub async fn new(
+        addr: &str,
         dn: Option<String>,
         password: Option<String>,
     ) -> Result<Self, LdapError> {
-        let addr = addr.to_string();
-        let (conn, mut ldap) = LdapConnAsync::new(&addr).await?;
+        let (conn, mut ldap) = LdapConnAsync::new(addr).await?;
         ldap3::drive!(conn);
 
         if let Some(dn) = dn {
@@ -34,7 +33,7 @@ impl Ldap {
 
         Ok(Ldap {
             conn: Some(ldap),
-            addr,
+            addr: addr.to_owned(),
             template: "ou=People, dc=gravitalia, dc=com, uid={user_id}, cn={username}".to_owned(),
             path: "ou=People, dc=gravitalia, dc=com".to_owned(),
         })

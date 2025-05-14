@@ -4,7 +4,8 @@ use sqlx::PgPool;
 
 use crate::AppState;
 
-pub const DEFAULT_PG_URL: &str = "postgres://postgres:postgres@localhost:5432/autha";
+pub const DEFAULT_CREDENTIALS: &str = "postgres";
+pub const DEFAULT_DATABASE_NAME: &str = "autha";
 
 /// Custom db structure to pass to Axum.
 #[derive(Clone)]
@@ -14,8 +15,16 @@ pub struct Database {
 
 impl Database {
     /// Init database connections.
-    pub async fn new(pg_url: &str) -> Result<Self, sqlx::Error> {
-        let postgres = PgPool::connect(pg_url).await?;
+    pub async fn new(
+        hostname: &str,
+        username: &str,
+        password: &str,
+        db: &str,
+    ) -> Result<Self, sqlx::Error> {
+        let addr = format!("postgres://{username}:{password}@{hostname}/{db}");
+        let postgres = PgPool::connect(&addr).await?;
+
+        tracing::info!(%hostname, %db, "postgres connected");
 
         Ok(Self { postgres })
     }

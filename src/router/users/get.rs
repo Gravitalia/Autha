@@ -4,9 +4,9 @@ use axum::extract::State;
 use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 
+use crate::user::{Key, User};
 use crate::AppState;
 use crate::ServerError;
-use crate::user::{Key, User};
 
 const ACTIVITY_STREAM: &str = "https://www.w3.org/ns/activitystreams";
 const W3C_SECURITY: &str = "https://w3id.org/security/v1";
@@ -49,7 +49,7 @@ pub async fn handler(
     State(state): State<AppState>,
     Extension(user): Extension<User>,
 ) -> Result<Json<Response>, ServerError> {
-    let url = if let Ok(url) = url::Url::parse(&state.config.url) {
+    let url = if let Ok(url) = url::Url::parse(&state.config.address) {
         format!(
             "{}://{}/users/{}",
             url.scheme(),
@@ -88,7 +88,7 @@ mod tests {
     async fn test_get_user_handler(pool: Pool<Postgres>) {
         let state = AppState {
             db: database::Database { postgres: pool },
-            config: status::Configuration::default(),
+            config: config::Configuration::default(),
             ldap: ldap::Ldap::default(),
         };
         let app = app(state);

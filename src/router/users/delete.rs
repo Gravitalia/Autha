@@ -5,10 +5,10 @@ use axum::Extension;
 use serde::Deserialize;
 
 use crate::database::Database;
-use crate::user::User;
-use crate::ServerError;
 use crate::router::login::{check_password, check_totp};
 use crate::router::Valid;
+use crate::user::User;
+use crate::ServerError;
 
 #[derive(Debug, validator::Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]

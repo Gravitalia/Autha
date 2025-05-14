@@ -16,7 +16,9 @@ services:
       - LDAP_URL=
     volumes:
       - ../status.json:/status.json
-      
+    networks:
+      - authentification
+
   postgres:
     image: postgres:17
     container_name: postgres
@@ -28,8 +30,9 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: autha
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
-    #  - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - authentification
 
   openldap:
     image: bitnami/openldap:latest
@@ -42,8 +45,10 @@ services:
       - LDAP_ADMIN_PASSWORD=admin
       - LDAP_EXTRA_SCHEMAS=argon2
     volumes:
-      - ./data/openldap:/bitnami/openldap
+      - openldap-data:/bitnami/openldap
       - ./argon2.ldif:/opt/bitnami/openldap/etc/schema/argon2.ldif
+    networks:
+      - authentification
 
   grafana:
     image: grafana/grafana
@@ -55,8 +60,10 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ./data/grafana/data:/var/lib/grafana
+      - grafana-data:/var/lib/grafana
       - ./data/grafana/conf:/etc/grafana/provisioning/datasources
+    networks:
+      - authentification
 
   prometheus:
     image: prom/prometheus
@@ -66,7 +73,9 @@ services:
       - 9090:9090
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
-      - ./data/prometheus:/prometheus
+      - prometheus-data:/prometheus
+    networks:
+      - authentification
 
   loki:
     image: grafana/loki:3.4
@@ -78,6 +87,9 @@ services:
       - 3100:3100
     volumes:
       - ./loki.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    networks:
+      - authentification
 
   promtail:
     image: grafana/promtail:2.9.2
@@ -86,6 +98,8 @@ services:
     volumes:
       - /var/log:/var/log
       - ./promtail.yaml:/etc/promtail/config.yaml
+    networks:
+      - authentification
 
   jaeger:
     image: jaegertracing/all-in-one:latest
@@ -98,22 +112,37 @@ services:
       - "14268:14268"
       - "14250:14250"
       - "9411:9411"
+    networks:
+      - authentification
 
   otel-collector:
     image: otel/opentelemetry-collector:0.119.0
     container_name: otel
     restart: always
-    command: --config=/etc/otel-collector-config.yaml"
+    command: --config=/etc/otel-collector-config.yaml
     depends_on:
       - jaeger
       - loki
       - prometheus
     ports:
       - "1888:1888"   # pprof extension
-      - "8888:8888"   # Prometheus metrics exposed by the collector
-      - "8889:8889"   # Prometheus exporter metrics
+      - "8888:8888"   # Prometheus metrics
+      - "8889:8889"   # Prometheus exporter
       - "13133:13133" # health_check extension
       - "4317:4317"   # OTLP gRPC receiver
       - "55679:55679" # zpages extension
     volumes:
       - ./otel.yaml:/etc/otel-collector-config.yaml
+    networks:
+      - authentification
+
+volumes:
+  postgres-data:
+  openldap-data:
+  grafana-data:
+  prometheus-data:
+  loki-data:
+
+networks:
+  authentification:
+    driver: bridge
