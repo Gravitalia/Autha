@@ -141,29 +141,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // initialize metrics.
     let recorder_handle = telemetry::setup_metrics_recorder()?;
 
-    // initialize LDAP.
-    let ldap = ldap::Ldap::new(
-        env::var("LDAP_URL").unwrap_or("ldap://localhost:389".into()),
-        env::var("LDAP_USERNAME").ok(),
-        env::var("LDAP_PASSWORD").ok(),
-    )
-    .await
-    .or_else(|err| {
-        tracing::error!(error = err.to_string(), "LDAP connection failed");
-        Ok::<_, ldap3::LdapError>(ldap::Ldap::default())
-    })
-    .expect(""); // never fails.
+    // read configuration file. let it in memory.
+    let config = config::Configuration::default().read()?;
 
-    // load configuration and let it on memory.
-    // init databases connection.
-    let state = AppState {
-        config: config::Configuration::default().read()?,
-        db: database::Database::new(
-            &env::var("POSTGRES_URL").unwrap_or_else(|_| database::DEFAULT_PG_URL.into()),
+    // initialize LDAP.
+    let ldap = if let Some(ref config) = config.ldap {
+        ldap::Ldap::new(
+            &config.address,
+            config.user.clone(),
+            config.password.clone(),
         )
-        .await?,
-        ldap,
+        .await
+        .or_else(|err| {
+            tracing::error!(error = err.to_string(), "LDAP connection failed");
+            Ok::<_, ldap3::LdapError>(ldap::Ldap::default())
+        })?
+    } else {
+        ldap::Ldap::default()
     };
+
+    let db = if let Some(ref config) = config.postgres {
+        database::Database::new(&config.address).await?
+    } else {
+        // A database is required even with LDAP.
+        // PostgreSQL manage user publics keys.
+        tracing::error!("missing `postgres` entry on `config.yaml` file");
+        panic!()
+    };
+
+    let state = AppState { config, db, ldap };
 
     // build our application with a route.
     let app = app(state)
