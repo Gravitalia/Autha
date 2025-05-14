@@ -7,11 +7,11 @@ use validator::{ValidationError, ValidationErrors};
 
 use crate::crypto::check_key;
 use crate::database::Database;
+use crate::router::login::check_password;
+use crate::router::Valid;
 use crate::totp::generate_totp;
 use crate::user::{Key, User};
 use crate::ServerError;
-use crate::router::login::check_password;
-use crate::router::Valid;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]

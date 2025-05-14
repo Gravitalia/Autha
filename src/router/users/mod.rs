@@ -1,19 +1,19 @@
 //!
+mod delete;
 mod get;
 mod update;
-mod delete;
 
-use axum::response::Response;
-use axum::routing::{get, patch, delete};
-use axum::middleware;
-use axum::Router;
-use axum::extract::{State, Path, Request};
+use axum::extract::{Path, Request, State};
 use axum::http::header;
+use axum::middleware;
+use axum::response::Response;
+use axum::routing::{delete, get, patch};
+use axum::Router;
 
-use crate::AppState;
 use crate::database::Database;
-use crate::ServerError;
 use crate::user::User;
+use crate::AppState;
+use crate::ServerError;
 
 /// Custom middleware for authentification.
 async fn auth(
@@ -47,10 +47,7 @@ async fn auth(
         user_id
     };
 
-    let user = User::default()
-        .with_id(user_id)
-        .get(&db.postgres)
-        .await?;
+    let user = User::default().with_id(user_id).get(&db.postgres).await?;
 
     req.extensions_mut().insert::<User>(user);
     Ok(next.run(req).await)
