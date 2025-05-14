@@ -4,7 +4,7 @@ use sqlx::PgPool;
 
 use crate::AppState;
 
-pub const DEFAULT_PG_URL: &str = "postgres://postgres:postgres@localhost:5432/autha";
+pub const _DEFAULT_PG_URL: &str = "postgres://postgres:postgres@localhost:5432/autha";
 
 /// Custom db structure to pass to Axum.
 #[derive(Clone)]
