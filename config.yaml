@@ -3,7 +3,7 @@ address: https://auth.gravitalia.com
 favicon: https://account.gravitalia.com/favicon.webp
 terms_of_service: https://policies.gravitalia.com/terms
 privacy_policy: https://policies.gravitalia.com/privacy
-invite_only: true
+invite_only: false
 
 postgres:
   address: postgres:5432
@@ -18,9 +18,9 @@ ldap:
   password: admin
   base_dn: DC=domain,DC=local
   additional_users_dn: OU=users
-  users_filter: '(&(uid={user_id}))'
-  additional_groups_dn: 'OU=groups'
-  groups_filter: '(&(member={dn})(objectClass=groupOfNames))'
+  users_filter: (&(uid={user_id}))
+  additional_groups_dn: OU=groups
+  groups_filter: (&(member={dn})(objectClass=groupOfNames))
 
 totp:
   issuer: autha
