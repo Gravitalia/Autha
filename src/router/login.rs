@@ -6,7 +6,6 @@ use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
-use crate::totp::generate_totp;
 use crate::user::User;
 use crate::{AppState, ServerError};
 
@@ -53,34 +52,6 @@ pub(super) fn check_password(pwd: &str, hash: &str) -> Result<(), ValidationErro
         })
 }
 
-#[inline]
-pub(super) fn check_totp(code: Option<String>, secret: Option<String>) -> Result<(), ServerError> {
-    if let Some(ref secret) = secret {
-        let mut errors = ValidationErrors::new();
-
-        if let Some(code) = code {
-            if generate_totp(secret, 30, 6).map_err(ServerError::Internal)? != code {
-                errors.add(
-                    "totpCode",
-                    ValidationError::new("invalid_totp").with_message("TOTP code is wrong.".into()),
-                );
-            }
-        } else {
-            errors.add(
-                "totpCode",
-                ValidationError::new("invalid_totp")
-                    .with_message("Missing 'totpCode' field.".into()),
-            );
-        }
-
-        if !errors.is_empty() {
-            return Err(ServerError::Validation(errors));
-        }
-    }
-
-    Ok(())
-}
-
 pub async fn login(
     State(state): State<AppState>,
     Valid(body): Valid<Body>,
@@ -92,7 +63,7 @@ pub async fn login(
         .await?;
 
     check_password(&body.password, &user.password)?;
-    check_totp(body.totp_code, user.totp_secret.clone())?;
+    state.crypto.check_totp(body.totp_code, &user.totp_secret)?;
 
     let token = user.generate_token(&state.db.postgres).await?;
 

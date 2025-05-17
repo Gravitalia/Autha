@@ -5,7 +5,7 @@ use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 use validator::{ValidationError, ValidationErrors};
 
-use crate::crypto::check_key;
+use crate::crypto::{check_key, Action};
 use crate::router::login::check_password;
 use crate::router::Valid;
 use crate::totp::generate_totp;
@@ -65,7 +65,12 @@ pub async fn handler(
     {
         check_password(&password, &user.password)?;
         if generate_totp(&secret, 30, 6).map_err(ServerError::Internal)? == code {
-            user.totp_secret = Some(secret);
+            user.totp_secret = Some(
+                state
+                    .crypto
+                    .aes(Action::Encrypt, secret.as_bytes().to_vec())
+                    .map_err(|err| ServerError::Internal(err.to_string()))?,
+            );
         } else {
             errors.add(
                 "totp_code",
