@@ -1,4 +1,4 @@
-//! Cryptogragic logic.s
+//! Cryptogragic logics.
 use aes::cipher::block_padding::{Pkcs7, UnpadError};
 use aes::cipher::generic_array::GenericArray;
 use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit};
@@ -10,6 +10,8 @@ use rand::rngs::OsRng;
 use rand::RngCore;
 use rsa::pkcs1::DecodeRsaPublicKey;
 use rsa::RsaPublicKey;
+
+use crate::ServerError;
 
 const RADIX: u32 = 256;
 
@@ -79,7 +81,7 @@ impl Cipher {
 
                 let mut message = iv.to_vec();
                 message.extend(
-                    Aes256CbcEnc::new(&key, &iv.into()).encrypt_padded_vec_mut::<Pkcs7>(&data),
+                    Aes256CbcEnc::new(key, &iv.into()).encrypt_padded_vec_mut::<Pkcs7>(&data),
                 );
 
                 Ok(hex::encode(message))
@@ -90,11 +92,48 @@ impl Cipher {
                 let iv: [u8; 16] = iv.try_into()?;
 
                 Ok(String::from_utf8(
-                    Aes256CbcDec::new(&key, &iv.clone().into())
-                        .decrypt_padded_vec_mut::<Pkcs7>(&cipher_text)?,
+                    Aes256CbcDec::new(key, &iv.into())
+                        .decrypt_padded_vec_mut::<Pkcs7>(cipher_text)?,
                 )?)
             }
         }
+    }
+
+    pub fn check_totp(
+        &self,
+        code: Option<String>,
+        secret: &Option<String>,
+    ) -> std::result::Result<(), ServerError> {
+        if let Some(ref secret) = secret {
+            let secret = self
+                .aes(crate::crypto::Action::Decrypt, secret.as_bytes().to_vec())
+                .map_err(|err| ServerError::Internal(err.to_string()))?;
+            let mut errors = validator::ValidationErrors::new();
+
+            if let Some(code) = code {
+                if crate::totp::generate_totp(&secret, 30, 6).map_err(ServerError::Internal)?
+                    != code
+                {
+                    errors.add(
+                        "totpCode",
+                        validator::ValidationError::new("invalid_totp")
+                            .with_message("TOTP code is wrong.".into()),
+                    );
+                }
+            } else {
+                errors.add(
+                    "totpCode",
+                    validator::ValidationError::new("invalid_totp")
+                        .with_message("Missing 'totpCode' field.".into()),
+                );
+            }
+
+            if !errors.is_empty() {
+                return Err(ServerError::Validation(errors));
+            }
+        }
+
+        Ok(())
     }
 }
 
