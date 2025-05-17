@@ -6,8 +6,9 @@ use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
-use crate::ServerError;
-use crate::{database::Database, totp::generate_totp, user::User};
+use crate::totp::generate_totp;
+use crate::user::User;
+use crate::{AppState, ServerError};
 
 use super::Valid;
 
@@ -81,16 +82,19 @@ pub(super) fn check_totp(code: Option<String>, secret: Option<String>) -> Result
 }
 
 pub async fn login(
-    State(db): State<Database>,
+    State(state): State<AppState>,
     Valid(body): Valid<Body>,
 ) -> Result<Json<Response>, ServerError> {
-    let email = crate::crypto::email_encryption(body.email);
-    let user = User::default().with_email(email).get(&db.postgres).await?;
+    let email = state.crypto.format_preserving(&body.email);
+    let user = User::default()
+        .with_email(email)
+        .get(&state.db.postgres)
+        .await?;
 
     check_password(&body.password, &user.password)?;
     check_totp(body.totp_code, user.totp_secret.clone())?;
 
-    let token = user.generate_token(&db.postgres).await?;
+    let token = user.generate_token(&state.db.postgres).await?;
 
     Ok(Json(Response { user, token }))
 }
@@ -106,9 +110,13 @@ mod tests {
     #[sqlx::test(fixtures("../../fixtures/users.sql"))]
     async fn test_login_handler(pool: Pool<Postgres>) {
         let state = AppState {
-            db: Database { postgres: pool },
+            db: database::Database { postgres: pool },
             config: config::Configuration::default(),
             ldap: ldap::Ldap::default(),
+            crypto: {
+                let key = [0x42; 32];
+                crypto::Cipher::key(hex::encode(key)).unwrap()
+            },
         };
         let app = app(state);
 

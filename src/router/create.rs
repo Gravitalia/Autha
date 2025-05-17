@@ -112,7 +112,7 @@ pub async fn create(
     State(state): State<AppState>,
     Valid(body): Valid<Body>,
 ) -> Result<(StatusCode, Json<Response>), ServerError> {
-    let email = crate::crypto::email_encryption(body.email);
+    let email = state.crypto.format_preserving(&body.email);
 
     let password = {
         let salt = SaltString::generate(&mut OsRng);
@@ -172,6 +172,10 @@ mod tests {
             db: database::Database { postgres: pool },
             config: config::Configuration::default(),
             ldap: ldap::Ldap::default(),
+            crypto: {
+                let key = [0x42; 32];
+                crypto::Cipher::key(hex::encode(key)).unwrap()
+            },
         };
         let app = app(state);
 

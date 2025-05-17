@@ -90,6 +90,10 @@ mod tests {
             db: database::Database { postgres: pool },
             config: config::Configuration::default(),
             ldap: ldap::Ldap::default(),
+            crypto: {
+                let key = [0x42; 16];
+                crypto::Cipher::key(hex::encode(key)).unwrap()
+            },
         };
         let app = app(state);
 

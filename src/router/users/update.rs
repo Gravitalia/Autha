@@ -6,12 +6,11 @@ use serde::{Deserialize, Serialize};
 use validator::{ValidationError, ValidationErrors};
 
 use crate::crypto::check_key;
-use crate::database::Database;
 use crate::router::login::check_password;
 use crate::router::Valid;
 use crate::totp::generate_totp;
 use crate::user::{Key, User};
-use crate::ServerError;
+use crate::{AppState, ServerError};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -44,7 +43,7 @@ pub struct Body {
 }
 
 pub async fn handler(
-    State(db): State<Database>,
+    State(state): State<AppState>,
     Extension(mut user): Extension<User>,
     Valid(body): Valid<Body>,
 ) -> Result<Json<Vec<String>>, ServerError> {
@@ -116,7 +115,7 @@ pub async fn handler(
                     key,
                     user.id,
                 )
-                .execute(&db.postgres)
+                .execute(&state.db.postgres)
                 .await
                 .map_err(|_| {
                     errors.add(
@@ -131,7 +130,7 @@ pub async fn handler(
 
     if let Some((email, password)) = body.email.clone().zip(body.password) {
         check_password(&password, &user.password)?;
-        user.email = crate::crypto::email_encryption(email);
+        user.email = state.crypto.format_preserving(&email);
     } else if body.email.is_some() {
         errors.add(
             "password",
@@ -150,7 +149,7 @@ pub async fn handler(
             user.id,
             key.public_key_pem,
         )
-        .fetch_optional(&db.postgres)
+        .fetch_optional(&state.db.postgres)
         .await?;
 
         if let Some(record) = record {
@@ -159,7 +158,7 @@ pub async fn handler(
     }
 
     // Save other user's data.
-    user.update(&db.postgres).await?;
+    user.update(&state.db.postgres).await?;
 
     Ok(Json(pkeys.into_iter().map(|k| k.id).collect()))
 }
