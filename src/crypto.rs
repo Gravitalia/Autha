@@ -1,28 +1,101 @@
-//! Cryptogragic logic.
+//! Cryptogragic logic.s
+use aes::cipher::block_padding::{Pkcs7, UnpadError};
+use aes::cipher::generic_array::GenericArray;
+use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit};
+use aes::Aes256;
 use fpe::ff1::{FlexibleNumeralString, Operations, FF1};
 use p256::ecdsa::VerifyingKey;
 use p256::pkcs8::DecodePublicKey;
+use rand::rngs::OsRng;
+use rand::RngCore;
 use rsa::pkcs1::DecodeRsaPublicKey;
 use rsa::RsaPublicKey;
 
 const RADIX: u32 = 256;
 
-/// Encrypt email using FPE.
-#[inline]
-pub fn email_encryption(data: String) -> String {
-    std::env::var("AES_KEY")
-        .ok()
-        .and_then(|key| hex::decode(&key).ok())
-        .and_then(|key| FF1::<aes::Aes256>::new(&key, RADIX).ok())
-        .and_then(|ff| {
-            let email: Vec<u16> = data.encode_utf16().collect();
-            let email_length = email.len();
+type Result<T> = std::result::Result<T, Error>;
+type Aes256CbcEnc = cbc::Encryptor<Aes256>;
+type Aes256CbcDec = cbc::Decryptor<Aes256>;
 
-            ff.encrypt(&[], &FlexibleNumeralString::from(email))
-                .ok()
-                .map(|encrypted| hex::encode(encrypted.to_be_bytes(RADIX, email_length)))
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("hex is not valid")]
+    Hex(#[from] hex::FromHexError),
+    #[error("failed to slice iv")]
+    Slice(#[from] std::array::TryFromSliceError),
+    #[error("unpadding decryption error, {0}")]
+    Unpad(#[from] UnpadError),
+    #[error("was encrypted data string?")]
+    Utf8(#[from] std::string::FromUtf8Error),
+}
+
+/// Action [`Cipher`] should make.
+pub enum Action {
+    Encrypt,
+    Decrypt,
+}
+
+#[derive(Clone)]
+pub struct Cipher {
+    key: Vec<u8>,
+}
+
+impl Cipher {
+    /// Create a new [`Cipher`] structure with a `key`.
+    pub fn key<T: ToString>(key: T) -> Result<Self> {
+        Ok(Self {
+            key: hex::decode(key.to_string())?,
         })
-        .unwrap_or(data)
+    }
+
+    fn iv(&self) -> [u8; 16] {
+        let mut iv = [0u8; 16];
+        OsRng.fill_bytes(&mut iv);
+        iv
+    }
+
+    /// Encrypt plaintext with FPE.
+    pub fn format_preserving(&self, plaintext: &str) -> String {
+        FF1::<Aes256>::new(&self.key, RADIX)
+            .ok()
+            .and_then(|ff| {
+                let email: Vec<u16> = plaintext.encode_utf16().collect();
+                let email_length = email.len();
+
+                ff.encrypt(&[], &FlexibleNumeralString::from(email))
+                    .ok()
+                    .map(|encrypted| hex::encode(encrypted.to_be_bytes(RADIX, email_length)))
+            })
+            .unwrap_or(plaintext.to_string())
+    }
+
+    /// Either encrypt or decrypt data with AES256-CBC.
+    pub fn aes(&self, action: Action, data: Vec<u8>) -> Result<String> {
+        let key = GenericArray::from_slice(&self.key);
+
+        match action {
+            Action::Encrypt => {
+                let iv = self.iv();
+
+                let mut message = iv.to_vec();
+                message.extend(
+                    Aes256CbcEnc::new(&key, &iv.into()).encrypt_padded_vec_mut::<Pkcs7>(&data),
+                );
+
+                Ok(hex::encode(message))
+            }
+            Action::Decrypt => {
+                let data = hex::decode(data)?;
+                let (iv, cipher_text) = data.split_at(16);
+                let iv: [u8; 16] = iv.try_into()?;
+
+                Ok(String::from_utf8(
+                    Aes256CbcDec::new(&key, &iv.clone().into())
+                        .decrypt_padded_vec_mut::<Pkcs7>(&cipher_text)?,
+                )?)
+            }
+        }
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -36,7 +109,7 @@ pub enum KeyError {
 }
 
 /// Check if a key is well-formatted.
-pub fn check_key(key: &str) -> Result<(), KeyError> {
+pub fn check_key(key: &str) -> std::result::Result<(), KeyError> {
     if key.contains("BEGIN RSA PUBLIC KEY") {
         // Means it is PKCS#1 and only RSA.
         RsaPublicKey::from_pkcs1_pem(key).map_err(KeyError::Pkcs1)?;
@@ -59,12 +132,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_email_encryption() {
-        // There is no env.
-        const RESULT: &str = "test@gravitalia.com";
+    fn test_fpe_encryption() {
+        const EMAIL: &str = "admin@gravitalia.com";
 
-        let email = "test@gravitalia.com".to_string();
-        assert_eq!(&email_encryption(email), RESULT);
+        let key = [0x42; 32];
+        let cipher = Cipher::key(hex::encode(key)).unwrap();
+
+        assert_eq!(
+            cipher.format_preserving(EMAIL),
+            "26378b206d60de2ed8819fc1bc9502ee2abcd7e1"
+        );
     }
 
     #[test]
