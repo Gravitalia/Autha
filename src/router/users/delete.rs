@@ -4,11 +4,10 @@ use axum::extract::State;
 use axum::Extension;
 use serde::Deserialize;
 
-use crate::database::Database;
-use crate::router::login::{check_password, check_totp};
+use crate::router::login::check_password;
 use crate::router::Valid;
 use crate::user::User;
-use crate::ServerError;
+use crate::{AppState, ServerError};
 
 #[derive(Debug, validator::Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -19,13 +18,13 @@ pub struct DeleteBody {
 }
 
 pub async fn handler(
-    State(db): State<Database>,
+    State(state): State<AppState>,
     Extension(user): Extension<User>,
     Valid(body): Valid<DeleteBody>,
 ) -> Result<(), ServerError> {
     check_password(&body.password, &user.password)?;
-    check_totp(body.totp_code, user.totp_secret.clone())?;
+    state.crypto.check_totp(body.totp_code, &user.totp_secret)?;
 
-    user.delete(&db.postgres).await?;
+    user.delete(&state.db.postgres).await?;
     Ok(())
 }
