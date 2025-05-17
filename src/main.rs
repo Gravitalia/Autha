@@ -60,6 +60,7 @@ pub struct AppState {
     pub config: config::Configuration,
     pub db: database::Database,
     pub ldap: ldap::Ldap,
+    pub crypto: crypto::Cipher,
 }
 
 /// Create router.
@@ -186,7 +187,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    let state = AppState { config, db, ldap };
+    let crypto = if let Ok(key) = std::env::var("KEY") {
+        crypto::Cipher::key(key)?
+    } else {
+        tracing::warn!("missing `KEY` environnement; set it in production!");
+
+        let key = [0x42; 16];
+        crypto::Cipher::key(hex::encode(key))?
+    };
+
+    let state = AppState {
+        config,
+        db,
+        ldap,
+        crypto,
+    };
 
     // build our application with a route.
     let app = app(state)
