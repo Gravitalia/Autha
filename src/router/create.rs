@@ -13,7 +13,7 @@ use crate::ServerError;
 
 use super::Valid;
 
-fn validate_id(vanity: &str) -> Result<(), ValidationError> {
+pub fn validate_id(vanity: &str) -> Result<(), ValidationError> {
     if !Regex::new(r"^[A-Za-z0-9_.]+$")
         .map_err(|_| ValidationError::new("wtf_regex"))?
         .is_match(vanity)
@@ -130,18 +130,12 @@ pub async fn create(
         hash.to_string()
     };
 
-    sqlx::query!(
-        r#"INSERT INTO "users" (id, username, email, password) VALUES ($1, $2, $3, $4)"#,
-        body.id.to_lowercase(),
-        body.id,
-        email,
-        password
-    )
-    .execute(&state.db.postgres)
-    .await?;
-
     let user = User::default()
         .with_id(body.id.to_lowercase())
+        .with_email(email)
+        .with_password(password)
+        .create(&state.db.postgres)
+        .await?
         .get(&state.db.postgres)
         .await?;
     let token = user.generate_token(&state.db.postgres).await?;
