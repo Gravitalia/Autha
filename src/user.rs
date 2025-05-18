@@ -48,6 +48,35 @@ impl User {
         self
     }
 
+    /// Update `password` of an empty [`User`].
+    ///
+    /// **WARNING: hash password before pass it here!**
+    pub fn with_password(mut self, password: String) -> Self {
+        self.password = password;
+        self
+    }
+
+    /// Create a new user.
+    pub async fn create(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
+        if self.id.is_empty() && self.password.is_empty() {
+            return Err(sqlx::Error::ColumnNotFound(
+                "missing 'id' and 'password' columns".to_owned(),
+            ));
+        }
+
+        sqlx::query!(
+            r#"INSERT INTO "users" (id, username, email, password) VALUES ($1, $2, $3, $4)"#,
+            self.id.to_lowercase(),
+            self.id,
+            self.email,
+            self.password,
+        )
+        .execute(conn)
+        .await?;
+
+        Ok(self)
+    }
+
     /// Get data on a user.
     pub async fn get(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
         if !self.id.is_empty() {
@@ -62,7 +91,7 @@ impl User {
                 .await
         } else {
             Err(sqlx::Error::ColumnNotFound(
-                "Missing column 'id' or 'email' column".to_owned(),
+                "missing column 'id' or 'email' column".to_owned(),
             ))
         }
     }
