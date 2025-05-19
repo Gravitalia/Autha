@@ -135,7 +135,10 @@ pub async fn handler(
 
     if let Some((email, password)) = body.email.clone().zip(body.password) {
         check_password(&password, &user.password)?;
-        user.email = state.crypto.format_preserving(&email);
+        user.email = state
+            .crypto
+            .aes_no_iv(Action::Encrypt, email.into())
+            .map_err(|_| ServerError::Internal("email cannot be encrypted".into()))?;
     } else if body.email.is_some() {
         errors.add(
             "password",

@@ -1,12 +1,9 @@
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, SaltString},
-    Argon2, Params, Version,
-};
 use axum::{extract::State, http::StatusCode, Json};
 use regex_lite::Regex;
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
+use crate::crypto::Action;
 use crate::user::User;
 use crate::AppState;
 use crate::ServerError;
@@ -31,7 +28,7 @@ pub struct Body {
         custom(function = "validate_id", message = "Vanity must be alphanumeric.")
     )]
     id: String,
-    #[validate(email(message = "Email must be formated."))]
+    #[validate(email(message = "Email must be formatted."))]
     email: String,
     #[validate(length(
         min = 8,
@@ -112,23 +109,11 @@ pub async fn create(
     State(state): State<AppState>,
     Valid(body): Valid<Body>,
 ) -> Result<(StatusCode, Json<Response>), ServerError> {
-    let email = state.crypto.format_preserving(&body.email);
-
-    let password = {
-        let salt = SaltString::generate(&mut OsRng);
-        let params = Params::new(Params::DEFAULT_M_COST * 4, 6, Params::DEFAULT_P_COST, None)
-            .map_err(|err| ServerError::Internal(err.to_string()))?;
-        let argon2 = Argon2::new(argon2::Algorithm::Argon2id, Version::V0x13, params);
-
-        let password_hash = argon2
-            .hash_password(body.password.as_bytes(), &salt)
-            .map_err(|err| ServerError::Internal(err.to_string()))?
-            .to_string();
-        let hash = PasswordHash::new(&password_hash)
-            .map_err(|err| ServerError::Internal(err.to_string()))?;
-
-        hash.to_string()
-    };
+    let email = state
+        .crypto
+        .aes_no_iv(Action::Encrypt, body.email.into())
+        .map_err(|_| ServerError::Internal("email cannot be encrypted".into()))?;
+    let password = state.crypto.hash_password(&body.password)?;
 
     let user = User::default()
         .with_id(body.id.to_lowercase())
