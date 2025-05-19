@@ -1,9 +1,10 @@
 //! Cryptogragic logics.
 use aes::cipher::block_padding::{Pkcs7, UnpadError};
 use aes::cipher::generic_array::GenericArray;
-use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit};
+use aes::cipher::{BlockDecryptMut, BlockEncrypt, BlockEncryptMut, KeyInit, KeyIvInit};
 use aes::Aes256;
-use fpe::ff1::{FlexibleNumeralString, Operations, FF1};
+use argon2::password_hash::{PasswordHash, PasswordHasher, SaltString};
+use argon2::{Argon2, Params, Version};
 use p256::ecdsa::VerifyingKey;
 use p256::pkcs8::DecodePublicKey;
 use rand::rngs::OsRng;
@@ -12,8 +13,6 @@ use rsa::pkcs1::DecodeRsaPublicKey;
 use rsa::RsaPublicKey;
 
 use crate::ServerError;
-
-const RADIX: u32 = 256;
 
 type Result<T> = std::result::Result<T, Error>;
 type Aes256CbcEnc = cbc::Encryptor<Aes256>;
@@ -44,9 +43,10 @@ pub struct Cipher {
 
 impl Cipher {
     /// Create a new [`Cipher`] structure with a `key`.
+    /// If key have more than 32 bytes, turncate it.
     pub fn key<T: ToString>(key: T) -> Result<Self> {
         Ok(Self {
-            key: hex::decode(key.to_string())?,
+            key: hex::decode(key.to_string())?.into(),
         })
     }
 
@@ -56,19 +56,25 @@ impl Cipher {
         iv
     }
 
-    /// Encrypt plaintext with FPE.
-    pub fn format_preserving(&self, plaintext: &str) -> String {
-        FF1::<Aes256>::new(&self.key, RADIX)
-            .ok()
-            .and_then(|ff| {
-                let email: Vec<u16> = plaintext.encode_utf16().collect();
-                let email_length = email.len();
+    /// Either encrypt or decrypt data with AES256.
+    ///
+    /// **WARNING**: no iv means less secure.
+    pub fn aes_no_iv(&self, action: Action, data: Vec<u8>) -> Result<String> {
+        let key = GenericArray::from_slice(&self.key);
 
-                ff.encrypt(&[], &FlexibleNumeralString::from(email))
-                    .ok()
-                    .map(|encrypted| hex::encode(encrypted.to_be_bytes(RADIX, email_length)))
-            })
-            .unwrap_or(plaintext.to_string())
+        match action {
+            Action::Encrypt => {
+                let message = Aes256::new(key).encrypt_padded_vec::<Pkcs7>(&data);
+                Ok(hex::encode(message))
+            }
+            Action::Decrypt => {
+                let data = hex::decode(data)?;
+
+                Ok(String::from_utf8(
+                    Aes256::new(key).decrypt_padded_vec_mut::<Pkcs7>(&data)?,
+                )?)
+            }
+        }
     }
 
     /// Either encrypt or decrypt data with AES256-CBC.
@@ -97,6 +103,23 @@ impl Cipher {
                 )?)
             }
         }
+    }
+
+    /// Hash password using [`argon2`].
+    pub fn hash_password(&self, password: &str) -> std::result::Result<String, ServerError> {
+        let salt = SaltString::generate(&mut OsRng);
+        let params = Params::new(Params::DEFAULT_M_COST * 4, 6, Params::DEFAULT_P_COST, None)
+            .map_err(|err| ServerError::Internal(err.to_string()))?;
+        let argon2 = Argon2::new(argon2::Algorithm::Argon2id, Version::V0x13, params);
+
+        let password_hash = argon2
+            .hash_password(password.as_bytes(), &salt)
+            .map_err(|err| ServerError::Internal(err.to_string()))?
+            .to_string();
+        let hash = PasswordHash::new(&password_hash)
+            .map_err(|err| ServerError::Internal(err.to_string()))?;
+
+        Ok(hash.to_string())
     }
 
     pub fn check_totp(
@@ -171,15 +194,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_fpe_encryption() {
+    fn test_aes_no_iv() {
         const EMAIL: &str = "admin@gravitalia.com";
 
         let key = [0x42; 32];
         let cipher = Cipher::key(hex::encode(key)).unwrap();
 
+        let cipher_text = cipher.aes_no_iv(Action::Encrypt, EMAIL.into()).unwrap();
+
+        assert_eq!(cipher_text, "3601ff3a929d30b044c7ec7722c0d5da0fcba9acca82ded8b781e999b01aa33a");
+
         assert_eq!(
-            cipher.format_preserving(EMAIL),
-            "26378b206d60de2ed8819fc1bc9502ee2abcd7e1"
+            cipher
+                .aes_no_iv(Action::Decrypt, cipher_text.into())
+                .unwrap(),
+            EMAIL,
         );
     }
 
