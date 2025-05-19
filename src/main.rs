@@ -87,6 +87,8 @@ pub fn app(state: AppState) -> Router {
         );
 
     let create_router = Router::new()
+        // Initialize telemetry.
+        // initialize tracing.
         // `POST /create` goes to `create`.
         .route("/", post(router::create::create))
         .route_layer(middleware::from_fn_with_state(
@@ -110,8 +112,6 @@ pub fn app(state: AppState) -> Router {
 #[tokio::main]
 #[tracing::instrument]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize telemetry.
-    // initialize tracing.
     let tracer_provider = telemetry::setup_tracer()?;
     global::set_tracer_provider(tracer_provider.clone());
 
@@ -192,7 +192,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         tracing::warn!("missing `KEY` environnement; set it in production!");
 
-        let key = [0x42; 16];
+        let key = [0x42; 32];
         crypto::Cipher::key(hex::encode(key))?
     };
 
