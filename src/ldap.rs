@@ -99,17 +99,17 @@ impl Ldap {
 
     /// Test a connection on [`Ldap3`].
     /// Do not re-use this connection after.
-    pub async fn bind(&self, user: &User, password: &str) -> Result<(), LdapError> {
+    pub async fn bind(&self, user_id: &str, password: &str) -> Result<(), LdapError> {
         let (conn_handle, mut conn) = LdapConnAsync::new(&self.addr).await?;
         ldap3::drive!(conn_handle);
 
-        tracing::debug!(user_id = %user.id, "Trying to bind user...");
+        tracing::debug!(%user_id, "Trying to bind user...");
 
         let search = conn
             .search(
                 &self.path,
                 Scope::Subtree,
-                &format!("(uid={})", user.id),
+                &format!("(uid={})", user_id),
                 vec!["dn"],
             )
             .await?
