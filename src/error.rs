@@ -1,4 +1,4 @@
-//! Route handler module with HTTP routes and validation.
+//! Error handler for autha.
 
 use axum::extract::rejection::JsonRejection;
 use axum::http::{header, StatusCode};
@@ -8,23 +8,34 @@ use sqlx::{postgres::PgDatabaseError, Error as SQLxError};
 use thiserror::Error;
 use validator::ValidationErrors;
 
+pub type Result<T> = std::result::Result<T, ServerError>;
+
 /// Enum representing server-side errors.
 #[derive(Debug, Error)]
 pub enum ServerError {
-    #[error("Validation error occurred: {0:?}")]
+    #[error("validation error occurred")]
     Validation(#[from] ValidationErrors),
 
-    #[error("Error parsing form data: {0}")]
-    ParsingForm(#[from] JsonRejection),
+    #[error("error parsing form data")]
+    ParsingForm(Box<dyn std::error::Error>),
+
+    #[error(transparent)]
+    Axum(#[from] JsonRejection),
 
     #[error("SQL request failed: {0}")]
     Sql(#[from] SQLxError),
 
-    #[error("invalid public key")]
-    Key(crate::crypto::KeyError),
+    #[error("invalid email")]
+    WrongEmail,
 
-    #[error("internal server error")]
-    Internal(String),
+    #[error("public key must be PCKS-1 or PCKS-8")]
+    Key(#[from] crate::crypto::KeyError),
+
+    #[error("internal server error, {details}")]
+    Internal {
+        details: String,
+        source: Option<Box<dyn std::error::Error>>,
+    },
 
     #[error("invalid 'Authorization' header")]
     Unauthorized,
@@ -48,11 +59,13 @@ impl ResponseError {
         self
     }
 
+    /// Update `title` field.
     pub fn title(mut self, title: &str) -> Self {
         self.title = title.into();
         self
     }
 
+    /// Add detailed error.
     pub fn details(mut self, description: &str) -> Self {
         self.detail = description.into();
         self
@@ -64,7 +77,8 @@ impl ResponseError {
         self
     }
 
-    pub fn into_response(self) -> Result<Response, axum::http::Error> {
+    /// Transform [`ResponseError`] into axum [`Response`].
+    pub fn into_response(self) -> std::result::Result<Response, axum::http::Error> {
         if let Ok(body) = serde_json::to_string(&self) {
             Response::builder()
                 .status(self.status)
@@ -89,14 +103,12 @@ impl Default for ResponseError {
     }
 }
 
-/// Represents a specific field error.
 #[derive(Debug, Serialize)]
 struct FieldError {
     field: String,
     message: String,
 }
 
-/// Converts validation errors into a vector of `FieldError`.
 fn parse_validation_errors(errors: &ValidationErrors) -> Vec<FieldError> {
     errors
         .field_errors()
@@ -112,47 +124,43 @@ fn parse_validation_errors(errors: &ValidationErrors) -> Vec<FieldError> {
 
 impl IntoResponse for ServerError {
     fn into_response(self) -> Response {
-        match &self {
-            ServerError::Validation(validation_errors) => ResponseError::default()
-                .title("Invalid input.")
-                .details("There were validation errors with your request.")
-                .errors(validation_errors)
-                .status(StatusCode::BAD_REQUEST)
-                .into_response()
-                .unwrap_or_else(|_| internal_server_error()),
-            ServerError::ParsingForm(err) => ResponseError::default()
-                .title("Parsing error.")
-                .details(&err.to_string())
-                .status(StatusCode::BAD_REQUEST)
-                .into_response()
-                .unwrap_or_else(|_| internal_server_error()),
-            ServerError::Sql(err) => ResponseError::default()
-                .title("Invalid input.")
-                .details(
-                    err.as_database_error()
-                        .and_then(|e| e.downcast_ref::<PgDatabaseError>().detail())
-                        .unwrap_or(&err.to_string()),
-                )
-                .status(StatusCode::BAD_REQUEST)
-                .into_response()
-                .unwrap_or_else(|_| internal_server_error()),
-            ServerError::Key(_) => ResponseError::default()
-                .title("Invalid key format.")
-                .details("Public key must be PCKS-1 or PCKS-8.")
-                .status(StatusCode::BAD_REQUEST)
-                .into_response()
-                .unwrap_or_else(|_| internal_server_error()),
-            ServerError::Internal(_err) => internal_server_error(),
-            ServerError::Unauthorized => ResponseError::default()
+        let response = ResponseError::default()
+            .title("There were validation errors with your request.")
+            .details(&self.to_string())
+            .status(StatusCode::BAD_REQUEST);
+
+        let response = match &self {
+            ServerError::Validation(validation_errors) => response.errors(validation_errors),
+
+            ServerError::ParsingForm(err) => response
+                .title("Server error during data parsing.")
+                .details(&err.to_string()),
+
+            ServerError::Sql(err) => response.details(
+                err.as_database_error()
+                    .and_then(|e| e.downcast_ref::<PgDatabaseError>().detail())
+                    .unwrap_or(&err.to_string()),
+            ),
+
+            ServerError::Unauthorized => response
                 .title("Missing or invalid 'Authorization' header.")
-                .status(StatusCode::UNAUTHORIZED)
-                .into_response()
-                .unwrap_or_else(|_| internal_server_error()),
-        }
+                .status(StatusCode::UNAUTHORIZED),
+
+            ServerError::Internal { details, source } => {
+                tracing::error!(err = source, %details, "server returned 500 status");
+
+                ResponseError::default()
+            }
+
+            _ => response,
+        };
+
+        response
+            .into_response()
+            .unwrap_or_else(|_| internal_server_error())
     }
 }
 
-/// Helper function to create a generic "Internal Server Error" response.
 fn internal_server_error() -> Response {
     Response::builder()
         .status(StatusCode::INTERNAL_SERVER_ERROR)
