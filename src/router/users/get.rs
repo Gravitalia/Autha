@@ -91,7 +91,7 @@ mod tests {
             config: config::Configuration::default(),
             ldap: ldap::Ldap::default(),
             crypto: {
-                let key = [0x42; 16];
+                let key = [0x42; 32];
                 crypto::Cipher::key(hex::encode(key)).unwrap()
             },
         };

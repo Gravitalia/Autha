@@ -4,13 +4,14 @@ use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
 use crate::crypto::Action;
+use crate::error::Result;
 use crate::user::User;
 use crate::AppState;
 use crate::ServerError;
 
 use super::Valid;
 
-pub fn validate_id(vanity: &str) -> Result<(), ValidationError> {
+pub fn validate_id(vanity: &str) -> std::result::Result<(), ValidationError> {
     if !Regex::new(r"^[A-Za-z0-9_.]+$")
         .map_err(|_| ValidationError::new("wtf_regex"))?
         .is_match(vanity)
@@ -60,14 +61,14 @@ pub async fn middleware(
     State(state): State<AppState>,
     req: axum::extract::Request,
     next: axum::middleware::Next,
-) -> Result<axum::response::Response, ServerError> {
+) -> Result<axum::response::Response> {
     if state.config.invite_only {
         let (parts, body) = req.into_parts();
         let body_bytes = axum::body::to_bytes(body, usize::MAX)
             .await
-            .map_err(|_| ServerError::Internal("Cannot decode body.".to_owned()))?;
+            .map_err(|err| ServerError::ParsingForm(Box::new(err)))?;
         let body = serde_json::from_slice::<Body>(&body_bytes)
-            .map_err(|_| ServerError::Internal("Cannot decode body.".to_owned()))?;
+            .map_err(|err| ServerError::ParsingForm(Box::new(err)))?;
 
         if let Some(ref invite) = body.invite {
             let is_used = sqlx::query!(
@@ -108,11 +109,14 @@ pub async fn middleware(
 pub async fn create(
     State(state): State<AppState>,
     Valid(body): Valid<Body>,
-) -> Result<(StatusCode, Json<Response>), ServerError> {
+) -> Result<(StatusCode, Json<Response>)> {
     let email = state
         .crypto
         .aes_no_iv(Action::Encrypt, body.email.into())
-        .map_err(|_| ServerError::Internal("email cannot be encrypted".into()))?;
+        .map_err(|err| ServerError::Internal {
+            details: "email cannot be encrypted".into(),
+            source: Some(Box::new(err)),
+        })?;
     let password = state.crypto.hash_password(&body.password)?;
 
     let user = User::default()

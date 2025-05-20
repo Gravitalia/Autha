@@ -64,12 +64,15 @@ pub async fn handler(
         .zip(body.totp_code.clone())
     {
         check_password(&password, &user.password)?;
-        if generate_totp(&secret, 30, 6).map_err(ServerError::Internal)? == code {
+        if generate_totp(&secret, 30, 6)? == code {
             user.totp_secret = Some(
                 state
                     .crypto
                     .aes(Action::Encrypt, secret.as_bytes().to_vec())
-                    .map_err(|err| ServerError::Internal(err.to_string()))?,
+                    .map_err(|err| ServerError::Internal {
+                        details: "cannot encrypt".into(),
+                        source: Some(Box::new(err)),
+                    })?,
             );
         } else {
             errors.add(
@@ -138,7 +141,10 @@ pub async fn handler(
         user.email = state
             .crypto
             .aes_no_iv(Action::Encrypt, email.into())
-            .map_err(|_| ServerError::Internal("email cannot be encrypted".into()))?;
+            .map_err(|err| ServerError::Internal {
+                details: "email cannot be encrypted".into(),
+                source: Some(Box::new(err)),
+            })?;
     } else if body.email.is_some() {
         errors.add(
             "password",

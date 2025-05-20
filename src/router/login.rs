@@ -6,12 +6,14 @@ use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
-use crate::{crypto::Action, user::User};
+use crate::crypto::Action;
+use crate::error::Result;
+use crate::user::User;
 use crate::{AppState, ServerError};
 
 use super::Valid;
 
-fn at_least_one_contact(form: &Identifier) -> Result<(), ValidationError> {
+fn at_least_one_contact(form: &Identifier) -> std::result::Result<(), ValidationError> {
     if form.email.is_none() && form.id.is_none() {
         let mut error = ValidationError::new("missing_identifier");
         error.message = Some("Email must be formatted.".into());
@@ -58,7 +60,7 @@ pub struct Response {
 }
 
 #[inline]
-pub(super) fn check_password(pwd: &str, hash: &str) -> Result<(), ValidationErrors> {
+pub(super) fn check_password(pwd: &str, hash: &str) -> std::result::Result<(), ValidationErrors> {
     let hash = PasswordHash::new(hash).map_err(|err| {
         tracing::error!(%err, "password hash decoding failed");
         let error = ValidationError::new("decode").with_message("Invalid password format.".into());
@@ -80,16 +82,20 @@ pub(super) fn check_password(pwd: &str, hash: &str) -> Result<(), ValidationErro
 pub async fn login(
     State(state): State<AppState>,
     Valid(body): Valid<Body>,
-) -> Result<Json<Response>, ServerError> {
+) -> Result<Json<Response>> {
     let user = if let Some(email) = body.identifier.email {
         let email = state
             .crypto
             .aes_no_iv(Action::Encrypt, email.into())
-            .map_err(|_| ServerError::Internal("email cannot be encrypted".into()))?;
+            .map_err(|err| ServerError::Internal {
+                details: "email cannot be encrypted".into(),
+                source: Some(Box::new(err)),
+            })?;
         let user = User::default()
             .with_email(email)
             .get(&state.db.postgres)
-            .await?;
+            .await
+            .map_err(|_| ServerError::WrongEmail)?;
 
         check_password(&body.password, &user.password)?;
         state.crypto.check_totp(body.totp_code, &user.totp_secret)?;
@@ -99,17 +105,28 @@ pub async fn login(
             .ldap
             .bind(&id, &body.password)
             .await
-            .map_err(|_| ServerError::Internal("Invalid LDAP credentials.".into()))?;
+            .map_err(|err| ServerError::Internal {
+                details: "invalid LDAP credentials".into(),
+                source: Some(Box::new(err)),
+            })?;
+
+        let password = state.crypto.hash_password(&body.password)?;
 
         User::default()
-            .with_id(id)
-            .with_password(state.crypto.hash_password(&body.password)?)
+            .with_id(id.to_lowercase())
+            .with_password(password)
             .create(&state.db.postgres)
             .await?
             .get(&state.db.postgres)
             .await?
+        /*.with_id(id)
+        .with_password(state.crypto.hash_password(&body.password)?)
+        .create(&state.db.postgres)
+        .await?
+        .get(&state.db.postgres)
+        .await?*/
     } else {
-        return Err(ServerError::Internal("Missing email or id.".into()));
+        return Err(ServerError::WrongEmail);
     };
 
     let token = user.generate_token(&state.db.postgres).await?;
