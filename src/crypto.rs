@@ -46,7 +46,7 @@ impl Cipher {
     /// If key have more than 32 bytes, turncate it.
     pub fn key<T: ToString>(key: T) -> Result<Self> {
         Ok(Self {
-            key: hex::decode(key.to_string())?.into(),
+            key: hex::decode(key.to_string())?,
         })
     }
 
@@ -106,18 +106,26 @@ impl Cipher {
     }
 
     /// Hash password using [`argon2`].
-    pub fn hash_password(&self, password: &str) -> std::result::Result<String, ServerError> {
+    pub fn hash_password(&self, password: &str) -> crate::error::Result<String> {
         let salt = SaltString::generate(&mut OsRng);
         let params = Params::new(Params::DEFAULT_M_COST * 4, 6, Params::DEFAULT_P_COST, None)
-            .map_err(|err| ServerError::Internal(err.to_string()))?;
+            .map_err(|_| ServerError::Internal {
+                details: String::default(),
+                source: None,
+            })?;
         let argon2 = Argon2::new(argon2::Algorithm::Argon2id, Version::V0x13, params);
 
         let password_hash = argon2
             .hash_password(password.as_bytes(), &salt)
-            .map_err(|err| ServerError::Internal(err.to_string()))?
+            .map_err(|_| ServerError::Internal {
+                details: String::default(),
+                source: None,
+            })?
             .to_string();
-        let hash = PasswordHash::new(&password_hash)
-            .map_err(|err| ServerError::Internal(err.to_string()))?;
+        let hash = PasswordHash::new(&password_hash).map_err(|_| ServerError::Internal {
+            details: String::default(),
+            source: None,
+        })?;
 
         Ok(hash.to_string())
     }
@@ -126,17 +134,18 @@ impl Cipher {
         &self,
         code: Option<String>,
         secret: &Option<String>,
-    ) -> std::result::Result<(), ServerError> {
+    ) -> crate::error::Result<()> {
         if let Some(ref secret) = secret {
             let secret = self
                 .aes(crate::crypto::Action::Decrypt, secret.as_bytes().to_vec())
-                .map_err(|err| ServerError::Internal(err.to_string()))?;
+                .map_err(|err| ServerError::Internal {
+                    details: "decode totp secret".into(),
+                    source: Some(Box::new(err)),
+                })?;
             let mut errors = validator::ValidationErrors::new();
 
             if let Some(code) = code {
-                if crate::totp::generate_totp(&secret, 30, 6).map_err(ServerError::Internal)?
-                    != code
-                {
+                if crate::totp::generate_totp(&secret, 30, 6)? != code {
                     errors.add(
                         "totpCode",
                         validator::ValidationError::new("invalid_totp")
@@ -160,12 +169,15 @@ impl Cipher {
     }
 }
 
+/// Error related to public keys.
 #[derive(Debug, thiserror::Error)]
 pub enum KeyError {
     #[error(transparent)]
     Pkcs1(#[from] rsa::pkcs1::Error),
+
     #[error(transparent)]
     Pkcs8(#[from] rsa::pkcs8::spki::Error),
+
     #[error("unknown public key format")]
     UnknownFormat,
 }
@@ -202,7 +214,10 @@ mod tests {
 
         let cipher_text = cipher.aes_no_iv(Action::Encrypt, EMAIL.into()).unwrap();
 
-        assert_eq!(cipher_text, "3601ff3a929d30b044c7ec7722c0d5da0fcba9acca82ded8b781e999b01aa33a");
+        assert_eq!(
+            cipher_text,
+            "3601ff3a929d30b044c7ec7722c0d5da0fcba9acca82ded8b781e999b01aa33a"
+        );
 
         assert_eq!(
             cipher

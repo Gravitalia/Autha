@@ -3,19 +3,27 @@ use hmac::{Hmac, Mac};
 use sha1::Sha1;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::error::{Result, ServerError};
+
 /// Generates a TOTP code.
-pub fn generate_totp(secret: &str, time_step: u64, digits: u32) -> Result<String, String> {
+pub fn generate_totp(secret: &str, time_step: u64, digits: u32) -> Result<String> {
     let key = decode(base32::Alphabet::Rfc4648 { padding: false }, secret)
-        .ok_or("Invalid base32 encoding")?;
+        .ok_or(ServerError::ParsingForm("invalid base32 encoding".into()))?;
 
     let time_counter = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map_err(|_| "System time error")?
+        .map_err(|err| ServerError::Internal {
+            details: String::default(),
+            source: Some(Box::new(err)),
+        })?
         .as_secs()
         / time_step;
 
     let counter_bytes = time_counter.to_be_bytes();
-    let mut mac = Hmac::<Sha1>::new_from_slice(&key).map_err(|_| "HMAC error")?;
+    let mut mac = Hmac::<Sha1>::new_from_slice(&key).map_err(|err| ServerError::Internal {
+        details: String::default(),
+        source: Some(Box::new(err)),
+    })?;
     mac.update(&counter_bytes);
     let result = mac.finalize().into_bytes();
 

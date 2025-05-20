@@ -5,23 +5,19 @@ pub mod login;
 pub mod status;
 pub mod users;
 
-use axum::extract::rejection::JsonRejection;
-use axum::extract::{FromRequest, Request};
-use axum::Json;
+use axum::extract::{FromRequest, Json, Request};
 use serde::de::DeserializeOwned;
 use validator::Validate;
 
 use crate::error::ServerError;
 
-/// A wrapper struct for validating form data.
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug)]
 pub struct Valid<T>(pub T);
 
 impl<T, S> FromRequest<S> for Valid<T>
 where
     T: DeserializeOwned + Validate,
     S: Send + Sync,
-    Json<T>: FromRequest<S, Rejection = JsonRejection>,
 {
     type Rejection = ServerError;
 
