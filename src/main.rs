@@ -125,11 +125,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let layer =
         telemetry::setup_logging(&env::var("OTEL_URL").unwrap_or("http://localhost:4317".into()))?
             .with_filter(filter);
+    let level = if cfg!(debug_assertions) {
+        "debug"
+    } else {
+        "info"
+    };
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
                 format!(
-                    "{}=debug,tower_http=debug,axum::rejection=trace",
+                    "{}={level},tower_http={level},axum::rejection=trace",
                     env!("CARGO_CRATE_NAME")
                 )
                 .into()
