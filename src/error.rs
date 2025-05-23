@@ -1,12 +1,11 @@
 //! Error handler for autha.
-
 use axum::extract::rejection::JsonRejection;
 use axum::http::{header, StatusCode};
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use sqlx::{postgres::PgDatabaseError, Error as SQLxError};
 use thiserror::Error;
-use validator::ValidationErrors;
+use validator::{ValidationError, ValidationErrors};
 
 pub type Result<T> = std::result::Result<T, ServerError>;
 
@@ -136,11 +135,36 @@ impl IntoResponse for ServerError {
                 .title("Server error during data parsing.")
                 .details(&err.to_string()),
 
-            ServerError::Sql(err) => response.details(
-                err.as_database_error()
-                    .and_then(|e| e.downcast_ref::<PgDatabaseError>().detail())
-                    .unwrap_or(&err.to_string()),
-            ),
+            ServerError::Sql(err) => {
+                let errors = match err {
+                    sqlx::Error::Database(err) => {
+                        let err = err.downcast_ref::<PgDatabaseError>();
+                        let mut validation_errors = ValidationErrors::new();
+
+                        match err.constraint() {
+                            Some("users_pkey") => validation_errors.add(
+                                "id",
+                                ValidationError::new("sql")
+                                    .with_message("ID is already in use.".into()),
+                            ),
+                            Some("users_email_key") => validation_errors.add(
+                                "email",
+                                ValidationError::new("sql")
+                                    .with_message("Email is already in use.".into()),
+                            ),
+                            _ => {}
+                        }
+
+                        validation_errors
+                    }
+                    _ => {
+                        tracing::error!(%err, "SQL query failed");
+                        ValidationErrors::new()
+                    }
+                };
+
+                response.errors(&errors).details("")
+            }
 
             ServerError::Unauthorized => response
                 .title("Missing or invalid 'Authorization' header.")
