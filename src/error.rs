@@ -40,6 +40,32 @@ pub enum ServerError {
     Unauthorized,
 }
 
+impl From<ServerError> for ValidationErrors {
+    fn from(error: ServerError) -> Self {
+        let mut errors = ValidationErrors::new();
+
+        match error {
+            ServerError::WrongEmail => {
+                errors.add(
+                    "email",
+                    ValidationError::new("email").with_message("Email must be formatted.".into()),
+                );
+            }
+            ServerError::Key(_) => {
+                errors.add(
+                    "key",
+                    ValidationError::new("publicKeys").with_message(
+                        "Public key format must be PCKS1 (RSA) or PCKS8 (ECDSA).".into(),
+                    ),
+                );
+            }
+            _ => {}
+        }
+
+        errors
+    }
+}
+
 /// Structure for detailed error responses.
 #[derive(Debug, Serialize)]
 pub struct ResponseError {
@@ -180,6 +206,7 @@ impl IntoResponse for ServerError {
         };
 
         response
+            .errors(&self.into())
             .into_response()
             .unwrap_or_else(|_| internal_server_error())
     }
