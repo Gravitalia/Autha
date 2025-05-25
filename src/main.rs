@@ -19,6 +19,7 @@ use error::ServerError;
 use opentelemetry::global;
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::sensitive_headers::SetSensitiveHeadersLayer;
 use tower_http::timeout::RequestBodyTimeoutLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
@@ -77,6 +78,8 @@ pub fn app(state: AppState) -> Router {
         )
         // Set a timeout.
         .layer(TimeoutLayer::new(Duration::from_secs(10)))
+        // Remove senstive headers from trace.
+        .layer(SetSensitiveHeadersLayer::new([header::AUTHORIZATION, header::COOKIE]))
         // Add CORS preflight support.
         .layer(
             CorsLayer::new()
