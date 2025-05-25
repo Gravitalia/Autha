@@ -178,7 +178,7 @@ impl IntoResponse for ServerError {
                                 ValidationError::new("sql")
                                     .with_message("Email is already in use.".into()),
                             ),
-                            _ => {}
+                            _ => tracing::error!(%err, "SQL query failed"),
                         }
 
                         validation_errors
