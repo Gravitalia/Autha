@@ -42,6 +42,17 @@
         <script src="toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -119,7 +130,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -160,20 +171,140 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>Autha is an account manager, allowing you to decentralize your connection using
-JWT.</p>
+<p>Autha is an account manager, allowing you to decentralize your connection.</p>
 <p>You can either self-host Autha or use a public instance. Then, create an
 account. Finally, create a key pair on your machine and send only the
 public key to the server.</p>
 <h2 id="license"><a class="header" href="#license">License</a></h2>
 <p>Source code and documentation are released under <a href="https://opensource.org/license/bsd-3-clause">BSD-3-Clause</a> license.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="introduction-1"><a class="header" href="#introduction-1">Introduction</a></h1>
-<p>Autha is a decentralized authentification system which lets users connect
-themselves via asymmetric key using JWT. They save their own keys.</p>
-<p>Autha simply publish public keys of user.</p>
-<h1 id="impact"><a class="header" href="#impact">Impact</a></h1>
-<p>A system based on Autha MUST always allow user’s connection, even from another
-instance.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="ldap"><a class="header" href="#ldap">LDAP</a></h1>
+<p>Autha supports LDAP directory integration for user and group resolution. This feature enables compatibility with enterprise identity systems by dynamically resolving user attributes and group memberships through LDAP queries.</p>
+<p>Add in <code>config.yaml</code> following code:</p>
+<pre><code class="language-yaml">ldap:
+  address: ldap://127.0.0.1:389
+  user: CN=admin,DC=domain,DC=local
+  password: admin
+  base_dn: DC=domain,DC=local
+  additional_users_dn: OU=users
+  users_filter: '(&amp;(uid={user_id}))'
+  additional_groups_dn: 'OU=groups'
+  groups_filter: '(&amp;(member={dn})(objectClass=groupOfNames))'
+</code></pre>
+<div class="table-wrapper"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>address</code></td><td>URL of the LDAP server. Support <code>ldap://</code> and <code>ldaps://</code>.</td></tr>
+<tr><td><code>user</code>*</td><td>DN of admin LDAP account used to create new entries.</td></tr>
+<tr><td><code>password</code>*</td><td><code>userPassword</code> for admin account.</td></tr>
+<tr><td><code>base_dn</code></td><td>Root DN for all LDAP searches.</td></tr>
+<tr><td><code>additional_users_dn</code></td><td>Sub-path under <code>base_dn</code> to locate user entries.</td></tr>
+<tr><td><code>users_filter</code></td><td>LDAP filter to find a specific user</td></tr>
+<tr><td><code>additional_groups_dn</code>,</td><td>Sub-path under <code>base_dn</code> to locate group entries.</td></tr>
+<tr><td><code>groups_filter</code></td><td>LDAP filter to find groups containing the user</td></tr>
+</tbody></table>
+</div>
+<p>* You can omit <code>user</code> and <code>password</code> field if you don’t want to create new entires on LDAP via Autha.</p>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="1-introduction"><a class="header" href="#1-introduction">1. Introduction</a></h2>
+<p>Autha is a decentralized authentication system that enables users to authenticate themselves using asymmetric cryptographic keys via WebAuthn. Users are responsible for securely storing and managing their own private keys.</p>
+<p>Autha’s role is limited to publishing the users’ corresponding public keys in a verifiable and accessible manner.</p>
+<h3 id="12-impact"><a class="header" href="#12-impact">1.2 Impact</a></h3>
+<p>Any system implementing Autha <strong>MUST</strong> support user authentication regardless of the specific instance used. In particular, a user <strong>MUST</strong> be able to authenticate from any Autha-compatible instance, provided their public key is available and their private key is valid.</p>
+<p>This ensures cross-instance interoperability and preserves the decentralized nature of the authentication mechanism.</p>
+<h2 id="2-schema"><a class="header" href="#2-schema">2. Schema</a></h2>
+<h3 id="21-user-identifier-user-id"><a class="header" href="#21-user-identifier-user-id">2.1 User Identifier (User ID)</a></h3>
+<p>Each user is identified by a unique and stable identifier, referred to as the <strong>User ID</strong>.</p>
+<p>A User ID <strong>MUST</strong> follow the format:</p>
+<pre><code>&lt;vanity&gt;@&lt;server-domain&gt;
+</code></pre>
+<p>For example: <code>alice@auth.example.com</code>.</p>
+<ul>
+<li><code>vanity</code>: A user-chosen identifier (MAY be pseudonymous).</li>
+<li><code>server-domain</code>: The domain of the Autha-compatible server that exposes the user’s public identity.</li>
+</ul>
+<p>A User <strong>MUST</strong> have exactly one User ID, and this identifier <strong>MUST</strong> remain consistent across all Autha operations.</p>
+<h3 id="22-server"><a class="header" href="#22-server">2.2 Server</a></h3>
+<p>Server exposes user as specified on <a href="https://www.w3.org/TR/activitypub/">ActivityPub</a> format.</p>
+<h3 id="23-keys"><a class="header" href="#23-keys">2.3 Keys</a></h3>
+<p>An Autha-compatible server <strong>MUST NOT</strong> store or have access to any private key. It <strong>MUST ONLY</strong> store and expose public keys associated with a given user.</p>
+<p>A user <strong>MAY</strong> have multiple active public keys (e.g., to support multiple devices or key rotations). Each key <strong>MUST</strong> be uniquely identifiable and linked to the owning User ID.</p>
+<p>The <code>/users/:USER_ID</code> endpoint <strong>MUST</strong> return public keys using the following JSON structure:</p>
+<pre><code class="language-json">[
+  {
+    "id": "0000",
+    "owner": "alice@auth.example.com",
+    "public_key_pem": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----",
+    "created_at": "YYYY-MM-DD"
+  },
+  ...
+]
+</code></pre>
+<ul>
+<li><code>id</code>: A unique identifier for the public key.</li>
+<li><code>owner</code>: The associated User ID.</li>
+<li><code>public_key_pem</code>: The public key in PEM format.</li>
+<li><code>created_at</code>: ISO 8601 date when the key was created or registered.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="1-introduction-1"><a class="header" href="#1-introduction-1">1. Introduction</a></h2>
+<p>This document defines a mechanism for generating and verifying identity assertion tokens using <a href="https://developer.mozilla.org/en-US/docs/Web/API/Navigator/credentials">Navigator Credentials</a>. These tokens are client-generated cryptographic signatures that bind a user identity to an authentication assertion, leveraging WebAuthn-compatible authenticators.</p>
+<p>Tokens are signed using one of the following public-key signature algorithms:</p>
+<ul>
+<li><strong>Ed25519</strong> (preferred), or</li>
+<li><strong>RS256</strong> (RSA PKCS#1 v1.5 with SHA-256).</li>
+</ul>
+<h2 id="2-token-format"><a class="header" href="#2-token-format">2. Token Format</a></h2>
+<p>Tokens are transmitted using POST request to server defined on query parameters <code>redirect</code>.</p>
+<h3 id="21-body-fields"><a class="header" href="#21-body-fields">2.1 Body fields</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>signature</code></td><td>Cryptographic signature.</td></tr>
+<tr><td><code>id</code></td><td>Unique user identifier with server (e.g., <code>id@server.com</code>).</td></tr>
+<tr><td><code>key</code></td><td>Identifier of the public key used to verify the signature.</td></tr>
+<tr><td><code>authenticatorData</code></td><td>Base64url-encoded data returned by the authenticator, includes flags, counters, etc.</td></tr>
+<tr><td><code>clientDataJSON</code></td><td>Base64url-encoded JSON describing the context (challenge, origin, type).</td></tr>
+</tbody></table>
+</div>
+<h2 id="3-token-generation-client-side"><a class="header" href="#3-token-generation-client-side">3. Token Generation (Client-Side)</a></h2>
+<ol>
+<li>The client obtains credentials via the <a href="https://w3c.github.io/webauthn/">WebAuthn API</a>.</li>
+<li>The authenticator signs a challenge with the user’s private key.</li>
+<li>The client builds a token URL with the resulting signature and metadata.</li>
+<li>The token is shared with the relying party (e.g., via HTTP redirect or fetch).</li>
+</ol>
+<h2 id="4-token-verification-server-side"><a class="header" href="#4-token-verification-server-side">4. Token Verification (Server-Side)</a></h2>
+<p>To verify the received token, the server MUST:</p>
+<ol>
+<li><strong>Parse the fields</strong> from the body request.</li>
+<li><strong>Reconstruct the signed payload</strong>:
+<ul>
+<li><code>message = authenticatorData || SHA-256(clientDataJSON)</code></li>
+</ul>
+</li>
+<li><strong>Retrieve the public key</strong>:
+<ul>
+<li>Use the <code>key</code> and <code>id</code> parameters to fetch the correct key.</li>
+<li>Validate the authenticity of the server and key material.</li>
+</ul>
+</li>
+<li><strong>Verify the signature</strong> using the appropriate algorithm (Ed25519 or RS256).</li>
+<li><strong>Validate <code>authenticatorData</code></strong>:
+<ul>
+<li>Check presence/verification flags.</li>
+<li>Validate the relying party ID hash.</li>
+</ul>
+</li>
+<li><strong>Parse and validate <code>clientDataJSON</code></strong>:
+<ul>
+<li>Ensure <code>challenge</code> matches what was sent.</li>
+<li>Confirm <code>origin</code> matches expected domain.</li>
+</ul>
+</li>
+<li><strong>Create server-side token</strong> with expiration.</li>
+</ol>
+<h2 id="5-security-considerations"><a class="header" href="#5-security-considerations">5. Security Considerations</a></h2>
+<p>Token relay on <a href="https://w3c.github.io/webauthn/">WebAuthn</a> with extras.</p>
+<ul>
+<li><strong>User ID modification</strong>: server MUST get public key from query server using query user ID; if no key corresponds to the user, the connection is invalidated.</li>
+<li><strong>Replay attack</strong>: while WebAuthn have no timestamp or nonce field, it have a challenge one which MUST be used.</li>
+</ul>
+<p>NEVER use WebAuthn signature as server-side token. You SHOULD use <a href="https://jwt.io">JWT</a> after verifications.
+<code>challenge</code> generated by the server MUST have a window shorter than 2 minutes.</p>
 
                     </main>
 

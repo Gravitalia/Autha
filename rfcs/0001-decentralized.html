@@ -41,6 +41,17 @@
         <script src="../toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -118,7 +129,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -161,22 +172,58 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>Autha is a decentralized authentification system which lets users connect
-themselves via asymmetric key using JWT. They save their own keys.</p>
-<p>Autha simply publish public keys of user.</p>
-<h1 id="impact"><a class="header" href="#impact">Impact</a></h1>
-<p>A system based on Autha MUST always allow user’s connection, even from another
-instance.</p>
+                        <h2 id="1-introduction"><a class="header" href="#1-introduction">1. Introduction</a></h2>
+<p>Autha is a decentralized authentication system that enables users to authenticate themselves using asymmetric cryptographic keys via WebAuthn. Users are responsible for securely storing and managing their own private keys.</p>
+<p>Autha’s role is limited to publishing the users’ corresponding public keys in a verifiable and accessible manner.</p>
+<h3 id="12-impact"><a class="header" href="#12-impact">1.2 Impact</a></h3>
+<p>Any system implementing Autha <strong>MUST</strong> support user authentication regardless of the specific instance used. In particular, a user <strong>MUST</strong> be able to authenticate from any Autha-compatible instance, provided their public key is available and their private key is valid.</p>
+<p>This ensures cross-instance interoperability and preserves the decentralized nature of the authentication mechanism.</p>
+<h2 id="2-schema"><a class="header" href="#2-schema">2. Schema</a></h2>
+<h3 id="21-user-identifier-user-id"><a class="header" href="#21-user-identifier-user-id">2.1 User Identifier (User ID)</a></h3>
+<p>Each user is identified by a unique and stable identifier, referred to as the <strong>User ID</strong>.</p>
+<p>A User ID <strong>MUST</strong> follow the format:</p>
+<pre><code>&lt;vanity&gt;@&lt;server-domain&gt;
+</code></pre>
+<p>For example: <code>alice@auth.example.com</code>.</p>
+<ul>
+<li><code>vanity</code>: A user-chosen identifier (MAY be pseudonymous).</li>
+<li><code>server-domain</code>: The domain of the Autha-compatible server that exposes the user’s public identity.</li>
+</ul>
+<p>A User <strong>MUST</strong> have exactly one User ID, and this identifier <strong>MUST</strong> remain consistent across all Autha operations.</p>
+<h3 id="22-server"><a class="header" href="#22-server">2.2 Server</a></h3>
+<p>Server exposes user as specified on <a href="https://www.w3.org/TR/activitypub/">ActivityPub</a> format.</p>
+<h3 id="23-keys"><a class="header" href="#23-keys">2.3 Keys</a></h3>
+<p>An Autha-compatible server <strong>MUST NOT</strong> store or have access to any private key. It <strong>MUST ONLY</strong> store and expose public keys associated with a given user.</p>
+<p>A user <strong>MAY</strong> have multiple active public keys (e.g., to support multiple devices or key rotations). Each key <strong>MUST</strong> be uniquely identifiable and linked to the owning User ID.</p>
+<p>The <code>/users/:USER_ID</code> endpoint <strong>MUST</strong> return public keys using the following JSON structure:</p>
+<pre><code class="language-json">[
+  {
+    "id": "0000",
+    "owner": "alice@auth.example.com",
+    "public_key_pem": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----",
+    "created_at": "YYYY-MM-DD"
+  },
+  ...
+]
+</code></pre>
+<ul>
+<li><code>id</code>: A unique identifier for the public key.</li>
+<li><code>owner</code>: The associated User ID.</li>
+<li><code>public_key_pem</code>: The public key in PEM format.</li>
+<li><code>created_at</code>: ISO 8601 date when the key was created or registered.</li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../extensions/ldap.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
+                            <a rel="next prefetch" href="../rfcs/0002-tokens.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -184,10 +231,13 @@ instance.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../extensions/ldap.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
+                    <a rel="next prefetch" href="../rfcs/0002-tokens.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
             </nav>
 
         </div>
