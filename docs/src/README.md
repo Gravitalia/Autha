@@ -1,7 +1,6 @@
 # Introduction
 
-Autha is an account manager, allowing you to decentralize your connection using
-JWT.
+Autha is an account manager, allowing you to decentralize your connection.
 
 You can either self-host Autha or use a public instance. Then, create an
 account. Finally, create a key pair on your machine and send only the
