@@ -12,8 +12,8 @@ opt-level = 3
 lto = true
 codegen-units = 1
 panic = "abort"
-strip = true
-debug = false
+strip = false
+debug = true
 
 [profile.dev]
 opt-level = "z"
@@ -21,7 +21,7 @@ debug = true
 
 [dependencies]
 axum = { version = "0.8.4", features = ["macros"] }
-tokio =  { version = "1.44.2", features = ["rt-multi-thread", "net", "tracing"] }
+tokio =  { version = "1.44.2", features = ["rt-multi-thread", "net", "tracing", "signal"] }
 serde = "1.0.219"
 serde_json = "1.0.140"
 serde_yaml = "0.9.34"
@@ -59,6 +59,10 @@ rand = "0.8"
 hmac = "0.12"
 sha1 = "0.10"
 base32 = "0.5"
+dhat = { version = "0", optional = true }
 
 [dev-dependencies]
 http-body-util = "0.1"
+
+[features]
+dhat-heap = ["dhat"]
