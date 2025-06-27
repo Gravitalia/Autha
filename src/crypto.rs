@@ -135,7 +135,7 @@ impl Cipher {
         code: Option<String>,
         secret: &Option<String>,
     ) -> crate::error::Result<()> {
-        if let Some(ref secret) = secret {
+        if let Some(secret) = secret {
             let secret = self
                 .aes(crate::crypto::Action::Decrypt, secret.as_bytes().to_vec())
                 .map_err(|err| ServerError::Internal {
