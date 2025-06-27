@@ -4,7 +4,7 @@ version = "0.2.0"
 description = "fast and safe authorization delegation and account management API"
 homepage = "https://account.gravitalia.com"
 readme = "README.md"
-edition = "2021"
+edition = "2024"
 license = "MPL"
 
 [profile.release]
