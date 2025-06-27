@@ -7,7 +7,7 @@ on:
 jobs:
   autha:
     runs-on: ubuntu-latest
-    container: rust:1.84-slim-bullseye
+    container: rust:1.88-slim-bullseye
     services:
       postgres:
         image: postgres:17.2
