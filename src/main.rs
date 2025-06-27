@@ -1,3 +1,8 @@
+//! Autha is a lightweight account manager for decentralized world.
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
 mod config;
 #[forbid(unsafe_code)]
 #[deny(missing_docs, unused_mut)]
@@ -115,10 +120,14 @@ pub fn app(state: AppState) -> Router {
 #[tokio::main]
 #[tracing::instrument]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // dynamic heap analysis.
+    #[cfg(feature = "dhat-heap")]
+    let _profiler = dhat::Profiler::new_heap();
+
+    // initialize logging.
     let tracer_provider = telemetry::setup_tracer()?;
     global::set_tracer_provider(tracer_provider.clone());
 
-    // initialize logging.
     let filter = EnvFilter::new("info")
         .add_directive("hyper=off".parse().unwrap())
         .add_directive("opentelemetry=off".parse().unwrap())
@@ -223,9 +232,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ))
     .await?;
     tracing::info!("listening on {}", listener.local_addr()?);
-    axum::serve(listener, app).await?;
 
-    tracer_provider.shutdown().unwrap();
+    tokio::select! {
+        _ = axum::serve(listener, app) => {
+            tracing::info!("server is stopping");
+            tracer_provider.shutdown().unwrap();
+        },
+        _ = tokio::signal::ctrl_c() => {
+            tracing::info!("ctrl+c pressed... should only happen on dev mode");
+        },
+    };
 
     Ok(())
 }
