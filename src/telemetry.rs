@@ -16,7 +16,7 @@ use opentelemetry_sdk::logs::SdkLoggerProvider;
 use opentelemetry_sdk::logs::{LogError, SdkLogger};
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use opentelemetry_sdk::Resource;
-use sysinfo::{Pid, System};
+use sysinfo::{Pid, System, RefreshKind, ProcessRefreshKind, ProcessesToUpdate};
 use tokio::time::sleep;
 
 use std::time::{Duration, Instant};
@@ -54,14 +54,20 @@ pub fn setup_metrics_recorder() -> Result<PrometheusHandle, BuildError> {
         "Total process memory in bytes."
     );
 
-    let mut system = System::new_all();
+    let mut system = System::new_with_specifics(RefreshKind::nothing());
     let pid = Pid::from_u32(std::process::id());
 
     // Create a loop to update system information.
-    // Wait 5 seconds before update it.
+    // Wait 10 seconds before update it.
     tokio::spawn(async move {
         loop {
-            system.refresh_all();
+            system.refresh_processes_specifics(
+                ProcessesToUpdate::Some(&[pid]),
+                true,
+                ProcessRefreshKind::nothing()
+                    .with_memory()
+                    .with_cpu()
+            );
 
             if let Some(process) = system.process(pid) {
                 let memory_used = process.memory() as f64;
@@ -73,7 +79,7 @@ pub fn setup_metrics_recorder() -> Result<PrometheusHandle, BuildError> {
                 cpu_gauge.set(cpu_usage);
             }
 
-            sleep(Duration::from_secs(5)).await;
+            sleep(Duration::from_secs(10)).await;
         }
     });
 
