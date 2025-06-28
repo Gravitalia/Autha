@@ -17,24 +17,25 @@ mod user;
 mod well_known;
 
 use axum::body::Bytes;
-use axum::http::{header, Method};
+use axum::http::{Method, header};
 use axum::routing::{get, post};
-use axum::{middleware, Router};
+use axum::{Router, middleware};
 use error::ServerError;
 use opentelemetry::global;
 use tower::ServiceBuilder;
+use tower_http::LatencyUnit;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::sensitive_headers::SetSensitiveHeadersLayer;
 use tower_http::timeout::RequestBodyTimeoutLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse};
-use tower_http::LatencyUnit;
+use tracing_subscriber::{EnvFilter, prelude::*};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use tracing_subscriber::{prelude::*, EnvFilter};
 
 use std::env;
 use std::future::ready;
+use std::sync::Arc;
 use std::time::Duration;
 
 /// MUST NEVER be used in production.
@@ -63,7 +64,7 @@ pub async fn make_request(
 /// State sharing between routes.
 #[derive(Clone)]
 pub struct AppState {
-    pub config: config::Configuration,
+    pub config: Arc<config::Configuration>,
     pub db: database::Database,
     pub ldap: ldap::Ldap,
     pub crypto: crypto::Cipher,
