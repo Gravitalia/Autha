@@ -4,9 +4,9 @@ use axum::extract::State;
 use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 
-use crate::user::{Key, User};
 use crate::AppState;
 use crate::ServerError;
+use crate::user::{Key, User};
 
 const ACTIVITY_STREAM: &str = "https://www.w3.org/ns/activitystreams";
 const W3C_SECURITY: &str = "https://w3id.org/security/v1";
@@ -88,7 +88,7 @@ mod tests {
     async fn test_get_user_handler(pool: Pool<Postgres>) {
         let state = AppState {
             db: database::Database { postgres: pool },
-            config: config::Configuration::default(),
+            config: config::Configuration::default().into(),
             ldap: ldap::Ldap::default(),
             crypto: {
                 let key = [0x42; 32];

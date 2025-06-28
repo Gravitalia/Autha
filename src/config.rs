@@ -6,6 +6,7 @@ use url::Url;
 
 use std::fs::File;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use crate::AppState;
 
@@ -91,9 +92,9 @@ impl Default for Totp {
     }
 }
 
-impl FromRef<AppState> for Configuration {
-    fn from_ref(state: &AppState) -> Configuration {
-        state.config.clone()
+impl FromRef<AppState> for Arc<Configuration> {
+    fn from_ref(state: &AppState) -> Arc<Configuration> {
+        Arc::clone(&state.config)
     }
 }
 
@@ -116,7 +117,7 @@ impl Configuration {
     }
 
     /// Reads the `config.yaml` file from the specified path or the default location.
-    pub fn read(self) -> Result<Self, url::ParseError> {
+    pub fn read(self) -> Result<Arc<Self>, url::ParseError> {
         let file_path = if self.path.is_file() {
             &self.path
         } else {
@@ -128,7 +129,7 @@ impl Configuration {
                 let mut config: Configuration = match serde_yaml::from_reader(file) {
                     Ok(config) => config,
                     Err(err) => {
-                        return Ok(self.error(err));
+                        return Ok(Arc::new(self.error(err)));
                     }
                 };
 
@@ -151,9 +152,9 @@ impl Configuration {
                     .map(|b| self.normalize_url(&b))
                     .transpose()?;
 
-                Ok(config)
+                Ok(Arc::new(config))
             }
-            Err(err) => Ok(self.error(err)),
+            Err(err) => Ok(Arc::new(self.error(err))),
         }
     }
 

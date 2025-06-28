@@ -1,8 +1,8 @@
 use argon2::{
-    password_hash::{PasswordHash, PasswordVerifier},
     Argon2,
+    password_hash::{PasswordHash, PasswordVerifier},
 };
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
@@ -145,7 +145,7 @@ mod tests {
     async fn test_login_handler(pool: Pool<Postgres>) {
         let state = AppState {
             db: database::Database { postgres: pool },
-            config: config::Configuration::default(),
+            config: config::Configuration::default().into(),
             ldap: ldap::Ldap::default(),
             crypto: {
                 let key = [0x42; 32];

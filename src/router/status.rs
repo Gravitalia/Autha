@@ -1,11 +1,13 @@
 //! Public configuration page for front-end identification and customization.
 
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
+
+use std::sync::Arc;
 
 use crate::config::Configuration;
 
 /// Public server status (configuration).
-pub async fn status(State(configuration): State<Configuration>) -> Json<Configuration> {
+pub async fn status(State(configuration): State<Arc<Configuration>>) -> Json<Arc<Configuration>> {
     Json(configuration)
 }
 
@@ -22,7 +24,7 @@ mod tests {
         // State pool is useless, but required.
         let state = AppState {
             db: database::Database { postgres: pool },
-            config: config.clone(),
+            config: config.clone().into(),
             ldap: ldap::Ldap::default(),
             crypto: {
                 let key = [0x42; 16];

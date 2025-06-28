@@ -3,10 +3,12 @@
 //! Path: /.well-known/webfinger?resource=acct:VANITY[@domain.tld]
 
 use axum::extract::Query;
-use axum::http::{header, StatusCode};
+use axum::http::{StatusCode, header};
 use axum::response::IntoResponse;
-use axum::{extract::State, Json};
+use axum::{Json, extract::State};
 use serde::{Deserialize, Serialize};
+
+use std::sync::Arc;
 
 use crate::config::Configuration;
 use crate::{database::Database, user::User};
@@ -34,7 +36,7 @@ struct Link {
 
 pub async fn handler(
     State(db): State<Database>,
-    State(config): State<Configuration>,
+    State(config): State<Arc<Configuration>>,
     query: Query<Params>,
 ) -> Result<impl IntoResponse, StatusCode> {
     // Extract vanity from resource query.

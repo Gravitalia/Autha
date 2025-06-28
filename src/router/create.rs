@@ -154,7 +154,7 @@ mod tests {
     async fn test_create_handler(pool: Pool<Postgres>) {
         let state = AppState {
             db: database::Database { postgres: pool },
-            config: config::Configuration::default(),
+            config: config::Configuration::default().into(),
             ldap: ldap::Ldap::default(),
             crypto: {
                 let key = [0x42; 32];
