@@ -1,21 +1,22 @@
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{Json, extract::State, http::StatusCode};
 use regex_lite::Regex;
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
+use crate::AppState;
+use crate::ServerError;
 use crate::crypto::Action;
 use crate::error::Result;
 use crate::user::User;
-use crate::AppState;
-use crate::ServerError;
+
+use std::sync::LazyLock;
 
 use super::Valid;
 
+static VANITY_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^^[A-Za-z0-9_.]+$").unwrap());
+
 pub fn validate_id(vanity: &str) -> std::result::Result<(), ValidationError> {
-    if !Regex::new(r"^[A-Za-z0-9_.]+$")
-        .map_err(|_| ValidationError::new("wtf_regex"))?
-        .is_match(vanity)
-    {
+    if !VANITY_RE.is_match(vanity) {
         return Err(ValidationError::new("alphanumerical"));
     }
 
@@ -153,7 +154,7 @@ mod tests {
     async fn test_create_handler(pool: Pool<Postgres>) {
         let state = AppState {
             db: database::Database { postgres: pool },
-            config: config::Configuration::default(),
+            config: config::Configuration::default().into(),
             ldap: ldap::Ldap::default(),
             crypto: {
                 let key = [0x42; 32];
