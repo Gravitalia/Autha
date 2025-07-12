@@ -22,14 +22,15 @@ use axum::routing::{get, post};
 use axum::{Router, middleware};
 use error::ServerError;
 use opentelemetry::global;
+use opentelemetry::trace::TracerProvider;
 use tower::ServiceBuilder;
 use tower_http::LatencyUnit;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::sensitive_headers::SetSensitiveHeadersLayer;
 use tower_http::timeout::RequestBodyTimeoutLayer;
 use tower_http::timeout::TimeoutLayer;
-use tower_http::trace::TraceLayer;
 use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse};
+use tower_http::trace::{DefaultOnRequest, TraceLayer};
 use tracing_subscriber::{EnvFilter, prelude::*};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -79,7 +80,8 @@ pub fn app(state: AppState) -> Router {
                 .on_body_chunk(|chunk: &Bytes, latency: Duration, _span: &tracing::Span| {
                     tracing::trace!(size_bytes = chunk.len(), latency = ?latency, "sending body chunk")
                 })
-                .make_span_with(DefaultMakeSpan::new().include_headers(true))
+                .make_span_with(DefaultMakeSpan::new().include_headers(true).level(tracing::Level::INFO))
+                .on_request(DefaultOnRequest::new())
                 .on_response(DefaultOnResponse::new().include_headers(true).latency_unit(LatencyUnit::Micros)),
         )
         // Set a timeout.
@@ -125,19 +127,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "dhat-heap")]
     let _profiler = dhat::Profiler::new_heap();
 
-    // initialize logging.
-    let tracer_provider = telemetry::setup_tracer()?;
-    global::set_tracer_provider(tracer_provider.clone());
-
+    // Telemetry.
     let filter = EnvFilter::new("info")
         .add_directive("hyper=off".parse().unwrap())
-        .add_directive("opentelemetry=off".parse().unwrap())
         .add_directive("tonic=off".parse().unwrap())
         .add_directive("h2=off".parse().unwrap())
         .add_directive("reqwest=off".parse().unwrap());
-    let layer =
+
+    // initialize logging.
+    let tracer_provider = telemetry::setup_tracer()?;
+    let tracer = tracer_provider.tracer("autha");
+    global::set_tracer_provider(tracer_provider.clone());
+
+    let telemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
+    let logging_layer =
         telemetry::setup_logging(&env::var("OTEL_URL").unwrap_or("http://localhost:4317".into()))?
             .with_filter(filter);
+
     let level = if cfg!(debug_assertions) {
         "debug"
     } else {
@@ -153,7 +159,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .into()
             }),
         )
-        .with(layer)
+        .with(logging_layer)
+        .with(telemetry_layer)
         .with(tracing_subscriber::fmt::layer())
         .init();
 
