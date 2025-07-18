@@ -1,0 +1,50 @@
+"""autha -- account system management"""
+
+module(
+    name = "autha",
+    version = "0.2.0",
+)
+
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "bazel_skylib", version = "1.8.1")
+
+bazel_dep(name = "rules_rust", version = "0.62.0")
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(edition = "2024")
+use_repo(
+    rust,
+    "rust_toolchains",
+)
+
+register_toolchains("@rust_toolchains//:all")
+
+crate = use_extension(
+    "@rules_rust//crate_universe:extension.bzl",
+    "crate",
+)
+crate.from_cargo(
+    name = "crate_index",
+    cargo_lockfile = "//:Cargo.lock",
+    manifests = [
+        "//:Cargo.toml",
+    ],
+)
+use_repo(crate, "crate_index")
+
+# OCI support.
+bazel_dep(name = "rules_pkg", version = "1.1.0")
+bazel_dep(name = "rules_oci", version = "2.2.6")
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+
+oci.pull(
+    name = "distroless_cc",
+    digest = "sha256:a9056d2232d16e3772bec3ef36b93a5ea9ef6ad4b4ed407631e534b85832cf40",
+    image = "gcr.io/distroless/cc-debian12",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64/v8",
+    ],
+)
+use_repo(oci, "distroless_cc")

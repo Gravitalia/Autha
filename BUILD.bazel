@@ -1,0 +1,71 @@
+load("@crate_index//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_image_index", "oci_push")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+_VERSION = "1"
+
+# Rust.
+
+rust_binary(
+    name = "autha",
+    srcs = glob(["src/**/*.rs"]),
+    aliases = aliases(),
+    deps = all_crate_deps(
+        normal = True,
+    ),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "autha_test",
+    crate = ":autha",
+    deps = all_crate_deps(
+        normal = True,
+    ),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
+    size = "small",
+    timeout = "short",
+)
+
+# Containers.
+
+# Compress binary to layer.
+pkg_tar(
+    name = "layer",
+    srcs = [":autha"],
+)
+
+# Build image.
+oci_image(
+    name = "linux",
+    base = "@distroless_cc",
+    tars = [":layer"],
+    entrypoint = ["/autha"],
+)
+
+# Add multiple images.
+oci_image_index(
+    name = "images",
+    images = [
+        ":linux",
+    ],
+)
+
+# Publish to Docker Hub.
+oci_push(
+    name = "push",
+    image = ":images",
+    repository = "ghcr.io/gravitalia/autha",
+    remote_tags = [
+        "latest",
+        _VERSION,
+    ]
+)
