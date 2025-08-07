@@ -1,17 +1,21 @@
-FROM rust:alpine AS builder
+FROM rust:slim AS builder
 
-RUN USER=root cargo new --bin autha
-WORKDIR /autha
+RUN  apt-get update && apt-get install -y \
+      build-essential \
+      pkg-config \
+      libssl-dev \
+      musl-tools \
+      curl
 
-ENV     RUSTFLAGS="-Ctarget-cpu=native"
-RUN     apk add -q --update-cache --no-cache build-base openssl-dev openssl-static musl-dev pkgconfig
+WORKDIR   /autha
+COPY     ./Cargo.toml ./Cargo.toml
+COPY     ./Cargo.lock ./Cargo.lock
+COPY     ./src        ./src
+COPY     ./.sqlx      ./.sqlx
 
-COPY ./Cargo.toml ./Cargo.toml
-COPY ./Cargo.lock ./Cargo.lock
-COPY ./src        ./src
-COPY ./.sqlx      ./.sqlx
-
-RUN cargo build --release --target x86_64-unknown-linux-musl
+RUN  rustup target add x86_64-unknown-linux-musl
+ENV  RUSTFLAGS="-Ctarget-feature=+crt-static -Ctarget-cpu=native"
+RUN  cargo build --release --target x86_64-unknown-linux-musl
 
 FROM scratch
 
