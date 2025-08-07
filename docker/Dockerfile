@@ -3,6 +3,7 @@ FROM rust:slim AS builder
 RUN  apt-get update && apt-get install -y \
       build-essential \
       pkg-config \
+      openssl    \
       libssl-dev \
       musl-tools \
       curl
