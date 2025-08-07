@@ -1,25 +1,25 @@
-FROM rust:slim AS builder
+FROM rust:alpine AS builder
 
-RUN  apt-get update && apt-get install -y \
-      build-essential \
-      pkg-config \
-      openssl    \
-      libssl-dev \
-      musl-tools \
-      curl
+RUN USER=root cargo new --bin autha
+WORKDIR /autha
 
-WORKDIR   /autha
-COPY     ./Cargo.toml ./Cargo.toml
-COPY     ./Cargo.lock ./Cargo.lock
-COPY     ./src        ./src
-COPY     ./.sqlx      ./.sqlx
+ENV     RUSTFLAGS="-Ctarget-feature=-crt-static -Ctarget-cpu=native"
+RUN     apk add -q --update-cache --no-cache build-base openssl-dev musl pkgconfig protobuf-dev
 
-RUN  rustup target add x86_64-unknown-linux-musl
-ENV  RUSTFLAGS="-Ctarget-feature=+crt-static -Ctarget-cpu=native"
-RUN  cargo build --release --target x86_64-unknown-linux-musl
+COPY ./Cargo.toml ./Cargo.toml
+COPY ./Cargo.lock ./Cargo.lock
+COPY ./src        ./src
+COPY ./.sqlx      ./.sqlx
 
-FROM scratch
+RUN cargo build --release 
 
-COPY --from=builder /autha/target/x86_64-unknown-linux-musl/release/autha /bin/autha
+FROM alpine:3 AS runtime
+
+RUN apk add --no-cache libgcc
+
+RUN addgroup -S appgroup && adduser -S rust -G appgroup
+USER rust
+
+COPY --from=builder /autha/target/release/autha /bin/autha
 
 CMD ["./bin/autha"]
