@@ -4,7 +4,7 @@ RUN USER=root cargo new --bin autha
 WORKDIR /autha
 
 ENV     RUSTFLAGS="-Ctarget-cpu=native"
-RUN     apk add -q --update-cache --no-cache build-base openssl-dev musl pkgconfig
+RUN     apk add -q --update-cache --no-cache build-base openssl-dev openssl-static musl-dev pkgconfig
 
 COPY ./Cargo.toml ./Cargo.toml
 COPY ./Cargo.lock ./Cargo.lock
