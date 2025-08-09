@@ -3,7 +3,7 @@ FROM rust:alpine AS builder
 RUN USER=root cargo new --bin autha
 WORKDIR /autha
 
-ENV     RUSTFLAGS="-Ctarget-feature=-crt-static -Ctarget-cpu=native"
+ENV     RUSTFLAGS="-Ctarget-feature=-crt-static"
 RUN     apk add -q --update-cache --no-cache build-base openssl-dev musl pkgconfig protobuf-dev
 
 COPY ./Cargo.toml ./Cargo.toml
