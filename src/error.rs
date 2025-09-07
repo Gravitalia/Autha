@@ -1,9 +1,9 @@
 //! Error handler for autha.
 use axum::extract::rejection::JsonRejection;
-use axum::http::{header, StatusCode};
+use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use serde::Serialize;
-use sqlx::{postgres::PgDatabaseError, Error as SQLxError};
+use sqlx::{Error as SQLxError, postgres::PgDatabaseError};
 use thiserror::Error;
 use validator::{ValidationError, ValidationErrors};
 
@@ -16,7 +16,7 @@ pub enum ServerError {
     Validation(#[from] ValidationErrors),
 
     #[error("error parsing form data")]
-    ParsingForm(Box<dyn std::error::Error>),
+    ParsingForm(Box<dyn std::error::Error + Send>),
 
     #[error(transparent)]
     Axum(#[from] JsonRejection),
@@ -33,7 +33,7 @@ pub enum ServerError {
     #[error("internal server error, {details}")]
     Internal {
         details: String,
-        source: Option<Box<dyn std::error::Error>>,
+        source: Option<Box<dyn std::error::Error + Send>>,
     },
 
     #[error("invalid 'Authorization' header")]

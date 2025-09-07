@@ -1,18 +1,21 @@
 //! Cryptogragic logics.
+use aes::Aes256;
 use aes::cipher::block_padding::{Pkcs7, UnpadError};
 use aes::cipher::generic_array::GenericArray;
 use aes::cipher::{BlockDecryptMut, BlockEncrypt, BlockEncryptMut, KeyInit, KeyIvInit};
-use aes::Aes256;
-use argon2::password_hash::{PasswordHash, PasswordHasher, SaltString};
+use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
 use argon2::{Argon2, Params, Version};
 use p256::ecdsa::VerifyingKey;
 use p256::pkcs8::DecodePublicKey;
-use rand::rngs::OsRng;
 use rand::RngCore;
-use rsa::pkcs1::DecodeRsaPublicKey;
+use rand::rngs::OsRng;
 use rsa::RsaPublicKey;
+use rsa::pkcs1::DecodeRsaPublicKey;
+use validator::{ValidationError, ValidationErrors};
 
 use crate::ServerError;
+
+const MAX_NO_OVERHEAD_BLOCK_SIZE: usize = 10_000; // 10,000 bytes.
 
 type Result<T> = std::result::Result<T, Error>;
 type Aes256CbcEnc = cbc::Encryptor<Aes256>;
@@ -28,6 +31,8 @@ pub enum Error {
     Unpad(#[from] UnpadError),
     #[error("was encrypted data string?")]
     Utf8(#[from] std::string::FromUtf8Error),
+    #[error("tokio blocking thread crashed")]
+    Thread,
 }
 
 /// Action [`Cipher`] should make.
@@ -59,36 +64,55 @@ impl Cipher {
     /// Either encrypt or decrypt data with AES256.
     ///
     /// **WARNING**: no iv means less secure.
-    pub fn aes_no_iv(&self, action: Action, data: Vec<u8>) -> Result<String> {
-        let key = GenericArray::from_slice(&self.key);
+    pub async fn aes_no_iv(&self, action: Action, data: Vec<u8>) -> Result<String> {
+        // The key is 32 bytes long. The operation is therefore easy to clone.
+        let key = *GenericArray::from_slice(&self.key);
 
         match action {
             Action::Encrypt => {
-                let message = Aes256::new(key).encrypt_padded_vec::<Pkcs7>(&data);
+                let message = tokio::task::spawn_blocking(move || {
+                    Aes256::new(&key).encrypt_padded_vec::<Pkcs7>(&data)
+                })
+                .await
+                .map_err(|_| Error::Thread)?;
                 Ok(hex::encode(message))
             }
             Action::Decrypt => {
                 let data = hex::decode(data)?;
 
-                Ok(String::from_utf8(
-                    Aes256::new(key).decrypt_padded_vec_mut::<Pkcs7>(&data)?,
-                )?)
+                let bytes = tokio::task::spawn_blocking(move || {
+                    Aes256::new(&key).decrypt_padded_vec_mut::<Pkcs7>(&data)
+                })
+                .await
+                .map_err(|_| Error::Thread)?;
+
+                Ok(String::from_utf8(bytes?)?)
             }
         }
     }
 
     /// Either encrypt or decrypt data with AES256-CBC.
-    pub fn aes(&self, action: Action, data: Vec<u8>) -> Result<String> {
-        let key = GenericArray::from_slice(&self.key);
+    pub async fn aes(&self, action: Action, data: Vec<u8>) -> Result<String> {
+        // The key is 32 bytes long. The operation is therefore easy to clone.
+        let key = *GenericArray::from_slice(&self.key);
+        let iv = self.iv();
 
         match action {
             Action::Encrypt => {
-                let iv = self.iv();
-
                 let mut message = iv.to_vec();
-                message.extend(
-                    Aes256CbcEnc::new(key, &iv.into()).encrypt_padded_vec_mut::<Pkcs7>(&data),
-                );
+
+                // If text is light, avoid thread overhead.
+                let cipher_text = if data.len() > MAX_NO_OVERHEAD_BLOCK_SIZE {
+                    tokio::task::spawn_blocking(move || {
+                        Aes256CbcEnc::new(&key, &iv.into()).encrypt_padded_vec_mut::<Pkcs7>(&data)
+                    })
+                    .await
+                    .map_err(|_| Error::Thread)?
+                } else {
+                    Aes256CbcEnc::new(&key, &iv.into()).encrypt_padded_vec_mut::<Pkcs7>(&data)
+                };
+
+                message.extend(cipher_text);
 
                 Ok(hex::encode(message))
             }
@@ -96,17 +120,29 @@ impl Cipher {
                 let data = hex::decode(data)?;
                 let (iv, cipher_text) = data.split_at(16);
                 let iv: [u8; 16] = iv.try_into()?;
+                let cipher_text = cipher_text.to_vec();
 
-                Ok(String::from_utf8(
-                    Aes256CbcDec::new(key, &iv.into())
-                        .decrypt_padded_vec_mut::<Pkcs7>(cipher_text)?,
-                )?)
+                // If text is light, avoid thread overhead.
+                let bytes = if cipher_text.len() > MAX_NO_OVERHEAD_BLOCK_SIZE {
+                    tokio::task::spawn_blocking(move || {
+                        Aes256CbcDec::new(&key, &iv.into())
+                            .decrypt_padded_vec_mut::<Pkcs7>(&cipher_text)
+                    })
+                    .await
+                    .map_err(|_| Error::Thread)??
+                } else {
+                    Aes256CbcDec::new(&key, &iv.into())
+                        .decrypt_padded_vec_mut::<Pkcs7>(&cipher_text)?
+                };
+
+                Ok(String::from_utf8(bytes)?)
             }
         }
     }
 
     /// Hash password using [`argon2`].
-    pub fn hash_password(&self, password: &str) -> crate::error::Result<String> {
+    pub async fn hash_password<T: ToString>(&self, password: T) -> crate::error::Result<String> {
+        let password = password.to_string();
         let salt = SaltString::generate(&mut OsRng);
         let params = Params::new(Params::DEFAULT_M_COST * 4, 6, Params::DEFAULT_P_COST, None)
             .map_err(|_| ServerError::Internal {
@@ -115,22 +151,64 @@ impl Cipher {
             })?;
         let argon2 = Argon2::new(argon2::Algorithm::Argon2id, Version::V0x13, params);
 
-        let password_hash = argon2
-            .hash_password(password.as_bytes(), &salt)
-            .map_err(|_| ServerError::Internal {
+        let hash = tokio::task::spawn_blocking(move || {
+            let password_hash = argon2
+                .hash_password(password.as_bytes(), &salt)
+                .map_err(|_| ServerError::Internal {
+                    details: String::default(),
+                    source: None,
+                })?
+                .to_string();
+            let hash = PasswordHash::new(&password_hash).map_err(|_| ServerError::Internal {
                 details: String::default(),
                 source: None,
-            })?
-            .to_string();
-        let hash = PasswordHash::new(&password_hash).map_err(|_| ServerError::Internal {
-            details: String::default(),
-            source: None,
-        })?;
+            })?;
 
-        Ok(hash.to_string())
+            Ok::<String, ServerError>(hash.to_string())
+        })
+        .await
+        .map_err(|err| ServerError::Internal {
+            details: String::default(),
+            source: Some(Box::new(err)),
+        })??;
+
+        Ok(hash)
     }
 
-    pub fn check_totp(
+    /// Check plaintext password with Argon2-hashed password.
+    pub async fn check_password<T: ToString>(
+        &self,
+        pwd: T,
+        hash: T,
+    ) -> std::result::Result<(), ValidationErrors> {
+        let plaintext = pwd.to_string();
+        let hash = hash.to_string();
+
+        tokio::task::spawn_blocking(move || {
+            let hash = PasswordHash::new(&hash).map_err(|err| {
+                tracing::error!(%err, "password hash decoding failed");
+                let error =
+                    ValidationError::new("decode").with_message("Invalid password format.".into());
+                let mut errors = ValidationErrors::new();
+                errors.add("password", error);
+                errors
+            })?;
+
+            Argon2::default()
+                .verify_password(plaintext.as_bytes(), &hash)
+                .map_err(|_| {
+                    let error = ValidationError::new("invalid_password")
+                        .with_message("Invalid password format.".into());
+                    let mut errors = ValidationErrors::new();
+                    errors.add("password", error);
+                    errors
+                })
+        })
+        .await
+        .unwrap()
+    }
+
+    pub async fn check_totp(
         &self,
         code: Option<String>,
         secret: &Option<String>,
@@ -138,6 +216,7 @@ impl Cipher {
         if let Some(secret) = secret {
             let secret = self
                 .aes(crate::crypto::Action::Decrypt, secret.as_bytes().to_vec())
+                .await
                 .map_err(|err| ServerError::Internal {
                     details: "decode totp secret".into(),
                     source: Some(Box::new(err)),
@@ -205,14 +284,17 @@ pub fn check_key(key: &str) -> std::result::Result<(), KeyError> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_aes_no_iv() {
+    #[tokio::test]
+    async fn test_aes_no_iv() {
         const EMAIL: &str = "admin@gravitalia.com";
 
         let key = [0x42; 32];
         let cipher = Cipher::key(hex::encode(key)).unwrap();
 
-        let cipher_text = cipher.aes_no_iv(Action::Encrypt, EMAIL.into()).unwrap();
+        let cipher_text = cipher
+            .aes_no_iv(Action::Encrypt, EMAIL.into())
+            .await
+            .unwrap();
 
         assert_eq!(
             cipher_text,
@@ -222,6 +304,7 @@ mod tests {
         assert_eq!(
             cipher
                 .aes_no_iv(Action::Decrypt, cipher_text.into())
+                .await
                 .unwrap(),
             EMAIL,
         );

@@ -114,11 +114,12 @@ pub async fn create(
     let email = state
         .crypto
         .aes_no_iv(Action::Encrypt, body.email.into())
+        .await
         .map_err(|err| ServerError::Internal {
             details: "email cannot be encrypted".into(),
             source: Some(Box::new(err)),
         })?;
-    let password = state.crypto.hash_password(&body.password)?;
+    let password = state.crypto.hash_password(&body.password).await?;
 
     let user = User::default()
         .with_id(body.id.to_lowercase())
