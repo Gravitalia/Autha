@@ -5,10 +5,21 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::{Result, ServerError};
 
+#[derive(Debug)]
+struct Base32DecodeError();
+
+impl std::fmt::Display for Base32DecodeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "invalid base32 encoding")
+    }
+}
+
+impl std::error::Error for Base32DecodeError {}
+
 /// Generates a TOTP code.
 pub fn generate_totp(secret: &str, time_step: u64, digits: u32) -> Result<String> {
     let key = decode(base32::Alphabet::Rfc4648 { padding: false }, secret)
-        .ok_or(ServerError::ParsingForm("invalid base32 encoding".into()))?;
+        .ok_or(ServerError::ParsingForm(Box::new(Base32DecodeError())))?;
 
     let time_counter = SystemTime::now()
         .duration_since(UNIX_EPOCH)
