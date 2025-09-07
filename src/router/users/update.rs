@@ -5,7 +5,8 @@ use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 use validator::{ValidationError, ValidationErrors};
 
-use crate::crypto::{Action, check_key};
+use crate::crypto::{check_key, Action};
+use crate::router::login::check_password;
 use crate::router::Valid;
 use crate::totp::generate_totp;
 use crate::user::{Key, User};
@@ -62,16 +63,12 @@ pub async fn handler(
         .zip(body.password.clone())
         .zip(body.totp_code.clone())
     {
-        state
-            .crypto
-            .check_password(&password, &user.password)
-            .await?;
+        check_password(&password, &user.password)?;
         if generate_totp(&secret, 30, 6)? == code {
             user.totp_secret = Some(
                 state
                     .crypto
                     .aes(Action::Encrypt, secret.as_bytes().to_vec())
-                    .await
                     .map_err(|err| ServerError::Internal {
                         details: "cannot encrypt".into(),
                         source: Some(Box::new(err)),
@@ -140,14 +137,10 @@ pub async fn handler(
     }
 
     if let Some((email, password)) = body.email.clone().zip(body.password) {
-        state
-            .crypto
-            .check_password(&password, &user.password)
-            .await?;
+        check_password(&password, &user.password)?;
         user.email = state
             .crypto
             .aes_no_iv(Action::Encrypt, email.into())
-            .await
             .map_err(|err| ServerError::Internal {
                 details: "email cannot be encrypted".into(),
                 source: Some(Box::new(err)),

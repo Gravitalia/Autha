@@ -1,6 +1,10 @@
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHash, PasswordVerifier},
+};
 use axum::{Json, extract::State};
 use serde::{Deserialize, Serialize};
-use validator::{Validate, ValidationError};
+use validator::{Validate, ValidationError, ValidationErrors};
 
 use crate::crypto::Action;
 use crate::error::Result;
@@ -55,6 +59,26 @@ pub struct Response {
     token: String,
 }
 
+#[inline]
+pub(super) fn check_password(pwd: &str, hash: &str) -> std::result::Result<(), ValidationErrors> {
+    let hash = PasswordHash::new(hash).map_err(|err| {
+        tracing::error!(%err, "password hash decoding failed");
+        let error = ValidationError::new("decode").with_message("Invalid password format.".into());
+        let mut errors = ValidationErrors::new();
+        errors.add("password", error);
+        errors
+    })?;
+    Argon2::default()
+        .verify_password(pwd.as_bytes(), &hash)
+        .map_err(|_| {
+            let error = ValidationError::new("invalid_password")
+                .with_message("Invalid password format.".into());
+            let mut errors = ValidationErrors::new();
+            errors.add("password", error);
+            errors
+        })
+}
+
 pub async fn login(
     State(state): State<AppState>,
     Valid(body): Valid<Body>,
@@ -63,7 +87,6 @@ pub async fn login(
         let email = state
             .crypto
             .aes_no_iv(Action::Encrypt, email.into())
-            .await
             .map_err(|err| ServerError::Internal {
                 details: "email cannot be encrypted".into(),
                 source: Some(Box::new(err)),
@@ -74,14 +97,8 @@ pub async fn login(
             .await
             .map_err(|_| ServerError::WrongEmail)?;
 
-        state
-            .crypto
-            .check_password(&body.password, &user.password)
-            .await?;
-        state
-            .crypto
-            .check_totp(body.totp_code, &user.totp_secret)
-            .await?;
+        check_password(&body.password, &user.password)?;
+        state.crypto.check_totp(body.totp_code, &user.totp_secret)?;
         user
     } else if let Some(id) = body.identifier.id {
         state
@@ -93,7 +110,7 @@ pub async fn login(
                 source: Some(Box::new(err)),
             })?;
 
-        let password = state.crypto.hash_password(&body.password).await?;
+        let password = state.crypto.hash_password(&body.password)?;
 
         User::default()
             .with_id(id.to_lowercase())

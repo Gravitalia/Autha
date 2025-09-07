@@ -1,9 +1,10 @@
 //! Get and update user data.
 
-use axum::Extension;
 use axum::extract::State;
+use axum::Extension;
 use serde::Deserialize;
 
+use crate::router::login::check_password;
 use crate::router::Valid;
 use crate::user::User;
 use crate::{AppState, ServerError};
@@ -21,14 +22,8 @@ pub async fn handler(
     Extension(user): Extension<User>,
     Valid(body): Valid<DeleteBody>,
 ) -> Result<(), ServerError> {
-    state
-        .crypto
-        .check_password(&body.password, &user.password)
-        .await?;
-    state
-        .crypto
-        .check_totp(body.totp_code, &user.totp_secret)
-        .await?;
+    check_password(&body.password, &user.password)?;
+    state.crypto.check_totp(body.totp_code, &user.totp_secret)?;
 
     user.delete(&state.db.postgres).await?;
     Ok(())
