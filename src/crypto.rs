@@ -205,7 +205,13 @@ impl Cipher {
                 })
         })
         .await
-        .unwrap()
+        .map_err(|_| {
+            let error = ValidationError::new("invalid_password")
+                .with_message("Invalid password format.".into());
+            let mut errors = ValidationErrors::new();
+            errors.add("password", error);
+            errors
+        })?
     }
 
     pub async fn check_totp(
