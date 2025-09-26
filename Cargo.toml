@@ -45,7 +45,7 @@ tracing-opentelemetry = "0.29"
 opentelemetry = { version = "0.28.0", features = ["trace"] }
 opentelemetry_sdk = "0.28.0"
 opentelemetry-otlp = { version="0.28.0",  features = ["grpc-tonic", "metrics"] }
-opentelemetry-appender-tracing = "0.28.1"
+opentelemetry-appender-tracing = "0.31.0"
 metrics = "0.24"
 metrics-exporter-prometheus = { version = "0.17", default-features = false, features = ["tracing"] }
 sysinfo = { version = "0.37", default-features = false, features = ["system"] }
