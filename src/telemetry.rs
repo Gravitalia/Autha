@@ -4,19 +4,19 @@ use axum::extract::{MatchedPath, Request};
 use axum::http::Version;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
-use metrics::{gauge, Unit};
+use metrics::{Unit, gauge};
 use metrics_exporter_prometheus::{BuildError, Matcher, PrometheusBuilder, PrometheusHandle};
+use opentelemetry::KeyValue;
 use opentelemetry::global;
 use opentelemetry::trace::{Span, TraceError, Tracer};
-use opentelemetry::KeyValue;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 use opentelemetry_otlp::LogExporter;
 use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::logs::SdkLoggerProvider;
 use opentelemetry_sdk::logs::{LogError, SdkLogger};
 use opentelemetry_sdk::trace::SdkTracerProvider;
-use opentelemetry_sdk::Resource;
-use sysinfo::{Pid, System, RefreshKind, ProcessRefreshKind, ProcessesToUpdate};
+use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System};
 use tokio::time::sleep;
 
 use std::time::{Duration, Instant};
@@ -64,9 +64,7 @@ pub fn setup_metrics_recorder() -> Result<PrometheusHandle, BuildError> {
             system.refresh_processes_specifics(
                 ProcessesToUpdate::Some(&[pid]),
                 true,
-                ProcessRefreshKind::nothing()
-                    .with_memory()
-                    .with_cpu()
+                ProcessRefreshKind::nothing().with_memory().with_cpu(),
             );
 
             if let Some(process) = system.process(pid) {

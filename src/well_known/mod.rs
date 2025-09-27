@@ -1,7 +1,7 @@
 pub mod webfinger;
 
-use axum::routing::get;
 use axum::Router;
+use axum::routing::get;
 
 use crate::AppState;
 

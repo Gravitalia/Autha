@@ -1,19 +1,19 @@
-//!
+//! Users-related HTTP API.
 mod delete;
 mod get;
 mod update;
 
+use axum::Router;
 use axum::extract::{Path, Request, State};
 use axum::http::header;
 use axum::middleware;
 use axum::response::Response;
 use axum::routing::{delete, get, patch};
-use axum::Router;
 
-use crate::database::Database;
-use crate::user::User;
 use crate::AppState;
 use crate::ServerError;
+use crate::database::Database;
+use crate::user::User;
 
 /// Custom middleware for authentification.
 async fn auth(
