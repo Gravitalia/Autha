@@ -213,7 +213,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // execute migrations scripts on start.
-    sqlx::migrate!("./migrations").run(&db.postgres).await?;
+    sqlx::migrate!().run(&db.postgres).await?;
 
     let crypto = if let Ok(key) = std::env::var("KEY") {
         crypto::Cipher::key(key)?
