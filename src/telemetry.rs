@@ -8,13 +8,13 @@ use metrics::{Unit, gauge};
 use metrics_exporter_prometheus::{BuildError, Matcher, PrometheusBuilder, PrometheusHandle};
 use opentelemetry::KeyValue;
 use opentelemetry::global;
-use opentelemetry::trace::{Span, TraceError, Tracer};
+use opentelemetry::trace::{Span, Tracer};
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_otlp::LogExporter;
 use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{ExporterBuildError, LogExporter};
 use opentelemetry_sdk::Resource;
+use opentelemetry_sdk::logs::SdkLogger;
 use opentelemetry_sdk::logs::SdkLoggerProvider;
-use opentelemetry_sdk::logs::{LogError, SdkLogger};
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System};
 use tokio::time::sleep;
@@ -26,7 +26,7 @@ fn ressources() -> Resource {
 }
 
 /// Create tracer for OLTP.
-pub fn setup_tracer() -> Result<SdkTracerProvider, TraceError> {
+pub fn setup_tracer() -> Result<SdkTracerProvider, ExporterBuildError> {
     let exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_tonic()
         .build()?;
@@ -92,7 +92,7 @@ pub fn setup_metrics_recorder() -> Result<PrometheusHandle, BuildError> {
 /// Create OLTP exporter for logs.
 pub fn setup_logging(
     endpoint: &str,
-) -> Result<OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger>, LogError> {
+) -> Result<OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger>, ExporterBuildError> {
     let exporter = LogExporter::builder()
         .with_tonic()
         .with_endpoint(endpoint)
