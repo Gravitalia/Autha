@@ -20,7 +20,8 @@ mod tests {
 
     #[sqlx::test]
     async fn test_status_handler(pool: Pool<Postgres>) {
-        let config = config::Configuration::default();
+        let mut config = config::Configuration::default();
+        config.token = Some(config::Token::default());
         // State pool is useless, but required.
         let state = AppState {
             db: database::Database { postgres: pool },
