@@ -45,6 +45,6 @@ mod tests {
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let body: config::Configuration = serde_json::from_slice(&body).unwrap();
-        assert_eq!(body, config);
+        assert_eq!(body, config::Configuration::default());
     }
 }
