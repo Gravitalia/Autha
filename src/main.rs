@@ -12,6 +12,7 @@ mod error;
 mod ldap;
 mod router;
 mod telemetry;
+mod token;
 mod totp;
 mod user;
 mod well_known;
@@ -69,6 +70,7 @@ pub struct AppState {
     pub db: database::Database,
     pub ldap: ldap::Ldap,
     pub crypto: crypto::Cipher,
+    pub token: token::TokenManager,
 }
 
 /// Create router.
@@ -224,11 +226,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         crypto::Cipher::key(hex::encode(key))?
     };
 
+    // handle jwt.
+    let token = token::TokenManager::new(
+        &config.name,
+        &config.token.public_key_pem,
+        &config.token.private_key_pem,
+    )?;
+
     let state = AppState {
         config,
         db,
         ldap,
         crypto,
+        token,
     };
 
     // build our application with a route.

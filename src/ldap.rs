@@ -109,7 +109,7 @@ impl Ldap {
             .search(
                 &self.path,
                 Scope::Subtree,
-                &format!("(uid={})", user_id),
+                &format!("(uid={user_id})"),
                 vec!["dn"],
             )
             .await?

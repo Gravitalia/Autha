@@ -14,30 +14,31 @@ pub type Result<T> = std::result::Result<T, ServerError>;
 pub enum ServerError {
     #[error("validation error occurred")]
     Validation(#[from] ValidationErrors),
-
     #[error("error parsing form data")]
     ParsingForm(Box<dyn std::error::Error + Send>),
-
     #[error(transparent)]
     Axum(#[from] JsonRejection),
 
     #[error("SQL request failed: {0}")]
     Sql(#[from] SQLxError),
 
+    #[error(transparent)]
+    Jwt(#[from] jsonwebtoken::errors::Error),
+
     #[error("invalid email")]
     WrongEmail,
-
     #[error("public key must be PCKS-1 or PCKS-8")]
     Key(#[from] crate::crypto::KeyError),
-
     #[error("internal server error, {details}")]
     Internal {
         details: String,
         source: Option<Box<dyn std::error::Error + Send>>,
     },
-
     #[error("invalid 'Authorization' header")]
     Unauthorized,
+
+    #[error(transparent)]
+    Time(#[from] std::time::SystemTimeError),
 }
 
 impl From<ServerError> for ValidationErrors {

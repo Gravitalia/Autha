@@ -15,9 +15,10 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Configuration {
-    name: String,
+    /// Instance name.
+    pub name: String,
     /// Domain name of current instance.
-    pub address: String,
+    pub url: String,
     favicon: Option<String>,
     background: Option<String>,
     terms_of_service: Option<String>,
@@ -28,6 +29,9 @@ pub struct Configuration {
     version: String,
     #[serde(skip)]
     path: PathBuf,
+    /// Related to JsonWebToken configuration.
+    #[serde(skip_serializing)]
+    pub token: Token,
     /// Related to PostgreSQL configuration.
     #[serde(skip_serializing)]
     pub postgres: Option<Postgres>,
@@ -51,6 +55,13 @@ pub struct Postgres {
     /// Password credential to connect.
     pub password: Option<String>,
     ssl: bool,
+}
+
+/// PostgreSQL configuration.
+#[derive(Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Token {
+    pub public_key_pem: String,
+    pub private_key_pem: String,
 }
 
 /// LDAP configuration.
@@ -109,7 +120,7 @@ impl Configuration {
         let url_with_scheme = if url.starts_with("http://") || url.starts_with("https://") {
             url.to_string()
         } else {
-            format!("https://{}", url)
+            format!("https://{url}")
         };
 
         let parsed_url = Url::parse(&url_with_scheme)?;
@@ -137,7 +148,7 @@ impl Configuration {
                 config.version = VERSION.to_owned();
 
                 // normalize URLs.
-                config.address = self.normalize_url(&config.address)?;
+                config.url = self.normalize_url(&config.url)?;
                 config.favicon = config.favicon.map(|f| self.normalize_url(&f)).transpose()?;
                 config.terms_of_service = config
                     .terms_of_service

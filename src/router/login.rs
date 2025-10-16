@@ -119,6 +119,7 @@ pub async fn login(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::router::create::tests::JWT_PRIVATE_KEY;
     use crate::*;
     use axum::http::StatusCode;
     use serde_json::json;
@@ -134,6 +135,7 @@ mod tests {
                 let key = [0x42; 32];
                 crypto::Cipher::key(hex::encode(key)).unwrap()
             },
+            token: token::TokenManager::new("", "", JWT_PRIVATE_KEY).unwrap(),
         };
         let app = app(state);
 

@@ -187,7 +187,6 @@ fn get_by_field_query(field: &str) -> String {
                 u.flags, 
                 u.password, 
                 u.created_at;
-            "#,
-        field = field
+            "#
     )
 }

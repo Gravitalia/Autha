@@ -49,7 +49,7 @@ pub async fn handler(
     State(state): State<AppState>,
     Extension(user): Extension<User>,
 ) -> Result<Json<Response>, ServerError> {
-    let url = if let Ok(url) = url::Url::parse(&state.config.address) {
+    let url = if let Ok(url) = url::Url::parse(&state.config.url) {
         format!(
             "{}://{}/users/{}",
             url.scheme(),
@@ -80,6 +80,7 @@ mod tests {
     use sqlx::{Pool, Postgres};
 
     use super::*;
+    use crate::router::create::tests::JWT_PRIVATE_KEY;
     use crate::*;
 
     const ID: &str = "admin";
@@ -94,6 +95,7 @@ mod tests {
                 let key = [0x42; 32];
                 crypto::Cipher::key(hex::encode(key)).unwrap()
             },
+            token: token::TokenManager::new("", "", JWT_PRIVATE_KEY).unwrap(),
         };
         let app = app(state);
 

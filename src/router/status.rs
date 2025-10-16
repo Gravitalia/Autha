@@ -18,6 +18,8 @@ mod tests {
     use http_body_util::BodyExt;
     use sqlx::{Pool, Postgres};
 
+    use crate::router::create::tests::JWT_PRIVATE_KEY;
+
     #[sqlx::test]
     async fn test_status_handler(pool: Pool<Postgres>) {
         let config = config::Configuration::default();
@@ -30,6 +32,7 @@ mod tests {
                 let key = [0x42; 16];
                 crypto::Cipher::key(hex::encode(key)).unwrap()
             },
+            token: token::TokenManager::new("", "", JWT_PRIVATE_KEY).unwrap(),
         };
         let app = app(state);
 

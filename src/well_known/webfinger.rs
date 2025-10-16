@@ -54,8 +54,7 @@ pub async fn handler(
 
     // Parse given production URL.
     // Then add a custom path pointing to API.
-    let mut url =
-        url::Url::parse(&config.address).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let mut url = url::Url::parse(&config.url).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     url.set_path(&format!("/users/{}", user.id));
 
     let response = Response {

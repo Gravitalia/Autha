@@ -46,6 +46,7 @@ pub struct Body {
 pub struct Response {
     user: User,
     token: String,
+    refresh_token: String,
 }
 
 fn invalid_code() -> ValidationErrors {
@@ -129,7 +130,8 @@ pub async fn create(
         .await?
         .get(&state.db.postgres)
         .await?;
-    let token = user.generate_token(&state.db.postgres).await?;
+    let refresh_token = user.generate_token(&state.db.postgres).await?;
+    let token = state.token.create(&user.id)?;
 
     if let Err(err) = state.ldap.add(user.clone()).await {
         tracing::error!(
@@ -139,17 +141,32 @@ pub async fn create(
         );
     }
 
-    Ok((StatusCode::CREATED, Json(Response { user, token })))
+    Ok((
+        StatusCode::CREATED,
+        Json(Response {
+            user,
+            token,
+            refresh_token,
+        }),
+    ))
 }
 
 #[cfg(test)]
-mod tests {
+pub(super) mod tests {
     use super::*;
     use crate::*;
     use axum::http::StatusCode;
     use http_body_util::BodyExt;
     use serde_json::json;
     use sqlx::{Pool, Postgres};
+
+    pub const JWT_PRIVATE_KEY: &str = "-----BEGIN PRIVATE KEY-----
+MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDDINwXgz4RRSpxnbMiE
+/e2GRd0GByH25kJS3sUe1eDk/7VNmE4eE/J+NxUhPdd/PxmhZANiAATjcYmGOnT9
+fuzDvtC4BEpYBwSeyTNVvwb/V0/WeKhDHOyBN6HUFgX0GldHUobgDpz/RmKHN43C
+z03B2abKQoxhhMjyYzv5aQjOd4+E7EXFtsO16R6X3aB1v+w5XCJc/aA=
+-----END PRIVATE KEY-----
+";
 
     #[sqlx::test]
     async fn test_create_handler(pool: Pool<Postgres>) {
@@ -161,6 +178,7 @@ mod tests {
                 let key = [0x42; 32];
                 crypto::Cipher::key(hex::encode(key)).unwrap()
             },
+            token: token::TokenManager::new("", "", JWT_PRIVATE_KEY).unwrap(),
         };
         let app = app(state);
 
