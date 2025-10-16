@@ -119,7 +119,6 @@ pub async fn login(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::router::create::tests::JWT_PRIVATE_KEY;
     use crate::*;
     use axum::http::StatusCode;
     use serde_json::json;
@@ -127,15 +126,21 @@ mod tests {
 
     #[sqlx::test(fixtures("../../fixtures/users.sql"))]
     async fn test_login_handler(pool: Pool<Postgres>) {
+        let config = config::Configuration::default();
         let state = AppState {
             db: database::Database { postgres: pool },
-            config: config::Configuration::default().into(),
+            config: config.clone().into(),
             ldap: ldap::Ldap::default(),
             crypto: {
                 let key = [0x42; 32];
                 crypto::Cipher::key(hex::encode(key)).unwrap()
             },
-            token: token::TokenManager::new("", "", JWT_PRIVATE_KEY).unwrap(),
+            token: token::TokenManager::new(
+                &config.name,
+                &config.token.public_key_pem,
+                &config.token.private_key_pem,
+            )
+            .unwrap(),
         };
         let app = app(state);
 

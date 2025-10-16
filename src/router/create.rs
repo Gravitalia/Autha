@@ -160,25 +160,23 @@ pub(super) mod tests {
     use serde_json::json;
     use sqlx::{Pool, Postgres};
 
-    pub const JWT_PRIVATE_KEY: &str = "-----BEGIN PRIVATE KEY-----
-MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDDINwXgz4RRSpxnbMiE
-/e2GRd0GByH25kJS3sUe1eDk/7VNmE4eE/J+NxUhPdd/PxmhZANiAATjcYmGOnT9
-fuzDvtC4BEpYBwSeyTNVvwb/V0/WeKhDHOyBN6HUFgX0GldHUobgDpz/RmKHN43C
-z03B2abKQoxhhMjyYzv5aQjOd4+E7EXFtsO16R6X3aB1v+w5XCJc/aA=
------END PRIVATE KEY-----
-";
-
     #[sqlx::test]
     async fn test_create_handler(pool: Pool<Postgres>) {
+        let config = config::Configuration::default();
         let state = AppState {
             db: database::Database { postgres: pool },
-            config: config::Configuration::default().into(),
+            config: config.clone().into(),
             ldap: ldap::Ldap::default(),
             crypto: {
                 let key = [0x42; 32];
                 crypto::Cipher::key(hex::encode(key)).unwrap()
             },
-            token: token::TokenManager::new("", "", JWT_PRIVATE_KEY).unwrap(),
+            token: token::TokenManager::new(
+                &config.name,
+                &config.token.public_key_pem,
+                &config.token.private_key_pem,
+            )
+            .unwrap(),
         };
         let app = app(state);
 
