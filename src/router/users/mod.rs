@@ -12,12 +12,11 @@ use axum::routing::{delete, get, patch};
 
 use crate::AppState;
 use crate::ServerError;
-use crate::database::Database;
 use crate::user::User;
 
 /// Custom middleware for authentification.
 async fn auth(
-    State(db): State<Database>,
+    State(state): State<AppState>,
     user_id: Option<Path<String>>,
     mut req: Request,
     next: middleware::Next,
@@ -32,22 +31,20 @@ async fn auth(
             .get(header::AUTHORIZATION)
             .and_then(|header| header.to_str().ok())
         {
-            Some(token) => {
-                match sqlx::query!("SELECT user_id FROM tokens WHERE token = $1", token)
-                    .fetch_one(&db.postgres)
-                    .await
-                {
-                    Ok(token_data) => token_data.user_id,
-                    Err(_) => return Err(ServerError::Unauthorized),
-                }
-            }
+            Some(token) => match state.token.decode(token) {
+                Ok(claims) => claims.sub,
+                Err(_) => return Err(ServerError::Unauthorized),
+            },
             None => return Err(ServerError::Unauthorized),
         }
     } else {
         user_id
     };
 
-    let user = User::default().with_id(user_id).get(&db.postgres).await?;
+    let user = User::default()
+        .with_id(user_id)
+        .get(&state.db.postgres)
+        .await?;
 
     req.extensions_mut().insert::<User>(user);
     Ok(next.run(req).await)
