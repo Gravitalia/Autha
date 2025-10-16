@@ -86,8 +86,7 @@ mod tests {
 
     #[sqlx::test(fixtures("../../../fixtures/users.sql"))]
     async fn test_get_user_handler(pool: Pool<Postgres>) {
-        let mut config = config::Configuration::default();
-        config.token = Some(config::Token::default());
+        let config = config::Configuration::default().read().unwrap();
         let state = AppState {
             db: database::Database { postgres: pool },
             config: config.clone().into(),

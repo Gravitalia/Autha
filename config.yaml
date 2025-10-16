@@ -1,5 +1,5 @@
 name: Autha
-address: https://auth.gravitalia.com
+url: https://auth.gravitalia.com
 favicon: https://account.gravitalia.com/favicon.webp
 terms_of_service: https://policies.gravitalia.com/terms
 privacy_policy: https://policies.gravitalia.com/privacy
@@ -27,3 +27,18 @@ totp:
   algorithm: sha1
   digits: 6
   period: 30 # in seconds
+
+token:
+  private_key_pem: |-
+    -----BEGIN PRIVATE KEY-----
+    MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDCMClJpwGVWFGanuWX/
+    ezIV1getxkwBJTcqClVE1H6UqoCtag16Hsyt1cjjb1vhydmhZANiAARYdoKAVXgO
+    MV6cKPdzPo9sS3UaiiPBJydddOQvQ43oFCD9eyg759qDJzOkH2ZNRPM3x7XDk1be
+    taQW6eDAAavXBW7WZyxYt4DlSkmbyklbNv7IoQ4ABvG2FBJice1yEKQ=
+    -----END PRIVATE KEY-----
+  public_key_pem: |-
+    -----BEGIN PUBLIC KEY-----
+    MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEWHaCgFV4DjFenCj3cz6PbEt1GoojwScn
+    XXTkL0ON6BQg/XsoO+fagyczpB9mTUTzN8e1w5NW3rWkFungwAGr1wVu1mcsWLeA
+    5UpJm8pJWzb+yKEOAAbxthQSYnHtchCk
+    -----END PUBLIC KEY-----

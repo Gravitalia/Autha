@@ -25,7 +25,7 @@ pub struct Configuration {
     privacy_policy: Option<String>,
     /// whether user registration requires an invite code.
     pub invite_only: bool,
-    #[serde(skip_deserializing)]
+    #[serde(default)]
     version: String,
     #[serde(skip)]
     path: PathBuf,
@@ -62,28 +62,6 @@ pub struct Postgres {
 pub struct Token {
     pub public_key_pem: String,
     pub private_key_pem: String,
-}
-
-impl Default for Token {
-    fn default() -> Self {
-        const JWT_PRIVATE_KEY: &str = "-----BEGIN PRIVATE KEY-----
-MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDCMClJpwGVWFGanuWX/
-ezIV1getxkwBJTcqClVE1H6UqoCtag16Hsyt1cjjb1vhydmhZANiAARYdoKAVXgO
-MV6cKPdzPo9sS3UaiiPBJydddOQvQ43oFCD9eyg759qDJzOkH2ZNRPM3x7XDk1be
-taQW6eDAAavXBW7WZyxYt4DlSkmbyklbNv7IoQ4ABvG2FBJice1yEKQ=
------END PRIVATE KEY-----";
-        const JWT_PUBLIC_KEY: &str = "-----BEGIN PUBLIC KEY-----
-MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEWHaCgFV4DjFenCj3cz6PbEt1GoojwScn
-XXTkL0ON6BQg/XsoO+fagyczpB9mTUTzN8e1w5NW3rWkFungwAGr1wVu1mcsWLeA
-5UpJm8pJWzb+yKEOAAbxthQSYnHtchCk
------END PUBLIC KEY-----
-";
-
-        Self {
-            public_key_pem: JWT_PUBLIC_KEY.to_owned(),
-            private_key_pem: JWT_PRIVATE_KEY.to_owned(),
-        }
-    }
 }
 
 /// LDAP configuration.

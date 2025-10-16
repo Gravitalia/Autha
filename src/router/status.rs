@@ -20,8 +20,7 @@ mod tests {
 
     #[sqlx::test]
     async fn test_status_handler(pool: Pool<Postgres>) {
-        let mut config = config::Configuration::default();
-        config.token = Some(config::Token::default());
+        let config = config::Configuration::default().read().unwrap();
         // State pool is useless, but required.
         let state = AppState {
             db: database::Database { postgres: pool },
@@ -45,6 +44,6 @@ mod tests {
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let body: config::Configuration = serde_json::from_slice(&body).unwrap();
-        assert_eq!(body, config::Configuration::default());
+        assert_eq!(serde_json::json!(body), serde_json::json!(config));
     }
 }
