@@ -31,7 +31,7 @@ pub struct Configuration {
     path: PathBuf,
     /// Related to JsonWebToken configuration.
     #[serde(skip_serializing)]
-    pub token: Token,
+    pub token: Option<Token>,
     /// Related to PostgreSQL configuration.
     #[serde(skip_serializing)]
     pub postgres: Option<Postgres>,

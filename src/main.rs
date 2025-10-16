@@ -37,6 +37,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use std::env;
 use std::future::ready;
+use std::process::exit;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -210,7 +211,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // A database is required even with LDAP.
             // PostgreSQL manage user publics keys.
             tracing::error!("missing `postgres` entry on `config.yaml` file");
-            panic!()
+            exit(0);
         }
     };
 
@@ -227,11 +228,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // handle jwt.
-    let token = token::TokenManager::new(
-        &config.name,
-        &config.token.public_key_pem,
-        &config.token.private_key_pem,
-    )?;
+    let Some(token) = &config.token else {
+        tracing::warn!("missing `token` entry on `config.yaml` file");
+        exit(0);
+    };
+    let token =
+        token::TokenManager::new(&config.name, &token.public_key_pem, &token.private_key_pem)?;
 
     let state = AppState {
         config,

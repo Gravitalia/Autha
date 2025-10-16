@@ -32,8 +32,8 @@ mod tests {
             },
             token: token::TokenManager::new(
                 &config.name,
-                &config.token.public_key_pem,
-                &config.token.private_key_pem,
+                &config.token.as_ref().unwrap().public_key_pem,
+                &config.token.as_ref().unwrap().private_key_pem,
             )
             .unwrap(),
         };
