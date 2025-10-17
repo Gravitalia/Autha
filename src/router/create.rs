@@ -44,9 +44,9 @@ pub struct Body {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Response {
-    user: User,
-    token: String,
-    refresh_token: String,
+    pub user: User,
+    pub token: String,
+    pub refresh_token: String,
 }
 
 fn invalid_code() -> ValidationErrors {

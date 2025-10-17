@@ -4,6 +4,7 @@ use validator::{Validate, ValidationError};
 
 use crate::crypto::Action;
 use crate::error::Result;
+use crate::router::create::Response;
 use crate::user::User;
 use crate::{AppState, ServerError};
 
@@ -47,12 +48,6 @@ struct Identifier {
         )
     )]
     id: Option<String>,
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct Response {
-    user: User,
-    token: String,
 }
 
 pub async fn login(
@@ -112,8 +107,13 @@ pub async fn login(
         return Err(ServerError::WrongEmail);
     };
 
-    let token = user.generate_token(&state.db.postgres).await?;
-    Ok(Json(Response { user, token }))
+    let refresh_token = user.generate_token(&state.db.postgres).await?;
+    let token = state.token.create(&user.id)?;
+    Ok(Json(Response {
+        user,
+        refresh_token,
+        token,
+    }))
 }
 
 #[cfg(test)]
