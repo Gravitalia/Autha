@@ -105,6 +105,7 @@ impl Ldap {
 
         tracing::debug!(%user_id, "Trying to bind user...");
 
+        let user_id = escape_ldap(user_id);
         let search = conn
             .search(
                 &self.path,
@@ -122,4 +123,19 @@ impl Ldap {
         conn.unbind().await?;
         Ok(())
     }
+}
+
+fn escape_ldap(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    for b in input.as_bytes() {
+        match *b {
+            b'*' => out.push_str(r"\2a"),
+            b'(' => out.push_str(r"\28"),
+            b')' => out.push_str(r"\29"),
+            b'\\' => out.push_str(r"\5c"),
+            0 => out.push_str(r"\00"),
+            c => out.push(c as char),
+        }
+    }
+    out
 }
