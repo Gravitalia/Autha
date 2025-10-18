@@ -1,8 +1,11 @@
 //! Cryptogragic logics.
+
 use aes::Aes256;
 use aes::cipher::block_padding::{Pkcs7, UnpadError};
 use aes::cipher::generic_array::GenericArray;
-use aes::cipher::{BlockDecryptMut, BlockEncrypt, BlockEncryptMut, KeyInit, KeyIvInit};
+use aes::cipher::{BlockDecryptMut, BlockEncrypt, KeyInit};
+use aes_gcm::aead::{Aead, Nonce};
+use aes_gcm::{Aes256Gcm, Key};
 use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
 use argon2::{Argon2, Params, Version};
 use p256::ecdsa::VerifyingKey;
@@ -12,17 +15,19 @@ use rand::rngs::OsRng;
 use rsa::RsaPublicKey;
 use rsa::pkcs1::DecodeRsaPublicKey;
 use validator::{ValidationError, ValidationErrors};
+use zeroize::Zeroizing;
 
 use crate::ServerError;
 
 const MAX_NO_OVERHEAD_BLOCK_SIZE: usize = 10_000; // 10,000 bytes.
+const NONCE_SIZE: usize = 12;
 
 type Result<T> = std::result::Result<T, Error>;
-type Aes256CbcEnc = cbc::Encryptor<Aes256>;
-type Aes256CbcDec = cbc::Decryptor<Aes256>;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
+    #[error(transparent)]
+    AesGcm(#[from] aes_gcm::Error),
     #[error("hex is not valid")]
     Hex(#[from] hex::FromHexError),
     #[error("failed to slice iv")]
@@ -33,6 +38,8 @@ pub enum Error {
     Utf8(#[from] std::string::FromUtf8Error),
     #[error("tokio blocking thread crashed")]
     Thread,
+    #[error("key length is {value} while {excepted} is excepted")]
+    KeyLength { value: usize, excepted: usize },
 }
 
 /// Action [`Cipher`] should make.
@@ -41,29 +48,61 @@ pub enum Action {
     Decrypt,
 }
 
-#[derive(Clone, Default)]
+/// Cryptographic manager.
+#[derive(Clone)]
 pub struct Cipher {
-    key: Vec<u8>,
+    key: Zeroizing<Vec<u8>>,
+    pub memory_cost: u32,
+    pub iterations: u32,
+    pub parallelism: u32,
+    pub hash_length: usize,
+}
+
+impl Default for Cipher {
+    fn default() -> Self {
+        Self {
+            key: Zeroizing::new(Vec::new()),
+            memory_cost: 1024 * 64, // 64 MiB.
+            iterations: 4,
+            parallelism: 2,
+            hash_length: 32,
+        }
+    }
 }
 
 impl Cipher {
     /// Create a new [`Cipher`] structure with a `key`.
-    /// If key have more than 32 bytes, turncate it.
     pub fn key<T: ToString>(key: T) -> Result<Self> {
-        Ok(Self {
-            key: hex::decode(key.to_string())?,
-        })
+        let mut cipher = Self::default();
+
+        const KEY_LENGTH: usize = 32;
+        let mut key = Zeroizing::new(hex::decode(key.to_string())?);
+        key.truncate(KEY_LENGTH);
+
+        if key.len() < KEY_LENGTH {
+            return Err(Error::KeyLength {
+                value: key.len(),
+                excepted: KEY_LENGTH,
+            });
+        }
+
+        cipher.key = key;
+        Ok(cipher)
     }
 
-    fn iv(&self) -> [u8; 16] {
-        let mut iv = [0u8; 16];
+    fn iv() -> [u8; NONCE_SIZE] {
+        let mut iv = [0u8; NONCE_SIZE];
         OsRng.fill_bytes(&mut iv);
         iv
     }
 
     /// Either encrypt or decrypt data with AES256.
     ///
-    /// **WARNING**: no iv means less secure.
+    /// # Security issues
+    /// * **Deterministic**: function does not use IV and is therefore deterministic.
+    /// * **ECB mode**: patterns remain identifiable
+    ///
+    /// Please **never use this function** except where weak security is better than nothing.
     pub async fn aes_no_iv(&self, action: Action, data: Vec<u8>) -> Result<String> {
         // The key is 32 bytes long. The operation is therefore easy to clone.
         let key = *GenericArray::from_slice(&self.key);
@@ -91,48 +130,44 @@ impl Cipher {
         }
     }
 
-    /// Either encrypt or decrypt data with AES256-CBC.
+    /// Either encrypt or decrypt data with AES256-GCM.
     pub async fn aes(&self, action: Action, data: Vec<u8>) -> Result<String> {
-        // The key is 32 bytes long. The operation is therefore easy to clone.
-        let key = *GenericArray::from_slice(&self.key);
-        let iv = self.iv();
+        let key = Key::<Aes256Gcm>::from_slice(&self.key);
+        let cipher = Aes256Gcm::new(key);
 
         match action {
             Action::Encrypt => {
-                let mut message = iv.to_vec();
+                let nonce = Self::iv();
+                let nonce = GenericArray::clone_from_slice(&nonce);
 
-                // If text is light, avoid thread overhead.
                 let cipher_text = if data.len() > MAX_NO_OVERHEAD_BLOCK_SIZE {
-                    tokio::task::spawn_blocking(move || {
-                        Aes256CbcEnc::new(&key, &iv.into()).encrypt_padded_vec_mut::<Pkcs7>(&data)
-                    })
-                    .await
-                    .map_err(|_| Error::Thread)?
+                    tokio::task::spawn_blocking(move || cipher.encrypt(&nonce, data.as_ref()))
+                        .await
+                        .map_err(|_| Error::Thread)??
                 } else {
-                    Aes256CbcEnc::new(&key, &iv.into()).encrypt_padded_vec_mut::<Pkcs7>(&data)
+                    cipher.encrypt(&nonce, data.as_ref())?
                 };
 
+                let mut message = nonce.to_vec();
                 message.extend(cipher_text);
 
                 Ok(hex::encode(message))
             }
             Action::Decrypt => {
                 let data = hex::decode(data)?;
-                let (iv, cipher_text) = data.split_at(16);
-                let iv: [u8; 16] = iv.try_into()?;
+                let (nonce, cipher_text) = data.split_at(NONCE_SIZE);
+
+                let nonce = Nonce::<Aes256Gcm>::clone_from_slice(nonce);
                 let cipher_text = cipher_text.to_vec();
 
-                // If text is light, avoid thread overhead.
                 let bytes = if cipher_text.len() > MAX_NO_OVERHEAD_BLOCK_SIZE {
                     tokio::task::spawn_blocking(move || {
-                        Aes256CbcDec::new(&key, &iv.into())
-                            .decrypt_padded_vec_mut::<Pkcs7>(&cipher_text)
+                        cipher.decrypt(&nonce, cipher_text.as_ref())
                     })
                     .await
                     .map_err(|_| Error::Thread)??
                 } else {
-                    Aes256CbcDec::new(&key, &iv.into())
-                        .decrypt_padded_vec_mut::<Pkcs7>(&cipher_text)?
+                    cipher.decrypt(&nonce, cipher_text.as_ref())?
                 };
 
                 Ok(String::from_utf8(bytes)?)
@@ -142,25 +177,30 @@ impl Cipher {
 
     /// Hash password using [`argon2`].
     pub async fn hash_password<T: ToString>(&self, password: T) -> crate::error::Result<String> {
-        let password = password.to_string();
+        let password = Zeroizing::new(password.to_string());
         let salt = SaltString::generate(&mut OsRng);
-        let params = Params::new(Params::DEFAULT_M_COST * 4, 6, Params::DEFAULT_P_COST, None)
-            .map_err(|_| ServerError::Internal {
-                details: String::default(),
-                source: None,
-            })?;
+        let params = Params::new(
+            self.memory_cost,
+            self.iterations,
+            self.parallelism,
+            Some(self.hash_length),
+        )
+        .map_err(|err| ServerError::Internal {
+            details: err.to_string(),
+            source: None,
+        })?;
         let argon2 = Argon2::new(argon2::Algorithm::Argon2id, Version::V0x13, params);
 
         let hash = tokio::task::spawn_blocking(move || {
             let password_hash = argon2
                 .hash_password(password.as_bytes(), &salt)
-                .map_err(|_| ServerError::Internal {
-                    details: String::default(),
+                .map_err(|err| ServerError::Internal {
+                    details: err.to_string(),
                     source: None,
                 })?
                 .to_string();
-            let hash = PasswordHash::new(&password_hash).map_err(|_| ServerError::Internal {
-                details: String::default(),
+            let hash = PasswordHash::new(&password_hash).map_err(|err| ServerError::Internal {
+                details: err.to_string(),
                 source: None,
             })?;
 
@@ -274,11 +314,10 @@ pub fn check_key(key: &str) -> std::result::Result<(), KeyError> {
         RsaPublicKey::from_pkcs1_pem(key).map_err(KeyError::Pkcs1)?;
     } else if key.contains("BEGIN PUBLIC KEY") {
         // Means it is PKCS#8 and could be even RSA or ECDSA.
-        if key.len() > 200 {
-            RsaPublicKey::from_public_key_pem(key).map_err(KeyError::Pkcs8)?;
-        } else {
-            VerifyingKey::from_public_key_pem(key).map_err(KeyError::Pkcs8)?;
-        }
+        RsaPublicKey::from_public_key_pem(key)
+            .map(|_| ())
+            .or_else(|_| VerifyingKey::from_public_key_pem(key).map(|_| ()))
+            .map_err(KeyError::Pkcs8)?;
     } else {
         return Err(KeyError::UnknownFormat);
     }

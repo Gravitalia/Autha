@@ -27,7 +27,7 @@ mod tests {
             config: config.clone().into(),
             ldap: ldap::Ldap::default(),
             crypto: {
-                let key = [0x42; 16];
+                let key = [0x42; 32];
                 crypto::Cipher::key(hex::encode(key)).unwrap()
             },
             token: token::TokenManager::new(
