@@ -63,7 +63,7 @@ pub async fn login(
                 details: "email cannot be encrypted".into(),
                 source: Some(Box::new(err)),
             })?;
-        let user = User::default()
+        let user = User::builder()
             .with_email(email)
             .get(&state.db.postgres)
             .await
@@ -88,14 +88,10 @@ pub async fn login(
                 source: Some(Box::new(err)),
             })?;
 
-        let password = state.crypto.hash_password(&body.password).await?;
-
-        User::default()
+        User::builder()
             .with_id(id.to_lowercase())
-            .with_password(password)
+            .with_password(&body.password)
             .create(&state.db.postgres)
-            .await?
-            .get(&state.db.postgres)
             .await?
         /*.with_id(id)
         .with_password(state.crypto.hash_password(&body.password)?)

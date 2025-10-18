@@ -3,7 +3,7 @@ use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
 
-const TOKEN_LENGTH: usize = 64;
+pub const TOKEN_LENGTH: u64 = 64;
 
 /// Database user representation.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
@@ -18,7 +18,10 @@ pub struct User {
     pub avatar: Option<String>,
     pub flags: i32,
     #[serde(skip)]
-    pub(crate) password: String,
+    pub password: String,
+    #[sqlx(skip)]
+    #[serde(skip)]
+    pub ip: Option<String>,
     pub created_at: chrono::NaiveDate,
     #[sqlx(json)]
     pub public_keys: Vec<Key>,
@@ -34,34 +37,51 @@ pub struct Key {
 }
 
 impl User {
+    /// Build a new [`User`].
+    pub fn builder() -> Self {
+        Self::default()
+    }
+
     /// Update `vanity` of en empty [`User`].
     /// Do not work for fetched users.
-    pub fn with_id(mut self, user_id: String) -> Self {
-        self.id = user_id;
+    pub fn with_id<T: ToString>(mut self, user_id: T) -> Self {
+        self.id = user_id.to_string();
         self
     }
 
     /// Update `email` of an empty [`User`].
     /// Do not work for fetched users.
-    pub fn with_email(mut self, email: String) -> Self {
-        self.email = email;
+    pub fn with_email<T: ToString>(mut self, email: T) -> Self {
+        self.email = email.to_string();
         self
     }
 
     /// Update `password` of an empty [`User`].
+    pub fn with_password<T: ToString>(mut self, plain_text: T) -> Self {
+        self.password = plain_text.to_string();
+        self
+    }
+
+    /// Update `ip` of a [`User`].
     ///
-    /// **WARNING: hash password before pass it here!**
-    pub fn with_password(mut self, password: String) -> Self {
-        self.password = password;
+    /// IP should be encrypted.
+    pub fn with_ip(mut self, ip: Option<String>) -> Self {
+        self.ip = ip;
         self
     }
 
     /// Create a new user.
-    pub async fn create(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
+    pub async fn create(mut self, conn: &Pool<Postgres>) -> crate::error::Result<Self> {
         if self.id.is_empty() && self.password.is_empty() {
-            return Err(sqlx::Error::ColumnNotFound(
-                "missing 'id' and 'password' columns".to_owned(),
-            ));
+            return Err(crate::ServerError::MissingColumns(vec![
+                "id".into(),
+                "password".into(),
+            ]));
+        }
+
+        if !self.password.is_empty() {
+            let crypto = crate::crypto::Cipher::default();
+            self.password = crypto.hash_password(self.password).await?;
         }
 
         sqlx::query!(
@@ -80,12 +100,12 @@ impl User {
     /// Get data on a user.
     pub async fn get(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
         if !self.id.is_empty() {
-            sqlx::query_as::<_, User>(&get_by_field_query("id"))
+            sqlx::query_as::<_, User>(&get_by_field_query(Field::Id))
                 .bind(self.id)
                 .fetch_one(conn)
                 .await
         } else if !self.email.is_empty() {
-            sqlx::query_as::<_, User>(&get_by_field_query("email"))
+            sqlx::query_as::<_, User>(&get_by_field_query(Field::Email))
                 .bind(self.email)
                 .fetch_one(conn)
                 .await
@@ -104,12 +124,13 @@ impl User {
             ));
         }
 
-        let token = Alphanumeric.sample_string(&mut OsRng, TOKEN_LENGTH);
+        let token = Alphanumeric.sample_string(&mut OsRng, TOKEN_LENGTH as usize);
 
         sqlx::query!(
-            r#"INSERT INTO "tokens" (token, user_id) values ($1, $2)"#,
+            r#"INSERT INTO "tokens" (token, user_id, ip) values ($1, $2, $3)"#,
             token,
             self.id,
+            self.ip,
         )
         .execute(conn)
         .await?;
@@ -153,7 +174,22 @@ impl User {
     }
 }
 
-fn get_by_field_query(field: &str) -> String {
+#[derive(Debug, Clone)]
+enum Field {
+    Id,
+    Email,
+}
+
+impl std::fmt::Display for Field {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Field::Id => write!(f, "id"),
+            Field::Email => write!(f, "email"),
+        }
+    }
+}
+
+fn get_by_field_query(field: Field) -> String {
     format!(
         r#"SELECT 
                 u.id,

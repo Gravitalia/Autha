@@ -120,16 +120,14 @@ pub async fn create(
             details: "email cannot be encrypted".into(),
             source: Some(Box::new(err)),
         })?;
-    let password = state.crypto.hash_password(&body.password).await?;
 
-    let user = User::default()
+    let user = User::builder()
         .with_id(body.id.to_lowercase())
         .with_email(email)
-        .with_password(password)
+        .with_password(&body.password)
         .create(&state.db.postgres)
-        .await?
-        .get(&state.db.postgres)
         .await?;
+
     let refresh_token = user.generate_token(&state.db.postgres).await?;
     let token = state.token.create(&user.id)?;
 
