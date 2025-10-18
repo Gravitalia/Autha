@@ -41,7 +41,7 @@ pub enum Action {
     Decrypt,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Cipher {
     key: Vec<u8>,
 }

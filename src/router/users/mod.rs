@@ -1,6 +1,7 @@
 //! Users-related HTTP API.
 mod delete;
 mod get;
+pub mod refresh_token;
 mod update;
 
 use axum::Router;

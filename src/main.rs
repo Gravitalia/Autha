@@ -115,6 +115,8 @@ pub fn app(state: AppState) -> Router {
         .route("/status.json", get(router::status::status))
         // `POST /login` goes to `login`.
         .route("/login", post(router::login::login))
+        // POST `/oauth/token`
+        .route("/oauth/token", post(router::users::refresh_token::handler))
         .nest("/create", create_router)
         .nest("/users", router::users::router(state.clone()))
         .with_state(state.clone())

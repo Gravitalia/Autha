@@ -21,6 +21,8 @@ pub enum ServerError {
 
     #[error("SQL request failed: {0}")]
     Sql(#[from] SQLxError),
+    #[error("missing columns {0:?}")]
+    MissingColumns(Vec<String>),
 
     #[error(transparent)]
     Jwt(#[from] jsonwebtoken::errors::Error),
