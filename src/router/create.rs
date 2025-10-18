@@ -13,7 +13,7 @@ use std::sync::LazyLock;
 
 use super::Valid;
 
-static VANITY_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^^[A-Za-z0-9_.]+$").unwrap());
+static VANITY_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[A-Za-z0-9_]+$").unwrap());
 
 pub fn validate_id(vanity: &str) -> std::result::Result<(), ValidationError> {
     if !VANITY_RE.is_match(vanity) {
