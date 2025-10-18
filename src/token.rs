@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::Result;
 
-const _DEFAULT_AUDIENCE: &str = "account.gravitalia.com";
+const DEFAULT_AUDIENCE: &str = "account.gravitalia.com";
 const EXPIRATION_TIME: u64 = 1000 * 60 * 15; // 15 minutes.
 
 /// Pieces of information asserted on a JWT.
@@ -34,6 +34,7 @@ pub struct TokenManager {
     public_key: Option<DecodingKey>,
     private_key: EncodingKey,
     name: String,
+    audience: String,
     // key_id: Option<String>,
     // jku: Option<String>,
 }
@@ -53,7 +54,13 @@ impl TokenManager {
             public_key,
             private_key,
             name: name.to_owned(),
+            audience: DEFAULT_AUDIENCE.to_string(),
         })
+    }
+
+    /// Set `audience` field on JWT.
+    pub fn audience(&mut self, audience: &str) {
+        self.audience = audience.to_owned();
     }
 
     /// Create a new [`jsonwebtoken`].
@@ -61,12 +68,11 @@ impl TokenManager {
         let time = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() as u64;
         let header = Header::new(self.algorithm);
         let claims = Claims {
-            //aud: _DEFAULT_AUDIENCE.to_string(),
+            aud: self.audience.clone(),
             exp: time + EXPIRATION_TIME,
             iat: time,
             iss: self.name.clone(),
             sub: user_id.to_owned(),
-            ..Default::default()
         };
 
         Ok(encode(&header, &claims, &self.private_key)?)

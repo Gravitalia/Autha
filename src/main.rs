@@ -234,8 +234,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tracing::warn!("missing `token` entry on `config.yaml` file");
         exit(0);
     };
-    let token =
+    let mut token =
         token::TokenManager::new(&config.name, &token.public_key_pem, &token.private_key_pem)?;
+
+    if let Some(audience) = config.token.as_ref().and_then(|t| t.audience.as_ref()) {
+        token.audience(audience);
+    }
 
     let state = AppState {
         config,

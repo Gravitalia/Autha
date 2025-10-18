@@ -62,6 +62,9 @@ pub struct Postgres {
 pub struct Token {
     pub public_key_pem: String,
     pub private_key_pem: String,
+    /// Update token audience.
+    /// Default is `account.gravitalia.com`.
+    pub audience: Option<String>,
 }
 
 /// LDAP configuration.
