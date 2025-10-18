@@ -4,7 +4,7 @@ use validator::{Validate, ValidationError};
 
 use crate::crypto::Action;
 use crate::error::Result;
-use crate::router::create::Response;
+use crate::router::create::{Response, TOKEN_TYPE};
 use crate::user::User;
 use crate::{AppState, ServerError};
 
@@ -106,9 +106,10 @@ pub async fn login(
     let refresh_token = user.generate_token(&state.db.postgres).await?;
     let token = state.token.create(&user.id)?;
     Ok(Json(Response {
-        user,
-        refresh_token,
+        token_type: TOKEN_TYPE.to_owned(),
         token,
+        refresh_token,
+        expires_in: crate::token::EXPIRATION_TIME / 1000,
     }))
 }
 

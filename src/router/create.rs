@@ -14,6 +14,7 @@ use std::sync::LazyLock;
 use super::Valid;
 
 static VANITY_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[A-Za-z0-9_]+$").unwrap());
+pub const TOKEN_TYPE: &str = "Bearer";
 
 pub fn validate_id(vanity: &str) -> std::result::Result<(), ValidationError> {
     if !VANITY_RE.is_match(vanity) {
@@ -29,7 +30,7 @@ pub struct Body {
         length(min = 2, max = 15),
         custom(function = "validate_id", message = "Vanity must be alphanumeric.")
     )]
-    id: String,
+    pub id: String,
     #[validate(email(message = "Email must be formatted."))]
     email: String,
     #[validate(length(
@@ -44,9 +45,10 @@ pub struct Body {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Response {
-    pub user: User,
+    pub token_type: String,
     pub token: String,
     pub refresh_token: String,
+    pub expires_in: u64,
 }
 
 fn invalid_code() -> ValidationErrors {
@@ -131,7 +133,7 @@ pub async fn create(
     let refresh_token = user.generate_token(&state.db.postgres).await?;
     let token = state.token.create(&user.id)?;
 
-    if let Err(err) = state.ldap.add(user.clone()).await {
+    if let Err(err) = state.ldap.add(&user).await {
         tracing::error!(
             user_id = user.id,
             error = err.to_string(),
@@ -142,9 +144,10 @@ pub async fn create(
     Ok((
         StatusCode::CREATED,
         Json(Response {
-            user,
+            token_type: TOKEN_TYPE.to_owned(),
             token,
             refresh_token,
+            expires_in: crate::token::EXPIRATION_TIME / 1000,
         }),
     ))
 }
@@ -192,6 +195,5 @@ pub(super) mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let body: Response = serde_json::from_slice(&body).unwrap();
         assert!(body.token.is_ascii());
-        assert_eq!(body.user.id, "user");
     }
 }

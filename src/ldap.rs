@@ -54,7 +54,7 @@ impl Ldap {
     }
 
     /// Create a new entry on [`Ldap3`].
-    pub async fn add(mut self, user: User) -> Result<(), LdapError> {
+    pub async fn add(mut self, user: &User) -> Result<(), LdapError> {
         let Some(ref mut conn) = self.conn else {
             return Err(LdapError::EmptyUnixPath);
         };

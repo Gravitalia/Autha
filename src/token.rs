@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::error::Result;
 
 const DEFAULT_AUDIENCE: &str = "account.gravitalia.com";
-const EXPIRATION_TIME: u64 = 1000 * 60 * 15; // 15 minutes.
+pub const EXPIRATION_TIME: u64 = 1000 * 60 * 15; // 15 minutes.
 
 /// Pieces of information asserted on a JWT.
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
