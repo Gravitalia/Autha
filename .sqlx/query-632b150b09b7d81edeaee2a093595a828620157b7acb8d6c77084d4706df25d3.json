@@ -1,15 +1,16 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO \"tokens\" (token, user_id) values ($1, $2)",
+  "query": "INSERT INTO \"tokens\" (token, user_id, ip) values ($1, $2, $3)",
   "describe": {
     "columns": [],
     "parameters": {
       "Left": [
+        "Text",
         "Text",
         "Text"
       ]
     },
     "nullable": []
   },
-  "hash": "3372ca6c1e7efe70844d644107664d7593b195408aba3b285810793738430e09"
+  "hash": "632b150b09b7d81edeaee2a093595a828620157b7acb8d6c77084d4706df25d3"
 }
