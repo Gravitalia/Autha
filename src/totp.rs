@@ -17,7 +17,11 @@ impl std::fmt::Display for Base32DecodeError {
 impl std::error::Error for Base32DecodeError {}
 
 /// Generates a TOTP code.
-pub fn generate_totp(secret: &str, time_step: u64, digits: u32) -> Result<String> {
+pub fn generate_totp(
+    secret: &str,
+    time_step: u64,
+    digits: u32,
+) -> Result<String> {
     let key = decode(base32::Alphabet::Rfc4648 { padding: false }, secret)
         .ok_or(ServerError::ParsingForm(Box::new(Base32DecodeError())))?;
 
@@ -31,9 +35,11 @@ pub fn generate_totp(secret: &str, time_step: u64, digits: u32) -> Result<String
         / time_step;
 
     let counter_bytes = time_counter.to_be_bytes();
-    let mut mac = Hmac::<Sha1>::new_from_slice(&key).map_err(|err| ServerError::Internal {
-        details: String::default(),
-        source: Some(Box::new(err)),
+    let mut mac = Hmac::<Sha1>::new_from_slice(&key).map_err(|err| {
+        ServerError::Internal {
+            details: String::default(),
+            source: Some(Box::new(err)),
+        }
     })?;
     mac.update(&counter_bytes);
     let result = mac.finalize().into_bytes();

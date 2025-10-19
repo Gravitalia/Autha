@@ -12,7 +12,10 @@ use crate::{AppState, ServerError};
 #[serde(rename_all = "camelCase")]
 pub struct DeleteBody {
     totp_code: Option<String>,
-    #[validate(length(min = 8, message = "Password must contain at least 8 characters."))]
+    #[validate(length(
+        min = 8,
+        message = "Password must contain at least 8 characters."
+    ))]
     password: String,
 }
 

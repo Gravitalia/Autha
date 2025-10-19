@@ -34,7 +34,9 @@ impl Ldap {
         Ok(Ldap {
             conn: Some(ldap),
             addr: addr.to_owned(),
-            template: "ou=People, dc=gravitalia, dc=com, uid={user_id}, cn={username}".to_owned(),
+            template:
+                "ou=People, dc=gravitalia, dc=com, uid={user_id}, cn={username}"
+                    .to_owned(),
             path: "ou=People, dc=gravitalia, dc=com".to_owned(),
         })
     }
@@ -60,7 +62,9 @@ impl Ldap {
         };
 
         if self.template.is_empty() {
-            tracing::warn!("LDAP `dn` template is empty; not saving new entries");
+            tracing::warn!(
+                "LDAP `dn` template is empty; not saving new entries"
+            );
             return Ok(());
         }
 
@@ -99,7 +103,11 @@ impl Ldap {
 
     /// Test a connection on [`Ldap3`].
     /// Do not re-use this connection after.
-    pub async fn bind(&self, user_id: &str, password: &str) -> Result<(), LdapError> {
+    pub async fn bind(
+        &self,
+        user_id: &str,
+        password: &str,
+    ) -> Result<(), LdapError> {
         let (conn_handle, mut conn) = LdapConnAsync::new(&self.addr).await?;
         ldap3::drive!(conn_handle);
 

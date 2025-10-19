@@ -5,7 +5,9 @@ use axum::http::Version;
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use metrics::{Unit, gauge};
-use metrics_exporter_prometheus::{BuildError, Matcher, PrometheusBuilder, PrometheusHandle};
+use metrics_exporter_prometheus::{
+    BuildError, Matcher, PrometheusBuilder, PrometheusHandle,
+};
 use opentelemetry::KeyValue;
 use opentelemetry::global;
 use opentelemetry::trace::{Span, Tracer};
@@ -16,7 +18,9 @@ use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::logs::SdkLogger;
 use opentelemetry_sdk::logs::SdkLoggerProvider;
 use opentelemetry_sdk::trace::SdkTracerProvider;
-use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System};
+use sysinfo::{
+    Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System,
+};
 use tokio::time::sleep;
 
 use std::time::{Duration, Instant};
@@ -92,7 +96,10 @@ pub fn setup_metrics_recorder() -> Result<PrometheusHandle, BuildError> {
 /// Create OLTP exporter for logs.
 pub fn setup_logging(
     endpoint: &str,
-) -> Result<OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger>, ExporterBuildError> {
+) -> Result<
+    OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger>,
+    ExporterBuildError,
+> {
     let exporter = LogExporter::builder()
         .with_tonic()
         .with_endpoint(endpoint)
@@ -101,7 +108,11 @@ pub fn setup_logging(
         .with_resource(ressources())
         .with_batch_exporter(exporter)
         .build();
-    Ok(opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge::new(&provider))
+    Ok(
+        opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge::new(
+            &provider,
+        ),
+    )
 }
 
 /// Track every metrics into one function. Cool.
@@ -112,7 +123,8 @@ pub async fn track(req: Request, next: Next) -> impl IntoResponse {
 
     // Init all metrics data.
     let start = Instant::now();
-    let path = if let Some(matched_path) = req.extensions().get::<MatchedPath>() {
+    let path = if let Some(matched_path) = req.extensions().get::<MatchedPath>()
+    {
         matched_path.as_str().to_owned()
     } else {
         req.uri().path().to_owned()
@@ -144,7 +156,8 @@ pub async fn track(req: Request, next: Next) -> impl IntoResponse {
         ("status", status),
     ];
     metrics::counter!("http_requests_total", &labels).increment(1);
-    metrics::histogram!("http_requests_duration_seconds", &labels).record(latency);
+    metrics::histogram!("http_requests_duration_seconds", &labels)
+        .record(latency);
 
     otel_span.end();
 

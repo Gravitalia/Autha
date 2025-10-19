@@ -51,9 +51,10 @@ impl From<ServerError> for ValidationErrors {
             ServerError::WrongEmail => {
                 errors.add(
                     "email",
-                    ValidationError::new("email").with_message("Email must be formatted.".into()),
+                    ValidationError::new("email")
+                        .with_message("Email must be formatted.".into()),
                 );
-            }
+            },
             ServerError::Key(_) => {
                 errors.add(
                     "key",
@@ -61,8 +62,8 @@ impl From<ServerError> for ValidationErrors {
                         "Public key format must be PCKS1 (RSA) or PCKS8 (ECDSA).".into(),
                     ),
                 );
-            }
-            _ => {}
+            },
+            _ => {},
         }
 
         errors
@@ -106,7 +107,9 @@ impl ResponseError {
     }
 
     /// Transform [`ResponseError`] into axum [`Response`].
-    pub fn into_response(self) -> std::result::Result<Response, axum::http::Error> {
+    pub fn into_response(
+        self,
+    ) -> std::result::Result<Response, axum::http::Error> {
         if let Ok(body) = serde_json::to_string(&self) {
             Response::builder()
                 .status(self.status)
@@ -158,7 +161,9 @@ impl IntoResponse for ServerError {
             .status(StatusCode::BAD_REQUEST);
 
         let response = match &self {
-            ServerError::Validation(validation_errors) => response.errors(validation_errors),
+            ServerError::Validation(validation_errors) => {
+                response.errors(validation_errors)
+            },
 
             ServerError::ParsingForm(err) => response
                 .title("Server error during data parsing.")
@@ -173,27 +178,29 @@ impl IntoResponse for ServerError {
                         match err.constraint() {
                             Some("users_pkey") => validation_errors.add(
                                 "id",
-                                ValidationError::new("sql")
-                                    .with_message("ID is already in use.".into()),
+                                ValidationError::new("sql").with_message(
+                                    "ID is already in use.".into(),
+                                ),
                             ),
                             Some("users_email_key") => validation_errors.add(
                                 "email",
-                                ValidationError::new("sql")
-                                    .with_message("Email is already in use.".into()),
+                                ValidationError::new("sql").with_message(
+                                    "Email is already in use.".into(),
+                                ),
                             ),
                             _ => tracing::error!(%err, "SQL query failed"),
                         }
 
                         validation_errors
-                    }
+                    },
                     _ => {
                         tracing::error!(%err, "SQL query failed");
                         ValidationErrors::new()
-                    }
+                    },
                 };
 
                 response.errors(&errors).details("")
-            }
+            },
 
             ServerError::Unauthorized => response
                 .title("Missing or invalid 'Authorization' header.")
@@ -203,7 +210,7 @@ impl IntoResponse for ServerError {
                 tracing::error!(err = source, %details, "server returned 500 status");
 
                 ResponseError::default()
-            }
+            },
 
             _ => response,
         };

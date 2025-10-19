@@ -24,7 +24,11 @@ enum TypedKey {
 pub struct Body {
     #[serde(alias = "preferredUsername")]
     #[serde(alias = "username")]
-    #[validate(length(min = 2, max = 50, message = "Name must be 2 to 50 characters long."))]
+    #[validate(length(
+        min = 2,
+        max = 50,
+        message = "Name must be 2 to 50 characters long."
+    ))]
     username: Option<String>,
     #[validate(length(
         min = 0,
@@ -37,7 +41,10 @@ pub struct Body {
     public_keys: Option<TypedKey>,
     #[validate(email(message = "Email must be formated."))]
     email: Option<String>,
-    #[validate(length(min = 8, message = "Password must contain at least 8 characters."))]
+    #[validate(length(
+        min = 8,
+        message = "Password must contain at least 8 characters."
+    ))]
     password: Option<String>,
 }
 
@@ -80,20 +87,23 @@ pub async fn handler(
         } else {
             errors.add(
                 "totp_code",
-                ValidationError::new("totp").with_message("TOTP code is wrong.".into()),
+                ValidationError::new("totp")
+                    .with_message("TOTP code is wrong.".into()),
             );
         }
     } else if body.totp_secret.is_some() {
         errors.add(
             "password",
-            ValidationError::new("pwd")
-                .with_message("Missing 'password' or 'totp_code' field.".into()),
+            ValidationError::new("pwd").with_message(
+                "Missing 'password' or 'totp_code' field.".into(),
+            ),
         );
     } else if body.totp_code.is_some() {
         errors.add(
             "password",
-            ValidationError::new("secret")
-                .with_message("Missing 'password' or 'totp_secret' field.".into()),
+            ValidationError::new("secret").with_message(
+                "Missing 'password' or 'totp_secret' field.".into(),
+            ),
         );
     }
 
@@ -108,7 +118,7 @@ pub async fn handler(
                     created_at: chrono::Utc::now().date_naive(),
                     ..Default::default()
                 })
-            }
+            },
             TypedKey::Multiple(keys) => {
                 for key in keys {
                     check_key(&key).map_err(ServerError::Key)?;
@@ -119,7 +129,7 @@ pub async fn handler(
                         ..Default::default()
                     })
                 }
-            }
+            },
             TypedKey::Remove(key) => {
                 let _ = sqlx::query!(
                     r#"DELETE FROM keys WHERE id = $1 AND user_id = $2"#,
@@ -131,11 +141,12 @@ pub async fn handler(
                 .map_err(|_| {
                     errors.add(
                         "public_keys",
-                        ValidationError::new("pkeys")
-                            .with_message("Invalid key ID to be deleted.".into()),
+                        ValidationError::new("pkeys").with_message(
+                            "Invalid key ID to be deleted.".into(),
+                        ),
                     );
                 });
-            }
+            },
         }
     }
 
@@ -155,7 +166,8 @@ pub async fn handler(
     } else if body.email.is_some() {
         errors.add(
             "password",
-            ValidationError::new("pwd").with_message("Missing 'password' field.".into()),
+            ValidationError::new("pwd")
+                .with_message("Missing 'password' field.".into()),
         );
     }
 

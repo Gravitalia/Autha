@@ -44,7 +44,8 @@ pub async fn handler(
         .resource
         .strip_prefix("acct:")
         .ok_or(StatusCode::BAD_REQUEST)?;
-    let (vanity, _domain) = resource.split_once('@').ok_or(StatusCode::BAD_REQUEST)?;
+    let (vanity, _domain) =
+        resource.split_once('@').ok_or(StatusCode::BAD_REQUEST)?;
 
     let user = User::default()
         .with_id(vanity.to_owned())
@@ -54,7 +55,8 @@ pub async fn handler(
 
     // Parse given production URL.
     // Then add a custom path pointing to API.
-    let mut url = url::Url::parse(&config.url).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let mut url = url::Url::parse(&config.url)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     url.set_path(&format!("/users/{}", user.id));
 
     let response = Response {

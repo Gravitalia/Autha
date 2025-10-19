@@ -6,7 +6,9 @@ use aes::cipher::generic_array::GenericArray;
 use aes::cipher::{BlockDecryptMut, BlockEncrypt, KeyInit};
 use aes_gcm::aead::{Aead, Nonce};
 use aes_gcm::{Aes256Gcm, Key};
-use argon2::password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
+use argon2::password_hash::{
+    PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
+};
 use argon2::{Argon2, Params, Version};
 use p256::ecdsa::VerifyingKey;
 use p256::pkcs8::DecodePublicKey;
@@ -103,7 +105,11 @@ impl Cipher {
     /// * **ECB mode**: patterns remain identifiable
     ///
     /// Please **never use this function** except where weak security is better than nothing.
-    pub async fn aes_no_iv(&self, action: Action, data: Vec<u8>) -> Result<String> {
+    pub async fn aes_no_iv(
+        &self,
+        action: Action,
+        data: Vec<u8>,
+    ) -> Result<String> {
         // The key is 32 bytes long. The operation is therefore easy to clone.
         let key = *GenericArray::from_slice(&self.key);
 
@@ -115,7 +121,7 @@ impl Cipher {
                 .await
                 .map_err(|_| Error::Thread)?;
                 Ok(hex::encode(message))
-            }
+            },
             Action::Decrypt => {
                 let data = hex::decode(data)?;
 
@@ -126,7 +132,7 @@ impl Cipher {
                 .map_err(|_| Error::Thread)?;
 
                 Ok(String::from_utf8(bytes?)?)
-            }
+            },
         }
     }
 
@@ -141,9 +147,11 @@ impl Cipher {
                 let nonce = GenericArray::clone_from_slice(&nonce);
 
                 let cipher_text = if data.len() > MAX_NO_OVERHEAD_BLOCK_SIZE {
-                    tokio::task::spawn_blocking(move || cipher.encrypt(&nonce, data.as_ref()))
-                        .await
-                        .map_err(|_| Error::Thread)??
+                    tokio::task::spawn_blocking(move || {
+                        cipher.encrypt(&nonce, data.as_ref())
+                    })
+                    .await
+                    .map_err(|_| Error::Thread)??
                 } else {
                     cipher.encrypt(&nonce, data.as_ref())?
                 };
@@ -152,7 +160,7 @@ impl Cipher {
                 message.extend(cipher_text);
 
                 Ok(hex::encode(message))
-            }
+            },
             Action::Decrypt => {
                 let data = hex::decode(data)?;
                 let (nonce, cipher_text) = data.split_at(NONCE_SIZE);
@@ -171,12 +179,15 @@ impl Cipher {
                 };
 
                 Ok(String::from_utf8(bytes)?)
-            }
+            },
         }
     }
 
     /// Hash password using [`argon2`].
-    pub async fn hash_password<T: ToString>(&self, password: T) -> crate::error::Result<String> {
+    pub async fn hash_password<T: ToString>(
+        &self,
+        password: T,
+    ) -> crate::error::Result<String> {
         let password = Zeroizing::new(password.to_string());
         let salt = SaltString::generate(&mut OsRng);
         let params = Params::new(
@@ -189,7 +200,8 @@ impl Cipher {
             details: err.to_string(),
             source: None,
         })?;
-        let argon2 = Argon2::new(argon2::Algorithm::Argon2id, Version::V0x13, params);
+        let argon2 =
+            Argon2::new(argon2::Algorithm::Argon2id, Version::V0x13, params);
 
         let hash = tokio::task::spawn_blocking(move || {
             let password_hash = argon2
@@ -199,9 +211,11 @@ impl Cipher {
                     source: None,
                 })?
                 .to_string();
-            let hash = PasswordHash::new(&password_hash).map_err(|err| ServerError::Internal {
-                details: err.to_string(),
-                source: None,
+            let hash = PasswordHash::new(&password_hash).map_err(|err| {
+                ServerError::Internal {
+                    details: err.to_string(),
+                    source: None,
+                }
             })?;
 
             Ok::<String, ServerError>(hash.to_string())
@@ -227,8 +241,8 @@ impl Cipher {
         tokio::task::spawn_blocking(move || {
             let hash = PasswordHash::new(&hash).map_err(|err| {
                 tracing::error!(%err, "password hash decoding failed");
-                let error =
-                    ValidationError::new("decode").with_message("Invalid password format.".into());
+                let error = ValidationError::new("decode")
+                    .with_message("Invalid password format.".into());
                 let mut errors = ValidationErrors::new();
                 errors.add("password", error);
                 errors

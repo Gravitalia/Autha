@@ -6,7 +6,9 @@ use sqlx::{Pool, Postgres};
 pub const TOKEN_LENGTH: u64 = 64;
 
 /// Database user representation.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(
+    Clone, Debug, Default, PartialEq, Serialize, Deserialize, sqlx::FromRow,
+)]
 pub struct User {
     pub id: String,
     pub username: String,
@@ -71,7 +73,10 @@ impl User {
     }
 
     /// Create a new user.
-    pub async fn create(mut self, conn: &Pool<Postgres>) -> crate::error::Result<Self> {
+    pub async fn create(
+        mut self,
+        conn: &Pool<Postgres>,
+    ) -> crate::error::Result<Self> {
         if self.id.is_empty() && self.password.is_empty() {
             return Err(crate::ServerError::MissingColumns(vec![
                 "id".into(),
@@ -117,14 +122,18 @@ impl User {
     }
 
     /// Generate a token for this specific user.
-    pub async fn generate_token(&self, conn: &Pool<Postgres>) -> Result<String, sqlx::Error> {
+    pub async fn generate_token(
+        &self,
+        conn: &Pool<Postgres>,
+    ) -> Result<String, sqlx::Error> {
         if self.id.is_empty() {
             return Err(sqlx::Error::ColumnNotFound(
                 "Missing column 'id' column".into(),
             ));
         }
 
-        let token = Alphanumeric.sample_string(&mut OsRng, TOKEN_LENGTH as usize);
+        let token =
+            Alphanumeric.sample_string(&mut OsRng, TOKEN_LENGTH as usize);
 
         sqlx::query!(
             r#"INSERT INTO "tokens" (token, user_id, ip) values ($1, $2, $3)"#,
@@ -139,7 +148,10 @@ impl User {
     }
 
     /// Update user data on database using structure.
-    pub async fn update(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
+    pub async fn update(
+        self,
+        conn: &Pool<Postgres>,
+    ) -> Result<Self, sqlx::Error> {
         if self.id.is_empty() {
             return Err(sqlx::Error::ColumnNotFound(
                 "Missing column 'id' column".into(),
@@ -161,7 +173,10 @@ impl User {
     }
 
     /// Delete user from database (with 30 days retention).
-    pub async fn delete(self, conn: &Pool<Postgres>) -> Result<(), sqlx::Error> {
+    pub async fn delete(
+        self,
+        conn: &Pool<Postgres>,
+    ) -> Result<(), sqlx::Error> {
         sqlx::query!(
             r#"UPDATE "users" SET deleted_at = $1 WHERE id = $2"#,
             chrono::Utc::now().date_naive(),
