@@ -145,9 +145,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     global::set_tracer_provider(tracer_provider.clone());
 
     let telemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-    let logging_layer =
-        telemetry::setup_logging(&env::var("OTEL_URL").unwrap_or("http://localhost:4317".into()))?
-            .with_filter(filter);
+    let logging_layer = telemetry::setup_logging(
+        &env::var("OTEL_URL").unwrap_or("http://localhost:4317".into()),
+    )?
+    .with_filter(filter);
 
     let level = if cfg!(debug_assertions) {
         "debug"
@@ -156,13 +157,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     tracing_subscriber::registry()
         .with(
-            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                format!(
-                    "{}={level},tower_http={level},axum::rejection=trace",
-                    env!("CARGO_CRATE_NAME")
-                )
-                .into()
-            }),
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| {
+                    format!(
+                        "{}={level},tower_http={level},axum::rejection=trace",
+                        env!("CARGO_CRATE_NAME")
+                    )
+                    .into()
+                }),
         )
         .with(logging_layer)
         .with(telemetry_layer)
@@ -208,13 +210,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .unwrap_or(database::DEFAULT_DATABASE_NAME.into()),
             )
             .await?
-        }
+        },
         None => {
             // A database is required even with LDAP.
             // PostgreSQL manage user publics keys.
             tracing::error!("missing `postgres` entry on `config.yaml` file");
             exit(0);
-        }
+        },
     };
 
     // execute migrations scripts on start.
@@ -234,10 +236,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tracing::warn!("missing `token` entry on `config.yaml` file");
         exit(0);
     };
-    let mut token =
-        token::TokenManager::new(&config.name, &token.public_key_pem, &token.private_key_pem)?;
+    let mut token = token::TokenManager::new(
+        &config.url,
+        token.key_id.clone(),
+        &token.public_key_pem,
+        &token.private_key_pem,
+    )?;
 
-    if let Some(audience) = config.token.as_ref().and_then(|t| t.audience.as_ref()) {
+    if let Some(audience) =
+        config.token.as_ref().and_then(|t| t.audience.as_ref())
+    {
         token.audience(audience);
     }
 

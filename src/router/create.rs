@@ -13,7 +13,8 @@ use std::sync::LazyLock;
 
 use super::Valid;
 
-static VANITY_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[A-Za-z0-9_]+$").unwrap());
+static VANITY_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[A-Za-z0-9_]+$").unwrap());
 pub const TOKEN_TYPE: &str = "Bearer";
 
 pub fn validate_id(vanity: &str) -> std::result::Result<(), ValidationError> {
@@ -28,7 +29,10 @@ pub fn validate_id(vanity: &str) -> std::result::Result<(), ValidationError> {
 pub struct Body {
     #[validate(
         length(min = 2, max = 15),
-        custom(function = "validate_id", message = "Vanity must be alphanumeric.")
+        custom(
+            function = "validate_id",
+            message = "Vanity must be alphanumeric."
+        )
     )]
     pub id: String,
     #[validate(email(message = "Email must be formatted."))]
@@ -55,7 +59,8 @@ fn invalid_code() -> ValidationErrors {
     let mut errors = ValidationErrors::new();
     errors.add(
         "invite",
-        ValidationError::new("invite").with_message("Invalid invite code.".into()),
+        ValidationError::new("invite")
+            .with_message("Invalid invite code.".into()),
     );
     errors
 }
@@ -68,7 +73,7 @@ pub async fn middleware(
 ) -> Result<axum::response::Response> {
     if state.config.invite_only {
         let (parts, body) = req.into_parts();
-        let body_bytes = axum::body::to_bytes(body, usize::MAX)
+        let body_bytes = axum::body::to_bytes(body, 30_000)
             .await
             .map_err(|err| ServerError::ParsingForm(Box::new(err)))?;
         let body = serde_json::from_slice::<Body>(&body_bytes)
@@ -91,7 +96,10 @@ pub async fn middleware(
             return Err(ServerError::Validation(invalid_code()));
         }
 
-        let req = axum::extract::Request::from_parts(parts, axum::body::Body::from(body_bytes));
+        let req = axum::extract::Request::from_parts(
+            parts,
+            axum::body::Body::from(body_bytes),
+        );
         let response = next.run(req).await;
 
         if response.status().is_success() {
@@ -132,6 +140,7 @@ pub async fn create(
 
     let refresh_token = user.generate_token(&state.db.postgres).await?;
     let token = state.token.create(&user.id)?;
+    //panic!("{token:?} vs {refresh_token:?}");
 
     if let Err(err) = state.ldap.add(&user).await {
         tracing::error!(
@@ -160,6 +169,7 @@ pub(super) mod tests {
     use http_body_util::BodyExt;
     use serde_json::json;
     use sqlx::{Pool, Postgres};
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[sqlx::test]
     async fn test_create_handler(pool: Pool<Postgres>) {
@@ -173,27 +183,46 @@ pub(super) mod tests {
                 crypto::Cipher::key(hex::encode(key)).unwrap()
             },
             token: token::TokenManager::new(
-                &config.name,
+                &config.url,
+                config.token.clone().unwrap().key_id,
                 &config.token.as_ref().unwrap().public_key_pem,
                 &config.token.as_ref().unwrap().private_key_pem,
             )
             .unwrap(),
         };
-        let app = app(state);
+        let app = app(state.clone());
 
-        let body = router::create::Body {
+        let req_body = router::create::Body {
             id: "user".into(),
             email: "test@gravitalia.com".into(),
             password: "Password1234".into(),
             _captcha: None,
             invite: None,
         };
-        let response = make_request(app, Method::POST, "/create", json!(body).to_string()).await;
+        let response = make_request(
+            app,
+            Method::POST,
+            "/create",
+            json!(req_body).to_string(),
+        )
+        .await;
 
         assert_eq!(response.status(), StatusCode::CREATED);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let body: Response = serde_json::from_slice(&body).unwrap();
+        assert_eq!(body.token_type, TOKEN_TYPE);
+        assert_eq!(body.expires_in, crate::token::EXPIRATION_TIME / 1000);
         assert!(body.token.is_ascii());
+        assert!(body.refresh_token.is_ascii());
+
+        let claims = state.token.decode(&body.token).unwrap();
+        assert_eq!(claims.sub, req_body.id);
+        assert_eq!(claims.iss, state.config.url);
+        let time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as u64;
+        assert!(claims.exp > time);
     }
 }

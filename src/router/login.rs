@@ -10,7 +10,9 @@ use crate::{AppState, ServerError};
 
 use super::Valid;
 
-fn at_least_one_contact(form: &Identifier) -> std::result::Result<(), ValidationError> {
+fn at_least_one_contact(
+    form: &Identifier,
+) -> std::result::Result<(), ValidationError> {
     if form.email.is_none() && form.id.is_none() {
         let mut error = ValidationError::new("missing_identifier");
         error.message = Some("Email must be formatted.".into());
@@ -79,14 +81,12 @@ pub async fn login(
             .await?;
         user
     } else if let Some(id) = body.identifier.id {
-        state
-            .ldap
-            .bind(&id, &body.password)
-            .await
-            .map_err(|err| ServerError::Internal {
+        state.ldap.bind(&id, &body.password).await.map_err(|err| {
+            ServerError::Internal {
                 details: "invalid LDAP credentials".into(),
                 source: Some(Box::new(err)),
-            })?;
+            }
+        })?;
 
         User::builder()
             .with_id(id.to_lowercase())
@@ -118,8 +118,10 @@ mod tests {
     use super::*;
     use crate::*;
     use axum::http::StatusCode;
+    use http_body_util::BodyExt;
     use serde_json::json;
     use sqlx::{Pool, Postgres};
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[sqlx::test(fixtures("../../fixtures/users.sql"))]
     async fn test_login_handler(pool: Pool<Postgres>) {
@@ -133,13 +135,14 @@ mod tests {
                 crypto::Cipher::key(hex::encode(key)).unwrap()
             },
             token: token::TokenManager::new(
-                &config.name,
+                &config.url,
+                config.token.clone().unwrap().key_id,
                 &config.token.as_ref().unwrap().public_key_pem,
                 &config.token.as_ref().unwrap().private_key_pem,
             )
             .unwrap(),
         };
-        let app = app(state);
+        let app = app(state.clone());
 
         let body = Body {
             identifier: Identifier {
@@ -150,12 +153,17 @@ mod tests {
             totp_code: None,
             _captcha: None,
         };
-        let response =
-            make_request(app.clone(), Method::POST, "/login", json!(body).to_string()).await;
+        let response = make_request(
+            app.clone(),
+            Method::POST,
+            "/login",
+            json!(body).to_string(),
+        )
+        .await;
 
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
-        let body = Body {
+        let req_body = Body {
             identifier: Identifier {
                 email: Some("admin@gravitalia.com".into()),
                 id: None,
@@ -164,8 +172,29 @@ mod tests {
             totp_code: None,
             _captcha: None,
         };
-        let response = make_request(app, Method::POST, "/login", json!(body).to_string()).await;
+        let response = make_request(
+            app,
+            Method::POST,
+            "/login",
+            json!(req_body).to_string(),
+        )
+        .await;
 
         assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let body: Response = serde_json::from_slice(&body).unwrap();
+        assert_eq!(body.token_type, TOKEN_TYPE);
+        assert_eq!(body.expires_in, crate::token::EXPIRATION_TIME / 1000);
+        assert!(body.token.is_ascii());
+        assert!(body.refresh_token.is_ascii());
+
+        let claims = state.token.decode(&body.token).unwrap();
+        assert_eq!(claims.iss, state.config.url);
+        let time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as u64;
+        assert!(claims.exp > time);
     }
 }

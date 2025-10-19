@@ -51,6 +51,7 @@ zeroize = "1.8"
 argon2 = "0.5.3"
 rsa = "0.9.8"
 p256 = "0.13.2"
+base64ct = "1.8"
 aes = "0.8.4"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 cbc = { version = "0.1.2", features = ["std"] }

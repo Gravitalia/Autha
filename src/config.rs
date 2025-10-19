@@ -60,6 +60,7 @@ pub struct Postgres {
 /// PostgreSQL configuration.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Token {
+    pub key_id: Option<String>,
     pub public_key_pem: String,
     pub private_key_pem: String,
     /// Update token audience.
@@ -120,11 +121,12 @@ impl Configuration {
 
     /// Normalizes a URL string by ensuring it starts with a valid scheme (`http` or `https`).
     fn normalize_url(&self, url: &str) -> Result<String, url::ParseError> {
-        let url_with_scheme = if url.starts_with("http://") || url.starts_with("https://") {
-            url.to_string()
-        } else {
-            format!("https://{url}")
-        };
+        let url_with_scheme =
+            if url.starts_with("http://") || url.starts_with("https://") {
+                url.to_string()
+            } else {
+                format!("https://{url}")
+            };
 
         let parsed_url = Url::parse(&url_with_scheme)?;
         Ok(parsed_url.to_string())
@@ -140,19 +142,23 @@ impl Configuration {
 
         match File::open(file_path) {
             Ok(file) => {
-                let mut config: Configuration = match serde_yaml::from_reader(file) {
-                    Ok(config) => config,
-                    Err(err) => {
-                        return Ok(Arc::new(self.error(err)));
-                    }
-                };
+                let mut config: Configuration =
+                    match serde_yaml::from_reader(file) {
+                        Ok(config) => config,
+                        Err(err) => {
+                            return Ok(Arc::new(self.error(err)));
+                        },
+                    };
 
                 // set app version.
                 config.version = VERSION.to_owned();
 
                 // normalize URLs.
                 config.url = self.normalize_url(&config.url)?;
-                config.favicon = config.favicon.map(|f| self.normalize_url(&f)).transpose()?;
+                config.favicon = config
+                    .favicon
+                    .map(|f| self.normalize_url(&f))
+                    .transpose()?;
                 config.terms_of_service = config
                     .terms_of_service
                     .map(|f| self.normalize_url(&f))
@@ -167,7 +173,7 @@ impl Configuration {
                     .transpose()?;
 
                 Ok(Arc::new(config))
-            }
+            },
             Err(err) => Ok(Arc::new(self.error(err))),
         }
     }

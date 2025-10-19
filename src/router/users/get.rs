@@ -96,7 +96,8 @@ mod tests {
                 crypto::Cipher::key(hex::encode(key)).unwrap()
             },
             token: token::TokenManager::new(
-                &config.name,
+                &config.url,
+                config.token.clone().unwrap().key_id,
                 &config.token.as_ref().unwrap().public_key_pem,
                 &config.token.as_ref().unwrap().private_key_pem,
             )
@@ -105,7 +106,8 @@ mod tests {
         let app = app(state);
 
         let path = format!("/users/{}", ID);
-        let response = make_request(app, Method::GET, &path, String::default()).await;
+        let response =
+            make_request(app, Method::GET, &path, String::default()).await;
         assert_eq!(response.status(), StatusCode::OK);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();

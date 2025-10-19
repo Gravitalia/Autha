@@ -28,17 +28,17 @@ totp:
   digits: 6
   period: 30 # in seconds
 
+# Only support ES256.
 token:
+  key_id: j3Xz32VQ1S
   private_key_pem: |-
     -----BEGIN PRIVATE KEY-----
-    MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDCMClJpwGVWFGanuWX/
-    ezIV1getxkwBJTcqClVE1H6UqoCtag16Hsyt1cjjb1vhydmhZANiAARYdoKAVXgO
-    MV6cKPdzPo9sS3UaiiPBJydddOQvQ43oFCD9eyg759qDJzOkH2ZNRPM3x7XDk1be
-    taQW6eDAAavXBW7WZyxYt4DlSkmbyklbNv7IoQ4ABvG2FBJice1yEKQ=
+    MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgg8wQwttCoiBA9yQZ
+    Uo+lImtpakc48rw9mHTPhD6k5A+hRANCAATkZYzb0mgzeeckNkE2dKlwX9zxW9Qz
+    4JtlLQH76IOhXNObDGrsrsEeo5KDCQe1rrkYT/mTNuWepEEotRd4DRvf
     -----END PRIVATE KEY-----
   public_key_pem: |-
     -----BEGIN PUBLIC KEY-----
-    MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEWHaCgFV4DjFenCj3cz6PbEt1GoojwScn
-    XXTkL0ON6BQg/XsoO+fagyczpB9mTUTzN8e1w5NW3rWkFungwAGr1wVu1mcsWLeA
-    5UpJm8pJWzb+yKEOAAbxthQSYnHtchCk
+    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5GWM29JoM3nnJDZBNnSpcF/c8VvU
+    M+CbZS0B++iDoVzTmwxq7K7BHqOSgwkHta65GE/5kzblnqRBKLUXeA0b3w==
     -----END PUBLIC KEY-----
