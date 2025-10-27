@@ -20,6 +20,7 @@ use validator::{ValidationError, ValidationErrors};
 use zeroize::Zeroizing;
 
 use crate::ServerError;
+use crate::config::Argon2 as ArgonConfig;
 
 const MAX_NO_OVERHEAD_BLOCK_SIZE: usize = 10_000; // 10,000 bytes.
 const NONCE_SIZE: usize = 12;
@@ -54,29 +55,25 @@ pub enum Action {
 #[derive(Clone)]
 pub struct Cipher {
     key: Zeroizing<Vec<u8>>,
-    pub memory_cost: u32,
-    pub iterations: u32,
-    pub parallelism: u32,
-    pub hash_length: usize,
-}
-
-impl Default for Cipher {
-    fn default() -> Self {
-        Self {
-            key: Zeroizing::new(Vec::new()),
-            memory_cost: 1024 * 64, // 64 MiB.
-            iterations: 4,
-            parallelism: 2,
-            hash_length: 32,
-        }
-    }
+    config: ArgonConfig,
 }
 
 impl Cipher {
-    /// Create a new [`Cipher`] structure with a `key`.
-    pub fn key<T: ToString>(key: T) -> Result<Self> {
-        let mut cipher = Self::default();
+    pub fn new(argon2: Option<ArgonConfig>) -> Self {
+        Self {
+            key: Zeroizing::default(),
+            config: argon2.unwrap_or_default(),
+        }
+    }
 
+    /// Create a new [`Cipher`] structure with a `key`.
+    pub fn from_key<T: ToString>(key: T) -> Result<Self> {
+        let cipher = Self::new(None);
+        cipher.key(key)
+    }
+
+    /// Create a new [`Cipher`] structure with a `key`.
+    pub fn key<T: ToString>(mut self, key: T) -> Result<Self> {
         const KEY_LENGTH: usize = 32;
         let mut key = Zeroizing::new(hex::decode(key.to_string())?);
         key.truncate(KEY_LENGTH);
@@ -88,8 +85,8 @@ impl Cipher {
             });
         }
 
-        cipher.key = key;
-        Ok(cipher)
+        self.key = key;
+        Ok(self)
     }
 
     fn iv() -> [u8; NONCE_SIZE] {
@@ -191,10 +188,10 @@ impl Cipher {
         let password = Zeroizing::new(password.to_string());
         let salt = SaltString::generate(&mut OsRng);
         let params = Params::new(
-            self.memory_cost,
-            self.iterations,
-            self.parallelism,
-            Some(self.hash_length),
+            self.config.memory_cost,
+            self.config.iterations,
+            self.config.parallelism,
+            Some(self.config.hash_length),
         )
         .map_err(|err| ServerError::Internal {
             details: err.to_string(),
@@ -348,7 +345,7 @@ mod tests {
         const EMAIL: &str = "admin@gravitalia.com";
 
         let key = [0x42; 32];
-        let cipher = Cipher::key(hex::encode(key)).unwrap();
+        let cipher = Cipher::from_key(hex::encode(key)).unwrap();
 
         let cipher_text = cipher
             .aes_no_iv(Action::Encrypt, EMAIL.into())

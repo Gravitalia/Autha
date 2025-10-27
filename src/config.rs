@@ -35,6 +35,9 @@ pub struct Configuration {
     /// Related to PostgreSQL configuration.
     #[serde(skip_serializing)]
     pub postgres: Option<Postgres>,
+    /// Related to Argon2 configuration.
+    #[serde(skip_serializing)]
+    pub argon2: Option<Argon2>,
     /// Related to LDAP3 configuration.
     #[serde(skip_serializing)]
     pub ldap: Option<Ldap>,
@@ -55,6 +58,30 @@ pub struct Postgres {
     /// Password credential to connect.
     pub password: Option<String>,
     ssl: bool,
+}
+
+/// Argon2 configuration.
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Argon2 {
+    /// Memory used while hashing.
+    pub memory_cost: u32,
+    /// Iterations of hash.
+    pub iterations: u32,
+    /// Parallelism degree.
+    pub parallelism: u32,
+    /// Output hash length.
+    pub hash_length: usize,
+}
+
+impl Default for Argon2 {
+    fn default() -> Self {
+        Self {
+            memory_cost: 1024 * 64, // 64 MiB.
+            iterations: 4,
+            parallelism: 2,
+            hash_length: 32,
+        }
+    }
 }
 
 /// PostgreSQL configuration.

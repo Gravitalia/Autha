@@ -223,12 +223,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     sqlx::migrate!().run(&db.postgres).await?;
 
     let crypto = if let Ok(key) = std::env::var("KEY") {
-        crypto::Cipher::key(key)?
+        crypto::Cipher::new(config.argon2.clone()).key(key)?
     } else {
         tracing::warn!("missing `KEY` environnement; set it in production!");
 
         let key = [0x42; 32];
-        crypto::Cipher::key(hex::encode(key))?
+        crypto::Cipher::new(config.argon2.clone()).key(hex::encode(key))?
     };
 
     // handle jwt.
