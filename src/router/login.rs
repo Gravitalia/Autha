@@ -185,7 +185,7 @@ mod tests {
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let body: Response = serde_json::from_slice(&body).unwrap();
         assert_eq!(body.token_type, TOKEN_TYPE);
-        assert_eq!(body.expires_in, crate::token::EXPIRATION_TIME / 1000);
+        assert_eq!(body.expires_in, crate::token::EXPIRATION_TIME);
         assert!(body.token.is_ascii());
         assert!(body.refresh_token.is_ascii());
 
