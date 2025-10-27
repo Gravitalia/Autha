@@ -156,7 +156,7 @@ pub async fn create(
             token_type: TOKEN_TYPE.to_owned(),
             token,
             refresh_token,
-            expires_in: crate::token::EXPIRATION_TIME / 1000,
+            expires_in: crate::token::EXPIRATION_TIME,
         }),
     ))
 }
