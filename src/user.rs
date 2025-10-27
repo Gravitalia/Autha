@@ -75,6 +75,7 @@ impl User {
     /// Create a new user.
     pub async fn create(
         mut self,
+        crypto: &crate::crypto::Cipher,
         conn: &Pool<Postgres>,
     ) -> crate::error::Result<Self> {
         if self.id.is_empty() && self.password.is_empty() {
@@ -85,7 +86,6 @@ impl User {
         }
 
         if !self.password.is_empty() {
-            let crypto = crate::crypto::Cipher::default();
             self.password = crypto.hash_password(self.password).await?;
         }
 

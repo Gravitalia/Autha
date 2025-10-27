@@ -135,7 +135,7 @@ pub async fn create(
         .with_id(body.id.to_lowercase())
         .with_email(email)
         .with_password(&body.password)
-        .create(&state.db.postgres)
+        .create(&state.crypto, &state.db.postgres)
         .await?;
 
     let refresh_token = user.generate_token(&state.db.postgres).await?;
@@ -180,7 +180,7 @@ pub(super) mod tests {
             ldap: ldap::Ldap::default(),
             crypto: {
                 let key = [0x42; 32];
-                crypto::Cipher::key(hex::encode(key)).unwrap()
+                crypto::Cipher::from_key(hex::encode(key)).unwrap()
             },
             token: token::TokenManager::new(
                 &config.url,

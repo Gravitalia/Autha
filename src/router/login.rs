@@ -91,7 +91,7 @@ pub async fn login(
         User::builder()
             .with_id(id.to_lowercase())
             .with_password(&body.password)
-            .create(&state.db.postgres)
+            .create(&state.crypto, &state.db.postgres)
             .await?
         /*.with_id(id)
         .with_password(state.crypto.hash_password(&body.password)?)
@@ -132,7 +132,7 @@ mod tests {
             ldap: ldap::Ldap::default(),
             crypto: {
                 let key = [0x42; 32];
-                crypto::Cipher::key(hex::encode(key)).unwrap()
+                crypto::Cipher::from_key(hex::encode(key)).unwrap()
             },
             token: token::TokenManager::new(
                 &config.url,

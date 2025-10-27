@@ -93,7 +93,7 @@ mod tests {
             ldap: ldap::Ldap::default(),
             crypto: {
                 let key = [0x42; 32];
-                crypto::Cipher::key(hex::encode(key)).unwrap()
+                crypto::Cipher::from_key(hex::encode(key)).unwrap()
             },
             token: token::TokenManager::new(
                 &config.url,
