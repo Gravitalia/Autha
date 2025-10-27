@@ -208,6 +208,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .database
                     .clone()
                     .unwrap_or(database::DEFAULT_DATABASE_NAME.into()),
+                config.pool_size.unwrap_or(database::DEFAULT_POOL_SIZE),
             )
             .await?
         },

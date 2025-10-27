@@ -11,6 +11,7 @@ postgres:
   database: autha
   username: postgres
   password: postgres
+  pool_size: 25
   ssl: false
 
 # Password hasher.

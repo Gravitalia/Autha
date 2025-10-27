@@ -57,6 +57,8 @@ pub struct Postgres {
     pub username: Option<String>,
     /// Password credential to connect.
     pub password: Option<String>,
+    /// Maximum pool connections.
+    pub pool_size: Option<u32>,
     ssl: bool,
 }
 
