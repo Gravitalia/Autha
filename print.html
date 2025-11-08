@@ -37,6 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc.js"></script>
@@ -93,10 +94,13 @@
                 sidebar = sidebar || 'visible';
             } else {
                 sidebar = 'hidden';
+                sidebar_toggle.checked = false;
             }
-            sidebar_toggle.checked = sidebar === 'visible';
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
@@ -150,7 +154,12 @@
 
                 <div id="search-wrapper" class="hidden">
                     <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
                     </form>
                     <div id="searchresults-outer" class="searchresults-outer hidden">
                         <div id="searchresults-header" class="searchresults-header"></div>
@@ -177,8 +186,78 @@ account. Finally, create a key pair on your machine and send only the
 public key to the server.</p>
 <h2 id="license"><a class="header" href="#license">License</a></h2>
 <p>Source code and documentation are released under <a href="https://opensource.org/license/bsd-3-clause">BSD-3-Clause</a> license.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="database"><a class="header" href="#database">Database</a></h1>
+<p>Autha uses PostgreSQL as database. Database handles account management
+(including public keys and refresh tokens) and invitations.</p>
+<p>Add in <code>config.yaml</code> following code:</p>
+<pre><code class="language-yaml">postgres:
+  address: postgres:5432
+  database: autha
+  username: postgres
+  password: postgres
+  pool_size: 25
+  ssl: false
+</code></pre>
+<div class="table-wrapper"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>address</code></td><td>URL of Postgres database.</td></tr>
+<tr><td><code>database</code></td><td>Database name on Postgres.</td></tr>
+<tr><td><code>username</code></td><td>Postgres’ username.</td></tr>
+<tr><td><code>password</code></td><td>Postgres’ password.</td></tr>
+<tr><td><code>pool_size</code></td><td>Maximum number of concurrent connections to database.</td></tr>
+<tr><td><code>ssl</code></td><td>Wether allow or not secure connection.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="password"><a class="header" href="#password">Password</a></h1>
+<p>Autha uses Argon2 to hash users’s passwords.
+Only change the settings if you know what you are doing.</p>
+<p>Add in <code>config.yaml</code> following code:</p>
+<pre><code class="language-yaml">argon2:
+  memory_cost: 65536 # 64 MiB.
+  iterations: 4
+  parallelism: 2
+  hash_length: 32
+  zxcvbn: 3
+</code></pre>
+<div class="table-wrapper"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>memory_cost</code></td><td>Memory cost of a hash in KiB.</td></tr>
+<tr><td><code>iterations</code></td><td>Number of iterations.</td></tr>
+<tr><td><code>parallelism</code></td><td>Parallelism degree.</td></tr>
+<tr><td><code>hash_length</code></td><td>Password hash result length. Higher avoid collisions.</td></tr>
+<tr><td><code>zxcvbn</code></td><td>Optional. Dropbox password strength metering.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="session-tokens"><a class="header" href="#session-tokens">Session tokens</a></h1>
+<p>When the user creates their account or logs in, a pair of tokens is created.
+The session token is a 15-minute <a href="https://datatracker.ietf.org/doc/html/rfc7519">JWT</a>.
+The second is a refresh token (64 alphanumeric characters) valid for 15 days.</p>
+<p>Refresh token allows you to obtain a new JWT and refresh token.
+Each new JWT created invalidates the old refresh token.</p>
+<p>Add in <code>config.yaml</code> following code:</p>
+<pre><code class="language-yaml">token:
+  key_id: fixed_string_for_this_key
+  private_key_pem: |-
+    -----BEGIN PRIVATE KEY-----
+    MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgg8wQwttCoiBA9yQZ
+    Uo+lImtpakc48rw9mHTPhD6k5A+hRANCAATkZYzb0mgzeeckNkE2dKlwX9zxW9Qz
+    4JtlLQH76IOhXNObDGrsrsEeo5KDCQe1rrkYT/mTNuWepEEotRd4DRvf
+    -----END PRIVATE KEY-----
+  public_key_pem: |-
+    -----BEGIN PUBLIC KEY-----
+    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5GWM29JoM3nnJDZBNnSpcF/c8VvU
+    M+CbZS0B++iDoVzTmwxq7K7BHqOSgwkHta65GE/5kzblnqRBKLUXeA0b3w==
+    -----END PUBLIC KEY-----
+</code></pre>
+<div class="table-wrapper"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>key_id</code></td><td>JWK ID. Public key retrieving for signature verficiation.</td></tr>
+<tr><td><code>private_key_pem</code>*</td><td>Private key to sign JWTs. NEVER SHARE IT.</td></tr>
+<tr><td><code>public_key_pem</code>*</td><td>Public key for signature verficiation.</td></tr>
+</tbody></table>
+</div>
+<p>* Key <strong>MUST</strong> be ES256.</p>
+<p>If your Autha instance is distributed, use a signature key pair for each container.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="ldap"><a class="header" href="#ldap">LDAP</a></h1>
-<p>Autha supports LDAP directory integration for user and group resolution. This feature enables compatibility with enterprise identity systems by dynamically resolving user attributes and group memberships through LDAP queries.</p>
+<p>Autha supports LDAP directory integration for user and group resolution.
+This feature enables compatibility with enterprise identity systems by
+dynamically resolving user attributes and group memberships through LDAP
+queries.</p>
 <p>Add in <code>config.yaml</code> following code:</p>
 <pre><code class="language-yaml">ldap:
   address: ldap://127.0.0.1:389
@@ -202,7 +281,23 @@ public key to the server.</p>
 </tbody></table>
 </div>
 <p>* You can omit <code>user</code> and <code>password</code> field if you don’t want to create new entires on LDAP via Autha.</p>
-<div style="break-before: page; page-break-before: always;"></div><h2 id="1-introduction"><a class="header" href="#1-introduction">1. Introduction</a></h2>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="time-based-one-time-password-totp"><a class="header" href="#time-based-one-time-password-totp">Time-based One-Time Password (TOTP)</a></h1>
+<p>This extension cannot be disabled.
+It provides users with additional security (a period-second symmetric token).</p>
+<p>Add in <code>config.yaml</code> following code:</p>
+<pre><code class="language-yaml">totp:
+  issuer: autha
+  algorithm: sha1
+  digits: 6
+  period: 30 # in seconds
+</code></pre>
+<div class="table-wrapper"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>issuer</code></td><td>Name displayed on the user authentication application.</td></tr>
+<tr><td><code>algorithm</code></td><td>MUST be <code>sha1</code>.</td></tr>
+<tr><td><code>digits</code></td><td>Number of digits for the 30-second token.</td></tr>
+<tr><td><code>period</code></td><td>Token time window.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h2 id="1-introduction"><a class="header" href="#1-introduction">1. Introduction</a></h2>
 <p>Autha is a decentralized authentication system that enables users to authenticate themselves using asymmetric cryptographic keys via WebAuthn. Users are responsible for securely storing and managing their own private keys.</p>
 <p>Autha’s role is limited to publishing the users’ corresponding public keys in a verifiable and accessible manner.</p>
 <h3 id="12-impact"><a class="header" href="#12-impact">1.2 Impact</a></h3>
@@ -346,6 +441,7 @@ public key to the server.</p>
             window.setTimeout(window.print, 100);
         });
         </script>
+
 
     </div>
     </body>
