@@ -1,6 +1,9 @@
 # LDAP
 
-Autha supports LDAP directory integration for user and group resolution. This feature enables compatibility with enterprise identity systems by dynamically resolving user attributes and group memberships through LDAP queries.
+Autha supports LDAP directory integration for user and group resolution.
+This feature enables compatibility with enterprise identity systems by
+dynamically resolving user attributes and group memberships through LDAP
+queries.
 
 Add in `config.yaml` following code:
 ```yaml
