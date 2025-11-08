@@ -19,4 +19,4 @@ argon2:
 | `iterations`           | Number of iterations.                                     |
 | `parallelism`          | Parallelism degree.                                       |
 | `hash_length`          | Password hash result length. Higher avoid collisions.     |
-| `zxcvbn`               | Optional. Dropbox password strength metering.             |
+| `zxcvbn`               | Dropbox password strength metering. Set to 0 to disable.  |
