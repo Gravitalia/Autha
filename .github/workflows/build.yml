@@ -4,6 +4,9 @@ on:
     paths-ignore:
       - 'docs/**'
 
+permissions:
+  contents: read
+
 jobs:
   autha:
     runs-on: ubuntu-latest
