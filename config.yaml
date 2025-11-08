@@ -20,6 +20,7 @@ argon2:
   iterations: 4
   parallelism: 2
   hash_length: 32
+  zxcvbn: 3 # password strength metering.
 
 # Enterprise-grade annuary.
 ldap:

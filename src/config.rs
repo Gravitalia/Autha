@@ -73,6 +73,8 @@ pub struct Argon2 {
     pub parallelism: u32,
     /// Output hash length.
     pub hash_length: usize,
+    /// Dropbox password strenght measurment.
+    pub zxcvbn: Option<u8>,
 }
 
 impl Default for Argon2 {
@@ -82,6 +84,7 @@ impl Default for Argon2 {
             iterations: 4,
             parallelism: 2,
             hash_length: 32,
+            zxcvbn: Some(2),
         }
     }
 }

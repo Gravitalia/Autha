@@ -65,6 +65,17 @@ fn invalid_code() -> ValidationErrors {
     errors
 }
 
+fn password_too_weak() -> ValidationErrors {
+    let mut errors = ValidationErrors::new();
+    errors.add(
+        "password",
+        ValidationError::new("password").with_message(
+            "Password must contain at least 8 characters.".into(),
+        ),
+    );
+    errors
+}
+
 /// Middleware to handle invite codes.
 pub async fn middleware(
     State(state): State<AppState>,
@@ -122,6 +133,13 @@ pub async fn create(
     State(state): State<AppState>,
     Valid(body): Valid<Body>,
 ) -> Result<(StatusCode, Json<Response>)> {
+    if let Some(score) = state.config.argon2.as_ref().and_then(|c| c.zxcvbn) {
+        let entropy = zxcvbn::zxcvbn(&body.password, &[&body.email, &body.id]);
+        if (entropy.score() as u8) < score {
+            return Err(ServerError::Validation(password_too_weak()));
+        }
+    }
+
     let email = state
         .crypto
         .aes_no_iv(Action::Encrypt, body.email.into())
@@ -140,7 +158,6 @@ pub async fn create(
 
     let refresh_token = user.generate_token(&state.db.postgres).await?;
     let token = state.token.create(&user.id)?;
-    //panic!("{token:?} vs {refresh_token:?}");
 
     if let Err(err) = state.ldap.add(&user).await {
         tracing::error!(
@@ -171,8 +188,7 @@ pub(super) mod tests {
     use sqlx::{Pool, Postgres};
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    #[sqlx::test]
-    async fn test_create_handler(pool: Pool<Postgres>) {
+    fn state(pool: Pool<Postgres>) -> AppState {
         let config = config::Configuration::default().read().unwrap();
         let state = AppState {
             db: database::Database { postgres: pool },
@@ -190,12 +206,18 @@ pub(super) mod tests {
             )
             .unwrap(),
         };
+        state
+    }
+
+    #[sqlx::test]
+    async fn test_create_handler(pool: Pool<Postgres>) {
+        let state = state(pool);
         let app = app(state.clone());
 
         let req_body = router::create::Body {
             id: "user".into(),
             email: "test@gravitalia.com".into(),
-            password: "Password1234".into(),
+            password: "P$soW%920$n&".into(),
             _captcha: None,
             invite: None,
         };
@@ -224,5 +246,28 @@ pub(super) mod tests {
             .unwrap()
             .as_secs() as u64;
         assert!(claims.exp > time);
+    }
+
+    #[sqlx::test]
+    async fn test_create_with_weak_password(pool: Pool<Postgres>) {
+        let state = state(pool);
+        let app = app(state.clone());
+
+        let req_body = router::create::Body {
+            id: "user2".into(),
+            email: "test2@gravitalia.com".into(),
+            password: "Pas$word1111".into(),
+            _captcha: None,
+            invite: None,
+        };
+        let response = make_request(
+            app,
+            Method::POST,
+            "/create",
+            json!(req_body).to_string(),
+        )
+        .await;
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 }

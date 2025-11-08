@@ -32,6 +32,7 @@ validator = { version = "0.20", features = ["derive"] }
 hex = "0.4"
 regex-lite = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
+zxcvbn = "3"
 ldap3 = "0.12.1"
 # Error
 thiserror = "2.0"
