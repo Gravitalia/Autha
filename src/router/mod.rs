@@ -61,6 +61,7 @@ where
     }
 }
 
+/// Validate user ID (vanity) to be alphanumerical.
 pub fn validate_id(vanity: &str) -> Result<(), ValidationError> {
     if !VANITY_RE.is_match(vanity) {
         return Err(ValidationError::new("alphanumerical"));
@@ -69,6 +70,7 @@ pub fn validate_id(vanity: &str) -> Result<(), ValidationError> {
     Ok(())
 }
 
+/// Validate password to be strong as required.
 pub fn validate_password(
     password: &str,
     state: &crate::AppState,
