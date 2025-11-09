@@ -1,5 +1,4 @@
 use axum::{Json, extract::State, http::StatusCode};
-use regex_lite::Regex;
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError, ValidationErrors};
 
@@ -9,39 +8,35 @@ use crate::crypto::Action;
 use crate::error::Result;
 use crate::user::User;
 
-use std::sync::LazyLock;
+use super::ValidWithState;
 
-use super::Valid;
-
-static VANITY_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^[A-Za-z0-9_]+$").unwrap());
 pub const TOKEN_TYPE: &str = "Bearer";
 
-pub fn validate_id(vanity: &str) -> std::result::Result<(), ValidationError> {
-    if !VANITY_RE.is_match(vanity) {
-        return Err(ValidationError::new("alphanumerical"));
-    }
-
-    Ok(())
-}
-
 #[derive(Debug, Serialize, Deserialize, Validate)]
+#[validate(context = AppState)]
 pub struct Body {
     #[validate(
         length(min = 2, max = 15),
         custom(
-            function = "validate_id",
+            function = "crate::router::validate_id",
             message = "Vanity must be alphanumeric."
         )
     )]
     pub id: String,
     #[validate(email(message = "Email must be formatted."))]
     email: String,
-    #[validate(length(
-        min = 8,
-        max = 255,
-        message = "Password must contain at least 8 characters."
-    ))]
+    #[validate(
+        length(
+            min = 8,
+            max = 255,
+            message = "Password must contain at least 8 characters."
+        ),
+        custom(
+            function = "crate::router::validate_password",
+            message = "Password is too weak.",
+            use_context
+        )
+    )]
     password: String,
     invite: Option<String>,
     _captcha: Option<String>,
@@ -61,17 +56,6 @@ fn invalid_code() -> ValidationErrors {
         "invite",
         ValidationError::new("invite")
             .with_message("Invalid invite code.".into()),
-    );
-    errors
-}
-
-fn password_too_weak() -> ValidationErrors {
-    let mut errors = ValidationErrors::new();
-    errors.add(
-        "password",
-        ValidationError::new("password").with_message(
-            "Password must contain at least 8 characters.".into(),
-        ),
     );
     errors
 }
@@ -131,15 +115,8 @@ pub async fn middleware(
 
 pub async fn create(
     State(state): State<AppState>,
-    Valid(body): Valid<Body>,
+    ValidWithState(body): ValidWithState<Body>,
 ) -> Result<(StatusCode, Json<Response>)> {
-    if let Some(score) = state.config.argon2.as_ref().and_then(|c| c.zxcvbn) {
-        let entropy = zxcvbn::zxcvbn(&body.password, &[&body.email, &body.id]);
-        if (entropy.score() as u8) < score {
-            return Err(ServerError::Validation(password_too_weak()));
-        }
-    }
-
     let email = state
         .crypto
         .aes_no_iv(Action::Encrypt, body.email.into())

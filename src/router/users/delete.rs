@@ -1,4 +1,4 @@
-//! Get and update user data.
+//! Delete user from database with 30-day retention.
 
 use axum::Extension;
 use axum::extract::State;

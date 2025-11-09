@@ -188,13 +188,13 @@ impl IntoResponse for ServerError {
                                     "Email is already in use.".into(),
                                 ),
                             ),
-                            _ => tracing::error!(%err, "SQL query failed"),
+                            _ => tracing::error!(%err, "sql query failed"),
                         }
 
                         validation_errors
                     },
                     _ => {
-                        tracing::error!(%err, "SQL query failed");
+                        tracing::error!(%err, "sql query failed");
                         ValidationErrors::new()
                     },
                 };

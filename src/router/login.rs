@@ -45,7 +45,7 @@ struct Identifier {
     #[validate(
         length(min = 2, max = 15),
         custom(
-            function = "crate::router::create::validate_id",
+            function = "crate::router::validate_id",
             message = "ID must be alphanumeric."
         )
     )]

@@ -3,7 +3,7 @@
 use axum::Json;
 use axum::extract::State;
 use serde::Deserialize;
-use validator::ValidationError;
+use validator::{Validate, ValidationError, ValidationErrors};
 
 use crate::router::Valid;
 use crate::router::create::{Response, TOKEN_TYPE};
@@ -13,19 +13,30 @@ use crate::{AppState, ServerError};
 fn validate_grant_type(grant_type: &str) -> Result<(), ValidationError> {
     // As specified on OAuth2.0 spec, reject if grant_type is not valid.
     if grant_type != "refresh_token" {
-        return Err(ValidationError::new("invalid_grant_type")
-            .with_message("\"grant_type\" must be \"refresh_token\".".into()));
+        return Err(ValidationError::new("invalid_grant_type"));
     }
 
     Ok(())
 }
 
-#[derive(Debug, validator::Validate, Deserialize)]
-#[serde(rename_all = "camelCase")]
+fn invalid_refresh_token() -> ValidationErrors {
+    let mut errors = ValidationErrors::new();
+    errors.add(
+        "refresh_token",
+        ValidationError::new("refresh_token")
+            .with_message("Invalid refresh token.".into()),
+    );
+    errors
+}
+
+#[derive(Debug, Validate, Deserialize)]
 pub struct Body {
     #[validate(length(equal = crate::user::TOKEN_LENGTH))]
     refresh_token: String,
-    #[validate(custom(function = "validate_grant_type"))]
+    #[validate(custom(
+        function = "validate_grant_type",
+        message = "\"grant_type\" must be \"refresh_token\"."
+    ))]
     grant_type: String,
 }
 
@@ -41,10 +52,10 @@ pub async fn handler(
     )
     .fetch_one(&mut *tx)
     .await
-    .map_err(|_| ServerError::Unauthorized)?;
+    .map_err(|_| invalid_refresh_token())?;
 
     if data.expire_at <= chrono::Utc::now() {
-        return Err(ServerError::Unauthorized);
+        return Err(invalid_refresh_token().into());
     }
 
     let user = User::builder()
