@@ -96,7 +96,7 @@ pub fn app(state: AppState) -> Router {
             CorsLayer::new()
                 .allow_origin(Any)
                 .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE, Method::OPTIONS])
-                .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE])
+                .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE, header::ACCEPT])
                 .vary([header::AUTHORIZATION]),
         );
 
@@ -223,9 +223,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // execute migrations scripts on start.
     sqlx::migrate!().run(&db.postgres).await?;
 
-    let key = std::env::var("KEY").expect("missing `KEY` environnement variable. Cannot encrypt data without it");
-    let crypto =
-        crypto::Cipher::new(config.argon2.clone()).key(key)?;
+    let key = std::env::var("KEY").expect(
+        "missing `KEY` environnement variable. Cannot encrypt data without it",
+    );
+    let crypto = crypto::Cipher::new(config.argon2.clone()).key(key)?;
 
     // handle jwt.
     let Some(token) = &config.token else {
