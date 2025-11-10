@@ -155,12 +155,12 @@ fn parse_validation_errors(errors: &ValidationErrors) -> Vec<FieldError> {
 
 impl IntoResponse for ServerError {
     fn into_response(self) -> Response {
-        let response = ResponseError::default()
+        let mut response = ResponseError::default()
             .title("There were validation errors with your request.")
             .details(&self.to_string())
             .status(StatusCode::BAD_REQUEST);
 
-        let response = match &self {
+        response = match &self {
             ServerError::Validation(validation_errors) => {
                 response.errors(validation_errors)
             },
@@ -198,7 +198,6 @@ impl IntoResponse for ServerError {
                         ValidationErrors::new()
                     },
                 };
-
                 response.errors(&errors).details("")
             },
 
@@ -216,7 +215,6 @@ impl IntoResponse for ServerError {
         };
 
         response
-            .errors(&self.into())
             .into_response()
             .unwrap_or_else(|_| internal_server_error())
     }
