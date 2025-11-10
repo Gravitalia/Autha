@@ -19,6 +19,7 @@ pub struct Configuration {
     pub name: String,
     /// Domain name of current instance.
     pub url: String,
+    support: Option<String>,
     favicon: Option<String>,
     background: Option<String>,
     terms_of_service: Option<String>,
