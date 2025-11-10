@@ -1,6 +1,6 @@
 use axum::{Json, extract::State, http::StatusCode};
 use serde::{Deserialize, Serialize};
-use validator::{Validate, ValidationError, ValidationErrors};
+use validator::Validate;
 
 use crate::AppState;
 use crate::ServerError;
@@ -38,7 +38,7 @@ pub struct Body {
         )
     )]
     password: String,
-    invite: Option<String>,
+    pub invite: Option<String>,
     _captcha: Option<String>,
 }
 
@@ -50,70 +50,8 @@ pub struct Response {
     pub expires_in: u64,
 }
 
-fn invalid_code() -> ValidationErrors {
-    let mut errors = ValidationErrors::new();
-    errors.add(
-        "invite",
-        ValidationError::new("invite")
-            .with_message("Invalid invite code.".into()),
-    );
-    errors
-}
-
-/// Middleware to handle invite codes.
-pub async fn middleware(
-    State(state): State<AppState>,
-    req: axum::extract::Request,
-    next: axum::middleware::Next,
-) -> Result<axum::response::Response> {
-    if state.config.invite_only {
-        let (parts, body) = req.into_parts();
-        let body_bytes = axum::body::to_bytes(body, 30_000)
-            .await
-            .map_err(|err| ServerError::ParsingForm(Box::new(err)))?;
-        let body = serde_json::from_slice::<Body>(&body_bytes)
-            .map_err(|err| ServerError::ParsingForm(Box::new(err)))?;
-
-        if let Some(ref invite) = body.invite {
-            let is_used = sqlx::query!(
-                r#"SELECT used_at IS NOT NULL AS is_used FROM "invite_codes" WHERE code = $1"#,
-                invite
-            )
-            .fetch_one(&state.db.postgres)
-            .await
-            .map_err(|_| invalid_code())?
-            .is_used;
-
-            if is_used.unwrap_or(false) {
-                return Err(ServerError::Validation(invalid_code()));
-            }
-        } else {
-            return Err(ServerError::Validation(invalid_code()));
-        }
-
-        let req = axum::extract::Request::from_parts(
-            parts,
-            axum::body::Body::from(body_bytes),
-        );
-        let response = next.run(req).await;
-
-        if response.status().is_success() {
-            sqlx::query!(
-                r#"UPDATE "invite_codes" SET used_by = $1, used_at = NOW() WHERE code = $2"#,
-                body.id,
-                body.invite.unwrap_or_default(),
-            )
-            .execute(&state.db.postgres)
-            .await?;
-        }
-
-        Ok(response)
-    } else {
-        Ok(next.run(req).await)
-    }
-}
-
-pub async fn create(
+/// Handler to create user.
+pub async fn handler(
     State(state): State<AppState>,
     ValidWithState(body): ValidWithState<Body>,
 ) -> Result<(StatusCode, Json<Response>)> {

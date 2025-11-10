@@ -10,6 +10,7 @@ mod crypto;
 mod database;
 mod error;
 mod ldap;
+mod middleware;
 mod router;
 mod telemetry;
 mod token;
@@ -20,7 +21,7 @@ mod well_known;
 use axum::body::Bytes;
 use axum::http::{Method, header};
 use axum::routing::{get, post};
-use axum::{Router, middleware};
+use axum::{Router, middleware as AxumMiddleware};
 use error::ServerError;
 use opentelemetry::global;
 use opentelemetry::trace::TracerProvider;
@@ -104,10 +105,10 @@ pub fn app(state: AppState) -> Router {
         // Initialize telemetry.
         // initialize tracing.
         // `POST /create` goes to `create`.
-        .route("/", post(router::create::create))
-        .route_layer(middleware::from_fn_with_state(
+        .route("/", post(router::create::handler))
+        .route_layer(AxumMiddleware::from_fn_with_state(
             state.clone(),
-            router::create::middleware,
+            middleware::consume_invites,
         ));
 
     Router::new()
@@ -121,7 +122,7 @@ pub fn app(state: AppState) -> Router {
         .nest("/users", router::users::router(state.clone()))
         .with_state(state.clone())
         .nest("/.well-known", well_known::well_known(state))
-        .route_layer(middleware::from_fn(telemetry::track))
+        .route_layer(AxumMiddleware::from_fn(telemetry::track))
         .layer(middleware)
 }
 
