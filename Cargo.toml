@@ -21,7 +21,7 @@ tokio =  { version = "1.48", features = ["rt-multi-thread", "net", "tracing", "s
 serde = "1"
 serde_json = "1"
 serde_yaml = "0.9.34"
-sqlx = { version = "0.8.6", features = ["runtime-tokio", "postgres", "chrono"] }
+sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres", "chrono"] }
 tower = { version = "0.5.2", features = ["limit"] }
 tower-http = { version = "0.6.6", features = [
 "cors", "trace", "tracing", "request-id", "sensitive-headers", "tokio", "timeout",
@@ -33,7 +33,7 @@ hex = "0.4"
 regex-lite = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
 zxcvbn = "3"
-ldap3 = "0.12.1"
+ldap3 = { version = "0.12.1", features = ["tls-rustls", "tls-rustls-ring"], default-features = false }
 # Error
 thiserror = "2.0"
 # Telemetry
