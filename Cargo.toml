@@ -1,6 +1,6 @@
 [package]
 name = "autha"
-version = "0.3.2"
+version = "0.3.3"
 description = "fast and safe authorization delegation and account management API"
 homepage = "https://account.gravitalia.com"
 readme = "README.md"
@@ -16,6 +16,7 @@ strip = true # false if flamegraph/DHAT.
 debug = false # true if flamegraph/DHAT.
 
 [dependencies]
+mimalloc = { version = "0.1", features = ["v3"] }
 axum = { version = "0.8.6", features = ["macros"] }
 tokio =  { version = "1.48", features = ["rt-multi-thread", "net", "tracing", "signal"] }
 serde = "1"
