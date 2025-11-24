@@ -29,7 +29,7 @@ impl Ldap {
                 .success()?;
         }
 
-        tracing::info!(%addr, "LDAP connected");
+        tracing::info!(%addr, "ldap connected");
 
         Ok(Ldap {
             conn: Some(ldap),
@@ -58,7 +58,8 @@ impl Ldap {
     /// Create a new entry on [`Ldap3`].
     pub async fn add(mut self, user: &User) -> Result<(), LdapError> {
         let Some(ref mut conn) = self.conn else {
-            return Err(LdapError::EmptyUnixPath);
+            tracing::debug!(?self.conn, user_id = user.id, "user add on ldap failed");
+            return Ok(());
         };
 
         if self.template.is_empty() {
@@ -68,7 +69,7 @@ impl Ldap {
             return Ok(());
         }
 
-        tracing::info!(user_id = user.id, "add new entry on LDAP");
+        tracing::info!(user_id = user.id, "add new entry on ldap");
 
         let dn = self
             .template
@@ -111,7 +112,7 @@ impl Ldap {
         let (conn_handle, mut conn) = LdapConnAsync::new(&self.addr).await?;
         ldap3::drive!(conn_handle);
 
-        tracing::debug!(%user_id, "Trying to bind user...");
+        tracing::debug!(%user_id, "binding ldap user");
 
         let user_id = escape_ldap(user_id);
         let search = conn

@@ -57,7 +57,7 @@ pub async fn handler(
 ) -> Result<(StatusCode, Json<Response>)> {
     let email = state
         .crypto
-        .aes_no_iv(Action::Encrypt, body.email.into())
+        .aes_no_iv(Action::Encrypt, body.email.clone().into_bytes())
         .await
         .map_err(|err| ServerError::Internal {
             details: "email cannot be encrypted".into(),
@@ -71,7 +71,7 @@ pub async fn handler(
         .create(&state.crypto, &state.db.postgres)
         .await?;
 
-    state.mail.publish_event(Welcome, &user).await?;
+    state.mail.publish_event(Welcome, body.email).await?;
 
     let refresh_token = user.generate_token(&state.db.postgres).await?;
     let token = state.token.create(&user.id)?;
@@ -80,7 +80,7 @@ pub async fn handler(
         tracing::error!(
             user_id = user.id,
             error = err.to_string(),
-            "user not created on LDAP"
+            "user not created on ldap"
         );
     }
 

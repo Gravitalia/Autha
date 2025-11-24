@@ -16,7 +16,6 @@ use url::Url;
 
 use crate::config::Mail;
 use crate::error::{Result, ServerError};
-use crate::user::User;
 
 use std::sync::Arc;
 
@@ -32,6 +31,7 @@ const ID_LENGTH: usize = 12;
 
 /// Maily templates list.
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Template {
     /// Provide user variety of explanations.
     Welcome,
@@ -91,6 +91,8 @@ impl MailManager {
             Connection::connect_uri(uri, ConnectionProperties::default())
                 .await?;
 
+        tracing::info!(%addr, "rabbitmq connected");
+
         // TODO: use a pool of channels.
         let channel = conn.create_channel().await?;
         channel
@@ -103,6 +105,8 @@ impl MailManager {
                 FieldTable::default(),
             )
             .await?;
+
+        tracing::debug!(queue = config.queue, "rabbitmq queue created");
 
         Ok(Self {
             queue: config.queue.clone(),
@@ -127,29 +131,34 @@ impl MailManager {
     pub async fn publish_event(
         &self,
         template: Template,
-        user: &User,
+        email: String,
     ) -> Result<()> {
-        if let Some(channel) = &self.channel {
-            let content = Content {
-                locale: None,
-                to: user.email.clone(),
-                template,
-            };
-            let payload = Self::create_event(content);
-            let payload = serde_json::to_vec(&payload)?;
+        let Some(channel) = &self.channel else {
+            tracing::debug!(?template, "failed to send event");
+            return Ok(());
+        };
 
-            channel
-                .basic_publish(
-                    "",
-                    &self.queue,
-                    BasicPublishOptions::default(),
-                    &payload,
-                    BasicProperties::default()
-                        .with_content_encoding(CONTENT_ENCODING.into())
-                        .with_content_type(CONTENT_TYPE.into()),
-                )
-                .await?;
-        }
+        tracing::trace!(?template, "event sent");
+
+        let content = Content {
+            locale: None,
+            to: email,
+            template,
+        };
+        let payload = Self::create_event(content);
+        let payload = serde_json::to_string(&payload)?;
+
+        channel
+            .basic_publish(
+                "",
+                &self.queue,
+                BasicPublishOptions::default(),
+                payload.as_bytes(),
+                BasicProperties::default()
+                    .with_content_encoding(CONTENT_ENCODING.into())
+                    .with_content_type(CONTENT_TYPE.into()),
+            )
+            .await?;
 
         Ok(())
     }

@@ -99,6 +99,8 @@ impl User {
         .execute(conn)
         .await?;
 
+        tracing::trace!(user_id = self.id, "new user created on postgres");
+
         Ok(self)
     }
 
@@ -143,6 +145,8 @@ impl User {
         )
         .execute(conn)
         .await?;
+
+        tracing::trace!(user_id = self.id, "new session token");
 
         Ok(token)
     }
