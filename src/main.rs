@@ -14,6 +14,7 @@ mod crypto;
 mod database;
 mod error;
 mod ldap;
+mod mail;
 mod middleware;
 mod router;
 mod telemetry;
@@ -77,6 +78,7 @@ pub struct AppState {
     pub ldap: ldap::Ldap,
     pub crypto: crypto::Cipher,
     pub token: token::TokenManager,
+    pub mail: mail::MailManager,
 }
 
 /// Create router.
@@ -251,12 +253,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         token.audience(audience);
     }
 
+    // handle mail sender.
+    let mail = if let Some(cfg) = &config.mail {
+        mail::MailManager::new(cfg).await?
+    } else {
+        mail::MailManager::default()
+    };
+
     let state = AppState {
         config,
         db,
         ldap,
         crypto,
         token,
+        mail,
     };
 
     // build our application with a route.

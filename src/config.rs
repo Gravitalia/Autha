@@ -39,6 +39,9 @@ pub struct Configuration {
     /// Related to Argon2 configuration.
     #[serde(skip_serializing)]
     pub argon2: Option<Argon2>,
+    /// Related to automatic mail sending.
+    #[serde(skip_serializing)]
+    pub mail: Option<Mail>,
     /// Related to LDAP3 configuration.
     #[serde(skip_serializing)]
     pub ldap: Option<Ldap>,
@@ -60,7 +63,7 @@ pub struct Postgres {
     pub password: Option<String>,
     /// Maximum pool connections.
     pub pool_size: Option<u32>,
-    ssl: bool,
+    tls: bool,
 }
 
 /// Argon2 configuration.
@@ -90,15 +93,23 @@ impl Default for Argon2 {
     }
 }
 
-/// PostgreSQL configuration.
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct Token {
-    pub key_id: Option<String>,
-    pub public_key_pem: String,
-    pub private_key_pem: String,
-    /// Update token audience.
-    /// Default is `account.gravitalia.com`.
-    pub audience: Option<String>,
+/// Gravitalia Maily configuration.
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Mail {
+    /// Hostname:(?port) for RabbitMQ instance.
+    pub address: String,
+    /// RabbitMQ default vhost.
+    pub vhost: Option<String>,
+    /// RabbitMQ username to access queue.
+    pub username: String,
+    /// RabbitMQ password to access queue.
+    pub password: String,
+    /// Max channel connections.
+    pub pool: Option<u16>,
+    /// Queue name to send mailing events.
+    pub queue: String,
+    /// Encryption layer.
+    pub tls: Option<bool>,
 }
 
 /// LDAP configuration.
@@ -138,6 +149,17 @@ impl Default for Totp {
             period: 30,
         }
     }
+}
+
+/// Json Web Token configuration.
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Token {
+    pub key_id: Option<String>,
+    pub public_key_pem: String,
+    pub private_key_pem: String,
+    /// Update token audience.
+    /// Default is `account.gravitalia.com`.
+    pub audience: Option<String>,
 }
 
 impl FromRef<AppState> for Arc<Configuration> {

@@ -12,7 +12,7 @@ postgres:
   username: postgres
   password: postgres
   pool_size: 25
-  ssl: false
+  tls: false
 
 # Password hasher.
 argon2:
@@ -21,6 +21,15 @@ argon2:
   parallelism: 2
   hash_length: 32
   zxcvbn: 3 # password strength metering.
+
+# Email sender.
+mail:
+  address: amqp://rabbitmq:5672
+  vhost: /
+  username: rabbitmq
+  password: rabbitmq
+  queue: mail
+  tls: false
 
 # Enterprise-grade annuary.
 ldap:

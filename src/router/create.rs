@@ -6,9 +6,9 @@ use crate::AppState;
 use crate::ServerError;
 use crate::crypto::Action;
 use crate::error::Result;
+use crate::mail::Template::Welcome;
+use crate::router::ValidWithState;
 use crate::user::User;
-
-use super::ValidWithState;
 
 pub const TOKEN_TYPE: &str = "Bearer";
 
@@ -71,6 +71,8 @@ pub async fn handler(
         .create(&state.crypto, &state.db.postgres)
         .await?;
 
+    state.mail.publish_event(Welcome, &user).await?;
+
     let refresh_token = user.generate_token(&state.db.postgres).await?;
     let token = state.token.create(&user.id)?;
 
@@ -120,6 +122,7 @@ pub(super) mod tests {
                 &config.token.as_ref().unwrap().private_key_pem,
             )
             .unwrap(),
+            mail: mail::MailManager::default(),
         };
         state
     }

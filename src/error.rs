@@ -41,6 +41,15 @@ pub enum ServerError {
 
     #[error(transparent)]
     Time(#[from] std::time::SystemTimeError),
+    #[error("invalid url")]
+    Url(#[from] url::ParseError),
+
+    #[error("failed to send email")]
+    Broker(#[from] lapin::Error),
+    #[error("provided scheme is not valid")]
+    InvalidScheme,
+    #[error("serialization error")]
+    JsonSerialization(#[from] serde_json::Error),
 }
 
 impl From<ServerError> for ValidationErrors {

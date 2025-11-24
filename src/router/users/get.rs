@@ -102,6 +102,7 @@ mod tests {
                 &config.token.as_ref().unwrap().private_key_pem,
             )
             .unwrap(),
+            mail: mail::MailManager::default(),
         };
         let app = app(state);
 
