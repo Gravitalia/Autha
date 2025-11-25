@@ -64,10 +64,16 @@ impl User {
         self
     }
 
-    /// Update `email` of an empty [`User`].
+    /// Update emails of an empty [`User`].
     /// Automatically hash and encrypt the email on `create`.
     pub fn with_email<T: ToString>(mut self, email: T) -> Self {
         self.email_cipher = email.to_string();
+        self
+    }
+
+    /// Update `email_hash` field of a [`User`].
+    pub fn with_email_hash<T: ToString>(mut self, email: T) -> Self {
+        self.email_hash = email.to_string();
         self
     }
 
@@ -102,7 +108,7 @@ impl User {
             self.password = crypto.hash_password(self.password).await?;
         }
 
-        self.email_hash = sha256::digest(&self.email_cipher);
+        self.email_hash = crypto.sha256(&self.email_hash);
         self.email_cipher = crypto
             .aes(Action::Encrypt, self.email_cipher.into())
             .await?;
@@ -132,10 +138,9 @@ impl User {
         // Use `Option<T>` instead of `String` would complicate other functions.
         // We lose a little idiomaticity in favor of simpler usage later on.
         let (query, param) =
-            match (self.id.is_empty(), self.email_cipher.is_empty()) {
+            match (self.id.is_empty(), self.email_hash.is_empty()) {
                 (false, _) => (get_by_field_query(Field::Id), &self.id),
                 (true, false) => {
-                    self.email_hash = sha256::digest(self.email_cipher.clone());
                     (get_by_field_query(Field::Email), &self.email_hash)
                 },
                 _ => {

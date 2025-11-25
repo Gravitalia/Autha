@@ -233,7 +233,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let key = std::env::var("KEY").expect(
         "missing `KEY` environnement variable. Cannot encrypt data without it",
     );
-    let crypto = crypto::Cipher::new(config.argon2.clone()).key(key)?;
+    let salt =
+        std::env::var("SALT").expect("missing `SALT` environnement variable");
+    let crypto = crypto::Cipher::new(config.argon2.clone())
+        .key(key)?
+        .salt(salt)?;
 
     // handle jwt.
     let Some(token) = &config.token else {

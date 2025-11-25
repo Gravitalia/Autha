@@ -15,6 +15,7 @@ use rand::RngCore;
 use rand::rngs::OsRng;
 use rsa::RsaPublicKey;
 use rsa::pkcs1::DecodeRsaPublicKey;
+use sha2::{Digest, Sha256};
 use validator::{ValidationError, ValidationErrors};
 use zeroize::Zeroizing;
 
@@ -54,6 +55,7 @@ pub enum Action {
 #[derive(Clone)]
 pub struct Cipher {
     key: Zeroizing<Vec<u8>>,
+    salt: Zeroizing<Vec<u8>>,
     config: ArgonConfig,
 }
 
@@ -61,6 +63,7 @@ impl Cipher {
     pub fn new(argon2: Option<ArgonConfig>) -> Self {
         Self {
             key: Zeroizing::default(),
+            salt: Zeroizing::default(),
             config: argon2.unwrap_or_default(),
         }
     }
@@ -71,7 +74,7 @@ impl Cipher {
         cipher.key(key)
     }
 
-    /// Create a new [`Cipher`] structure with a `key`.
+    /// Set `key`.
     pub fn key<T: ToString>(mut self, key: T) -> Result<Self> {
         const KEY_LENGTH: usize = 32;
         let mut key = Zeroizing::new(hex::decode(key.to_string())?);
@@ -85,6 +88,12 @@ impl Cipher {
         }
 
         self.key = key;
+        Ok(self)
+    }
+
+    /// Set salt.
+    pub fn salt<T: ToString>(mut self, salt: T) -> Result<Self> {
+        self.salt = Zeroizing::new(hex::decode(salt.to_string())?);
         Ok(self)
     }
 
@@ -139,6 +148,16 @@ impl Cipher {
                 Ok(String::from_utf8(bytes)?)
             },
         }
+    }
+
+    /// Hash data using SHA256.
+    pub fn sha256<B: std::convert::AsRef<[u8]>>(&self, data: B) -> String {
+        let mut hasher = Sha256::new();
+        hasher.update(&self.salt);
+        hasher.update(&data);
+        let hash = hasher.finalize();
+
+        hex::encode(hash)
     }
 
     /// Hash password using [`argon2`].

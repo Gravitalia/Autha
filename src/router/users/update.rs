@@ -156,7 +156,7 @@ pub async fn handler(
             .check_password(&password, &user.password)
             .await?;
 
-        user.email_hash = sha256::digest(&email);
+        user.email_hash = state.crypto.sha256(user.email_hash);
         user.email_cipher = state
             .crypto
             .aes(Action::Encrypt, email.into())

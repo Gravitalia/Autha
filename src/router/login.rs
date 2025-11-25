@@ -56,8 +56,9 @@ pub async fn login(
     Valid(body): Valid<Body>,
 ) -> Result<Json<Response>> {
     let user = if let Some(email) = body.identifier.email {
+        let email_hash = state.crypto.sha256(&email);
         let user = User::builder()
-            .with_email(email)
+            .with_email_hash(email_hash)
             .get(&state.db.postgres)
             .await
             .map_err(|_| ServerError::WrongEmail)?;
