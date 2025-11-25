@@ -2,7 +2,6 @@ use axum::{Json, extract::State};
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError};
 
-use crate::crypto::Action;
 use crate::error::Result;
 use crate::router::create::{Response, TOKEN_TYPE};
 use crate::user::User;
@@ -57,10 +56,6 @@ pub async fn login(
     Valid(body): Valid<Body>,
 ) -> Result<Json<Response>> {
     let user = if let Some(email) = body.identifier.email {
-        let email = state
-            .crypto
-            .aes_no_iv(Action::Encrypt, email.into())
-            .await?;
         let user = User::builder()
             .with_email(email)
             .get(&state.db.postgres)

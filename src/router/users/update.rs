@@ -155,9 +155,11 @@ pub async fn handler(
             .crypto
             .check_password(&password, &user.password)
             .await?;
-        user.email = state
+
+        user.email_hash = sha256::digest(&email);
+        user.email_cipher = state
             .crypto
-            .aes_no_iv(Action::Encrypt, email.into())
+            .aes(Action::Encrypt, email.into())
             .await
             .map_err(|err| ServerError::Internal {
                 details: "email cannot be encrypted".into(),

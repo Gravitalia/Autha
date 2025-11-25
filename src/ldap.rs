@@ -1,7 +1,9 @@
 //! LDAP support.
 
-use ldap3::{Ldap as Ldap3, LdapConnAsync, LdapError, Scope, SearchEntry};
+use ldap3::{Ldap as Ldap3, LdapConnAsync, Scope, SearchEntry};
 
+use crate::crypto::{Action, Cipher};
+use crate::error::Result;
 use crate::user::User;
 
 /// LDAP manager to create connection.
@@ -19,7 +21,7 @@ impl Ldap {
         addr: &str,
         dn: Option<String>,
         password: Option<String>,
-    ) -> Result<Self, LdapError> {
+    ) -> Result<Self> {
         let (conn, mut ldap) = LdapConnAsync::new(addr).await?;
         ldap3::drive!(conn);
 
@@ -56,7 +58,7 @@ impl Ldap {
     }
 
     /// Create a new entry on [`Ldap3`].
-    pub async fn add(mut self, user: &User) -> Result<(), LdapError> {
+    pub async fn add(mut self, crypto: &Cipher, user: &User) -> Result<()> {
         let Some(ref mut conn) = self.conn else {
             tracing::debug!(?self.conn, user_id = user.id, "user add on ldap failed");
             return Ok(());
@@ -71,6 +73,9 @@ impl Ldap {
 
         tracing::info!(user_id = user.id, "add new entry on ldap");
 
+        let email = crypto
+            .aes(Action::Decrypt, user.email_cipher.clone().into())
+            .await?;
         let dn = self
             .template
             .replace("{user_id}", &user.id)
@@ -91,7 +96,7 @@ impl Ldap {
             ),
             ("uid", [user.id.as_str()].into_iter().collect()),
             ("cn", [user.username.as_str()].into_iter().collect()),
-            ("mail", [user.email.as_str()].into_iter().collect()),
+            ("mail", [email.as_str()].into_iter().collect()),
             (
                 "userPassword",
                 [user.password.as_str()].into_iter().collect(),
@@ -104,11 +109,7 @@ impl Ldap {
 
     /// Test a connection on [`Ldap3`].
     /// Do not re-use this connection after.
-    pub async fn bind(
-        &self,
-        user_id: &str,
-        password: &str,
-    ) -> Result<(), LdapError> {
+    pub async fn bind(&self, user_id: &str, password: &str) -> Result<()> {
         let (conn_handle, mut conn) = LdapConnAsync::new(&self.addr).await?;
         ldap3::drive!(conn_handle);
 

@@ -3,8 +3,10 @@
 CREATE TABLE IF NOT EXISTS users (
   id            TEXT        PRIMARY KEY,
   username      TEXT        NOT NULL,
-  email         TEXT        UNIQUE NOT NULL,
+  email_hash    TEXT        UNIQUE NOT NULL,
+  email_cipher  TEXT        UNIQUE NOT NULL,
   password      TEXT        NOT NULL,
+  locale        TEXT        NOT NULL DEFAULT 'en',
   totp_secret   TEXT,
   summary       TEXT,
   avatar        TEXT,

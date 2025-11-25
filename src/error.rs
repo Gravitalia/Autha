@@ -30,6 +30,8 @@ pub enum ServerError {
 
     #[error("invalid email")]
     WrongEmail,
+    #[error("user has been deleted")]
+    UserDeleted { date: chrono::NaiveDate },
     #[error("public key must be PCKS-1 or PCKS-8")]
     Key(#[from] crate::crypto::KeyError),
     #[error("internal server error, {details}")]

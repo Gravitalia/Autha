@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE \"users\"\n            SET username = $1, email_hash = $2, email_cipher = $3, summary = $4, totp_secret = $5\n            WHERE id = $6",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "69884d2c91edba79a1e797aca98addf41c139ff99f3832caa405fe5a323237de"
+}

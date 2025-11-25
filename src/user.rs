@@ -1,9 +1,12 @@
-use rand::distributions::{Alphanumeric, DistString};
+use rand::RngCore;
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
 
+use crate::crypto::Action;
+
 pub const TOKEN_LENGTH: u64 = 64;
+const DEFAULT_LOCALE: &str = "en";
 
 /// Database user representation.
 #[derive(
@@ -13,9 +16,12 @@ pub struct User {
     pub id: String,
     pub username: String,
     #[serde(skip)]
-    pub email: String,
+    pub email_hash: String,
+    #[serde(skip)]
+    pub email_cipher: String,
     #[serde(skip)]
     pub totp_secret: Option<String>,
+    pub locale: String,
     pub summary: Option<String>,
     pub avatar: Option<String>,
     pub flags: i32,
@@ -25,6 +31,7 @@ pub struct User {
     #[serde(skip)]
     pub ip: Option<String>,
     pub created_at: chrono::NaiveDate,
+    pub deleted_at: Option<chrono::NaiveDate>,
     #[sqlx(json)]
     pub public_keys: Vec<Key>,
 }
@@ -51,10 +58,16 @@ impl User {
         self
     }
 
+    /// Update `locale` of an empty [`User`].
+    pub fn with_locale(mut self, locale: Option<String>) -> Self {
+        self.locale = locale.unwrap_or(DEFAULT_LOCALE.to_string());
+        self
+    }
+
     /// Update `email` of an empty [`User`].
-    /// Do not work for fetched users.
+    /// Automatically hash and encrypt the email on `create`.
     pub fn with_email<T: ToString>(mut self, email: T) -> Self {
-        self.email = email.to_string();
+        self.email_cipher = email.to_string();
         self
     }
 
@@ -89,11 +102,18 @@ impl User {
             self.password = crypto.hash_password(self.password).await?;
         }
 
+        self.email_hash = sha256::digest(&self.email_cipher);
+        self.email_cipher = crypto
+            .aes(Action::Encrypt, self.email_cipher.into())
+            .await?;
+
         sqlx::query!(
-            r#"INSERT INTO "users" (id, username, email, password) VALUES ($1, $2, $3, $4)"#,
+            r#"INSERT INTO "users" (id, username, locale, email_hash, email_cipher, password) VALUES ($1, $2, $3, $4, $5, $6)"#,
             self.id.to_lowercase(),
             self.id,
-            self.email,
+            self.locale,
+            self.email_hash,
+            self.email_cipher,
             self.password,
         )
         .execute(conn)
@@ -105,22 +125,37 @@ impl User {
     }
 
     /// Get data on a user.
-    pub async fn get(self, conn: &Pool<Postgres>) -> Result<Self, sqlx::Error> {
-        if !self.id.is_empty() {
-            sqlx::query_as::<_, User>(&get_by_field_query(Field::Id))
-                .bind(self.id)
-                .fetch_one(conn)
-                .await
-        } else if !self.email.is_empty() {
-            sqlx::query_as::<_, User>(&get_by_field_query(Field::Email))
-                .bind(self.email)
-                .fetch_one(conn)
-                .await
-        } else {
-            Err(sqlx::Error::ColumnNotFound(
-                "missing column 'id' or 'email' column".to_owned(),
-            ))
-        }
+    pub async fn get(
+        &mut self,
+        conn: &Pool<Postgres>,
+    ) -> crate::error::Result<Self> {
+        // Use `Option<T>` instead of `String` would complicate other functions.
+        // We lose a little idiomaticity in favor of simpler usage later on.
+        let (query, param) =
+            match (self.id.is_empty(), self.email_cipher.is_empty()) {
+                (false, _) => (get_by_field_query(Field::Id), &self.id),
+                (true, false) => {
+                    self.email_hash = sha256::digest(self.email_cipher.clone());
+                    (get_by_field_query(Field::Email), &self.email_hash)
+                },
+                _ => {
+                    return Err(sqlx::Error::ColumnNotFound(
+                        "missing column 'id' or 'email_hash' column".to_owned(),
+                    )
+                    .into());
+                },
+            };
+
+        let user = sqlx::query_as::<_, User>(&query)
+            .bind(param)
+            .fetch_one(conn)
+            .await?;
+
+        if let Some(date) = user.deleted_at {
+            return Err(crate::error::ServerError::UserDeleted { date });
+        };
+
+        Ok(user)
     }
 
     /// Generate a token for this specific user.
@@ -134,8 +169,9 @@ impl User {
             ));
         }
 
-        let token =
-            Alphanumeric.sample_string(&mut OsRng, TOKEN_LENGTH as usize);
+        let mut bytes = [0u8; TOKEN_LENGTH as usize / 2];
+        OsRng.fill_bytes(&mut bytes);
+        let token = hex::encode(bytes);
 
         sqlx::query!(
             r#"INSERT INTO "tokens" (token, user_id, ip) values ($1, $2, $3)"#,
@@ -163,9 +199,12 @@ impl User {
         }
 
         sqlx::query!(
-            r#"UPDATE "users" SET username = $1, email = $2, summary = $3, totp_secret = $4 WHERE id = $5"#,
+            r#"UPDATE "users"
+            SET username = $1, email_hash = $2, email_cipher = $3, summary = $4, totp_secret = $5
+            WHERE id = $6"#,
             self.username,
-            self.email,
+            self.email_hash,
+            self.email_cipher,
             self.summary,
             self.totp_secret,
             self.id
@@ -203,7 +242,7 @@ impl std::fmt::Display for Field {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Field::Id => write!(f, "id"),
-            Field::Email => write!(f, "email"),
+            Field::Email => write!(f, "email_hash"),
         }
     }
 }
@@ -213,13 +252,16 @@ fn get_by_field_query(field: Field) -> String {
         r#"SELECT 
                 u.id,
                 u.username,
-                u.email,
+                u.locale,
+                u.email_hash,
+                u.email_cipher,
                 u.totp_secret,
                 u.summary,
                 u.avatar,
                 u.flags,
                 u.password,
                 u.created_at,
+                u.deleted_at,
                 CASE
                     WHEN COUNT(k.id) = 0 THEN '[]'
                     ELSE JSONB_AGG(
@@ -235,13 +277,16 @@ fn get_by_field_query(field: Field) -> String {
             LEFT JOIN keys k ON k.user_id = u.id
             WHERE u.{field} = $1
             GROUP BY 
-                u.id, 
-                u.username, 
-                u.email, 
-                u.avatar, 
-                u.flags, 
-                u.password, 
-                u.created_at;
+                u.id,
+                u.username,
+                u.locale,
+                u.email_hash,
+                u.email_cipher,
+                u.avatar,
+                u.flags,
+                u.password,
+                u.created_at,
+                u.deleted_at;
             "#
     )
 }

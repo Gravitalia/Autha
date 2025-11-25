@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use crate::AppState;
-use crate::crypto::Action;
 use crate::error::Result;
 use crate::mail::Template::Welcome;
 use crate::router::ValidWithState;
@@ -37,6 +36,11 @@ pub struct Body {
         )
     )]
     password: String,
+    #[validate(length(
+        equal = 2,
+        message = "Locale must be ISO 3166-1 alpha-2."
+    ))]
+    locale: Option<String>,
     pub invite: Option<String>,
     _captcha: Option<String>,
 }
@@ -54,14 +58,10 @@ pub async fn handler(
     State(state): State<AppState>,
     ValidWithState(body): ValidWithState<Body>,
 ) -> Result<(StatusCode, Json<Response>)> {
-    let email = state
-        .crypto
-        .aes_no_iv(Action::Encrypt, body.email.clone().into_bytes())
-        .await?;
-
     let user = User::builder()
         .with_id(body.id.to_lowercase())
-        .with_email(email)
+        .with_locale(body.locale)
+        .with_email(&body.email)
         .with_password(&body.password)
         .create(&state.crypto, &state.db.postgres)
         .await?;
@@ -71,7 +71,7 @@ pub async fn handler(
     let refresh_token = user.generate_token(&state.db.postgres).await?;
     let token = state.token.create(&user.id)?;
 
-    if let Err(err) = state.ldap.add(&user).await {
+    if let Err(err) = state.ldap.add(&state.crypto, &user).await {
         tracing::error!(
             user_id = user.id,
             error = err.to_string(),
@@ -109,6 +109,7 @@ pub(super) mod tests {
             id: "user".into(),
             email: "test@gravitalia.com".into(),
             password: "P$soW%920$n&".into(),
+            locale: None,
             _captcha: None,
             invite: None,
         };
@@ -148,6 +149,7 @@ pub(super) mod tests {
             id: "user2".into(),
             email: "test2@gravitalia.com".into(),
             password: "Pas$word1111".into(),
+            locale: None,
             _captcha: None,
             invite: None,
         };

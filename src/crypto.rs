@@ -1,9 +1,8 @@
 //! Cryptogragic logics.
 
-use aes::Aes256;
-use aes::cipher::block_padding::{Pkcs7, UnpadError};
+use aes::cipher::KeyInit;
+use aes::cipher::block_padding::UnpadError;
 use aes::cipher::generic_array::GenericArray;
-use aes::cipher::{BlockDecryptMut, BlockEncrypt, KeyInit};
 use aes_gcm::aead::{Aead, Nonce};
 use aes_gcm::{Aes256Gcm, Key};
 use argon2::password_hash::{
@@ -93,44 +92,6 @@ impl Cipher {
         let mut iv = [0u8; NONCE_SIZE];
         OsRng.fill_bytes(&mut iv);
         iv
-    }
-
-    /// Either encrypt or decrypt data with AES256.
-    ///
-    /// # Security issues
-    /// * **Deterministic**: function does not use IV and is therefore deterministic.
-    /// * **ECB mode**: patterns remain identifiable
-    ///
-    /// Please **never use this function** except where weak security is better than nothing.
-    pub async fn aes_no_iv(
-        &self,
-        action: Action,
-        data: Vec<u8>,
-    ) -> Result<String> {
-        // The key is 32 bytes long. The operation is therefore easy to clone.
-        let key = *GenericArray::from_slice(&self.key);
-
-        match action {
-            Action::Encrypt => {
-                let message = tokio::task::spawn_blocking(move || {
-                    Aes256::new(&key).encrypt_padded_vec::<Pkcs7>(&data)
-                })
-                .await
-                .map_err(|_| Error::Thread)?;
-                Ok(hex::encode(message))
-            },
-            Action::Decrypt => {
-                let data = hex::decode(data)?;
-
-                let bytes = tokio::task::spawn_blocking(move || {
-                    Aes256::new(&key).decrypt_padded_vec_mut::<Pkcs7>(&data)
-                })
-                .await
-                .map_err(|_| Error::Thread)?;
-
-                Ok(String::from_utf8(bytes?)?)
-            },
-        }
     }
 
     /// Either encrypt or decrypt data with AES256-GCM.
@@ -339,32 +300,6 @@ pub fn check_key(key: &str) -> std::result::Result<(), KeyError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[tokio::test]
-    async fn test_aes_no_iv() {
-        const EMAIL: &str = "admin@gravitalia.com";
-
-        let key = [0x42; 32];
-        let cipher = Cipher::from_key(hex::encode(key)).unwrap();
-
-        let cipher_text = cipher
-            .aes_no_iv(Action::Encrypt, EMAIL.into())
-            .await
-            .unwrap();
-
-        assert_eq!(
-            cipher_text,
-            "3601ff3a929d30b044c7ec7722c0d5da0fcba9acca82ded8b781e999b01aa33a"
-        );
-
-        assert_eq!(
-            cipher
-                .aes_no_iv(Action::Decrypt, cipher_text.into())
-                .await
-                .unwrap(),
-            EMAIL,
-        );
-    }
 
     #[test]
     fn test_rsa() {
