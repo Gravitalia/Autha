@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use crate::AppState;
-use crate::ServerError;
 use crate::crypto::Action;
 use crate::error::Result;
 use crate::mail::Template::Welcome;
@@ -58,11 +57,7 @@ pub async fn handler(
     let email = state
         .crypto
         .aes_no_iv(Action::Encrypt, body.email.clone().into_bytes())
-        .await
-        .map_err(|err| ServerError::Internal {
-            details: "email cannot be encrypted".into(),
-            source: Some(Box::new(err)),
-        })?;
+        .await?;
 
     let user = User::builder()
         .with_id(body.id.to_lowercase())
@@ -105,31 +100,9 @@ pub(super) mod tests {
     use sqlx::{Pool, Postgres};
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    fn state(pool: Pool<Postgres>) -> AppState {
-        let config = config::Configuration::default().read().unwrap();
-        let state = AppState {
-            db: database::Database { postgres: pool },
-            config: config.clone().into(),
-            ldap: ldap::Ldap::default(),
-            crypto: {
-                let key = [0x42; 32];
-                crypto::Cipher::from_key(hex::encode(key)).unwrap()
-            },
-            token: token::TokenManager::new(
-                &config.url,
-                config.token.clone().unwrap().key_id,
-                &config.token.as_ref().unwrap().public_key_pem,
-                &config.token.as_ref().unwrap().private_key_pem,
-            )
-            .unwrap(),
-            mail: mail::MailManager::default(),
-        };
-        state
-    }
-
     #[sqlx::test]
     async fn test_create_handler(pool: Pool<Postgres>) {
-        let state = state(pool);
+        let state = router::state(pool);
         let app = app(state.clone());
 
         let req_body = router::create::Body {
@@ -168,7 +141,7 @@ pub(super) mod tests {
 
     #[sqlx::test]
     async fn test_create_with_weak_password(pool: Pool<Postgres>) {
-        let state = state(pool);
+        let state = router::state(pool);
         let app = app(state.clone());
 
         let req_body = router::create::Body {

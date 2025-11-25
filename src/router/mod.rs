@@ -84,3 +84,27 @@ pub fn validate_password(
 
     Ok(())
 }
+
+/// Create a default state for tests.
+#[cfg(test)]
+pub fn state(pool: sqlx::Pool<sqlx::Postgres>) -> crate::AppState {
+    let config = crate::config::Configuration::default().read().unwrap();
+    let state = crate::AppState {
+        db: crate::database::Database { postgres: pool },
+        config: config.clone().into(),
+        ldap: crate::ldap::Ldap::default(),
+        crypto: {
+            let key = [0x42; 32];
+            crate::crypto::Cipher::from_key(hex::encode(key)).unwrap()
+        },
+        token: crate::token::TokenManager::new(
+            &config.url,
+            config.token.clone().unwrap().key_id,
+            &config.token.as_ref().unwrap().public_key_pem,
+            &config.token.as_ref().unwrap().private_key_pem,
+        )
+        .unwrap(),
+        mail: crate::mail::MailManager::default(),
+    };
+    state
+}

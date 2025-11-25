@@ -86,24 +86,7 @@ mod tests {
 
     #[sqlx::test(fixtures("../../../fixtures/users.sql"))]
     async fn test_get_user_handler(pool: Pool<Postgres>) {
-        let config = config::Configuration::default().read().unwrap();
-        let state = AppState {
-            db: database::Database { postgres: pool },
-            config: config.clone().into(),
-            ldap: ldap::Ldap::default(),
-            crypto: {
-                let key = [0x42; 32];
-                crypto::Cipher::from_key(hex::encode(key)).unwrap()
-            },
-            token: token::TokenManager::new(
-                &config.url,
-                config.token.clone().unwrap().key_id,
-                &config.token.as_ref().unwrap().public_key_pem,
-                &config.token.as_ref().unwrap().private_key_pem,
-            )
-            .unwrap(),
-            mail: mail::MailManager::default(),
-        };
+        let state = router::state(pool);
         let app = app(state);
 
         let path = format!("/users/{}", ID);

@@ -60,11 +60,7 @@ pub async fn login(
         let email = state
             .crypto
             .aes_no_iv(Action::Encrypt, email.into())
-            .await
-            .map_err(|err| ServerError::Internal {
-                details: "email cannot be encrypted".into(),
-                source: Some(Box::new(err)),
-            })?;
+            .await?;
         let user = User::builder()
             .with_email(email)
             .get(&state.db.postgres)
@@ -81,24 +77,13 @@ pub async fn login(
             .await?;
         user
     } else if let Some(id) = body.identifier.id {
-        state.ldap.bind(&id, &body.password).await.map_err(|err| {
-            ServerError::Internal {
-                details: "invalid LDAP credentials".into(),
-                source: Some(Box::new(err)),
-            }
-        })?;
+        state.ldap.bind(&id, &body.password).await?;
 
         User::builder()
             .with_id(id.to_lowercase())
             .with_password(&body.password)
             .create(&state.crypto, &state.db.postgres)
             .await?
-        /*.with_id(id)
-        .with_password(state.crypto.hash_password(&body.password)?)
-        .create(&state.db.postgres)
-        .await?
-        .get(&state.db.postgres)
-        .await?*/
     } else {
         return Err(ServerError::WrongEmail);
     };
@@ -125,24 +110,7 @@ mod tests {
 
     #[sqlx::test(fixtures("../../fixtures/users.sql"))]
     async fn test_login_handler(pool: Pool<Postgres>) {
-        let config = config::Configuration::default().read().unwrap();
-        let state = AppState {
-            db: database::Database { postgres: pool },
-            config: config.clone().into(),
-            ldap: ldap::Ldap::default(),
-            crypto: {
-                let key = [0x42; 32];
-                crypto::Cipher::from_key(hex::encode(key)).unwrap()
-            },
-            token: token::TokenManager::new(
-                &config.url,
-                config.token.clone().unwrap().key_id,
-                &config.token.as_ref().unwrap().public_key_pem,
-                &config.token.as_ref().unwrap().private_key_pem,
-            )
-            .unwrap(),
-            mail: mail::MailManager::default(),
-        };
+        let state = router::state(pool);
         let app = app(state.clone());
 
         let body = Body {
@@ -197,5 +165,31 @@ mod tests {
             .unwrap()
             .as_secs() as u64;
         assert!(claims.exp > time);
+    }
+
+    #[sqlx::test]
+    async fn test_login_injection(pool: Pool<Postgres>) {
+        const INJECTION: &str = "\"\0\0\0\"\u{FFFF}\"@gravitalia.com";
+        let state = router::state(pool);
+        let app = app(state.clone());
+
+        let body = Body {
+            identifier: Identifier {
+                email: Some(INJECTION.into()),
+                id: None,
+            },
+            password: "StRong_Pa§$W0rD".into(),
+            totp_code: None,
+            _captcha: None,
+        };
+        let response = make_request(
+            app.clone(),
+            Method::POST,
+            "/login",
+            json!(body).to_string(),
+        )
+        .await;
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 }

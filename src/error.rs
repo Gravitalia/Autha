@@ -1,4 +1,5 @@
 //! Error handler for autha.
+
 use axum::extract::rejection::JsonRejection;
 use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
@@ -50,6 +51,24 @@ pub enum ServerError {
     InvalidScheme,
     #[error("serialization error")]
     JsonSerialization(#[from] serde_json::Error),
+}
+
+impl From<crate::crypto::Error> for ServerError {
+    fn from(value: crate::crypto::Error) -> Self {
+        Self::Internal {
+            details: value.to_string(),
+            source: Some(Box::new(value)),
+        }
+    }
+}
+
+impl From<ldap3::LdapError> for ServerError {
+    fn from(value: ldap3::LdapError) -> Self {
+        Self::Internal {
+            details: "invalid LDAP credentials".to_string(),
+            source: Some(Box::new(value)),
+        }
+    }
 }
 
 impl From<ServerError> for ValidationErrors {
