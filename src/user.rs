@@ -28,6 +28,8 @@ pub struct User {
     #[sqlx(skip)]
     #[serde(skip)]
     pub ip: Option<String>,
+    #[serde(skip)]
+    invite: Option<String>,
     pub created_at: chrono::NaiveDate,
     pub deleted_at: Option<chrono::NaiveDate>,
     #[sqlx(json)]
@@ -82,10 +84,14 @@ impl User {
     }
 
     /// Update `ip` of a [`User`].
-    ///
-    /// IP should be encrypted.
     pub fn with_ip(mut self, ip: Option<String>) -> Self {
         self.ip = ip;
+        self
+    }
+
+    /// Update `invite` code of a [`User`].
+    pub fn with_invite(mut self, invite: Option<String>) -> Self {
+        self.invite = invite;
         self
     }
 
@@ -110,6 +116,8 @@ impl User {
         self.email_cipher =
             crypto.symmetric.encrypt_and_hex(self.email_cipher)?;
 
+        let mut tx = conn.begin().await?;
+
         sqlx::query!(
             r#"INSERT INTO "users" (id, username, locale, email_hash, email_cipher, password) VALUES ($1, $2, $3, $4, $5, $6)"#,
             self.id.to_lowercase(),
@@ -119,8 +127,20 @@ impl User {
             self.email_cipher,
             self.password,
         )
-        .execute(conn)
+        .execute(&mut *tx)
         .await?;
+
+        if let Some(ref invite) = self.invite {
+            sqlx::query!(
+                r#"UPDATE invite_codes SET used_by = $1, used_at = NOW() WHERE code = $2"#,
+                self.id.to_lowercase(),
+                invite,
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        tx.commit().await?;
 
         tracing::trace!(user_id = self.id, "new user created on postgres");
 

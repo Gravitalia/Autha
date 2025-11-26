@@ -64,6 +64,7 @@ pub async fn handler(
         .with_locale(locale.clone())
         .with_email(&body.email)
         .with_password(&body.password)
+        .with_invite(body.invite)
         .create(&state.crypto, &state.db.postgres)
         .await?;
 

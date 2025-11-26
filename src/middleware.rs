@@ -49,19 +49,8 @@ pub async fn consume_invites(
             parts,
             axum::body::Body::from(body_bytes),
         );
-        let response = next.run(req).await;
 
-        if response.status().is_success() {
-            sqlx::query!(
-                r#"UPDATE invite_codes SET used_by = $1, used_at = NOW() WHERE code = $2"#,
-                body.id,
-                body.invite.unwrap_or_default(),
-            )
-            .execute(&state.db.postgres)
-            .await?;
-        }
-
-        Ok(response)
+        Ok(next.run(req).await)
     } else {
         Ok(next.run(req).await)
     }
