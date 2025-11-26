@@ -3,6 +3,8 @@ use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
 
+use crate::error::ServerError;
+
 pub const TOKEN_LENGTH: u64 = 64;
 const DEFAULT_LOCALE: &str = "en";
 
@@ -29,6 +31,7 @@ pub struct User {
     #[serde(skip)]
     pub ip: Option<String>,
     #[serde(skip)]
+    #[sqlx(skip)]
     invite: Option<String>,
     pub created_at: chrono::NaiveDate,
     pub deleted_at: Option<chrono::NaiveDate>,
@@ -131,13 +134,18 @@ impl User {
         .await?;
 
         if let Some(ref invite) = self.invite {
-            sqlx::query!(
-                r#"UPDATE invite_codes SET used_by = $1, used_at = NOW() WHERE code = $2"#,
+            let result = sqlx::query!(
+                r#"UPDATE invite_codes SET used_by = $1, used_at = NOW() WHERE code = $2 AND used_by IS NULL"#,
                 self.id.to_lowercase(),
                 invite,
             )
             .execute(&mut *tx)
             .await?;
+
+            if result.rows_affected() != 1 {
+                tx.rollback().await?;
+                return Err(ServerError::InvalidScheme);
+            }
         }
 
         tx.commit().await?;
