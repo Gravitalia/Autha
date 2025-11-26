@@ -85,6 +85,17 @@ pub fn validate_password(
     Ok(())
 }
 
+/// Validate ISO 3166-1 alpha 2 for locale.
+pub fn validate_locale(code: &str) -> Result<(), ValidationError> {
+    if code.len() != 2
+        || code.as_bytes().iter().all(|&b| b.is_ascii_alphabetic())
+    {
+        return Err(ValidationError::new("locale"));
+    }
+
+    Ok(())
+}
+
 /// Create a default state for tests.
 #[cfg(test)]
 pub fn state(pool: sqlx::Pool<sqlx::Postgres>) -> crate::AppState {

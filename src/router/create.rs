@@ -36,8 +36,8 @@ pub struct Body {
         )
     )]
     password: String,
-    #[validate(length(
-        equal = 2,
+    #[validate(custom(
+        function = "crate::router::validate_locale",
         message = "Locale must be ISO 3166-1 alpha-2."
     ))]
     locale: Option<String>,
@@ -58,15 +58,19 @@ pub async fn handler(
     State(state): State<AppState>,
     ValidWithState(body): ValidWithState<Body>,
 ) -> Result<(StatusCode, Json<Response>)> {
+    let locale = body.locale.map(|l| l.to_lowercase());
     let user = User::builder()
         .with_id(body.id.to_lowercase())
-        .with_locale(body.locale)
+        .with_locale(locale.clone())
         .with_email(&body.email)
         .with_password(&body.password)
         .create(&state.crypto, &state.db.postgres)
         .await?;
 
-    state.mail.publish_event(Welcome, body.email).await?;
+    state
+        .mail
+        .publish_event(Welcome, body.email, locale)
+        .await?;
 
     let refresh_token = user.generate_token(&state.db.postgres).await?;
     let token = state.token.create(&user.id)?;

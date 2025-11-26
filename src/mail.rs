@@ -31,10 +31,12 @@ const ID_LENGTH: usize = 12;
 
 /// Maily templates list.
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 pub enum Template {
     /// Provide user variety of explanations.
     Welcome,
+    /// Alert user of a personal data update.
+    DataUpdate,
 }
 
 #[derive(Debug, Serialize)]
@@ -132,6 +134,7 @@ impl MailManager {
         &self,
         template: Template,
         email: String,
+        locale: Option<impl ToString>,
     ) -> Result<()> {
         let Some(channel) = &self.channel else {
             tracing::debug!(?template, "failed to send event");
@@ -141,7 +144,7 @@ impl MailManager {
         tracing::trace!(?template, "event sent");
 
         let content = Content {
-            locale: None,
+            locale: locale.map(|l| l.to_string()),
             to: email,
             template,
         };

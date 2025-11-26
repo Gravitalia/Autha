@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use validator::{ValidationError, ValidationErrors};
 
 use crate::crypto::check_key;
+use crate::mail::Template::DataUpdate;
 use crate::router::Valid;
 use crate::totp::generate_totp;
 use crate::user::{Key, User};
@@ -148,8 +149,12 @@ pub async fn handler(
             .pwd
             .verify_password(&password, &user.password)?;
 
-        user.email_hash = state.crypto.hasher.digest(user.email_hash);
-        user.email_cipher = state.crypto.symmetric.encrypt_and_hex(email)?;
+        user.email_hash = state.crypto.hasher.digest(&email);
+        user.email_cipher = state.crypto.symmetric.encrypt_and_hex(&email)?;
+        state
+            .mail
+            .publish_event(DataUpdate, email, Some(&user.locale))
+            .await?;
     } else if body.email.is_some() {
         errors.add(
             "password",
