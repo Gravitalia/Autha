@@ -10,7 +10,8 @@ use crate::router::create::Body;
 
 const BODY_LIMIT: usize = 30_000;
 
-fn invalid_code() -> ValidationErrors {
+/// Custom error for invite code.
+pub fn invalid_code() -> ValidationErrors {
     let mut errors = ValidationErrors::new();
     errors.add(
         "invite",

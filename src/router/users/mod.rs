@@ -15,6 +15,8 @@ use crate::AppState;
 use crate::ServerError;
 use crate::user::User;
 
+const ME_ROUTE: &str = "@me";
+
 /// Custom middleware for authentification.
 async fn auth(
     State(state): State<AppState>,
@@ -24,9 +26,9 @@ async fn auth(
 ) -> Result<Response, ServerError> {
     let user_id = match user_id {
         Some(user_id) => user_id.to_string(),
-        None => "@me".to_owned(),
+        None => ME_ROUTE.to_string(),
     };
-    let user_id = if user_id == "@me" {
+    let user_id = if user_id == ME_ROUTE {
         match req
             .headers()
             .get(header::AUTHORIZATION)
