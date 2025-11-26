@@ -267,6 +267,16 @@ impl PasswordManager {
         Ok(hash.to_string())
     }
 
+    fn invalid_password() -> ValidationErrors {
+        let mut errors = ValidationErrors::new();
+        errors.add(
+            "password",
+            ValidationError::new("invalid_password")
+                .with_message("Invalid password.".into()),
+        );
+        errors
+    }
+
     /// Verify password against a PHC.
     pub fn verify_password(
         &self,
@@ -280,21 +290,12 @@ impl PasswordManager {
         );
         let phc_hash = phc_hash.to_string();
 
-        let parsed = PasswordHash::new(&phc_hash).map_err(|_| {
-            let err = ValidationError::new("decode");
-            let mut errors = ValidationErrors::new();
-            errors.add("password", err);
-            errors
-        })?;
+        let parsed = PasswordHash::new(&phc_hash)
+            .map_err(|_| Self::invalid_password())?;
 
         argon2
             .verify_password(password.as_ref(), &parsed)
-            .map_err(|_| {
-                let err = ValidationError::new("invalid_password");
-                let mut errors = ValidationErrors::new();
-                errors.add("password", err);
-                errors
-            })
+            .map_err(|_| Self::invalid_password())
     }
 }
 
@@ -322,10 +323,8 @@ impl Hasher {
 pub enum KeyError {
     #[error(transparent)]
     Pkcs1(#[from] rsa::pkcs1::Error),
-
     #[error(transparent)]
     Pkcs8(#[from] rsa::pkcs8::spki::Error),
-
     #[error("unknown public key format")]
     UnknownFormat,
 }

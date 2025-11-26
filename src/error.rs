@@ -73,33 +73,6 @@ impl From<ldap3::LdapError> for ServerError {
     }
 }
 
-impl From<ServerError> for ValidationErrors {
-    fn from(error: ServerError) -> Self {
-        let mut errors = ValidationErrors::new();
-
-        match error {
-            ServerError::WrongEmail => {
-                errors.add(
-                    "email",
-                    ValidationError::new("email")
-                        .with_message("Email must be formatted.".into()),
-                );
-            },
-            ServerError::Key(_) => {
-                errors.add(
-                    "key",
-                    ValidationError::new("publicKeys").with_message(
-                        "Public key format must be PCKS1 (RSA) or PCKS8 (ECDSA).".into(),
-                    ),
-                );
-            },
-            _ => {},
-        }
-
-        errors
-    }
-}
-
 /// Structure for detailed error responses.
 #[derive(Debug, Serialize)]
 pub struct ResponseError {
@@ -195,6 +168,27 @@ impl IntoResponse for ServerError {
                 response.errors(validation_errors)
             },
 
+            ServerError::WrongEmail => {
+                let mut errors = ValidationErrors::new();
+                errors.add(
+                    "email",
+                    ValidationError::new("email")
+                        .with_message("Email must be formatted.".into()),
+                );
+                response.errors(&errors)
+            },
+
+            ServerError::Key(_) => {
+                let mut errors = ValidationErrors::new();
+                errors.add(
+                    "key",
+                    ValidationError::new("publicKeys").with_message(
+                        "Public key format must be PCKS1 (RSA) or PCKS8 (ECDSA).".into(),
+                    ),
+                );
+                response.errors(&errors)
+            },
+
             ServerError::ParsingForm(err) => response
                 .title("Server error during data parsing.")
                 .details(&err.to_string()),
@@ -237,7 +231,6 @@ impl IntoResponse for ServerError {
 
             ServerError::Internal { details, source } => {
                 tracing::error!(err = source, %details, "server returned 500 status");
-
                 ResponseError::default()
             },
 
