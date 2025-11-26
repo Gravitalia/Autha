@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::AppState;
 use crate::ServerError;
-use crate::user::{Key, User};
+use crate::user::{Key, UserService};
 
 const ACTIVITY_STREAM: &str = "https://www.w3.org/ns/activitystreams";
 const W3C_SECURITY: &str = "https://w3id.org/security/v1";
@@ -47,8 +47,9 @@ pub struct Response {
 
 pub async fn handler(
     State(state): State<AppState>,
-    Extension(user): Extension<User>,
+    Extension(user): Extension<UserService>,
 ) -> Result<Json<Response>, ServerError> {
+    let user = user.data;
     let url = if let Ok(url) = url::Url::parse(&state.config.url) {
         format!(
             "{}://{}/users/{}",
@@ -89,7 +90,7 @@ mod tests {
         let state = router::state(pool);
         let app = app(state);
 
-        let path = format!("/users/{}", ID);
+        let path = format!("/users/{ID}");
         let response =
             make_request(app, Method::GET, &path, String::default()).await;
         assert_eq!(response.status(), StatusCode::OK);

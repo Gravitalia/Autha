@@ -100,9 +100,10 @@ pub fn validate_locale(code: &str) -> Result<(), ValidationError> {
 #[cfg(test)]
 pub fn state(pool: sqlx::Pool<sqlx::Postgres>) -> crate::AppState {
     let config = crate::config::Configuration::default().read().unwrap();
-    let state = crate::AppState {
+
+    crate::AppState {
         db: crate::database::Database { postgres: pool },
-        config: config.clone().into(),
+        config: config.clone(),
         ldap: crate::ldap::Ldap::default(),
         crypto: {
             let salt = [0x42; 16];
@@ -118,6 +119,5 @@ pub fn state(pool: sqlx::Pool<sqlx::Postgres>) -> crate::AppState {
         )
         .unwrap(),
         mail: crate::mail::MailManager::default(),
-    };
-    state
+    }
 }

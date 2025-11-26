@@ -7,7 +7,7 @@ use validator::{Validate, ValidationError, ValidationErrors};
 
 use crate::router::Valid;
 use crate::router::create::{Response, TOKEN_TYPE};
-use crate::user::User;
+use crate::user::UserBuilder;
 use crate::{AppState, ServerError};
 
 fn validate_grant_type(grant_type: &str) -> Result<(), ValidationError> {
@@ -58,13 +58,15 @@ pub async fn handler(
         return Err(invalid_refresh_token().into());
     }
 
-    let user = User::builder()
-        .with_id(data.user_id.to_lowercase())
-        .with_ip(data.ip)
-        .get(&state.db.postgres)
+    let user = UserBuilder::new()
+        .id(data.user_id.to_lowercase())
+        .ip(data.ip)
+        .build(state.db.postgres.clone(), state.crypto)
+        .find_by_id()
         .await?;
-    let refresh_token = user.generate_token(&state.db.postgres).await?;
-    let token = state.token.create(&user.id)?;
+
+    let refresh_token = user.generate_token().await?;
+    let token = state.token.create(&user.data.id)?;
 
     sqlx::query!("DELETE FROM tokens WHERE token = $1", body.refresh_token)
         .execute(&mut *tx)

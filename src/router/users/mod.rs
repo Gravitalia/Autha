@@ -13,7 +13,9 @@ use axum::routing::{delete, get, patch};
 
 use crate::AppState;
 use crate::ServerError;
-use crate::user::User;
+use crate::user::{UserBuilder, UserService};
+
+use std::sync::Arc;
 
 const ME_ROUTE: &str = "@me";
 
@@ -44,12 +46,11 @@ async fn auth(
         user_id
     };
 
-    let user = User::default()
-        .with_id(user_id)
-        .get(&state.db.postgres)
-        .await?;
+    let user = UserBuilder::new()
+        .id(&user_id)
+        .build(state.db.postgres.clone(), Arc::clone(&state.crypto));
 
-    req.extensions_mut().insert::<User>(user);
+    req.extensions_mut().insert::<UserService>(user);
     Ok(next.run(req).await)
 }
 

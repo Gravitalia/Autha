@@ -5,7 +5,7 @@ use axum::extract::State;
 use serde::Deserialize;
 
 use crate::router::Valid;
-use crate::user::User;
+use crate::user::UserService;
 use crate::{AppState, ServerError};
 
 #[derive(Debug, validator::Validate, Deserialize)]
@@ -21,18 +21,18 @@ pub struct DeleteBody {
 
 pub async fn handler(
     State(state): State<AppState>,
-    Extension(user): Extension<User>,
+    Extension(user): Extension<UserService>,
     Valid(body): Valid<DeleteBody>,
 ) -> Result<(), ServerError> {
     state
         .crypto
         .pwd
-        .verify_password(&body.password, &user.password)?;
+        .verify_password(&body.password, &user.data.password)?;
     state
         .crypto
         .symmetric
-        .check_totp(body.totp_code, &user.totp_secret)?;
+        .check_totp(body.totp_code, &user.data.totp_secret)?;
 
-    user.delete(&state.db.postgres).await?;
+    user.delete().await?;
     Ok(())
 }

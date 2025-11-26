@@ -8,10 +8,8 @@ use axum::response::IntoResponse;
 use axum::{Json, extract::State};
 use serde::{Deserialize, Serialize};
 
-use std::sync::Arc;
-
-use crate::config::Configuration;
-use crate::{database::Database, user::User};
+use crate::AppState;
+use crate::user::UserBuilder;
 
 const HEADER: &str = "application/jrd+json";
 
@@ -35,8 +33,7 @@ struct Link {
 }
 
 pub async fn handler(
-    State(db): State<Database>,
-    State(config): State<Arc<Configuration>>,
+    State(state): State<AppState>,
     query: Query<Params>,
 ) -> Result<impl IntoResponse, StatusCode> {
     // Extract vanity from resource query.
@@ -47,22 +44,23 @@ pub async fn handler(
     let (vanity, _domain) =
         resource.split_once('@').ok_or(StatusCode::BAD_REQUEST)?;
 
-    let user = User::default()
-        .with_id(vanity.to_owned())
-        .get(&db.postgres)
+    let user = UserBuilder::new()
+        .id(vanity.to_owned())
+        .build(state.db.postgres, state.crypto)
+        .find_by_id()
         .await
         .map_err(|_| StatusCode::NOT_FOUND)?;
 
     // Parse given production URL.
     // Then add a custom path pointing to API.
-    let mut url = url::Url::parse(&config.url)
+    let mut url = url::Url::parse(&state.config.url)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    url.set_path(&format!("/users/{}", user.id));
+    url.set_path(&format!("/users/{}", user.data.id));
 
     let response = Response {
         subject: format!(
             "acct:{}@{}",
-            user.id,
+            user.data.id,
             url.host().map(|u| u.to_string()).unwrap_or_default()
         ),
         aliases: Vec::new(),

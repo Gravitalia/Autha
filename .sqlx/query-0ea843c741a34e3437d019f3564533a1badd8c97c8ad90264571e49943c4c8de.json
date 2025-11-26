@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE \"users\" SET deleted_at = $1 WHERE id = $2",
+  "query": "UPDATE users SET deleted_at = $1 WHERE id = $2",
   "describe": {
     "columns": [],
     "parameters": {
@@ -11,5 +11,5 @@
     },
     "nullable": []
   },
-  "hash": "404d0b54250c666af6f1a5d7943475cd630b0bb77feb22c88e48f4c9d69a54d6"
+  "hash": "0ea843c741a34e3437d019f3564533a1badd8c97c8ad90264571e49943c4c8de"
 }

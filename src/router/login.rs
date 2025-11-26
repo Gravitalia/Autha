@@ -3,11 +3,12 @@ use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError};
 
 use crate::error::Result;
+use crate::router::Valid;
 use crate::router::create::{Response, TOKEN_TYPE};
-use crate::user::User;
+use crate::user::UserBuilder;
 use crate::{AppState, ServerError};
 
-use super::Valid;
+use std::sync::Arc;
 
 fn at_least_one_contact(
     form: &Identifier,
@@ -57,35 +58,36 @@ pub async fn login(
 ) -> Result<Json<Response>> {
     let user = if let Some(email) = body.identifier.email {
         let email_hash = state.crypto.hasher.digest(&email);
-        let user = User::builder()
-            .with_email_hash(email_hash)
-            .get(&state.db.postgres)
-            .await
-            .map_err(|_| ServerError::WrongEmail)?;
+        let user = UserBuilder::new()
+            .email(email_hash)
+            .build(state.db.postgres, Arc::clone(&state.crypto))
+            .find_by_email()
+            .await?;
 
         state
             .crypto
             .pwd
-            .verify_password(&body.password, &user.password)?;
+            .verify_password(&body.password, &user.data.password)?;
         state
             .crypto
             .symmetric
-            .check_totp(body.totp_code, &user.totp_secret)?;
+            .check_totp(body.totp_code, &user.data.totp_secret)?;
         user
     } else if let Some(id) = body.identifier.id {
         state.ldap.bind(&id, &body.password).await?;
 
-        User::builder()
-            .with_id(id.to_lowercase())
-            .with_password(&body.password)
-            .create(&state.crypto, &state.db.postgres)
+        UserBuilder::new()
+            .id(id.to_lowercase())
+            .password(&body.password)
+            .build(state.db.postgres, state.crypto.clone())
+            .create_user()
             .await?
     } else {
         return Err(ServerError::WrongEmail);
     };
 
-    let refresh_token = user.generate_token(&state.db.postgres).await?;
-    let token = state.token.create(&user.id)?;
+    let refresh_token = user.generate_token().await?;
+    let token = state.token.create(&user.data.id)?;
     Ok(Json(Response {
         token_type: TOKEN_TYPE.to_owned(),
         token,
@@ -159,7 +161,7 @@ mod tests {
         let time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_secs() as u64;
+            .as_secs();
         assert!(claims.exp > time);
     }
 

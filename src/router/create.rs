@@ -6,7 +6,7 @@ use crate::AppState;
 use crate::error::Result;
 use crate::mail::Template::Welcome;
 use crate::router::ValidWithState;
-use crate::user::User;
+use crate::user::UserBuilder;
 
 pub const TOKEN_TYPE: &str = "Bearer";
 
@@ -59,13 +59,14 @@ pub async fn handler(
     ValidWithState(body): ValidWithState<Body>,
 ) -> Result<(StatusCode, Json<Response>)> {
     let locale = body.locale.map(|l| l.to_lowercase());
-    let user = User::builder()
-        .with_id(body.id.to_lowercase())
-        .with_locale(locale.clone())
-        .with_email(&body.email)
-        .with_password(&body.password)
-        .with_invite(body.invite)
-        .create(&state.crypto, &state.db.postgres)
+    let user = UserBuilder::new()
+        .id(body.id.to_lowercase())
+        .locale(locale.clone())
+        .email(&body.email)
+        .password(&body.password)
+        .invite(body.invite)
+        .build(state.db.postgres, state.crypto.clone())
+        .create_user()
         .await?;
 
     state
@@ -73,12 +74,13 @@ pub async fn handler(
         .publish_event(Welcome, body.email, locale)
         .await?;
 
-    let refresh_token = user.generate_token(&state.db.postgres).await?;
-    let token = state.token.create(&user.id)?;
+    let refresh_token = user.generate_token().await?;
+    let token = state.token.create(&user.data.id)?;
 
-    if let Err(err) = state.ldap.add(&state.crypto.symmetric, &user).await {
+    if let Err(err) = state.ldap.add(&state.crypto.symmetric, &user.data).await
+    {
         tracing::error!(
-            user_id = user.id,
+            user_id = user.data.id,
             error = err.to_string(),
             "user not created on ldap"
         );
@@ -141,7 +143,7 @@ pub(super) mod tests {
         let time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_secs() as u64;
+            .as_secs();
         assert!(claims.exp > time);
     }
 

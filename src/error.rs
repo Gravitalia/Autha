@@ -3,7 +3,7 @@
 use axum::extract::rejection::JsonRejection;
 use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sqlx::{Error as SQLxError, postgres::PgDatabaseError};
 use thiserror::Error;
 use validator::{ValidationError, ValidationErrors};
@@ -74,7 +74,7 @@ impl From<ldap3::LdapError> for ServerError {
 }
 
 /// Structure for detailed error responses.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ResponseError {
     r#type: Option<String>,
     title: String,
@@ -137,7 +137,7 @@ impl Default for ResponseError {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct FieldError {
     field: String,
     message: String,

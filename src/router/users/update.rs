@@ -9,7 +9,7 @@ use crate::crypto::check_key;
 use crate::mail::Template::DataUpdate;
 use crate::router::Valid;
 use crate::totp::generate_totp;
-use crate::user::{Key, User};
+use crate::user::{Key, UserService};
 use crate::{AppState, ServerError};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -51,17 +51,17 @@ pub struct Body {
 
 pub async fn handler(
     State(state): State<AppState>,
-    Extension(mut user): Extension<User>,
+    Extension(mut user): Extension<UserService>,
     Valid(body): Valid<Body>,
 ) -> Result<Json<Vec<String>>, ServerError> {
     let mut errors = ValidationErrors::new();
 
     if let Some(username) = body.username {
-        user.username = username;
+        user.data.username = username;
     }
 
     if let Some(summary) = body.summary {
-        user.summary = Some(summary);
+        user.data.summary = Some(summary);
     }
 
     if let Some(((secret, password), code)) = body
@@ -73,9 +73,9 @@ pub async fn handler(
         state
             .crypto
             .pwd
-            .verify_password(&password, &user.password)?;
+            .verify_password(&password, &user.data.password)?;
         if generate_totp(&secret, 30, 6)? == code {
-            user.totp_secret =
+            user.data.totp_secret =
                 Some(state.crypto.symmetric.encrypt_and_hex(secret)?);
         } else {
             errors.add(
@@ -127,7 +127,7 @@ pub async fn handler(
                 let _ = sqlx::query!(
                     r#"DELETE FROM keys WHERE id = $1 AND user_id = $2"#,
                     key,
-                    user.id,
+                    user.data.id,
                 )
                 .execute(&state.db.postgres)
                 .await
@@ -147,13 +147,14 @@ pub async fn handler(
         state
             .crypto
             .pwd
-            .verify_password(&password, &user.password)?;
+            .verify_password(&password, &user.data.password)?;
 
-        user.email_hash = state.crypto.hasher.digest(&email);
-        user.email_cipher = state.crypto.symmetric.encrypt_and_hex(&email)?;
+        user.data.email_hash = state.crypto.hasher.digest(&email);
+        user.data.email_cipher =
+            state.crypto.symmetric.encrypt_and_hex(&email)?;
         state
             .mail
-            .publish_event(DataUpdate, email, Some(&user.locale))
+            .publish_event(DataUpdate, email, Some(&user.data.locale))
             .await?;
     } else if body.email.is_some() {
         errors.add(
@@ -171,7 +172,7 @@ pub async fn handler(
     for key in pkeys.iter_mut() {
         let record = sqlx::query!(
             r#"INSERT INTO "keys" (user_id, key) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING RETURNING id"#,
-            user.id,
+            user.data.id,
             key.public_key_pem,
         )
         .fetch_optional(&state.db.postgres)
@@ -182,8 +183,8 @@ pub async fn handler(
         }
     }
 
-    // Save other user's data.
-    user.update(&state.db.postgres).await?;
+    // Save user data.
+    user.update().await?;
 
     Ok(Json(pkeys.into_iter().map(|k| k.id).collect()))
 }
