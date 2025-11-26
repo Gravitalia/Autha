@@ -2,7 +2,7 @@
 
 use ldap3::{Ldap as Ldap3, LdapConnAsync, Scope, SearchEntry};
 
-use crate::crypto::{Action, Cipher};
+use crate::crypto::SymmetricCipher;
 use crate::error::Result;
 use crate::user::User;
 
@@ -58,7 +58,11 @@ impl Ldap {
     }
 
     /// Create a new entry on [`Ldap3`].
-    pub async fn add(mut self, crypto: &Cipher, user: &User) -> Result<()> {
+    pub async fn add(
+        mut self,
+        crypto: &SymmetricCipher,
+        user: &User,
+    ) -> Result<()> {
         let Some(ref mut conn) = self.conn else {
             tracing::debug!(?self.conn, user_id = user.id, "user add on ldap failed");
             return Ok(());
@@ -73,9 +77,7 @@ impl Ldap {
 
         tracing::info!(user_id = user.id, "add new entry on ldap");
 
-        let email = crypto
-            .aes(Action::Decrypt, user.email_cipher.clone().into())
-            .await?;
+        let email = crypto.decrypt_from_hex(&user.email_cipher)?;
         let dn = self
             .template
             .replace("{user_id}", &user.id)

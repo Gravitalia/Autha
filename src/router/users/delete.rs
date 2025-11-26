@@ -26,12 +26,12 @@ pub async fn handler(
 ) -> Result<(), ServerError> {
     state
         .crypto
-        .check_password(&body.password, &user.password)
-        .await?;
+        .pwd
+        .verify_password(&body.password, &user.password)?;
     state
         .crypto
-        .check_totp(body.totp_code, &user.totp_secret)
-        .await?;
+        .symmetric
+        .check_totp(body.totp_code, &user.totp_secret)?;
 
     user.delete(&state.db.postgres).await?;
     Ok(())

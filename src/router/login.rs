@@ -56,7 +56,7 @@ pub async fn login(
     Valid(body): Valid<Body>,
 ) -> Result<Json<Response>> {
     let user = if let Some(email) = body.identifier.email {
-        let email_hash = state.crypto.sha256(&email);
+        let email_hash = state.crypto.hasher.digest(&email);
         let user = User::builder()
             .with_email_hash(email_hash)
             .get(&state.db.postgres)
@@ -65,12 +65,12 @@ pub async fn login(
 
         state
             .crypto
-            .check_password(&body.password, &user.password)
-            .await?;
+            .pwd
+            .verify_password(&body.password, &user.password)?;
         state
             .crypto
-            .check_totp(body.totp_code, &user.totp_secret)
-            .await?;
+            .symmetric
+            .check_totp(body.totp_code, &user.totp_secret)?;
         user
     } else if let Some(id) = body.identifier.id {
         state.ldap.bind(&id, &body.password).await?;

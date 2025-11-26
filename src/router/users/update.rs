@@ -5,7 +5,7 @@ use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 use validator::{ValidationError, ValidationErrors};
 
-use crate::crypto::{Action, check_key};
+use crate::crypto::check_key;
 use crate::router::Valid;
 use crate::totp::generate_totp;
 use crate::user::{Key, User};
@@ -71,19 +71,11 @@ pub async fn handler(
     {
         state
             .crypto
-            .check_password(&password, &user.password)
-            .await?;
+            .pwd
+            .verify_password(&password, &user.password)?;
         if generate_totp(&secret, 30, 6)? == code {
-            user.totp_secret = Some(
-                state
-                    .crypto
-                    .aes(Action::Encrypt, secret.as_bytes().to_vec())
-                    .await
-                    .map_err(|err| ServerError::Internal {
-                        details: "cannot encrypt".into(),
-                        source: Some(Box::new(err)),
-                    })?,
-            );
+            user.totp_secret =
+                Some(state.crypto.symmetric.encrypt_and_hex(secret)?);
         } else {
             errors.add(
                 "totp_code",
@@ -153,18 +145,11 @@ pub async fn handler(
     if let Some((email, password)) = body.email.clone().zip(body.password) {
         state
             .crypto
-            .check_password(&password, &user.password)
-            .await?;
+            .pwd
+            .verify_password(&password, &user.password)?;
 
-        user.email_hash = state.crypto.sha256(user.email_hash);
-        user.email_cipher = state
-            .crypto
-            .aes(Action::Encrypt, email.into())
-            .await
-            .map_err(|err| ServerError::Internal {
-                details: "email cannot be encrypted".into(),
-                source: Some(Box::new(err)),
-            })?;
+        user.email_hash = state.crypto.hasher.digest(user.email_hash);
+        user.email_cipher = state.crypto.symmetric.encrypt_and_hex(email)?;
     } else if body.email.is_some() {
         errors.add(
             "password",

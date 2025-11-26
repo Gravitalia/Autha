@@ -55,8 +55,8 @@ pub enum ServerError {
     JsonSerialization(#[from] serde_json::Error),
 }
 
-impl From<crate::crypto::Error> for ServerError {
-    fn from(value: crate::crypto::Error) -> Self {
+impl From<crate::crypto::CryptoError> for ServerError {
+    fn from(value: crate::crypto::CryptoError) -> Self {
         Self::Internal {
             details: value.to_string(),
             source: Some(Box::new(value)),

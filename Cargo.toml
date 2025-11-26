@@ -1,6 +1,6 @@
 [package]
 name = "autha"
-version = "0.4.0"
+version = "0.4.1"
 description = "fast and safe authorization delegation and account management API"
 homepage = "https://account.gravitalia.com"
 readme = "README.md"
@@ -58,7 +58,6 @@ p256 = "0.13.2"
 base64ct = "1.8"
 aes = "0.8.4"
 aes-gcm = { version = "0.10.3", features = ["std"] }
-cbc = { version = "0.1.2", features = ["std"] }
 rand = "0.8"
 ## TOTP related.
 hmac = "0.12"

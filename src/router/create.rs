@@ -71,7 +71,7 @@ pub async fn handler(
     let refresh_token = user.generate_token(&state.db.postgres).await?;
     let token = state.token.create(&user.id)?;
 
-    if let Err(err) = state.ldap.add(&state.crypto, &user).await {
+    if let Err(err) = state.ldap.add(&state.crypto.symmetric, &user).await {
         tracing::error!(
             user_id = user.id,
             error = err.to_string(),

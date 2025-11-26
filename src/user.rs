@@ -3,8 +3,6 @@ use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
 
-use crate::crypto::Action;
-
 pub const TOKEN_LENGTH: u64 = 64;
 const DEFAULT_LOCALE: &str = "en";
 
@@ -94,7 +92,7 @@ impl User {
     /// Create a new user.
     pub async fn create(
         mut self,
-        crypto: &crate::crypto::Cipher,
+        crypto: &crate::crypto::Crypto,
         conn: &Pool<Postgres>,
     ) -> crate::error::Result<Self> {
         if self.id.is_empty() && self.password.is_empty() {
@@ -105,13 +103,12 @@ impl User {
         }
 
         if !self.password.is_empty() {
-            self.password = crypto.hash_password(self.password).await?;
+            self.password = crypto.pwd.hash_password(self.password)?;
         }
 
-        self.email_hash = crypto.sha256(&self.email_hash);
-        self.email_cipher = crypto
-            .aes(Action::Encrypt, self.email_cipher.into())
-            .await?;
+        self.email_hash = crypto.hasher.digest(&self.email_hash);
+        self.email_cipher =
+            crypto.symmetric.encrypt_and_hex(self.email_cipher)?;
 
         sqlx::query!(
             r#"INSERT INTO "users" (id, username, locale, email_hash, email_cipher, password) VALUES ($1, $2, $3, $4, $5, $6)"#,

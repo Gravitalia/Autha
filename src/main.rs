@@ -24,7 +24,7 @@ mod user;
 mod well_known;
 
 use axum::body::Bytes;
-use axum::http::{Method, header};
+use axum::http::{Method, StatusCode, header};
 use axum::routing::{get, post};
 use axum::{Router, middleware as AxumMiddleware};
 use error::ServerError;
@@ -76,7 +76,7 @@ pub struct AppState {
     pub config: Arc<config::Configuration>,
     pub db: database::Database,
     pub ldap: ldap::Ldap,
-    pub crypto: crypto::Cipher,
+    pub crypto: Arc<crypto::Crypto>,
     pub token: token::TokenManager,
     pub mail: mail::MailManager,
 }
@@ -95,7 +95,7 @@ pub fn app(state: AppState) -> Router {
                 .on_response(DefaultOnResponse::new().include_headers(true).latency_unit(LatencyUnit::Micros)),
         )
         // Set a timeout.
-        .layer(TimeoutLayer::new(Duration::from_secs(10)))
+        .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(10)))
         // Remove senstive headers from trace.
         .layer(SetSensitiveHeadersLayer::new([header::AUTHORIZATION, header::COOKIE]))
         // Add CORS preflight support.
@@ -230,14 +230,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // execute migrations scripts on start.
     sqlx::migrate!().run(&db.postgres).await?;
 
-    let key = std::env::var("KEY").expect(
-        "missing `KEY` environnement variable. Cannot encrypt data without it",
-    );
+    let key =
+        std::env::var("KEY").expect("missing `KEY` environnement variable");
     let salt =
         std::env::var("SALT").expect("missing `SALT` environnement variable");
-    let crypto = crypto::Cipher::new(config.argon2.clone())
-        .key(key)?
-        .salt(salt)?;
+    let crypto =
+        Arc::new(crypto::Crypto::new(config.argon2.clone(), key, salt)?);
 
     // handle jwt.
     let Some(token) = &config.token else {

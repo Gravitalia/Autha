@@ -94,8 +94,10 @@ pub fn state(pool: sqlx::Pool<sqlx::Postgres>) -> crate::AppState {
         config: config.clone().into(),
         ldap: crate::ldap::Ldap::default(),
         crypto: {
-            let key = [0x42; 32];
-            crate::crypto::Cipher::from_key(hex::encode(key)).unwrap()
+            let salt = [0x42; 16];
+            std::sync::Arc::new(
+                crate::crypto::Crypto::new(None, "secret", salt).unwrap(),
+            )
         },
         token: crate::token::TokenManager::new(
             &config.url,
