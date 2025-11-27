@@ -107,7 +107,7 @@ impl UserRepository {
     pub async fn delete(&self, user_id: &str) -> Result<()> {
         sqlx::query!(
             r#"UPDATE users SET deleted_at = $1 WHERE id = $2"#,
-            chrono::Utc::now().date_naive(),
+            chrono::Utc::now(),
             user_id
         )
         .execute(&self.pool)
