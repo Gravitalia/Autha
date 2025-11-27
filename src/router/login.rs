@@ -62,7 +62,8 @@ pub async fn login(
             .email(email_hash)
             .build(state.db.postgres, Arc::clone(&state.crypto))
             .find_by_email()
-            .await?;
+            .await
+            .map_err(|_| ServerError::WrongEmail)?;
 
         state
             .crypto

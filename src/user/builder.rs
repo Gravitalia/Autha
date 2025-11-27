@@ -15,6 +15,7 @@ const DEFAULT_LOCALE: &str = "en";
 #[derive(Debug, Clone)]
 pub struct UserBuilder<Id, Email> {
     id: Id,
+    username: String,
     email: Email,
     password: String,
     locale: String,
@@ -35,6 +36,7 @@ impl UserBuilder<Missing, Missing> {
     pub fn new() -> Self {
         Self {
             id: Missing,
+            username: String::default(),
             email: Missing,
             password: String::default(),
             locale: DEFAULT_LOCALE.to_string(),
@@ -51,7 +53,8 @@ impl<Email> UserBuilder<Missing, Email> {
         id: impl Into<String>,
     ) -> UserBuilder<Present<String>, Email> {
         UserBuilder {
-            id: Present(id.into()),
+            id: Present(id.into().to_lowercase()),
+            username: self.username,
             email: self.email,
             password: self.password,
             locale: self.locale,
@@ -69,6 +72,7 @@ impl<Id> UserBuilder<Id, Missing> {
     ) -> UserBuilder<Id, Present<String>> {
         UserBuilder {
             id: self.id,
+            username: self.username,
             email: Present(email.into()),
             password: self.password,
             locale: self.locale,
@@ -82,6 +86,12 @@ impl<Id, Email> UserBuilder<Id, Email> {
     /// Update `password` field on [`UserBuilder`].
     pub fn password(mut self, password: impl ToString) -> Self {
         self.password = password.to_string();
+        self
+    }
+
+    /// Update `username` field on [`UserBuilder`].
+    pub fn username(mut self, username: impl ToString) -> Self {
+        self.username = username.to_string();
         self
     }
 
@@ -113,6 +123,7 @@ impl UserBuilder<Missing, Present<String>> {
     ) -> UserService {
         let user = User {
             id: String::default(),
+            username: self.username,
             email_hash: self.email.0.clone(),
             email_cipher: self.email.0,
             password: self.password,
@@ -135,6 +146,7 @@ impl UserBuilder<Present<String>, Missing> {
     ) -> UserService {
         let user = User {
             id: self.id.0,
+            username: self.username,
             password: self.password,
             locale: self.locale,
             ip: self.ip,
@@ -155,6 +167,7 @@ impl UserBuilder<Present<String>, Present<String>> {
     ) -> UserService {
         let user = User {
             id: self.id.0,
+            username: self.username,
             email_hash: self.email.0.clone(),
             email_cipher: self.email.0,
             password: self.password,

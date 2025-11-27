@@ -17,6 +17,7 @@ use crate::user::{UserBuilder, UserService};
 
 use std::sync::Arc;
 
+const BEARER: &str = "Bearer ";
 const ME_ROUTE: &str = "@me";
 
 /// Custom middleware for authentification.
@@ -36,9 +37,12 @@ async fn auth(
             .get(header::AUTHORIZATION)
             .and_then(|header| header.to_str().ok())
         {
-            Some(token) => match state.token.decode(token) {
-                Ok(claims) => claims.sub,
-                Err(_) => return Err(ServerError::Unauthorized),
+            Some(token) => {
+                let token = token.replace(BEARER, "");
+                match state.token.decode(&token) {
+                    Ok(claims) => claims.sub,
+                    Err(_) => return Err(ServerError::Unauthorized),
+                }
             },
             None => return Err(ServerError::Unauthorized),
         }
@@ -48,7 +52,9 @@ async fn auth(
 
     let user = UserBuilder::new()
         .id(&user_id)
-        .build(state.db.postgres.clone(), Arc::clone(&state.crypto));
+        .build(state.db.postgres.clone(), Arc::clone(&state.crypto))
+        .find_by_id()
+        .await?;
 
     req.extensions_mut().insert::<UserService>(user);
     Ok(next.run(req).await)

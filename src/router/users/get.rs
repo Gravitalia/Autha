@@ -68,7 +68,7 @@ pub async fn handler(
         username: user.username.clone(),
         name: user.username,
         summary: String::default(),
-        published: user.created_at.to_string(),
+        published: user.created_at.date_naive().to_string(),
         public_keys: user.public_keys,
         url,
     }))

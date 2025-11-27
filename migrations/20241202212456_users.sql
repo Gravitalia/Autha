@@ -4,16 +4,16 @@ CREATE TABLE IF NOT EXISTS users (
   id            TEXT        PRIMARY KEY,
   username      TEXT        NOT NULL,
   email_hash    TEXT        UNIQUE NOT NULL,
-  email_cipher  TEXT        UNIQUE NOT NULL,
+  email_cipher  TEXT        NOT NULL,
   password      TEXT        NOT NULL,
   locale        TEXT        NOT NULL DEFAULT 'en',
+  flags         INT         NOT NULL DEFAULT 0,
   totp_secret   TEXT,
   summary       TEXT,
   avatar        TEXT,
-  flags         INT         NOT NULL DEFAULT 0,
-  suspended_at  DATE,
-  deleted_at    DATE,
-  created_at    DATE        NOT NULL DEFAULT NOW(), -- Millisecond precision seems... too precise
+  suspended_at  TIMESTAMPTZ,
+  deleted_at    TIMESTAMPTZ,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ
 );
 

@@ -61,6 +61,7 @@ pub async fn handler(
     let locale = body.locale.map(|l| l.to_lowercase());
     let user = UserBuilder::new()
         .id(body.id.to_lowercase())
+        .username(body.id)
         .locale(locale.clone())
         .email(&body.email)
         .password(&body.password)

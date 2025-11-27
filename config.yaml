@@ -22,26 +22,6 @@ argon2:
   hash_length: 32
   zxcvbn: 3 # password strength metering.
 
-# Email sender.
-mail:
-  address: amqp://rabbitmq:5672
-  vhost: /
-  username: rabbitmq
-  password: rabbitmq
-  queue: mail
-  tls: false
-
-# Enterprise-grade annuary.
-ldap:
-  address: ldap://openldap:389
-  user: CN=admin,DC=domain,DC=local
-  password: admin
-  base_dn: DC=domain,DC=local
-  additional_users_dn: OU=users
-  users_filter: (&(uid={user_id}))
-  additional_groups_dn: OU=groups
-  groups_filter: (&(member={dn})(objectClass=groupOfNames))
-
 # Multi-factor authentification (one time code).
 totp:
   issuer: autha

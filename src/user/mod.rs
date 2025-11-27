@@ -3,6 +3,7 @@ mod repository;
 mod service;
 
 pub use builder::*;
+use chrono::Utc;
 pub use repository::*;
 pub use service::*;
 
@@ -33,7 +34,7 @@ pub struct User {
     #[serde(skip)]
     #[sqlx(skip)]
     pub invite: Option<String>,
-    pub created_at: chrono::NaiveDate,
+    pub created_at: chrono::DateTime<Utc>,
     pub deleted_at: Option<chrono::NaiveDate>,
     #[sqlx(json)]
     pub public_keys: Vec<Key>,

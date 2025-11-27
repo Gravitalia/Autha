@@ -206,12 +206,13 @@ impl IntoResponse for ServerError {
                                     "ID is already in use.".into(),
                                 ),
                             ),
-                            Some("users_email_key") => validation_errors.add(
-                                "email",
-                                ValidationError::new("sql").with_message(
-                                    "Email is already in use.".into(),
+                            Some("users_email_hash_key") => validation_errors
+                                .add(
+                                    "email",
+                                    ValidationError::new("sql").with_message(
+                                        "Email is already in use.".into(),
+                                    ),
                                 ),
-                            ),
                             _ => tracing::error!(%err, "sql query failed"),
                         }
 

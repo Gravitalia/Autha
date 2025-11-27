@@ -25,7 +25,7 @@ impl UserRepository {
             r#"INSERT INTO users (id, username, locale, email_hash, email_cipher, password)
                 VALUES ($1, $2, $3, $4, $5, $6)"#,
             id,
-            user.id,
+            user.username,
             user.locale,
             user.email_hash,
             user.email_cipher,
