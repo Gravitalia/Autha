@@ -50,6 +50,7 @@ use std::time::Duration;
 /// MUST NEVER be used in production.
 #[cfg(test)]
 pub async fn make_request(
+    state: Option<&AppState>,
     app: Router,
     method: Method,
     path: &str,
@@ -58,11 +59,19 @@ pub async fn make_request(
     use axum::extract::Request;
     use tower::util::ServiceExt;
 
+    let token = match state {
+        Some(state) => state.token.create("admin").expect("cannot create JWT"),
+        None => String::default(),
+    };
+
+    dbg!(&token, &app, &method, path, &body);
+
     app.oneshot(
         Request::builder()
             .method(method)
             .uri(path)
             .header(header::CONTENT_TYPE, "application/json")
+            .header(header::AUTHORIZATION, token)
             .body(axum::body::Body::from(body))
             .unwrap(),
     )

@@ -72,7 +72,7 @@ pub async fn handler(
 
     state
         .mail
-        .publish_event(Welcome, body.email, locale)
+        .publish_event(Welcome, body.email, &user.data)
         .await?;
 
     let refresh_token = user.generate_token().await?;
@@ -122,6 +122,7 @@ pub(super) mod tests {
             invite: None,
         };
         let response = make_request(
+            None,
             app,
             Method::POST,
             "/create",
@@ -151,7 +152,7 @@ pub(super) mod tests {
     #[sqlx::test]
     async fn test_create_with_weak_password(pool: Pool<Postgres>) {
         let state = router::state(pool);
-        let app = app(state.clone());
+        let app = app(state);
 
         let req_body = router::create::Body {
             id: "user2".into(),
@@ -162,6 +163,7 @@ pub(super) mod tests {
             invite: None,
         };
         let response = make_request(
+            None,
             app,
             Method::POST,
             "/create",

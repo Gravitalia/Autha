@@ -16,6 +16,7 @@ use url::Url;
 
 use crate::config::Mail;
 use crate::error::{Result, ServerError};
+use crate::user::User;
 
 use std::sync::Arc;
 
@@ -55,6 +56,7 @@ struct Content {
     locale: Option<String>,
     to: String,
     template: Template,
+    username: String,
 }
 
 /// Maily instance manager.
@@ -134,7 +136,7 @@ impl MailManager {
         &self,
         template: Template,
         email: String,
-        locale: Option<impl ToString>,
+        user: &User,
     ) -> Result<()> {
         let Some(channel) = &self.channel else {
             tracing::debug!(?template, "failed to send event");
@@ -144,7 +146,8 @@ impl MailManager {
         tracing::trace!(?template, "event sent");
 
         let content = Content {
-            locale: locale.map(|l| l.to_string()),
+            locale: Some(user.locale.clone()),
+            username: user.username.clone(),
             to: email,
             template,
         };

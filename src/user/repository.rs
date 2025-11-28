@@ -88,13 +88,14 @@ impl UserRepository {
     pub async fn update(&self, user: &User) -> Result<()> {
         sqlx::query!(
             r#"UPDATE users
-                SET username = $1, email_hash = $2, email_cipher = $3, summary = $4, totp_secret = $5
-                WHERE id = $6"#,
+                SET username = $1, email_hash = $2, email_cipher = $3, summary = $4, totp_secret = $5, password = $6
+                WHERE id = $7"#,
             user.username,
             user.email_hash,
             user.email_cipher,
             user.summary,
             user.totp_secret,
+            user.password,
             user.id
         )
         .execute(&self.pool)

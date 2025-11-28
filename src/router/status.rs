@@ -27,9 +27,14 @@ mod tests {
         let config = state.config.clone();
         let app = app(state);
 
-        let response =
-            make_request(app, Method::GET, "/status.json", String::default())
-                .await;
+        let response = make_request(
+            None,
+            app,
+            Method::GET,
+            "/status.json",
+            String::default(),
+        )
+        .await;
         assert_eq!(response.status(), StatusCode::OK);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();

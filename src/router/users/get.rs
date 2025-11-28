@@ -92,7 +92,8 @@ mod tests {
 
         let path = format!("/users/{ID}");
         let response =
-            make_request(app, Method::GET, &path, String::default()).await;
+            make_request(None, app, Method::GET, &path, String::default())
+                .await;
         assert_eq!(response.status(), StatusCode::OK);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();

@@ -7,7 +7,7 @@ use validator::{ValidationError, ValidationErrors};
 
 use crate::crypto::check_key;
 use crate::mail::Template::DataUpdate;
-use crate::router::Valid;
+use crate::router::ValidWithState;
 use crate::totp::generate_totp;
 use crate::user::{Key, UserService};
 use crate::{AppState, ServerError};
@@ -21,6 +21,7 @@ enum TypedKey {
 }
 
 #[derive(Debug, validator::Validate, Serialize, Deserialize)]
+#[validate(context = AppState)]
 #[serde(rename_all = "camelCase")]
 pub struct Body {
     #[serde(alias = "preferredUsername")]
@@ -47,12 +48,25 @@ pub struct Body {
         message = "Password must contain at least 8 characters."
     ))]
     password: Option<String>,
+    #[validate(
+        length(
+            min = 8,
+            max = 255,
+            message = "Password must contain at least 8 characters."
+        ),
+        custom(
+            function = "crate::router::validate_password",
+            message = "Password is too weak.",
+            use_context
+        )
+    )]
+    new_password: Option<String>,
 }
 
 pub async fn handler(
     State(state): State<AppState>,
     Extension(mut user): Extension<UserService>,
-    Valid(body): Valid<Body>,
+    ValidWithState(body): ValidWithState<Body>,
 ) -> Result<Json<Vec<String>>, ServerError> {
     let mut errors = ValidationErrors::new();
 
@@ -64,6 +78,7 @@ pub async fn handler(
         user.data.summary = Some(summary);
     }
 
+    // TOTP modification.
     if let Some(((secret, password), code)) = body
         .totp_secret
         .clone()
@@ -100,6 +115,7 @@ pub async fn handler(
         );
     }
 
+    // Public keys modification.
     let mut pkeys: Vec<Key> = Vec::new();
     if let Some(keys) = body.public_keys {
         match keys {
@@ -143,20 +159,49 @@ pub async fn handler(
         }
     }
 
-    if let Some((email, password)) = body.email.clone().zip(body.password) {
+    // Email modification.
+    if let Some((email, password)) =
+        body.email.clone().zip(body.password.as_ref())
+    {
         state
             .crypto
             .pwd
-            .verify_password(&password, &user.data.password)?;
+            .verify_password(password, &user.data.password)?;
 
         user.data.email_hash = state.crypto.hasher.digest(&email);
         user.data.email_cipher =
             state.crypto.symmetric.encrypt_and_hex(&email)?;
         state
             .mail
-            .publish_event(DataUpdate, email, Some(&user.data.locale))
+            .publish_event(DataUpdate, email, &user.data)
             .await?;
     } else if body.email.is_some() {
+        errors.add(
+            "password",
+            ValidationError::new("pwd")
+                .with_message("Missing 'password' field.".into()),
+        );
+    }
+
+    // Password modification.
+    if let Some((new_password, password)) =
+        body.new_password.clone().zip(body.password)
+    {
+        state
+            .crypto
+            .pwd
+            .verify_password(&password, &user.data.password)?;
+
+        user.data.password = state.crypto.pwd.hash_password(new_password)?;
+        let user_email = state
+            .crypto
+            .symmetric
+            .decrypt_from_hex(&user.data.email_cipher)?;
+        state
+            .mail
+            .publish_event(DataUpdate, user_email, &user.data)
+            .await?;
+    } else if body.new_password.is_some() {
         errors.add(
             "password",
             ValidationError::new("pwd")
@@ -187,4 +232,39 @@ pub async fn handler(
     user.update().await?;
 
     Ok(Json(pkeys.into_iter().map(|k| k.id).collect()))
+}
+
+#[cfg(test)]
+pub(super) mod tests {
+    use crate::*;
+    use axum::http::StatusCode;
+    use serde_json::json;
+    use sqlx::{Pool, Postgres};
+
+    #[sqlx::test(fixtures("../../../fixtures/users.sql"))]
+    async fn test_update_handler(pool: Pool<Postgres>) {
+        let state = router::state(pool);
+        let app = app(state.clone());
+
+        let req_body = router::users::update::Body {
+            username: Some("Administrator".into()),
+            summary: Some("I am the strongest.".into()),
+            totp_secret: None,
+            totp_code: None,
+            public_keys: None,
+            email: Some("admin1@gravitalia.com".into()),
+            password: Some("StRong_Pa§$W0rD".into()),
+            new_password: Some("StRongER_Pa§$W0rD1234".into()),
+        };
+        let response = make_request(
+            Some(&state),
+            app,
+            Method::PATCH,
+            "/users/@me",
+            json!(req_body).to_string(),
+        )
+        .await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+    }
 }

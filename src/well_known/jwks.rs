@@ -94,6 +94,7 @@ mod tests {
         let app = app(state);
 
         let response = make_request(
+            None,
             app,
             Method::GET,
             "/.well-known/jwks.json",

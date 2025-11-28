@@ -122,6 +122,7 @@ mod tests {
             _captcha: None,
         };
         let response = make_request(
+            None,
             app.clone(),
             Method::POST,
             "/login",
@@ -141,6 +142,7 @@ mod tests {
             _captcha: None,
         };
         let response = make_request(
+            None,
             app,
             Method::POST,
             "/login",
@@ -170,7 +172,7 @@ mod tests {
     async fn test_login_injection(pool: Pool<Postgres>) {
         const INJECTION: &str = "\"\0\0\0\"\u{FFFF}\"@gravitalia.com";
         let state = router::state(pool);
-        let app = app(state.clone());
+        let app = app(state);
 
         let body = Body {
             identifier: Identifier {
@@ -182,6 +184,7 @@ mod tests {
             _captcha: None,
         };
         let response = make_request(
+            None,
             app.clone(),
             Method::POST,
             "/login",
