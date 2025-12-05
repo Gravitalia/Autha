@@ -1,11 +1,15 @@
 [package]
 name = "autha"
-version = "0.4.2"
+version = "0.5.0"
 description = "fast and safe authorization delegation and account management API"
 homepage = "https://account.gravitalia.com"
 readme = "README.md"
 edition = "2024"
 license = "MPL"
+
+[lib]
+name = "autha"
+crate-type = ["rlib"]
 
 [profile.release]
 opt-level = 3

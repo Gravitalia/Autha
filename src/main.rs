@@ -1,4 +1,5 @@
-//! Autha is a lightweight account manager for decentralized world.
+//! Autha account manager binary entry point.
+
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]
 static ALLOC: dhat::Alloc = dhat::Alloc;
@@ -7,139 +8,19 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-mod config;
-#[forbid(unsafe_code)]
-#[deny(missing_docs, unused_mut)]
-mod crypto;
-mod database;
-mod error;
-mod ldap;
-mod mail;
-mod middleware;
-mod router;
-mod telemetry;
-mod token;
-mod totp;
-mod user;
-mod well_known;
-
-use axum::body::Bytes;
-use axum::http::{Method, StatusCode, header};
-use axum::routing::{get, post};
-use axum::{Router, middleware as AxumMiddleware};
-use error::ServerError;
+use autha::{app, initialize_state};
+#[cfg(unix)]
+use axum::Router;
+use axum::routing::get;
 use opentelemetry::global;
 use opentelemetry::trace::TracerProvider;
-use tower::ServiceBuilder;
-use tower_http::LatencyUnit;
-use tower_http::cors::{Any, CorsLayer};
-use tower_http::sensitive_headers::SetSensitiveHeadersLayer;
 use tower_http::timeout::RequestBodyTimeoutLayer;
-use tower_http::timeout::TimeoutLayer;
-use tower_http::trace::{DefaultMakeSpan, DefaultOnResponse};
-use tower_http::trace::{DefaultOnRequest, TraceLayer};
 use tracing_subscriber::{EnvFilter, prelude::*};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use std::env;
 use std::future::ready;
-use std::process::exit;
-use std::sync::Arc;
 use std::time::Duration;
-
-/// MUST NEVER be used in production.
-#[cfg(test)]
-pub async fn make_request(
-    state: Option<&AppState>,
-    app: Router,
-    method: Method,
-    path: &str,
-    body: String,
-) -> axum::http::Response<axum::body::Body> {
-    use axum::extract::Request;
-    use tower::util::ServiceExt;
-
-    let token = match state {
-        Some(state) => state.token.create("admin").expect("cannot create JWT"),
-        None => String::default(),
-    };
-
-    dbg!(&token, &method, path, &body);
-
-    app.oneshot(
-        Request::builder()
-            .method(method)
-            .uri(path)
-            .header(header::CONTENT_TYPE, "application/json")
-            .header(header::AUTHORIZATION, token)
-            .body(axum::body::Body::from(body))
-            .unwrap(),
-    )
-    .await
-    .unwrap()
-}
-
-/// State sharing between routes.
-#[derive(Clone)]
-pub struct AppState {
-    pub config: Arc<config::Configuration>,
-    pub db: database::Database,
-    pub ldap: ldap::Ldap,
-    pub crypto: Arc<crypto::Crypto>,
-    pub token: token::TokenManager,
-    pub mail: mail::MailManager,
-}
-
-/// Create router.
-pub fn app(state: AppState) -> Router {
-    let middleware = ServiceBuilder::new()
-        // Add high level tracing/logging to all requests.
-        .layer(
-            TraceLayer::new_for_http()
-                .on_body_chunk(|chunk: &Bytes, latency: Duration, _span: &tracing::Span| {
-                    tracing::trace!(size_bytes = chunk.len(), latency = ?latency, "sending body chunk")
-                })
-                .make_span_with(DefaultMakeSpan::new().include_headers(true).level(tracing::Level::INFO))
-                .on_request(DefaultOnRequest::new())
-                .on_response(DefaultOnResponse::new().include_headers(true).latency_unit(LatencyUnit::Micros)),
-        )
-        // Set a timeout.
-        .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(10)))
-        // Remove senstive headers from trace.
-        .layer(SetSensitiveHeadersLayer::new([header::AUTHORIZATION, header::COOKIE]))
-        // Add CORS preflight support.
-        .layer(
-            CorsLayer::new()
-                .allow_origin(Any)
-                .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE, Method::OPTIONS])
-                .allow_headers(Any)
-                .vary([header::AUTHORIZATION]),
-        );
-
-    let create_router = Router::new()
-        // Initialize telemetry.
-        // initialize tracing.
-        // `POST /create` goes to `create`.
-        .route("/", post(router::create::handler))
-        .route_layer(AxumMiddleware::from_fn_with_state(
-            state.clone(),
-            middleware::consume_invites,
-        ));
-
-    Router::new()
-        // `GET /status.json` goes to `status`.
-        .route("/status.json", get(router::status::status))
-        // `POST /login` goes to `login`.
-        .route("/login", post(router::login::login))
-        // POST `/oauth/token`
-        .route("/oauth/token", post(router::users::refresh_token::handler))
-        .nest("/create", create_router)
-        .nest("/users", router::users::router(state.clone()))
-        .with_state(state.clone())
-        .nest("/.well-known", well_known::well_known(state))
-        .route_layer(AxumMiddleware::from_fn(telemetry::track))
-        .layer(middleware)
-}
 
 #[tokio::main]
 #[tracing::instrument]
@@ -156,12 +37,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_directive("reqwest=off".parse().unwrap());
 
     // initialize logging.
-    let tracer_provider = telemetry::setup_tracer()?;
+    let tracer_provider = autha::telemetry::setup_tracer()?;
     let tracer = tracer_provider.tracer("autha");
     global::set_tracer_provider(tracer_provider.clone());
 
     let telemetry_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-    let logging_layer = telemetry::setup_logging(
+    let logging_layer = autha::telemetry::setup_logging(
         &env::var("OTEL_URL").unwrap_or("http://localhost:4317".into()),
     )?
     .with_filter(filter);
@@ -188,97 +69,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     // initialize metrics.
-    let recorder_handle = telemetry::setup_metrics_recorder()?;
+    let recorder_handle = autha::telemetry::setup_metrics_recorder()?;
 
-    // read configuration file. let it in memory.
-    let config = config::Configuration::default().read()?;
-
-    // initialize LDAP.
-    let ldap = match config.ldap {
-        Some(ref config) => ldap::Ldap::new(
-            &config.address,
-            config.user.clone(),
-            config.password.clone(),
-        )
-        .await
-        .or_else(|err| {
-            tracing::error!(error = err.to_string(), "LDAP connection failed");
-            Ok::<_, ldap3::LdapError>(ldap::Ldap::default())
-        })?,
-        None => ldap::Ldap::default(),
-    };
-
-    let db = match config.postgres {
-        Some(ref config) => {
-            database::Database::new(
-                &config.address,
-                &config
-                    .username
-                    .clone()
-                    .unwrap_or(database::DEFAULT_CREDENTIALS.into()),
-                &config
-                    .password
-                    .clone()
-                    .unwrap_or(database::DEFAULT_CREDENTIALS.into()),
-                &config
-                    .database
-                    .clone()
-                    .unwrap_or(database::DEFAULT_DATABASE_NAME.into()),
-                config.pool_size.unwrap_or(database::DEFAULT_POOL_SIZE),
-            )
-            .await?
-        },
-        None => {
-            // A database is required even with LDAP.
-            // PostgreSQL manage user publics keys.
-            tracing::error!("missing `postgres` entry on `config.yaml` file");
-            exit(0);
-        },
-    };
-
-    // execute migrations scripts on start.
-    sqlx::migrate!().run(&db.postgres).await?;
-
-    let key =
-        std::env::var("KEY").expect("missing `KEY` environnement variable");
-    let salt =
-        std::env::var("SALT").expect("missing `SALT` environnement variable");
-    let crypto =
-        Arc::new(crypto::Crypto::new(config.argon2.clone(), key, salt)?);
-
-    // handle jwt.
-    let Some(token) = &config.token else {
-        tracing::warn!("missing `token` entry on `config.yaml` file");
-        exit(0);
-    };
-    let mut token = token::TokenManager::new(
-        &config.url,
-        token.key_id.clone(),
-        &token.public_key_pem,
-        &token.private_key_pem,
-    )?;
-
-    if let Some(audience) =
-        config.token.as_ref().and_then(|t| t.audience.as_ref())
-    {
-        token.audience(audience);
-    }
-
-    // handle mail sender.
-    let mail = if let Some(cfg) = &config.mail {
-        mail::MailManager::new(cfg).await?
-    } else {
-        mail::MailManager::default()
-    };
-
-    let state = AppState {
-        config,
-        db,
-        ldap,
-        crypto,
-        token,
-        mail,
-    };
+    // Initialize application state.
+    let state = initialize_state().await?;
 
     // build our application with a route.
     let app = app(state)
@@ -288,62 +82,65 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // either start a UNIX socket or a TCP listener.
     if let Ok(path) = env::var("UNIX_SOCKET") {
-        if cfg!(unix) {
-            // Remove existing socket file if it exists
-            if std::path::Path::new(&path).exists() {
-                std::fs::remove_file(&path)?;
-            }
-
-            let listener = tokio::net::UnixListener::bind(&path)?;
-            tracing::info!(?path, "listening on unix socket");
-
-            loop {
-                let (stream, _) = listener.accept().await?;
-                let tower_service = app.clone();
-                tokio::spawn(async move {
-                    let socket = hyper_util::rt::TokioIo::new(stream);
-                    let hyper_service = hyper::service::service_fn(
-                        move |request: hyper::Request<
-                            hyper::body::Incoming,
-                        >| {
-                            use tower::Service;
-                            let mut service = tower_service.clone();
-                            async move { service.call(request).await }
-                        },
-                    );
-                    if let Err(err) =
-                        hyper_util::server::conn::auto::Builder::new(
-                            hyper_util::rt::TokioExecutor::new(),
-                        )
-                        .serve_connection(socket, hyper_service)
-                        .await
-                    {
-                        tracing::error!(%err, "error serving connection");
-                    }
-                });
-            }
-        } else {
-            tracing::error!("UNIX sockets are not supported on this platform");
-            exit(1);
-        }
+        listen_unix_socket(&path, app).await
     } else {
-        let listener = tokio::net::TcpListener::bind(format!(
-            "0.0.0. 0:{}",
-            env::var("PORT").unwrap_or(8080.to_string())
-        ))
-        .await?;
-        tracing::info!("listening on {}", listener.local_addr()?);
+        listen_tcp(app).await
+    }
+}
 
-        tokio::select! {
-            _ = axum::serve(listener, app) => {
-                tracing::info! ("server is stopping");
-                tracer_provider.shutdown().unwrap();
-            },
-            _ = tokio::signal::ctrl_c() => {
-                tracing::info!("ctrl+c pressed... should only happen on dev mode");
-            },
-        };
+async fn listen_tcp(app: Router) -> Result<(), Box<dyn std::error::Error>> {
+    let listener = tokio::net::TcpListener::bind(format!(
+        "0.0.0. 0:{}",
+        env::var("PORT").unwrap_or(8080.to_string())
+    ))
+    .await?;
+    tracing::info!("listening on {}", listener.local_addr()?);
+
+    Ok(axum::serve(listener, app).await?)
+}
+
+#[cfg(unix)]
+async fn listen_unix_socket(
+    path: &str,
+    app: Router,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Remove existing socket file if it exists
+    if std::path::Path::new(&path).exists() {
+        std::fs::remove_file(path)?;
     }
 
-    Ok(())
+    let listener = tokio::net::UnixListener::bind(path)?;
+    tracing::info!(?path, "listening on unix socket");
+
+    loop {
+        let (stream, _) = listener.accept().await?;
+        let tower_service = app.clone();
+        tokio::spawn(async move {
+            let socket = hyper_util::rt::TokioIo::new(stream);
+            let hyper_service = hyper::service::service_fn(
+                move |request: hyper::Request<hyper::body::Incoming>| {
+                    use tower::Service;
+                    let mut service = tower_service.clone();
+                    async move { service.call(request).await }
+                },
+            );
+            if let Err(err) = hyper_util::server::conn::auto::Builder::new(
+                hyper_util::rt::TokioExecutor::new(),
+            )
+            .serve_connection(socket, hyper_service)
+            .await
+            {
+                tracing::error!(%err, "error serving connection");
+            }
+        });
+    }
+}
+
+#[cfg(not(unix))]
+fn listen_unix_socket(
+    path: &str,
+    app: Router,
+) -> Result<(), Box<dyn std::error::Error>> {
+    tracing::error!("UNIX sockets are not supported on this platform");
+    exit(1);
 }
