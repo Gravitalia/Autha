@@ -78,14 +78,7 @@ pub async fn handler(
     let refresh_token = user.generate_token().await?;
     let token = state.token.create(&user.data.id)?;
 
-    if let Err(err) = state.ldap.add(&state.crypto.symmetric, &user.data).await
-    {
-        tracing::error!(
-            user_id = user.data.id,
-            error = err.to_string(),
-            "user not created on ldap"
-        );
-    }
+    state.ldap.add(&state.crypto.symmetric, &user.data).await?;
 
     Ok((
         StatusCode::CREATED,

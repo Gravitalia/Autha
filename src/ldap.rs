@@ -1,6 +1,6 @@
 //! LDAP support.
 
-use ldap3::{Ldap as Ldap3, LdapConnAsync, Scope, SearchEntry};
+use ldap3::{Ldap as Ldap3, LdapConnAsync, LdapError, Scope, SearchEntry};
 
 use crate::crypto::SymmetricCipher;
 use crate::error::Result;
@@ -69,13 +69,9 @@ impl Ldap {
         };
 
         if self.template.is_empty() {
-            tracing::warn!(
-                "LDAP `dn` template is empty; not saving new entries"
-            );
-            return Ok(());
+            tracing::error!("ldap `dn` template is empty");
+            return Err(LdapError::AddNoValues.into());
         }
-
-        tracing::info!(user_id = user.id, "add new entry on ldap");
 
         let email = crypto.decrypt_from_hex(&user.email_cipher)?;
         let dn = self
@@ -105,8 +101,20 @@ impl Ldap {
             ),
         ];
 
-        conn.add(&dn, attrs).await?;
-        Ok(())
+        match conn.add(&dn, attrs).await {
+            Ok(_) => {
+                tracing::info!(user_id = user.id, "add new entry on ldap");
+                Ok(())
+            },
+            Err(err) => {
+                tracing::error!(
+                    %err,
+                    user_id = user.id,
+                    "user not created on ldap"
+                );
+                Err(err.into())
+            },
+        }
     }
 
     /// Test a connection on [`Ldap3`].
