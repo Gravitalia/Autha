@@ -286,22 +286,64 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/metrics", get(move || ready(recorder_handle.render())))
         .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(5)));
 
-    let listener = tokio::net::TcpListener::bind(format!(
-        "0.0.0.0:{}",
-        env::var("PORT").unwrap_or(8080.to_string())
-    ))
-    .await?;
-    tracing::info!("listening on {}", listener.local_addr()?);
+    // either start a UNIX socket or a TCP listener.
+    if let Ok(path) = env::var("UNIX_SOCKET") {
+        if cfg!(unix) {
+            // Remove existing socket file if it exists
+            if std::path::Path::new(&path).exists() {
+                std::fs::remove_file(&path)?;
+            }
 
-    tokio::select! {
-        _ = axum::serve(listener, app) => {
-            tracing::info!("server is stopping");
-            tracer_provider.shutdown().unwrap();
-        },
-        _ = tokio::signal::ctrl_c() => {
-            tracing::info!("ctrl+c pressed... should only happen on dev mode");
-        },
-    };
+            let listener = tokio::net::UnixListener::bind(&path)?;
+            tracing::info!(?path, "listening on unix socket");
+
+            loop {
+                let (stream, _) = listener.accept().await?;
+                let tower_service = app.clone();
+                tokio::spawn(async move {
+                    let socket = hyper_util::rt::TokioIo::new(stream);
+                    let hyper_service = hyper::service::service_fn(
+                        move |request: hyper::Request<
+                            hyper::body::Incoming,
+                        >| {
+                            use tower::Service;
+                            let mut service = tower_service.clone();
+                            async move { service.call(request).await }
+                        },
+                    );
+                    if let Err(err) =
+                        hyper_util::server::conn::auto::Builder::new(
+                            hyper_util::rt::TokioExecutor::new(),
+                        )
+                        .serve_connection(socket, hyper_service)
+                        .await
+                    {
+                        tracing::error!(%err, "error serving connection");
+                    }
+                });
+            }
+        } else {
+            tracing::error!("UNIX sockets are not supported on this platform");
+            exit(1);
+        }
+    } else {
+        let listener = tokio::net::TcpListener::bind(format!(
+            "0.0.0. 0:{}",
+            env::var("PORT").unwrap_or(8080.to_string())
+        ))
+        .await?;
+        tracing::info!("listening on {}", listener.local_addr()?);
+
+        tokio::select! {
+            _ = axum::serve(listener, app) => {
+                tracing::info! ("server is stopping");
+                tracer_provider.shutdown().unwrap();
+            },
+            _ = tokio::signal::ctrl_c() => {
+                tracing::info!("ctrl+c pressed... should only happen on dev mode");
+            },
+        };
+    }
 
     Ok(())
 }

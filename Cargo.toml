@@ -19,6 +19,8 @@ debug = false # true if flamegraph/DHAT.
 mimalloc = { version = "0.1", features = ["v3"] }
 axum = { version = "0.8.6", features = ["macros"] }
 tokio =  { version = "1.48", features = ["rt-multi-thread", "net", "tracing", "signal"] }
+hyper-util = "0.1"
+hyper = "1.8"
 serde = "1"
 serde_json = "1"
 serde_yaml = "0.9.34"

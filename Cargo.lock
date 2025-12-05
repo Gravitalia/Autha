@@ -349,6 +349,8 @@ dependencies = [
  "hex",
  "hmac",
  "http-body-util",
+ "hyper",
+ "hyper-util",
  "jsonwebtoken",
  "lapin",
  "ldap3",
