@@ -17,7 +17,7 @@ const DEFAULT_AUDIENCE: &str = "account.gravitalia.com";
 pub const DEFAULT_KID: &str = "0";
 const JTI_LENGTH: usize = 12;
 pub const EXPIRATION_TIME: u64 = 60 * 15; // 15 minutes in seconds.
-static SCOPES: LazyLock<Vec<String>> = LazyLock::new(|| {
+pub static SCOPES: LazyLock<Vec<String>> = LazyLock::new(|| {
     vec![
         "read:account".to_string(),
         "write:account".to_string(),

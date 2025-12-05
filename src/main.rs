@@ -64,7 +64,7 @@ pub async fn make_request(
         None => String::default(),
     };
 
-    dbg!(&token, &app, &method, path, &body);
+    dbg!(&token, &method, path, &body);
 
     app.oneshot(
         Request::builder()
