@@ -104,12 +104,16 @@ async fn listen_unix_socket(
     path: &str,
     app: Router,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    use std::fs::{self, Permissions};
+    use std::os::unix::fs::PermissionsExt;
+
     // Remove existing socket file if it exists
     if std::path::Path::new(&path).exists() {
-        std::fs::remove_file(path)?;
+        fs::remove_file(path)?;
     }
 
     let listener = tokio::net::UnixListener::bind(path)?;
+    fs::set_permissions(path, Permissions::from_mode(0o660))?;
     tracing::info!(?path, "listening on unix socket");
 
     loop {
