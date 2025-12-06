@@ -81,16 +81,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(5)));
 
     // either start a UNIX socket or a TCP listener.
-    if let Ok(path) = env::var("UNIX_SOCKET") {
-        listen_unix_socket(&path, app).await
-    } else {
-        listen_tcp(app).await
+    match env::var("UNIX_SOCKET") {
+        Ok(path) => listen_unix_socket(&path, app).await,
+        Err(_) => listen_tcp(app).await,
     }
 }
 
 async fn listen_tcp(app: Router) -> Result<(), Box<dyn std::error::Error>> {
     let listener = tokio::net::TcpListener::bind(format!(
-        "0.0.0. 0:{}",
+        "0.0.0.0:{}",
         env::var("PORT").unwrap_or(8080.to_string())
     ))
     .await?;
