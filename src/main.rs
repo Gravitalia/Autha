@@ -113,7 +113,7 @@ async fn listen_unix_socket(
     }
 
     let listener = tokio::net::UnixListener::bind(path)?;
-    fs::set_permissions(path, Permissions::from_mode(0o660))?;
+    fs::set_permissions(path, Permissions::from_mode(0o766))?;
     tracing::info!(?path, "listening on unix socket");
 
     loop {
