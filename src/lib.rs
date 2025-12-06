@@ -123,7 +123,7 @@ pub fn app(state: AppState) -> Router {
         .nest("/create", create_router)
         .nest("/users", router::users::router(state.clone()))
         .with_state(state.clone())
-        .nest("/. well-known", well_known::well_known(state))
+        .nest("/.well-known", well_known::well_known(state))
         .route_layer(AxumMiddleware::from_fn(telemetry::track))
         .layer(middleware)
 }
@@ -143,7 +143,7 @@ pub async fn initialize_state() -> Result<AppState, Box<dyn std::error::Error>>
         )
         .await
         .or_else(|err| {
-            tracing::error!(error = err.to_string(), "LDAP connection failed");
+            tracing::error!(error = err.to_string(), "ldap connection failed");
             Ok::<_, ldap3::LdapError>(ldap::Ldap::default())
         })?,
         None => ldap::Ldap::default(),

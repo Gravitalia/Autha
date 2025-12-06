@@ -106,7 +106,7 @@ async fn listen_unix_socket(
     use std::fs::{self, Permissions};
     use std::os::unix::fs::PermissionsExt;
 
-    // Remove existing socket file if it exists
+    // Remove existing socket file if it exists.
     if std::path::Path::new(&path).exists() {
         fs::remove_file(path)?;
     }
@@ -144,6 +144,6 @@ fn listen_unix_socket(
     path: &str,
     app: Router,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    tracing::error!("UNIX sockets are not supported on this platform");
+    tracing::error!("unix sockets are not supported on this platform");
     exit(1);
 }
