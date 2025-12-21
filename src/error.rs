@@ -34,7 +34,7 @@ pub enum ServerError {
     UserDeleted { date: chrono::NaiveDate },
     #[error("public key must be PCKS-1 or PCKS-8")]
     Key(#[from] crate::crypto::KeyError),
-    #[error("internal server error, {details}")]
+    #[error("internal server error")]
     Internal {
         details: String,
         source: Option<Box<dyn std::error::Error + Send>>,
