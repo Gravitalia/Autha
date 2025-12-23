@@ -98,9 +98,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name:  Prepare
+      - name: Prepare
         run:  |
-          echo "IMAGE_NAME_LOWER=$(echo '${{ env.IMAGE_NAME }}' | tr '[: upper:]' '[:lower:]')" >> $GITHUB_ENV
+          echo "IMAGE_NAME_LOWER=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Get version
         id: autha-version

@@ -88,7 +88,7 @@ pub fn validate_password(
 /// Validate ISO 3166-1 alpha 2 for locale.
 pub fn validate_locale(code: &str) -> Result<(), ValidationError> {
     if code.len() != 2
-        || code.as_bytes().iter().all(|&b| !b.is_ascii_alphabetic())
+        || code.as_bytes().iter().any(|&b| !b.is_ascii_alphabetic())
     {
         return Err(ValidationError::new("locale"));
     }
