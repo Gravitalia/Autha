@@ -33,7 +33,7 @@ jobs:
 
       - name: Prepare
         run:  |
-          platform=${{ matrix. platform }}
+          platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
           echo "IMAGE_NAME_LOWER=$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
@@ -46,7 +46,7 @@ jobs:
       - name: Login to GitHub Container Registry
         uses:  docker/login-action@v3
         with: 
-          registry:  ${{ env. REGISTRY }}
+          registry:  ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -60,34 +60,34 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with: 
-          images: ${{ env. REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ steps.autha-version.outputs. PKG_VERSION }}
+            type=raw,value=${{ steps.autha-version.outputs.PKG_VERSION }}
 
       - name:  Build and Push multi-platform image
         id: build
         uses:  docker/build-push-action@v6
         with:
-          context: . 
+          context: .
           file: docker/Dockerfile
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=image,name=${{ env. REGISTRY }}/${{ env.IMAGE_NAME_LOWER }},push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Export digest
         run: |
-          mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs. digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
 
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
           name: digests-${{ env.PLATFORM_PAIR }}
-          path:  /tmp/digests/*
+          path:  ${{ runner.temp }}/digests/*
           if-no-files-found:  error
           retention-days: 1
 
@@ -111,7 +111,7 @@ jobs:
       - name: Download digests
         uses: actions/download-artifact@v4
         with: 
-          path: /tmp/digests
+          path: ${{ runner.temp }}/digests
           pattern: digests-*
           merge-multiple: true
 
@@ -120,25 +120,24 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets. GITHUB_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name:  Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Docker meta
-        id:  meta
-        uses:  docker/metadata-action@v5
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          images:  ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ steps.autha-version. outputs.PKG_VERSION }}
+            type=raw,value=${{ steps.autha-version.outputs.PKG_VERSION }}
 
       - name: Create manifest list and push
-        working-directory: /tmp/digests
+        working-directory: ${{ runner.temp }}/digests
         run: |
-          TAG_ARGS=$(jq -cr '.tags[] | "-t " + .' <<< "$DOCKER_METADATA_OUTPUT_JSON")
-          docker buildx imagetools create $TAG_ARGS \
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}@sha256:%s ' *)
 
       - name: Inspect image
