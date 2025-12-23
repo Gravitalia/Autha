@@ -7,6 +7,12 @@ on:
     branches:
       - master
 
+permissions:
+  artifact-metadata: write
+  contents: read
+  packages: write
+  pull-requests: write
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -130,8 +136,9 @@ jobs:
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
-        run:   |
-          docker buildx imagetools create $(jq -cr '. tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+        run: |
+          TAG_ARGS=$(jq -cr '.tags[] | "-t " + .' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          docker buildx imagetools create $TAG_ARGS \
             $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}@sha256:%s ' *)
 
       - name: Inspect image
