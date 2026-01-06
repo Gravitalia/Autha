@@ -59,7 +59,7 @@ sysinfo = { version = "0.37", default-features = false, features = ["system"] }
 zeroize = "1.8"
 sha2 = "0.10.9"
 argon2 = "0.5.3"
-rsa = "0.9.8"
+rsa = "0.9.10"
 p256 = "0.13.2"
 base64ct = "1.8"
 aes = "0.8.4"
