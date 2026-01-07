@@ -7,11 +7,11 @@ invite_only: false
 
 # Database.
 postgres:
-  address: postgres:5432
+  address: localhost:5432
   database: autha
   username: postgres
   password: postgres
-  pool_size: 25
+  pool_size: 10
   tls: false
 
 # Password hasher.
