@@ -1,14 +1,15 @@
 //! Based on JWK (RFC 7517 <https://datatracker.ietf.org/doc/html/rfc7517>).
 
-use axum::http::StatusCode;
-use axum::{Json, extract::State};
-use base64ct::Base64UrlUnpadded;
-use base64ct::Encoding;
-use p256::PublicKey;
-use p256::elliptic_curve::{pkcs8::DecodePublicKey, sec1::ToEncodedPoint};
-use serde::{Deserialize, Serialize};
-
 use std::sync::Arc;
+
+use axum::Json;
+use axum::extract::State;
+use axum::http::StatusCode;
+use base64ct::{Base64UrlUnpadded, Encoding};
+use p256::PublicKey;
+use p256::elliptic_curve::pkcs8::DecodePublicKey;
+use p256::elliptic_curve::sec1::ToEncodedPoint;
+use serde::{Deserialize, Serialize};
 
 use crate::config::Configuration;
 use crate::token::DEFAULT_KID;
@@ -39,7 +40,8 @@ fn p256_pem_to_jwk(pem: String) -> Option<(String, String)> {
     let public_key = PublicKey::from_public_key_pem(&pem).ok()?;
     let encoded_point = public_key.to_encoded_point(false);
     let full_bytes = encoded_point.as_bytes();
-    if full_bytes.len() != PREFIX_LEN + 2 * COORD_LEN || full_bytes[0] != 0x04 {
+    if full_bytes.len() != PREFIX_LEN + 2 * COORD_LEN || full_bytes[0] != 0x04
+    {
         return None;
     }
 
@@ -81,10 +83,11 @@ pub async fn handler(
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
     use axum::http::StatusCode;
     use http_body_util::BodyExt;
     use sqlx::{Pool, Postgres};
+
+    use crate::*;
 
     #[sqlx::test]
     async fn test_jwks_handler(pool: Pool<Postgres>) {

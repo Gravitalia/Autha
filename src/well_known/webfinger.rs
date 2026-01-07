@@ -2,10 +2,10 @@
 //!
 //! Path: /.well-known/webfinger?resource=acct:VANITY[@domain.tld]
 
-use axum::extract::Query;
+use axum::Json;
+use axum::extract::{Query, State};
 use axum::http::{StatusCode, header};
 use axum::response::IntoResponse;
-use axum::{Json, extract::State};
 use serde::{Deserialize, Serialize};
 
 use crate::AppState;

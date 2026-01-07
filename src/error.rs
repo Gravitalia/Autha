@@ -4,7 +4,8 @@ use axum::extract::rejection::JsonRejection;
 use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use serde::{Deserialize, Serialize};
-use sqlx::{Error as SQLxError, postgres::PgDatabaseError};
+use sqlx::Error as SQLxError;
+use sqlx::postgres::PgDatabaseError;
 use thiserror::Error;
 use validator::{ValidationError, ValidationErrors};
 

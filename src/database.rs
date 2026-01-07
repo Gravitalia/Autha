@@ -1,6 +1,7 @@
 //! database (db) union structure.
 use axum::extract::FromRef;
-use sqlx::{PgPool, postgres::PgPoolOptions};
+use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 
 use crate::AppState;
 

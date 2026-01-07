@@ -1,13 +1,11 @@
 //! Typed builder for User.
 
+use std::sync::Arc;
+
 use sqlx::{Pool, Postgres};
 
-use crate::{
-    crypto::Crypto,
-    user::{User, UserService},
-};
-
-use std::sync::Arc;
+use crate::crypto::Crypto;
+use crate::user::{User, UserService};
 
 const DEFAULT_LOCALE: &str = "en";
 

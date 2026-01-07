@@ -1,8 +1,9 @@
 //! Public configuration page for front-end identification and customization.
 
-use axum::{Json, extract::State};
-
 use std::sync::Arc;
+
+use axum::Json;
+use axum::extract::State;
 
 use crate::config::Configuration;
 
@@ -15,10 +16,11 @@ pub async fn status(
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
     use axum::http::StatusCode;
     use http_body_util::BodyExt;
     use sqlx::{Pool, Postgres};
+
+    use crate::*;
 
     #[sqlx::test]
     async fn test_status_handler(pool: Pool<Postgres>) {

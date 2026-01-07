@@ -1,6 +1,7 @@
 //! Send emails to user for important updates.
 
 use std::str::FromStr;
+use std::sync::Arc;
 
 use chrono::Utc;
 use lapin::options::{BasicPublishOptions, QueueDeclareOptions};
@@ -17,8 +18,6 @@ use url::Url;
 use crate::config::Mail;
 use crate::error::{Result, ServerError};
 use crate::user::User;
-
-use std::sync::Arc;
 
 const DEFAULT_AMPQ_HOST: &str = "localhost";
 const DEFAULT_AMPQ_PORT: u16 = 5672;

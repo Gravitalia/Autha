@@ -1,12 +1,11 @@
+use std::sync::Arc;
+
 use rand::RngCore;
 use sqlx::{Pool, Postgres};
 
 use crate::crypto::Crypto;
 use crate::error::Result;
-use crate::user::User;
-use crate::user::UserRepository;
-
-use std::sync::Arc;
+use crate::user::{User, UserRepository};
 
 pub const TOKEN_LENGTH: u64 = 64;
 

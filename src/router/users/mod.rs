@@ -4,18 +4,16 @@ mod get;
 pub mod refresh_token;
 mod update;
 
-use axum::Router;
+use std::sync::Arc;
+
 use axum::extract::{Path, Request, State};
 use axum::http::header;
-use axum::middleware;
 use axum::response::Response;
 use axum::routing::{delete, get, patch};
+use axum::{Router, middleware};
 
-use crate::AppState;
-use crate::ServerError;
 use crate::user::{UserBuilder, UserService};
-
-use std::sync::Arc;
+use crate::{AppState, ServerError};
 
 const BEARER: &str = "Bearer ";
 const ME_ROUTE: &str = "@me";

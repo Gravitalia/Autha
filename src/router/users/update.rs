@@ -233,3 +233,39 @@ pub async fn handler(
 
     Ok(Json(pkeys.into_iter().map(|k| k.id).collect()))
 }
+
+#[cfg(test)]
+pub(super) mod tests {
+    use axum::http::StatusCode;
+    use serde_json::json;
+    use sqlx::{Pool, Postgres};
+
+    use crate::*;
+
+    #[sqlx::test(fixtures("../../../fixtures/users.sql"))]
+    async fn test_update_handler(pool: Pool<Postgres>) {
+        let state = router::state(pool);
+        let app = app(state.clone());
+
+        let req_body = router::users::update::Body {
+            username: Some("Administrator".into()),
+            summary: Some("I am the strongest.".into()),
+            totp_secret: None,
+            totp_code: None,
+            public_keys: None,
+            email: Some("admin1@gravitalia.com".into()),
+            password: Some("StRong_Pa§$W0rD".into()),
+            new_password: Some("StRongER_Pa§$W0rD1234".into()),
+        };
+        let response = make_request(
+            Some(&state),
+            app,
+            Method::PATCH,
+            "/users/@me",
+            json!(req_body).to_string(),
+        )
+        .await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+}

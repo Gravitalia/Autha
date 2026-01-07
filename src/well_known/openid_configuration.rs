@@ -8,14 +8,17 @@
 
 use std::sync::OnceLock;
 
-use axum::{Json, extract::State, http::StatusCode};
+use axum::Json;
+use axum::extract::State;
+use axum::http::StatusCode;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::AppState;
 use crate::token::SCOPES;
 
-const AUTHORIZATION_ENDPOINT: &str = "https://account.gravitalia.com/authorize";
+const AUTHORIZATION_ENDPOINT: &str =
+    "https://account.gravitalia.com/authorize";
 const TOKEN_ENDPOINT: &str = "/users/refresh_token";
 const USERINFO_ENDPOINT: &str = "/users/@me";
 const JWKS_ENDPOINT: &str = "/.well-known/jwks.json";

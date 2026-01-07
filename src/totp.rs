@@ -1,7 +1,8 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use base32::decode;
 use hmac::{Hmac, Mac};
 use sha1::Sha1;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::{Result, ServerError};
 
@@ -31,8 +32,8 @@ pub fn generate_totp(
             details: String::default(),
             source: Some(Box::new(err)),
         })?
-        .as_secs()
-        / time_step;
+        .as_secs() /
+        time_step;
 
     let counter_bytes = time_counter.to_be_bytes();
     let mut mac = Hmac::<Sha1>::new_from_slice(&key).map_err(|err| {
@@ -45,10 +46,10 @@ pub fn generate_totp(
     let result = mac.finalize().into_bytes();
 
     let offset = (result[19] & 0x0f) as usize;
-    let binary_code = ((result[offset] as u32 & 0x7f) << 24)
-        | ((result[offset + 1] as u32) << 16)
-        | ((result[offset + 2] as u32) << 8)
-        | (result[offset + 3] as u32);
+    let binary_code = ((result[offset] as u32 & 0x7f) << 24) |
+        ((result[offset + 1] as u32) << 16) |
+        ((result[offset + 2] as u32) << 8) |
+        (result[offset + 3] as u32);
 
     let mut code = (binary_code % 10u32.pow(digits)).to_string();
 

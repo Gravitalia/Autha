@@ -4,9 +4,8 @@ use axum::extract::State;
 use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
 
-use crate::AppState;
-use crate::ServerError;
 use crate::user::{Key, UserService};
+use crate::{AppState, ServerError};
 
 const ACTIVITY_STREAM: &str = "https://www.w3.org/ns/activitystreams";
 const W3C_SECURITY: &str = "https://w3id.org/security/v1";

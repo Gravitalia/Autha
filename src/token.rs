@@ -72,7 +72,8 @@ impl TokenManager {
         } else {
             Some(DecodingKey::from_ec_pem(public_key_pem.as_bytes())?)
         };
-        let private_key = EncodingKey::from_ec_pem(private_key_pem.as_bytes())?;
+        let private_key =
+            EncodingKey::from_ec_pem(private_key_pem.as_bytes())?;
 
         Ok(Self {
             algorithm: Algorithm::ES256,

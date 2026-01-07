@@ -1,4 +1,4 @@
-max_width = 80
+max_width = 79
 indent_style = "Block"
 match_block_trailing_comma = true
 binop_separator = "Back"

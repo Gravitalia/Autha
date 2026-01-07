@@ -5,9 +5,8 @@ mod service;
 pub use builder::*;
 use chrono::Utc;
 pub use repository::*;
-pub use service::*;
-
 use serde::{Deserialize, Serialize};
+pub use service::*;
 
 /// User as saved on database.
 #[derive(

@@ -1,5 +1,7 @@
 //! Telemetry logic.
 //! Support tracing, metrics and logging.
+use std::time::{Duration, Instant};
+
 use axum::extract::{MatchedPath, Request};
 use axum::http::Version;
 use axum::middleware::Next;
@@ -8,22 +10,17 @@ use metrics::{Unit, gauge};
 use metrics_exporter_prometheus::{
     BuildError, Matcher, PrometheusBuilder, PrometheusHandle,
 };
-use opentelemetry::KeyValue;
-use opentelemetry::global;
 use opentelemetry::trace::{Span, Tracer};
+use opentelemetry::{KeyValue, global};
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_otlp::{ExporterBuildError, LogExporter};
+use opentelemetry_otlp::{ExporterBuildError, LogExporter, WithExportConfig};
 use opentelemetry_sdk::Resource;
-use opentelemetry_sdk::logs::SdkLogger;
-use opentelemetry_sdk::logs::SdkLoggerProvider;
+use opentelemetry_sdk::logs::{SdkLogger, SdkLoggerProvider};
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use sysinfo::{
     Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System,
 };
 use tokio::time::sleep;
-
-use std::time::{Duration, Instant};
 
 fn ressources() -> Resource {
     Resource::builder().with_service_name("autha").build()
@@ -123,12 +120,12 @@ pub async fn track(req: Request, next: Next) -> impl IntoResponse {
 
     // Init all metrics data.
     let start = Instant::now();
-    let path = if let Some(matched_path) = req.extensions().get::<MatchedPath>()
-    {
-        matched_path.as_str().to_owned()
-    } else {
-        req.uri().path().to_owned()
-    };
+    let path =
+        if let Some(matched_path) = req.extensions().get::<MatchedPath>() {
+            matched_path.as_str().to_owned()
+        } else {
+            req.uri().path().to_owned()
+        };
     let method = req.method().clone();
     let version = match req.version() {
         Version::HTTP_09 => "HTTP/0.9", // should never appear!
