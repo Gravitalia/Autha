@@ -1,14 +1,15 @@
-use axum::{Json, extract::State};
+use std::sync::Arc;
+
+use axum::Json;
+use axum::extract::State;
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError};
 
 use crate::error::Result;
 use crate::router::Valid;
 use crate::router::create::{Response, TOKEN_TYPE};
-use crate::user::UserBuilder;
+use crate::user::{UserBuilder, UserService};
 use crate::{AppState, ServerError};
-
-use std::sync::Arc;
 
 fn at_least_one_contact(
     form: &Identifier,
@@ -52,37 +53,15 @@ struct Identifier {
     id: Option<String>,
 }
 
-pub async fn login(
+/// Handler to login user.
+pub async fn handler(
     State(state): State<AppState>,
     Valid(body): Valid<Body>,
 ) -> Result<Json<Response>> {
-    let user = if let Some(email) = body.identifier.email {
-        let email_hash = state.crypto.hasher.digest(&email);
-        let user = UserBuilder::new()
-            .email(email_hash)
-            .build(state.db.postgres, Arc::clone(&state.crypto))
-            .find_by_email()
-            .await
-            .map_err(|_| ServerError::WrongEmail)?;
-
-        state
-            .crypto
-            .pwd
-            .verify_password(&body.password, &user.data.password)?;
-        state
-            .crypto
-            .symmetric
-            .check_totp(body.totp_code, &user.data.totp_secret)?;
-        user
-    } else if let Some(id) = body.identifier.id {
-        state.ldap.bind(&id, &body.password).await?;
-
-        UserBuilder::new()
-            .id(id.to_lowercase())
-            .password(&body.password)
-            .build(state.db.postgres, state.crypto.clone())
-            .create_user()
-            .await?
+    let user = if let Some(ref email) = body.identifier.email {
+        default_login(&state, email, &body).await?
+    } else if let Some(ref id) = body.identifier.id {
+        ldap_login(&state, id, &body).await?
     } else {
         return Err(ServerError::WrongEmail);
     };
@@ -97,15 +76,60 @@ pub async fn login(
     }))
 }
 
+async fn default_login(
+    state: &AppState,
+    email: &str,
+    body: &Body,
+) -> Result<UserService> {
+    let email_hash = state.crypto.hasher.digest(email);
+    let user = UserBuilder::new()
+        .email(email_hash)
+        .build(state.db.postgres.clone(), Arc::clone(&state.crypto))
+        .find_by_email()
+        .await
+        .map_err(|_| ServerError::WrongEmail)?;
+
+    state
+        .crypto
+        .pwd
+        .verify_password(&body.password, &user.data.password)?;
+    state.crypto.symmetric.check_totp(
+        body.totp_code.as_deref(),
+        user.data.totp_secret.as_deref(),
+    )?;
+    Ok(user)
+}
+
+async fn ldap_login(
+    state: &AppState,
+    id: &str,
+    body: &Body,
+) -> Result<UserService> {
+    let Some(ref ldap) = state.ldap else {
+        return Err(ServerError::Unauthorized);
+    };
+
+    ldap.authenticate(id, &body.password).await?;
+
+    Ok(UserBuilder::new()
+        .id(id.to_lowercase())
+        .password(&body.password)
+        .build(state.db.postgres.clone(), Arc::clone(&state.crypto))
+        .create_user()
+        .await?)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
     use axum::http::StatusCode;
     use http_body_util::BodyExt;
     use serde_json::json;
     use sqlx::{Pool, Postgres};
-    use std::time::{SystemTime, UNIX_EPOCH};
+
+    use super::*;
+    use crate::*;
 
     #[sqlx::test(fixtures("../../fixtures/users.sql"))]
     async fn test_login_handler(pool: Pool<Postgres>) {

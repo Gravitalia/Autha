@@ -1,9 +1,11 @@
-use axum::{Json, extract::State, http::StatusCode};
+use axum::Json;
+use axum::extract::State;
+use axum::http::StatusCode;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 use crate::AppState;
-use crate::error::Result;
+use crate::error::{Result, ServerError};
 use crate::mail::Template::Welcome;
 use crate::router::ValidWithState;
 use crate::user::UserBuilder;
@@ -78,7 +80,18 @@ pub async fn handler(
     let refresh_token = user.generate_token().await?;
     let token = state.token.create(&user.data.id)?;
 
-    state.ldap.add(&state.crypto.symmetric, &user.data).await?;
+    if let Some(mut ldap) = state.ldap {
+        ldap.add_user(&state.crypto.symmetric, &user.data)
+            .await
+            .map_err(|err| {
+                tracing::error!(
+                    ?err,
+                    user_id = user.data.id,
+                    "user not created on ldap"
+                );
+                ServerError::Unauthorized
+            })?;
+    }
 
     Ok((
         StatusCode::CREATED,
@@ -93,13 +106,15 @@ pub async fn handler(
 
 #[cfg(test)]
 pub(super) mod tests {
-    use super::*;
-    use crate::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
     use axum::http::StatusCode;
     use http_body_util::BodyExt;
     use serde_json::json;
     use sqlx::{Pool, Postgres};
-    use std::time::{SystemTime, UNIX_EPOCH};
+
+    use super::*;
+    use crate::*;
 
     #[sqlx::test]
     async fn test_create_handler(pool: Pool<Postgres>) {

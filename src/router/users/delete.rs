@@ -28,10 +28,10 @@ pub async fn handler(
         .crypto
         .pwd
         .verify_password(&body.password, &user.data.password)?;
-    state
-        .crypto
-        .symmetric
-        .check_totp(body.totp_code, &user.data.totp_secret)?;
+    state.crypto.symmetric.check_totp(
+        body.totp_code.as_deref(),
+        user.data.totp_secret.as_deref(),
+    )?;
 
     user.delete().await?;
     Ok(())
@@ -39,10 +39,11 @@ pub async fn handler(
 
 #[cfg(test)]
 pub(super) mod tests {
-    use crate::*;
     use axum::http::StatusCode;
     use serde_json::json;
     use sqlx::{Pool, Postgres};
+
+    use crate::*;
 
     #[sqlx::test(fixtures("../../../fixtures/users.sql"))]
     async fn test_delete_handler(pool: Pool<Postgres>) {

@@ -6,78 +6,76 @@ use crate::crypto::SymmetricCipher;
 use crate::error::Result;
 use crate::user::User;
 
+#[derive(Debug, Clone)]
+pub struct LdapConfig {
+    pub addr: String,
+    pub base_dn: String,
+    pub user_dn_template: String,
+}
+
+impl LdapConfig {
+    /// Create a new [`LdapConfig`].
+    pub fn new(
+        addr: impl Into<String>,
+        base_dn: impl Into<String>,
+        user_dn_template: impl Into<String>,
+    ) -> Result<Self> {
+        let template = user_dn_template.into();
+
+        if !template.contains("{uid}") {
+            return Err(LdapError::FilterParsing.into());
+        }
+
+        Ok(Self {
+            addr: addr.into(),
+            base_dn: base_dn.into(),
+            user_dn_template: template,
+        })
+    }
+
+    /// Configure LDAP `dn` for user identifier.
+    pub fn user_dn(&self, uid: &str) -> String {
+        self.user_dn_template.replace("{uid}", &escape_ldap(uid))
+    }
+}
+
 /// LDAP manager to create connection.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct Ldap {
-    conn: Option<Ldap3>,
-    addr: String,
-    template: String,
-    path: String,
+    conn: Ldap3,
+    config: LdapConfig,
 }
 
 impl Ldap {
     /// Create a new [`Ldap3`] connection.
-    pub async fn new(
-        addr: &str,
-        dn: Option<String>,
-        password: Option<String>,
+    pub async fn connect(
+        config: LdapConfig,
+        bind_dn: Option<&str>,
+        bind_password: Option<&str>,
     ) -> Result<Self> {
-        let (conn, mut ldap) = LdapConnAsync::new(addr).await?;
-        ldap3::drive!(conn);
+        let (handle, mut conn) = LdapConnAsync::new(&config.addr).await?;
+        ldap3::drive!(handle);
 
-        if let Some(dn) = dn {
-            ldap.simple_bind(&dn, &password.unwrap_or_default())
-                .await?
-                .success()?;
+        if let Some(dn) = bind_dn {
+            let password = bind_password.ok_or_else(|| {
+                LdapError::InvalidScopeString("password".into())
+            })?;
+
+            conn.simple_bind(dn, password).await?.success()?;
         }
 
-        tracing::info!(%addr, "ldap connected");
-
-        Ok(Ldap {
-            conn: Some(ldap),
-            addr: addr.to_owned(),
-            template:
-                "ou=People, dc=gravitalia, dc=com, uid={user_id}, cn={username}"
-                    .to_owned(),
-            path: "ou=People, dc=gravitalia, dc=com".to_owned(),
-        })
-    }
-
-    /// Update `dn` entry for LDAP requests.
-    pub async fn with_template(mut self, template: &str) -> Self {
-        use regex_lite::Regex;
-
-        self.template = template.to_owned();
-        self.path = if let Ok(re) = Regex::new(r"[ ,]*(uid|cn)=[^,]+") {
-            re.replace_all(template, "").to_string()
-        } else {
-            String::default()
-        };
-
-        self
+        Ok(Self { conn, config })
     }
 
     /// Create a new entry on [`Ldap3`].
-    pub async fn add(
-        mut self,
+    pub async fn add_user(
+        &mut self,
         crypto: &SymmetricCipher,
         user: &User,
     ) -> Result<()> {
-        let Some(ref mut conn) = self.conn else {
-            tracing::debug!(?self.conn, user_id = user.id, "user add on ldap failed");
-            return Ok(());
-        };
-
-        if self.template.is_empty() {
-            tracing::error!("ldap `dn` template is empty");
-            return Err(LdapError::AddNoValues.into());
-        }
-
+        let dn = self.config.user_dn(&user.id);
         let email = crypto.decrypt_from_hex(&user.email_cipher)?;
-        let dn = self
-            .template
-            .replace("{user_id}", &user.id)
-            .replace("{username}", &user.username);
+
         let attrs = vec![
             (
                 "objectClass",
@@ -101,44 +99,29 @@ impl Ldap {
             ),
         ];
 
-        match conn.add(&dn, attrs).await {
-            Ok(_) => {
-                tracing::info!(user_id = user.id, "add new entry on ldap");
-                Ok(())
-            },
-            Err(err) => {
-                tracing::error!(
-                    %err,
-                    user_id = user.id,
-                    "user not created on ldap"
-                );
-                Err(err.into())
-            },
-        }
+        self.conn.add(&dn, attrs).await?.success()?;
+        Ok(())
     }
 
     /// Test a connection on [`Ldap3`].
-    /// Do not re-use this connection after.
-    pub async fn bind(&self, user_id: &str, password: &str) -> Result<()> {
-        let (conn_handle, mut conn) = LdapConnAsync::new(&self.addr).await?;
-        ldap3::drive!(conn_handle);
+    ///
+    /// SAFETY: Do not use connection after.
+    pub async fn authenticate(&self, uid: &str, password: &str) -> Result<()> {
+        let (handle, mut conn) = LdapConnAsync::new(&self.config.addr).await?;
+        ldap3::drive!(handle);
 
-        tracing::debug!(%user_id, "binding ldap user");
-
-        let user_id = escape_ldap(user_id);
-        let search = conn
-            .search(
-                &self.path,
-                Scope::Subtree,
-                &format!("(uid={user_id})"),
-                vec!["dn"],
-            )
+        let filter = format!("(uid={})", escape_ldap(uid));
+        let results = conn
+            .search(&self.config.base_dn, Scope::Subtree, &filter, vec!["dn"])
             .await?
             .success()?
             .0;
 
-        let dn = SearchEntry::construct(search[0].clone()).dn;
+        if results.len() != 1 {
+            return Err(crate::error::ServerError::Unauthorized);
+        }
 
+        let dn = SearchEntry::construct(results[0].clone()).dn;
         conn.simple_bind(&dn, password).await?.success()?;
         conn.unbind().await?;
         Ok(())

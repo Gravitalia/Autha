@@ -177,16 +177,11 @@ impl SymmetricCipher {
     /// Check TOTP code.
     pub fn check_totp(
         &self,
-        code: Option<String>,
-        secret: &Option<String>,
+        code: Option<&str>,
+        secret: Option<&str>,
     ) -> crate::error::Result<()> {
         if let Some(secret) = secret {
-            let secret = self.decrypt_from_hex(secret).map_err(|err| {
-                ServerError::Internal {
-                    details: "decode totp secret".into(),
-                    source: Some(Box::new(err)),
-                }
-            })?;
+            let secret = self.decrypt_from_hex(secret)?;
             let mut errors = validator::ValidationErrors::new();
 
             if let Some(code) = code {
@@ -214,7 +209,8 @@ impl SymmetricCipher {
     }
 }
 
-/// Password manager that uses Argon2id and PHC string format for hashing and verification.
+/// Password manager that uses Argon2id and PHC string format for hashing and
+/// verification.
 pub struct PasswordManager {
     params: Params,
     fixed_salt: Option<Vec<u8>>,

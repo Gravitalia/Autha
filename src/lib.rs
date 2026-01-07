@@ -71,7 +71,7 @@ pub async fn make_request(
 pub struct AppState {
     pub config: Arc<config::Configuration>,
     pub db: database::Database,
-    pub ldap: ldap::Ldap,
+    pub ldap: Option<ldap::Ldap>,
     pub crypto: Arc<crypto::Crypto>,
     pub token: token::TokenManager,
     pub mail: mail::MailManager,
@@ -117,7 +117,7 @@ pub fn app(state: AppState) -> Router {
         // `GET /status. json` goes to `status`.
         .route("/status.json", get(router::status::status))
         // `POST /login` goes to `login`.
-        .route("/login", post(router::login::login))
+        .route("/login", post(router::login::handler))
         // POST `/oauth/token`
         .route("/oauth/token", post(router::users::refresh_token::handler))
         .nest("/create", create_router)
@@ -135,18 +135,23 @@ pub async fn initialize_state() -> Result<AppState, Box<dyn std::error::Error>>
     let config = config::Configuration::default().read()?;
 
     // initialize LDAP.
-    let ldap = match config.ldap {
-        Some(ref config) => ldap::Ldap::new(
-            &config.address,
-            config.user.clone(),
-            config.password.clone(),
+        let ldap = if let Some(cfg) = &config.ldap {
+        let ldap_config = ldap::LdapConfig::new(
+            &cfg.address,
+            &cfg.base_dn,
+            &cfg.additional_users_dn,
+        )?;
+
+        Some(
+            ldap::Ldap::connect(
+                ldap_config,
+                cfg.user.as_deref(),
+                cfg.password.as_deref(),
+            )
+            .await?,
         )
-        .await
-        .or_else(|err| {
-            tracing::error!(error = err.to_string(), "ldap connection failed");
-            Ok::<_, ldap3::LdapError>(ldap::Ldap::default())
-        })?,
-        None => ldap::Ldap::default(),
+    } else {
+        None
     };
 
     let db = match config.postgres {

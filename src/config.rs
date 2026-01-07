@@ -1,12 +1,12 @@
 //! Configuration manager for Autha.
 
-use axum::extract::FromRef;
-use serde::{Deserialize, Serialize};
-use url::Url;
-
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+use axum::extract::FromRef;
+use serde::{Deserialize, Serialize};
+use url::Url;
 
 use crate::AppState;
 
@@ -122,9 +122,9 @@ pub struct Ldap {
     /// Password credential to connect.
     pub password: Option<String>,
     /// DN for domain.
-    pub base_dn: Option<String>,
+    pub base_dn: String,
     /// Useful for organization unit (OU).
-    pub additional_users_dn: Option<String>,
+    pub additional_users_dn: String,
     pub users_filter: Option<String>,
     /// Useful for organization unit (OU).
     pub additional_groups_dn: Option<String>,
@@ -174,7 +174,8 @@ impl Configuration {
         self
     }
 
-    /// Normalizes a URL string by ensuring it starts with a valid scheme (`http` or `https`).
+    /// Normalizes a URL string by ensuring it starts with a valid scheme
+    /// (`http` or `https`).
     fn normalize_url(&self, url: &str) -> Result<String, url::ParseError> {
         let url_with_scheme =
             if url.starts_with("http://") || url.starts_with("https://") {
@@ -187,7 +188,8 @@ impl Configuration {
         Ok(parsed_url.to_string())
     }
 
-    /// Reads the `config.yaml` file from the specified path or the default location.
+    /// Reads the `config.yaml` file from the specified path or the default
+    /// location.
     pub fn read(self) -> Result<Arc<Self>, url::ParseError> {
         let file_path = if self.path.is_file() {
             &self.path

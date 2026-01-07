@@ -5,14 +5,14 @@ pub mod login;
 pub mod status;
 pub mod users;
 
+use std::sync::LazyLock;
+
 use axum::extract::{FromRef, FromRequest, Json, Request};
 use regex_lite::Regex;
 use serde::de::DeserializeOwned;
 use validator::{Validate, ValidateArgs, ValidationError};
 
 use crate::error::ServerError;
-
-use std::sync::LazyLock;
 
 static VANITY_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^[A-Za-z0-9_]+$").unwrap());
@@ -87,8 +87,8 @@ pub fn validate_password(
 
 /// Validate ISO 3166-1 alpha 2 for locale.
 pub fn validate_locale(code: &str) -> Result<(), ValidationError> {
-    if code.len() != 2
-        || code.as_bytes().iter().any(|&b| !b.is_ascii_alphabetic())
+    if code.len() != 2 ||
+        code.as_bytes().iter().all(|&b| !b.is_ascii_alphabetic())
     {
         return Err(ValidationError::new("locale"));
     }
@@ -104,7 +104,7 @@ pub fn state(pool: sqlx::Pool<sqlx::Postgres>) -> crate::AppState {
     crate::AppState {
         db: crate::database::Database { postgres: pool },
         config: config.clone(),
-        ldap: crate::ldap::Ldap::default(),
+        ldap: None,
         crypto: {
             let salt = [0x42; 16];
             std::sync::Arc::new(
