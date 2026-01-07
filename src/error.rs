@@ -60,17 +60,14 @@ impl From<crate::crypto::CryptoError> for ServerError {
     fn from(value: crate::crypto::CryptoError) -> Self {
         Self::Internal {
             details: value.to_string(),
-            source: Some(Box::new(value)),
+            source: None,
         }
     }
 }
 
 impl From<ldap3::LdapError> for ServerError {
-    fn from(value: ldap3::LdapError) -> Self {
-        Self::Internal {
-            details: "invalid LDAP credentials".to_string(),
-            source: Some(Box::new(value)),
-        }
+    fn from(_: ldap3::LdapError) -> Self {
+        Self::Unauthorized
     }
 }
 
