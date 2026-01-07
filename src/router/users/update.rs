@@ -173,7 +173,7 @@ pub async fn handler(
             state.crypto.symmetric.encrypt_and_hex(&email)?;
         state
             .mail
-            .publish_event(DataUpdate, email, &user.data)
+            .publish_event(DataUpdate, &email, &user.data)
             .await?;
     } else if body.email.is_some() {
         errors.add(
@@ -199,7 +199,7 @@ pub async fn handler(
             .decrypt_from_hex(&user.data.email_cipher)?;
         state
             .mail
-            .publish_event(DataUpdate, user_email, &user.data)
+            .publish_event(DataUpdate, &user_email, &user.data)
             .await?;
     } else if body.new_password.is_some() {
         errors.add(

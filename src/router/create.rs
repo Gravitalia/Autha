@@ -74,7 +74,7 @@ pub async fn handler(
 
     state
         .mail
-        .publish_event(Welcome, body.email, &user.data)
+        .publish_event(Welcome, &body.email, &user.data)
         .await?;
 
     let refresh_token = user.generate_token().await?;

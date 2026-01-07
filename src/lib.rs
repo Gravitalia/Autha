@@ -17,6 +17,9 @@ mod well_known;
 
 pub mod config;
 
+use std::sync::Arc;
+use std::time::Duration;
+
 use axum::body::Bytes;
 use axum::http::{Method, StatusCode, header};
 use axum::routing::{get, post};
@@ -30,9 +33,6 @@ use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::{
     DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer,
 };
-
-use std::sync::Arc;
-use std::time::Duration;
 
 /// MUST NEVER be used in production.
 #[cfg(test)]
@@ -135,7 +135,7 @@ pub async fn initialize_state() -> Result<AppState, Box<dyn std::error::Error>>
     let config = config::Configuration::default().read()?;
 
     // initialize LDAP.
-        let ldap = if let Some(cfg) = &config.ldap {
+    let ldap = if let Some(cfg) = &config.ldap {
         let ldap_config = ldap::LdapConfig::new(
             &cfg.address,
             &cfg.base_dn,

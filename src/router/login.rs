@@ -111,12 +111,12 @@ async fn ldap_login(
 
     ldap.authenticate(id, &body.password).await?;
 
-    Ok(UserBuilder::new()
+    UserBuilder::new()
         .id(id.to_lowercase())
         .password(&body.password)
         .build(state.db.postgres.clone(), Arc::clone(&state.crypto))
         .create_user()
-        .await?)
+        .await
 }
 
 #[cfg(test)]

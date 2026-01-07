@@ -1,5 +1,6 @@
 //! Send emails to user for important updates.
 
+use std::borrow::Cow;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -40,22 +41,22 @@ pub enum Template {
 }
 
 #[derive(Debug, Serialize)]
-struct Cloudevent {
-    specversion: String,
-    r#type: String,
-    source: String,
+struct Cloudevent<'a> {
+    specversion: &'static str,
+    r#type: &'static str,
+    source: &'static str,
     id: String,
     time: String,
-    datacontenttype: String,
-    data: Content,
+    datacontenttype: &'static str,
+    data: Content<'a>,
 }
 
 #[derive(Debug, Serialize)]
-struct Content {
-    locale: Option<String>,
-    to: String,
+struct Content<'a> {
+    locale: Option<Cow<'a, str>>,
+    to: Cow<'a, str>,
     template: Template,
-    username: String,
+    username: Cow<'a, str>,
 }
 
 /// Maily instance manager.
@@ -120,12 +121,12 @@ impl MailManager {
     fn create_event(data: Content) -> Cloudevent {
         let id = Alphanumeric.sample_string(&mut OsRng, ID_LENGTH);
         Cloudevent {
-            specversion: CLOUDEVENT_VERSION.to_string(),
-            r#type: "com.gravitalia.email".to_string(),
-            source: "com.gravitalia.autha".to_string(),
+            specversion: CLOUDEVENT_VERSION,
+            r#type: "com.gravitalia.email",
+            source: "com.gravitalia.autha",
             id,
             time: Utc::now().with_timezone(&Utc).to_rfc3339(),
-            datacontenttype: DATA_CONTENT_TYPE.to_string(),
+            datacontenttype: DATA_CONTENT_TYPE,
             data,
         }
     }
@@ -134,7 +135,7 @@ impl MailManager {
     pub async fn publish_event(
         &self,
         template: Template,
-        email: String,
+        email: &str,
         user: &User,
     ) -> Result<()> {
         let Some(channel) = &self.channel else {
@@ -145,9 +146,9 @@ impl MailManager {
         tracing::trace!(?template, "event sent");
 
         let content = Content {
-            locale: Some(user.locale.clone()),
-            username: user.username.clone(),
-            to: email,
+            locale: Some(Cow::from(&user.locale)),
+            username: Cow::from(&user.username),
+            to: Cow::from(email),
             template,
         };
         let payload = Self::create_event(content);

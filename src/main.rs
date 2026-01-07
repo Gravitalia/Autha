@@ -8,6 +8,10 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+use std::env;
+use std::future::ready;
+use std::time::Duration;
+
 use autha::{app, initialize_state};
 #[cfg(unix)]
 use axum::Router;
@@ -15,12 +19,10 @@ use axum::routing::get;
 use opentelemetry::global;
 use opentelemetry::trace::TracerProvider;
 use tower_http::timeout::RequestBodyTimeoutLayer;
-use tracing_subscriber::{EnvFilter, prelude::*};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
-use std::env;
-use std::future::ready;
-use std::time::Duration;
+use tracing_subscriber::EnvFilter;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::prelude::*;
+use tracing_subscriber::util::SubscriberInitExt;
 
 #[tokio::main]
 #[tracing::instrument]
