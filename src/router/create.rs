@@ -68,9 +68,20 @@ pub async fn handler(
         .email(&body.email)
         .password(&body.password)
         .invite(body.invite)
-        .build(state.db.postgres, state.crypto.clone())
-        .create_user()
-        .await?;
+        .build(state.db.postgres, state.crypto.clone());
+
+    if let Some(mut ldap) = state.ldap {
+        ldap.add_user(&user.data).await.map_err(|err| {
+            tracing::error!(
+                ?err,
+                user_id = user.data.id,
+                "user not created on ldap"
+            );
+            ServerError::Unauthorized
+        })?;
+    }
+
+    let user = user.create_user().await?;
 
     state
         .mail
@@ -79,19 +90,6 @@ pub async fn handler(
 
     let refresh_token = user.generate_token().await?;
     let token = state.token.create(&user.data.id)?;
-
-    if let Some(mut ldap) = state.ldap {
-        ldap.add_user(&state.crypto.symmetric, &user.data)
-            .await
-            .map_err(|err| {
-                tracing::error!(
-                    ?err,
-                    user_id = user.data.id,
-                    "user not created on ldap"
-                );
-                ServerError::Unauthorized
-            })?;
-    }
 
     Ok((
         StatusCode::CREATED,

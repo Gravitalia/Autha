@@ -5,7 +5,6 @@ use ldap3::{
     SearchEntry,
 };
 
-use crate::crypto::SymmetricCipher;
 use crate::error::Result;
 use crate::user::User;
 
@@ -78,13 +77,8 @@ impl Ldap {
     }
 
     /// Create a new entry on [`Ldap3`].
-    pub async fn add_user(
-        &mut self,
-        crypto: &SymmetricCipher,
-        user: &User,
-    ) -> Result<()> {
+    pub async fn add_user(&mut self, user: &User) -> Result<()> {
         let dn = self.config.user_dn(&user.id);
-        let email = crypto.decrypt_from_hex(&user.email_cipher)?;
 
         let attrs = vec![
             (
@@ -102,7 +96,7 @@ impl Ldap {
             ),
             ("uid", [user.id.as_str()].into_iter().collect()),
             ("cn", [user.username.as_str()].into_iter().collect()),
-            ("mail", [email.as_str()].into_iter().collect()),
+            ("mail", [user.email_cipher.as_str()].into_iter().collect()),
             (
                 "userPassword",
                 [user.password.as_str()].into_iter().collect(),
