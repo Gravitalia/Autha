@@ -1,6 +1,6 @@
 [package]
 name = "autha"
-version = "0.5.1"
+version = "0.5.2"
 description = "fast and safe authorization delegation and account management API"
 homepage = "https://account.gravitalia.com"
 readme = "README.md"
@@ -40,7 +40,7 @@ regex-lite = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
 zxcvbn = "3"
 ldap3 = { version = "0.12", features = ["tls-rustls", "tls-rustls-ring"], default-features = false }
-lapin = "3"
+lapin = { version = "3", features = ["unstable"] }
 # Error
 thiserror = "2.0"
 # Telemetry

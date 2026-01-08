@@ -10,7 +10,9 @@ use lapin::types::FieldTable;
 use lapin::uri::{
     AMQPAuthority, AMQPQueryString, AMQPScheme, AMQPUri, AMQPUserInfo,
 };
-use lapin::{BasicProperties, Channel, Connection, ConnectionProperties};
+use lapin::{
+    BasicProperties, Channel, Connection, ConnectionProperties, RecoveryConfig,
+};
 use rand::distributions::{Alphanumeric, DistString};
 use rand::rngs::OsRng;
 use serde::Serialize;
@@ -63,7 +65,7 @@ struct Content<'a> {
 #[derive(Debug, Clone, Default)]
 pub struct MailManager {
     queue: String,
-    channel: Option<Arc<Channel>>,
+    conn: Option<Arc<Connection>>,
 }
 
 impl MailManager {
@@ -91,17 +93,31 @@ impl MailManager {
             },
         };
 
-        let conn =
-            Connection::connect_uri(uri, ConnectionProperties::default())
-                .await?;
+        let recovery_config =
+            RecoveryConfig::default().auto_recover_connection();
+        let conn_config = ConnectionProperties::default()
+            .with_connection_name("autha_maily_client".into())
+            .with_experimental_recovery_config(recovery_config);
+        let conn = Connection::connect_uri(uri, conn_config).await?;
 
         tracing::info!(%addr, "rabbitmq connected");
 
-        // TODO: use a pool of channels.
+        tracing::debug!(queue = config.queue, "rabbitmq queue created");
+
+        Ok(Self {
+            queue: config.queue.clone(),
+            conn: Some(Arc::new(conn)),
+        })
+    }
+
+    async fn create_channel(
+        conn: Arc<Connection>,
+        queue: &str,
+    ) -> Result<Channel> {
         let channel = conn.create_channel().await?;
         channel
             .queue_declare(
-                &config.queue,
+                queue,
                 QueueDeclareOptions {
                     durable: true,
                     ..Default::default()
@@ -109,13 +125,7 @@ impl MailManager {
                 FieldTable::default(),
             )
             .await?;
-
-        tracing::debug!(queue = config.queue, "rabbitmq queue created");
-
-        Ok(Self {
-            queue: config.queue.clone(),
-            channel: Some(Arc::new(channel)),
-        })
+        Ok(channel)
     }
 
     fn create_event(data: Content) -> Cloudevent {
@@ -138,10 +148,12 @@ impl MailManager {
         email: &str,
         user: &User,
     ) -> Result<()> {
-        let Some(channel) = &self.channel else {
+        let Some(conn) = &self.conn else {
             tracing::debug!(?template, "failed to send event");
             return Ok(());
         };
+        let channel =
+            Self::create_channel(Arc::clone(conn), &self.queue).await?;
 
         tracing::trace!(?template, "event sent");
 
