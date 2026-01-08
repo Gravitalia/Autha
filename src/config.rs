@@ -121,6 +121,10 @@ pub struct Ldap {
     pub user: Option<String>,
     /// Password credential to connect.
     pub password: Option<String>,
+    /// Use StartTLS.
+    /// Disable LDAPS.
+    pub starttls: Option<bool>,
+    pub certificate: Option<String>,
     /// DN for domain.
     pub base_dn: String,
     /// Useful for organization unit (OU).

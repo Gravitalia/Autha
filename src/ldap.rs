@@ -1,6 +1,9 @@
 //! LDAP support.
 
-use ldap3::{Ldap as Ldap3, LdapConnAsync, LdapError, Scope, SearchEntry};
+use ldap3::{
+    Ldap as Ldap3, LdapConnAsync, LdapConnSettings, LdapError, Scope,
+    SearchEntry,
+};
 
 use crate::crypto::SymmetricCipher;
 use crate::error::Result;
@@ -11,25 +14,23 @@ pub struct LdapConfig {
     pub addr: String,
     pub base_dn: String,
     pub user_dn_template: String,
+    pub start_tls: bool,
+    pub ca: Option<String>,
 }
 
 impl LdapConfig {
     /// Create a new [`LdapConfig`].
-    pub fn new(
-        addr: impl Into<String>,
-        base_dn: impl Into<String>,
-        user_dn_template: impl Into<String>,
-    ) -> Result<Self> {
-        let template = user_dn_template.into();
-
-        if !template.contains("{uid}") {
+    pub fn from_config(config: crate::config::Ldap) -> Result<Self> {
+        if !config.additional_users_dn.contains("{uid}") {
             return Err(LdapError::FilterParsing.into());
         }
 
         Ok(Self {
-            addr: addr.into(),
-            base_dn: base_dn.into(),
-            user_dn_template: template,
+            addr: config.address,
+            base_dn: config.base_dn,
+            user_dn_template: config.additional_users_dn,
+            start_tls: config.starttls.unwrap_or(false),
+            ca: config.certificate,
         })
     }
 
@@ -47,14 +48,23 @@ pub struct Ldap {
 }
 
 impl Ldap {
+    async fn create_connection(config: &LdapConfig) -> Result<Ldap3> {
+        let conn_config =
+            LdapConnSettings::new().set_starttls(config.start_tls);
+        let (handle, conn) =
+            LdapConnAsync::with_settings(conn_config, &config.addr).await?;
+        ldap3::drive!(handle);
+
+        Ok(conn)
+    }
+
     /// Create a new [`Ldap3`] connection.
     pub async fn connect(
         config: LdapConfig,
         bind_dn: Option<&str>,
         bind_password: Option<&str>,
     ) -> Result<Self> {
-        let (handle, mut conn) = LdapConnAsync::new(&config.addr).await?;
-        ldap3::drive!(handle);
+        let mut conn = Self::create_connection(&config).await?;
 
         if let Some(dn) = bind_dn {
             let password = bind_password.ok_or_else(|| {
@@ -105,10 +115,9 @@ impl Ldap {
 
     /// Test a connection on [`Ldap3`].
     ///
-    /// SAFETY: Do not use connection after.
+    /// Do not use connection after.
     pub async fn authenticate(&self, uid: &str, password: &str) -> Result<()> {
-        let (handle, mut conn) = LdapConnAsync::new(&self.config.addr).await?;
-        ldap3::drive!(handle);
+        let mut conn = Self::create_connection(&self.config).await?;
 
         let filter = format!("(uid={})", escape_ldap(uid));
         let results = conn

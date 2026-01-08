@@ -136,11 +136,7 @@ pub async fn initialize_state() -> Result<AppState, Box<dyn std::error::Error>>
 
     // initialize LDAP.
     let ldap = if let Some(cfg) = &config.ldap {
-        let ldap_config = ldap::LdapConfig::new(
-            &cfg.address,
-            &cfg.base_dn,
-            &cfg.additional_users_dn,
-        )?;
+        let ldap_config = ldap::LdapConfig::from_config(cfg.clone())?;
 
         Some(
             ldap::Ldap::connect(
