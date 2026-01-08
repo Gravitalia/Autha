@@ -4,10 +4,6 @@
 #[global_allocator]
 static ALLOC: dhat::Alloc = dhat::Alloc;
 
-#[cfg(not(feature = "dhat-heap"))]
-#[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
-
 use std::env;
 use std::future::ready;
 use std::time::Duration;
