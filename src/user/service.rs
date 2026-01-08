@@ -28,6 +28,8 @@ impl UserService {
     }
 
     /// Create builded user.
+    ///
+    /// Hash password and encrypt email.
     pub async fn create_user(mut self) -> Result<Self> {
         self.data.password =
             self.crypto.pwd.hash_password(self.data.password)?;
