@@ -1,6 +1,6 @@
 //! Handle database requests.
 
-use sqlx::{Pool, Postgres};
+use sqlx::{Pool, Postgres, Transaction};
 
 use crate::error::Result;
 use crate::user::User;
@@ -85,7 +85,12 @@ impl UserRepository {
     }
 
     /// Update current user.
-    pub async fn update(&self, user: &User) -> Result<()> {
+    /// Commit change.
+    pub async fn update(
+        &self,
+        user: &User,
+        mut tx: Transaction<'static, Postgres>,
+    ) -> Result<()> {
         sqlx::query!(
             r#"UPDATE users
                 SET username = $1, email_hash = $2, email_cipher = $3, summary = $4, totp_secret = $5, password = $6
@@ -98,8 +103,9 @@ impl UserRepository {
             user.password,
             user.id
         )
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await?;
+        tx.commit().await?;
 
         Ok(())
     }

@@ -4,6 +4,7 @@ use axum::Json;
 use axum::extract::State;
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError};
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use crate::error::Result;
 use crate::router::Valid;
@@ -22,7 +23,7 @@ fn at_least_one_contact(
     Ok(())
 }
 
-#[derive(Debug, Serialize, Deserialize, Validate)]
+#[derive(Serialize, Deserialize, Validate, Zeroize, ZeroizeOnDrop)]
 pub struct Body {
     #[serde(flatten)]
     #[validate(nested)]
@@ -38,7 +39,7 @@ pub struct Body {
     _captcha: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Validate)]
+#[derive(Serialize, Deserialize, Validate, Zeroize, ZeroizeOnDrop)]
 #[validate(schema(function = "at_least_one_contact"))]
 struct Identifier {
     #[validate(email(message = "Email must be formatted."))]

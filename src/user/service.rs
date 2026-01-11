@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use rand::RngCore;
-use sqlx::{Pool, Postgres};
+use sqlx::{Pool, Postgres, Transaction};
 
 use crate::crypto::Crypto;
 use crate::error::Result;
@@ -68,8 +68,11 @@ impl UserService {
     }
 
     /// Update current user.
-    pub async fn update(&self) -> Result<()> {
-        self.repo.update(&self.data).await
+    pub async fn update(
+        &self,
+        tx: Transaction<'static, Postgres>,
+    ) -> Result<()> {
+        self.repo.update(&self.data, tx).await
     }
 
     /// Delete current user with 30-day retention.

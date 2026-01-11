@@ -3,12 +3,14 @@
 use axum::Extension;
 use axum::extract::State;
 use serde::{Deserialize, Serialize};
+use validator::Validate;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use crate::router::Valid;
 use crate::user::UserService;
 use crate::{AppState, ServerError};
 
-#[derive(Debug, validator::Validate, Serialize, Deserialize)]
+#[derive(Debug, Validate, Serialize, Deserialize, Zeroize, ZeroizeOnDrop)]
 #[serde(rename_all = "camelCase")]
 pub struct Body {
     totp_code: Option<String>,

@@ -95,8 +95,9 @@ impl SymmetricKey {
         };
 
         let mut pwd = PasswordManager::new(Some(config))?;
-        pwd.salt(salt);
+        pwd.salt(Some(salt.as_ref().to_vec()));
         let phc_hash_string = pwd.hash_password(password)?;
+        pwd.salt(None); // remove fixed salt.
         let password_hash = PasswordHash::new(&phc_hash_string)
             .map_err(|e| CryptoError::Argon2(e.to_string()))?;
 
@@ -237,8 +238,8 @@ impl PasswordManager {
 
     /// Set a fixed salt.
     /// **Used for derivation password only!**
-    fn salt(&mut self, salt: impl AsRef<[u8]>) {
-        self.fixed_salt = Some(salt.as_ref().to_vec());
+    fn salt(&mut self, salt: Option<Vec<u8>>) {
+        self.fixed_salt = salt;
     }
 
     /// Hash password using Argon2id.

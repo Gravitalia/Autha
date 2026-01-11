@@ -3,7 +3,8 @@
 use axum::extract::State;
 use axum::{Extension, Json};
 use serde::{Deserialize, Serialize};
-use validator::{ValidationError, ValidationErrors};
+use validator::{Validate, ValidationError, ValidationErrors};
+use zeroize::Zeroizing;
 
 use crate::crypto::check_key;
 use crate::mail::Template::DataUpdate;
@@ -20,7 +21,7 @@ enum TypedKey {
     Remove(i32),
 }
 
-#[derive(Debug, validator::Validate, Serialize, Deserialize)]
+#[derive(Debug, Validate, Serialize, Deserialize)]
 #[validate(context = AppState)]
 #[serde(rename_all = "camelCase")]
 pub struct Body {
@@ -47,7 +48,7 @@ pub struct Body {
         min = 8,
         message = "Password must contain at least 8 characters."
     ))]
-    password: Option<String>,
+    password: Option<Zeroizing<String>>,
     #[validate(
         length(
             min = 8,
@@ -60,7 +61,7 @@ pub struct Body {
             use_context
         )
     )]
-    new_password: Option<String>,
+    new_password: Option<Zeroizing<String>>,
 }
 
 pub async fn handler(
@@ -79,40 +80,47 @@ pub async fn handler(
     }
 
     // TOTP modification.
-    if let Some(((secret, password), code)) = body
-        .totp_secret
-        .clone()
-        .zip(body.password.clone())
-        .zip(body.totp_code.clone())
-    {
-        state
-            .crypto
-            .pwd
-            .verify_password(&password, &user.data.password)?;
-        if generate_totp(&secret, 30, 6)? == code {
-            user.data.totp_secret =
-                Some(state.crypto.symmetric.encrypt_and_hex(secret)?);
-        } else {
+    match (
+        body.totp_secret.as_deref(),
+        body.password.as_deref(),
+        body.totp_code.as_deref(),
+    ) {
+        (Some(secret), Some(password), Some(code)) => {
+            state
+                .crypto
+                .pwd
+                .verify_password(password, &user.data.password)?;
+
+            if generate_totp(secret, 30, 6)? == code {
+                user.data.totp_secret =
+                    Some(state.crypto.symmetric.encrypt_and_hex(secret)?);
+            } else {
+                errors.add(
+                    "totp_code",
+                    ValidationError::new("totp")
+                        .with_message("TOTP code is wrong.".into()),
+                );
+            }
+        },
+        (Some(_), _, _)
+            if body.password.is_none() || body.totp_code.is_none() =>
+        {
             errors.add(
-                "totp_code",
-                ValidationError::new("totp")
-                    .with_message("TOTP code is wrong.".into()),
+                "password",
+                ValidationError::new("pwd").with_message(
+                    "Missing 'password' or 'totp_code' field.".into(),
+                ),
             );
-        }
-    } else if body.totp_secret.is_some() {
-        errors.add(
-            "password",
-            ValidationError::new("pwd").with_message(
-                "Missing 'password' or 'totp_code' field.".into(),
-            ),
-        );
-    } else if body.totp_code.is_some() {
-        errors.add(
-            "password",
-            ValidationError::new("secret").with_message(
-                "Missing 'password' or 'totp_secret' field.".into(),
-            ),
-        );
+        },
+        (None, _, Some(_)) => {
+            errors.add(
+                "password",
+                ValidationError::new("secret").with_message(
+                    "Missing 'password' or 'totp_secret' field.".into(),
+                ),
+            );
+        },
+        _ => {},
     }
 
     // Public keys modification.
@@ -184,34 +192,40 @@ pub async fn handler(
     }
 
     // Password modification.
-    if let Some((new_password, password)) =
-        body.new_password.clone().zip(body.password)
-    {
-        state
-            .crypto
-            .pwd
-            .verify_password(&password, &user.data.password)?;
+    match (body.new_password, body.password.as_deref()) {
+        (Some(new_pwd), Some(old_pwd)) => {
+            state
+                .crypto
+                .pwd
+                .verify_password(old_pwd, &user.data.password)?;
 
-        user.data.password = state.crypto.pwd.hash_password(new_password)?;
-        let user_email = state
-            .crypto
-            .symmetric
-            .decrypt_from_hex(&user.data.email_cipher)?;
-        state
-            .mail
-            .publish_event(DataUpdate, &user_email, &user.data)
-            .await?;
-    } else if body.new_password.is_some() {
-        errors.add(
-            "password",
-            ValidationError::new("pwd")
-                .with_message("Missing 'password' field.".into()),
-        );
+            user.data.password = state.crypto.pwd.hash_password(new_pwd)?;
+
+            let user_email = state
+                .crypto
+                .symmetric
+                .decrypt_from_hex(&user.data.email_cipher)?;
+
+            state
+                .mail
+                .publish_event(DataUpdate, &user_email, &user.data)
+                .await?;
+        },
+        (Some(_), None) => {
+            errors.add(
+                "password",
+                ValidationError::new("pwd")
+                    .with_message("Missing 'password' field.".into()),
+            );
+        },
+        _ => {},
     }
 
     if !errors.is_empty() {
         return Err(ServerError::Validation(errors));
     }
+
+    let mut tx = state.db.postgres.begin().await?;
 
     // Save keys.
     for key in pkeys.iter_mut() {
@@ -220,7 +234,7 @@ pub async fn handler(
             user.data.id,
             key.public_key_pem,
         )
-        .fetch_optional(&state.db.postgres)
+        .fetch_optional(&mut *tx)
         .await?;
 
         if let Some(record) = record {
@@ -229,7 +243,7 @@ pub async fn handler(
     }
 
     // Save user data.
-    user.update().await?;
+    user.update(tx).await?;
 
     Ok(Json(pkeys.into_iter().map(|k| k.id).collect()))
 }

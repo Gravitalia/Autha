@@ -3,6 +3,7 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use crate::AppState;
 use crate::error::{Result, ServerError};
@@ -12,7 +13,7 @@ use crate::user::UserBuilder;
 
 pub const TOKEN_TYPE: &str = "Bearer";
 
-#[derive(Debug, Serialize, Deserialize, Validate)]
+#[derive(Serialize, Deserialize, Validate, Zeroize, ZeroizeOnDrop)]
 #[validate(context = AppState)]
 pub struct Body {
     #[validate(
@@ -47,7 +48,7 @@ pub struct Body {
     _captcha: Option<String>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Zeroize, ZeroizeOnDrop)]
 pub struct Response {
     pub token_type: String,
     pub token: String,
@@ -60,14 +61,14 @@ pub async fn handler(
     State(state): State<AppState>,
     ValidWithState(body): ValidWithState<Body>,
 ) -> Result<(StatusCode, Json<Response>)> {
-    let locale = body.locale.map(|l| l.to_lowercase());
+    let locale = body.locale.clone().map(|l| l.to_lowercase());
     let user = UserBuilder::new()
         .id(body.id.to_lowercase())
-        .username(body.id)
+        .username(&body.id)
         .locale(locale.clone())
         .email(&body.email)
-        .password(&body.password)
-        .invite(body.invite)
+        .password(state.crypto.pwd.hash_password(&body.password)?)
+        .invite(body.invite.clone())
         .build(state.db.postgres, state.crypto.clone());
 
     if let Some(mut ldap) = state.ldap {
