@@ -94,10 +94,9 @@ impl SymmetricKey {
             ..Default::default()
         };
 
-        let mut pwd = PasswordManager::new(Some(config))?;
-        pwd.salt(Some(salt.as_ref().to_vec()));
-        let phc_hash_string = pwd.hash_password(password)?;
-        pwd.salt(None); // remove fixed salt.
+        let pwd = PasswordManager::new(Some(config))?;
+        let phc_hash_string =
+            pwd.hash_password(password, Some(salt.as_ref().to_vec()))?;
         let password_hash = PasswordHash::new(&phc_hash_string)
             .map_err(|e| CryptoError::Argon2(e.to_string()))?;
 
@@ -214,7 +213,6 @@ impl SymmetricCipher {
 /// verification.
 pub struct PasswordManager {
     params: Params,
-    fixed_salt: Option<Vec<u8>>,
 }
 
 impl PasswordManager {
@@ -230,30 +228,22 @@ impl PasswordManager {
         )
         .map_err(|err| CryptoError::Argon2(err.to_string()))?;
 
-        Ok(Self {
-            params,
-            fixed_salt: None,
-        })
-    }
-
-    /// Set a fixed salt.
-    /// **Used for derivation password only!**
-    fn salt(&mut self, salt: Option<Vec<u8>>) {
-        self.fixed_salt = salt;
+        Ok(Self { params })
     }
 
     /// Hash password using Argon2id.
     pub fn hash_password(
         &self,
         password: impl AsRef<[u8]>,
+        salt: Option<Vec<u8>>,
     ) -> std::result::Result<String, CryptoError> {
         let argon2 = Argon2::new(
             argon2::Algorithm::Argon2id,
             Version::V0x13,
             self.params.clone(),
         );
-        let salt = match &self.fixed_salt {
-            Some(salt) => SaltString::encode_b64(salt)
+        let salt = match salt {
+            Some(salt) => SaltString::encode_b64(&salt)
                 .map_err(|e| CryptoError::Argon2(e.to_string()))?,
             None => SaltString::generate(&mut OsRng),
         };

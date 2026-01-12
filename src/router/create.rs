@@ -67,7 +67,7 @@ pub async fn handler(
         .username(&body.id)
         .locale(locale.clone())
         .email(&body.email)
-        .password(state.crypto.pwd.hash_password(&body.password)?)
+        .password(state.crypto.pwd.hash_password(&body.password, None)?)
         .invite(body.invite.clone())
         .build(state.db.postgres, state.crypto.clone());
 

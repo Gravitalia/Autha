@@ -199,7 +199,8 @@ pub async fn handler(
                 .pwd
                 .verify_password(old_pwd, &user.data.password)?;
 
-            user.data.password = state.crypto.pwd.hash_password(new_pwd)?;
+            user.data.password =
+                state.crypto.pwd.hash_password(new_pwd, None)?;
 
             let user_email = state
                 .crypto
