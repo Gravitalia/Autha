@@ -21,7 +21,7 @@ impl TotpConfig {
     pub const DEFAULT_TIME_STEP: u64 = 30;
 
     /// Create a new TOTP configuration with validation.
-    /// 
+    ///
     /// # Errors
     ///
     /// Returns `Err` if `time_step` is inferior or equal to
