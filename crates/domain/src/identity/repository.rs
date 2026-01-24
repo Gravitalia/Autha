@@ -1,6 +1,8 @@
 //! Identity port between the domain layer and the data mapping layer.
 
-use crate::{error::Result, identity::{id::UserId, user::User}};
+use crate::error::Result;
+use crate::identity::id::UserId;
+use crate::identity::user::User;
 
 /// Port for user persistence.
 #[async_trait::async_trait]

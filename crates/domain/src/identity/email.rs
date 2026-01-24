@@ -5,7 +5,7 @@ use std::fmt;
 use crate::error::{DomainError, Result};
 
 /// Value object of a valid email address.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct EmailAddress(String);
 
 impl EmailAddress {
@@ -24,10 +24,6 @@ impl EmailAddress {
     }
 
     /// Returns the same string as a string slice `&str`.
-    ///
-    /// This method is redundant when used directly on `&str`, but
-    /// it helps dereferencing other string-like types to string slices,
-    /// for example references to `Box<str>` or `Arc<str>`.
     #[inline]
     pub fn as_str(&self) -> &str {
         &self.0

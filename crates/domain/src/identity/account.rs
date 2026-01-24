@@ -6,16 +6,16 @@ use crate::identity::user::User;
 
 const DEFAULT_LOCALE: &str = "en";
 
-/// Marker interface of missing value.
-#[derive(Debug, Clone)]
+/// Marker type for missing value.
+#[derive(Debug)]
 pub struct Missing;
 
-/// Marker interface of present value.
-#[derive(Debug, Clone)]
+/// Marker type for present value.
+#[derive(Debug)]
 pub struct Present<T>(pub T);
 
 /// A builder to track presence of `Id` and `Email`.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct UserBuilder<Id, Email> {
     id: Id,
     username: String,
@@ -39,6 +39,12 @@ impl UserBuilder<Missing, Missing> {
             ip: None,
             invite: None,
         }
+    }
+}
+
+impl Default for UserBuilder<Missing, Missing> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -108,57 +114,98 @@ impl<Id, Email> UserBuilder<Id, Email> {
     }
 }
 
-impl UserBuilder<Present<String>, Missing> {
-    /// Finalizes the build when only a manual ID string is provided.
+/// Helper to construct a `User` from moved parts.
+fn construct_user(
+    id: UserId,
+    email: EmailAddress,
+    username: String,
+    password: String,
+    locale: String,
+    ip: Option<String>,
+    invite: Option<String>,
+) -> User {
+    User {
+        id,
+        username,
+        email,
+        password,
+        locale,
+        ip,
+        invite,
+        totp_secret: None,
+        summary: None,
+        avatar: None,
+        flags: 0,
+        created_at: chrono::Utc::now(),
+        deleted_at: None,
+        public_keys: Vec::new(),
+    }
+}
+
+impl UserBuilder<Present<UserId>, Missing> {
+    /// Finalizes build using validated ID as the primary identity.
     pub fn build(self) -> User {
-        User {
-            id: self.id.0,
-            username: self.username,
-            password: self.password,
-            locale: self.locale,
-            ip: self.ip,
-            invite: self.invite,
-            ..Default::default()
-        }
+        let UserBuilder {
+            id: Present(id),
+            username,
+            email: _,
+            password,
+            locale,
+            ip,
+            invite,
+        } = self;
+
+        construct_user(
+            id,
+            EmailAddress::default(),
+            username,
+            password,
+            locale,
+            ip,
+            invite,
+        )
     }
 }
 
 impl UserBuilder<Missing, Present<EmailAddress>> {
-    /// Finalizes the build using the validated email as the primary identity.
-    ///
-    /// Note: The raw email string is used to populate internal hash and cipher
-    /// fields.
+    /// Finalizes build using validated email as the primary identity.
     pub fn build(self) -> User {
-        let email_str = self.email.0.as_str().to_string();
-        User {
-            id: String::new(),
-            username: self.username,
-            email_hash: email_str.clone(),
-            email_cipher: email_str,
-            password: self.password,
-            locale: self.locale,
-            ip: self.ip,
-            invite: self.invite,
-            ..Default::default()
-        }
+        let UserBuilder {
+            id: _,
+            username,
+            email: Present(email),
+            password,
+            locale,
+            ip,
+            invite,
+        } = self;
+
+        construct_user(
+            UserId::default(),
+            email,
+            username,
+            password,
+            locale,
+            ip,
+            invite,
+        )
     }
 }
 
-impl UserBuilder<Present<String>, Present<EmailAddress>> {
+impl UserBuilder<Present<UserId>, Present<EmailAddress>> {
     /// Finalizes build when both a specific ID and a validated email are
     /// provided.
     pub fn build(self) -> User {
-        let email_str = self.email.0.as_str().to_string();
-        User {
-            id: self.id.0,
-            username: self.username,
-            email_hash: email_str.clone(),
-            email_cipher: email_str,
-            password: self.password,
-            locale: self.locale,
-            ip: self.ip,
-            invite: self.invite,
-            ..Default::default()
-        }
+        let UserBuilder {
+            id: Present(id),
+            username,
+            email: Present(email),
+            password,
+            locale,
+            ip,
+            invite,
+        } = self;
+
+        construct_user(id, email, username, password, locale, ip, invite)
     }
 }

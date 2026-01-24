@@ -1,15 +1,17 @@
 //! User domain entity.
 
 use chrono::{DateTime, NaiveDate, Utc};
-use serde::{Deserialize, Serialize};
+
+use crate::identity::email::EmailAddress;
+use crate::identity::id::UserId;
+use crate::key::public_key::Key;
 
 /// Represents a registered user within the system domain.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct User {
-    pub id: String,
+    pub id: UserId,
     pub username: String,
-    pub email_hash: String,
-    pub email_cipher: String,
+    pub email: EmailAddress,
     pub totp_secret: Option<String>,
     pub locale: String,
     pub summary: Option<String>,
@@ -20,5 +22,5 @@ pub struct User {
     pub invite: Option<String>,
     pub created_at: DateTime<Utc>,
     pub deleted_at: Option<NaiveDate>,
-    // pub public_keys: Vec<Key>,
+    pub public_keys: Vec<Key>,
 }

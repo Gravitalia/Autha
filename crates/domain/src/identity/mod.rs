@@ -1,7 +1,7 @@
 //! Identity (User) domain.
 
-mod account;
-mod email;
-mod id;
-mod user;
+pub mod account;
+pub mod email;
+pub mod id;
 pub mod repository;
+pub mod user;
