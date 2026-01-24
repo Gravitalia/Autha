@@ -20,10 +20,10 @@ pub enum KeyError {
 /// Public key linked to a [`User`].
 #[derive(Clone, Debug, PartialEq)]
 pub struct Key {
-    pub id: PemFingerprint,
-    pub owner: UserId,
-    pub public_key_pem: PemPublicKey,
-    pub created_at: DateTime<Utc>,
+    id: PemFingerprint,
+    owner: UserId,
+    public_key_pem: PemPublicKey,
+    created_at: DateTime<Utc>,
 }
 
 impl Key {
@@ -40,5 +40,15 @@ impl Key {
             public_key_pem: pem,
             created_at,
         })
+    }
+
+    /// Get [`Key`] id.
+    pub fn id(&self) -> &PemFingerprint {
+        &self.id
+    }
+
+    /// Get [`Key`] owner.
+    pub fn owner(&self) -> &UserId {
+        &self.owner
     }
 }

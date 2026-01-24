@@ -13,18 +13,20 @@ impl UserId {
     ///
     /// # Errors
     ///
-    /// Returns `Err` if the string length is greater than 22
+    /// Returns `Err` if the string length is greater than 64
     /// characters or less than 2 characters.
     pub fn parse(id: String) -> Result<Self> {
-        let len = id.chars().count();
-
-        if (2..=22).contains(&len) {
-            Ok(Self(id))
-        } else {
-            // Assuming DomainError has an appropriate variant for ID
-            // validation
-            Err(DomainError::InvalidIdFormat)
+        let trimmed = id.trim();
+        let len = trimmed.len();
+        if !(3..=64).contains(&len) {
+            return Err(DomainError::InvalidIdFormat);
         }
+
+        if trimmed.chars().any(|c| c.is_whitespace()) {
+            return Err(DomainError::InvalidIdFormat);
+        }
+
+        Ok(Self(trimmed.to_string()))
     }
 
     /// Returns the same string as a string slice `&str`.
