@@ -1,6 +1,9 @@
 Autha
 =====
 
+> [!IMPORTANT]
+> **Autha is currently in rewrite to support hexagonal architecture.**
+
 Autha is an account management server designed for decentralized
 identities and infrastructures. It provides a security-first
 approach centered on PKI, public key distribution, and client-side
