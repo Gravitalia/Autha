@@ -154,6 +154,7 @@ dependencies = [
  "chrono",
  "der",
  "hex",
+ "regex-lite",
  "sha2",
  "spki",
  "thiserror",
@@ -268,6 +269,12 @@ checksum = "21b2ebcf727b7760c461f091f9f0f539b77b8e87f2fd88131e7f1b433b3cece4"
 dependencies = [
  "proc-macro2",
 ]
+
+[[package]]
+name = "regex-lite"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d942b98df5e658f56f20d592c7f868833fe38115e65c33003d8cd224b0155da"
 
 [[package]]
 name = "rustversion"

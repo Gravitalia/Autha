@@ -1,8 +1,15 @@
 //! Email logic management.
 
 use std::fmt;
+use std::sync::LazyLock;
+
+use regex_lite::Regex;
 
 use crate::error::{DomainError, Result};
+
+static EMAIL_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$").unwrap()
+});
 
 /// Value object of a valid email address.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -13,10 +20,13 @@ impl EmailAddress {
     ///
     /// # Errors
     ///
-    /// Returns `Err` if the string is not a valid email address as
-    /// defined on RFC5322.
-    pub fn parse(email: String) -> Result<Self> {
-        if email.contains('@') && email.split('@').count() == 2 {
+    /// Returns `Err` if the string is not a valid email address.
+    pub fn parse(email: &str) -> Result<Self> {
+        if email.len() > 254 {
+            return Err(DomainError::InvalidEmailFormat);
+        }
+
+        if EMAIL_RE.is_match(email) {
             Ok(Self(email.to_lowercase()))
         } else {
             Err(DomainError::InvalidEmailFormat)

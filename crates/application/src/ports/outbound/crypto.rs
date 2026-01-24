@@ -11,11 +11,7 @@ pub trait PasswordHasher: Send + Sync {
     fn hash(&self, password: &Password) -> Result<PasswordHash>;
 
     /// Verify a password against a stored hash.
-    fn verify(
-        &self,
-        password: &Password,
-        hash: &PasswordHash,
-    ) -> Result<()>;
+    fn verify(&self, password: &Password, hash: &PasswordHash) -> Result<()>;
 }
 
 /// Port for TOTP (Time-based One-Time Password) operations.
