@@ -7,3 +7,4 @@ edition = "2024"
 serde = { workspace = true, features = ["derive"] }
 chrono = { workspace = true, features = ["serde"] }
 thiserror = { workspace = true }
+async-trait = "0.1"
