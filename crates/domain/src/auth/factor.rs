@@ -21,6 +21,11 @@ impl TotpConfig {
     pub const DEFAULT_TIME_STEP: u64 = 30;
 
     /// Create a new TOTP configuration with validation.
+    /// 
+    /// # Errors
+    ///
+    /// Returns `Err` if `time_step` is inferior or equal to
+    /// zero or if `digits` is not contained between 4 and 8.
     pub fn new(
         time_step: u64,
         digits: u8,
@@ -102,10 +107,13 @@ pub struct TotpCode {
 
 impl TotpCode {
     /// Create a new TOTP code with validation.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if `code` is not `expected_digits` length or decimal.
     pub fn new(code: impl Into<String>, expected_digits: u8) -> Result<Self> {
         let value = code.into();
 
-        // Validate format (digits only, correct length)
         if value.len() != expected_digits as usize {
             return Err(DomainError::ValidationFailed {
                 field: "totp_code".into(),
@@ -140,8 +148,7 @@ impl TotpCode {
     }
 }
 
-/// A TOTP secret value object.
-/// Contains the Base32-encoded secret for TOTP generation.
+/// TOTP secret value object.
 #[derive(Clone, PartialEq, Eq)]
 pub struct TotpSecret {
     /// Base32-encoded secret (RFC 4648).
@@ -149,7 +156,11 @@ pub struct TotpSecret {
 }
 
 impl TotpSecret {
-    /// Create a new TOTP secret with Base32 validation.
+    /// Create a new TOTP secret with base32 validation.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if string is not base32.
     pub fn new(encoded: impl Into<String>) -> Result<Self> {
         let encoded = encoded.into();
 
@@ -180,12 +191,12 @@ impl TotpSecret {
     }
 
     /// Consume and return the inner value.
+    #[inline]
     pub fn into_inner(self) -> String {
         self.encoded
     }
 }
 
-// Prevent accidental logging of secrets.
 impl std::fmt::Debug for TotpSecret {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("TotpSecret")
@@ -194,18 +205,13 @@ impl std::fmt::Debug for TotpSecret {
     }
 }
 
-/// Represents the type of authentication factor.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FactorType {
-    /// Something you know (password).
     Knowledge,
-    /// Something you have (TOTP, hardware key).
     Possession,
-    /// Something you are (biometrics).
     Inherence,
 }
 
-/// Represents an authentication factor that has been verified.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VerifiedFactor {
     factor_type: FactorType,
