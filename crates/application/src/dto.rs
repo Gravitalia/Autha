@@ -3,11 +3,16 @@
 //! DTOs are used to transfer data between layers without exposing domain
 //! entities.
 
+use domain::auth::email::EmailHash;
+use domain::auth::password::PasswordHash;
+use domain::identity::email::EmailAddress;
+use domain::identity::id::UserId;
+
 /// Request DTO for authentication.
 #[derive(Debug, Clone)]
 pub struct AuthRequestDto {
     /// Email address (optional, mutually exclusive with user_id).
-    pub email: Option<String>,
+    pub email: Option<EmailAddress>,
     /// User ID (optional, mutually exclusive with email).
     pub user_id: Option<String>,
     /// Password.
@@ -84,20 +89,20 @@ pub struct RefreshTokenResponseDto {
 }
 
 /// DTO for account data (used between application and repository).
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct AccountDto {
-    pub id: String,
+    pub id: UserId,
     pub username: String,
-    pub email_hash: String,
+    pub email_hash: EmailHash,
     pub email_cipher: String,
-    pub password_hash: String,
+    pub password_hash: PasswordHash,
     pub totp_secret: Option<String>,
     pub locale: String,
     pub summary: Option<String>,
     pub avatar: Option<String>,
     pub flags: i32,
     pub created_at: u64,
-    pub deleted_at: Option<String>,
+    pub deleted_at: Option<u64>,
     pub public_keys: Vec<PublicKeyDto>,
 }
 

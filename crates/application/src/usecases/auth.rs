@@ -1,0 +1,203 @@
+//! Authentication use case implementation.
+
+use async_trait::async_trait;
+use domain::auth::email::EmailHash;
+use domain::auth::factor::{
+    FactorMethod, FactorType, TotpCode, TotpConfig, TotpSecret, VerifiedFactor,
+};
+use domain::auth::invariants::validate_totp_requirement;
+use domain::auth::password::Password;
+use domain::auth::proof::AuthenticationProofBuilder;
+use domain::error::DomainError;
+use domain::identity::id::UserId;
+
+use crate::dto::{AuthRequestDto, AuthResponseDto};
+use crate::error::{ApplicationError, Result};
+use crate::ports::inbound::Authenticate;
+use crate::ports::outbound::{
+    AccountRepository, Clock, PasswordHasher, RefreshTokenManager,
+    RefreshTokenRepository, SymmetricEncryption, TelemetryPort, TokenSigner,
+    TotpGenerator,
+};
+
+const TOKEN_TYPE: &str = "Bearer";
+const EXPIRES_IN: u64 = 900; // 15 minutes.
+
+/// Authentication use case service.
+pub struct AuthenticateUseCase<R, RT, P, T, TE, C, S, TG>
+where
+    R: AccountRepository,
+    RT: RefreshTokenRepository,
+    P: PasswordHasher,
+    T: TokenSigner,
+    TE: TelemetryPort,
+    C: Clock,
+    S: SymmetricEncryption,
+    TG: TotpGenerator,
+{
+    account_repo: R,
+    refresh_token_repo: RT,
+    password_hasher: P,
+    token_signer: T,
+    refresh_token_manager: Box<dyn RefreshTokenManager>,
+    telemetry: TE,
+    clock: C,
+    symmetric_encryption: S,
+    totp_generator: TG,
+}
+
+impl<R, RT, P, T, TE, C, S, TG> AuthenticateUseCase<R, RT, P, T, TE, C, S, TG>
+where
+    R: AccountRepository,
+    RT: RefreshTokenRepository,
+    P: PasswordHasher,
+    T: TokenSigner,
+    TE: TelemetryPort,
+    C: Clock,
+    S: SymmetricEncryption,
+    TG: TotpGenerator,
+{
+    // TODO: should be replaced with a Box later.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        account_repo: R,
+        refresh_token_repo: RT,
+        password_hasher: P,
+        token_signer: T,
+        refresh_token_manager: Box<dyn RefreshTokenManager>,
+        telemetry: TE,
+        clock: C,
+        symmetric_encryption: S,
+        totp_generator: TG,
+    ) -> Self {
+        Self {
+            account_repo,
+            refresh_token_repo,
+            password_hasher,
+            token_signer,
+            refresh_token_manager,
+            telemetry,
+            clock,
+            symmetric_encryption,
+            totp_generator,
+        }
+    }
+}
+
+#[async_trait]
+impl<R, RT, P, T, TE, C, S, TG> Authenticate
+    for AuthenticateUseCase<R, RT, P, T, TE, C, S, TG>
+where
+    R: AccountRepository,
+    RT: RefreshTokenRepository,
+    P: PasswordHasher,
+    T: TokenSigner,
+    TE: TelemetryPort,
+    C: Clock,
+    S: SymmetricEncryption,
+    TG: TotpGenerator,
+{
+    async fn execute(
+        &self,
+        request: AuthRequestDto,
+    ) -> Result<AuthResponseDto> {
+        let password = Password::new(&request.password)?;
+
+        let account = match (&request.email, request.user_id) {
+            (Some(email), _) => {
+                // For email-based login, we need to hash the email first.
+                // Not implemented for now.
+                self.account_repo
+                    .find_by_email_hash(EmailHash::new(email.as_str()))
+                    .await?
+                    .ok_or(ApplicationError::UserNotFound)?
+            },
+            (_, Some(user_id)) => {
+                // In fact it will check on annuary such as LDAP.
+                self.account_repo
+                    .find_by_id(UserId::parse(user_id)?)
+                    .await?
+                    .ok_or(ApplicationError::UserNotFound)?
+            },
+            _ => {
+                self.telemetry.record_auth_failure("missing_identifier");
+                return Err(DomainError::ValidationFailed {
+                    field: "identifier".into(),
+                    message: "email or user_id is required".into(),
+                }
+                .into());
+            },
+        };
+
+        if account.deleted_at.is_some() {
+            self.telemetry.record_auth_failure("account_deleted");
+            return Err(ApplicationError::AccountDeleted {
+                date: account.deleted_at.unwrap_or_default(),
+            });
+        }
+
+        self.password_hasher
+            .verify(&password, &account.password_hash)?;
+
+        let now = self.clock.now();
+        let mut verified_factors = vec![VerifiedFactor::new(
+            FactorType::Knowledge,
+            FactorMethod::Password,
+            now,
+        )];
+
+        let has_totp = account.totp_secret.is_some();
+        let totp_provided = request.totp_code.is_some();
+
+        validate_totp_requirement(has_totp, totp_provided)?;
+
+        if let (Some(encrypted_secret), Some(code)) =
+            (&account.totp_secret, &request.totp_code)
+        {
+            // Decrypt the TOTP secret.
+            let secret_bytes = self
+                .symmetric_encryption
+                .decrypt_from_hex(encrypted_secret)?;
+            let secret_str = String::from_utf8(secret_bytes)
+                .map_err(|_| DomainError::InvalidTotpSecret)?;
+            let secret = TotpSecret::new(secret_str)?;
+
+            let totp_code = TotpCode::six_digits(code)?;
+            let config = TotpConfig::default();
+
+            if !self.totp_generator.verify(&totp_code, &secret, &config)? {
+                self.telemetry.record_auth_failure("invalid_totp");
+                return Err(DomainError::InvalidTotpCode.into());
+            }
+
+            verified_factors.push(VerifiedFactor::new(
+                FactorType::Possession,
+                FactorMethod::Totp,
+                now,
+            ));
+        }
+
+        let proof = AuthenticationProofBuilder::new()
+            .user_id(&account.id)
+            .authenticated_at(now)
+            .add_factor(verified_factors.remove(0))
+            .build()?;
+
+        let access_token = self.token_signer.create_access_token(&proof)?;
+        let refresh_token = self.refresh_token_manager.generate();
+
+        self.refresh_token_repo
+            .store(&refresh_token, &account.id, request.ip_address.as_deref())
+            .await?;
+
+        self.telemetry
+            .record_auth_success(account.id.as_str(), "password");
+
+        Ok(AuthResponseDto {
+            access_token,
+            refresh_token,
+            token_type: TOKEN_TYPE.to_string(),
+            expires_in: EXPIRES_IN,
+        })
+    }
+}
