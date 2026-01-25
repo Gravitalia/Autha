@@ -3,7 +3,7 @@
 use std::fmt;
 use std::sync::LazyLock;
 
-use regex_lite::Regex;
+use regex::Regex;
 
 use crate::error::{DomainError, Result};
 

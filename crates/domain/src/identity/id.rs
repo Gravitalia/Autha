@@ -22,9 +22,9 @@ impl UserId {
             return Err(DomainError::InvalidIdFormat);
         }
 
-        if trimmed
+        if !trimmed
             .chars()
-            .any(|c| !c.is_ascii_alphanumeric() && c != '_')
+            .all(|c| c.is_ascii_alphanumeric() || c == '_')
         {
             return Err(DomainError::InvalidIdFormat);
         }

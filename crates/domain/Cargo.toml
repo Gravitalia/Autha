@@ -10,4 +10,4 @@ spki = { version = "0.7.3", features = ["pem"] }
 der = "0.7"
 sha2 = "0.10"
 hex = "0.4"
-regex-lite = "0.1"
+regex = "1"
