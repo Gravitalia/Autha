@@ -36,7 +36,7 @@ pub trait RefreshTokenRepository: Send + Sync {
     async fn store(
         &self,
         token: &str,
-        user_id: UserId,
+        user_id: &UserId,
         ip_address: Option<&str>,
     ) -> Result<()>;
 

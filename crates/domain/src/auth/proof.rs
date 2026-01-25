@@ -18,16 +18,16 @@ pub enum AuthIdentifier {
 
 /// Authentication proof.
 #[derive(Debug, Clone)]
-pub struct AuthenticationProof {
-    user_id: UserId,
+pub struct AuthenticationProof<'a> {
+    user_id: &'a UserId,
     verified_factors: Vec<VerifiedFactor>,
     authenticated_at: u64,
 }
 
-impl AuthenticationProof {
+impl<'a> AuthenticationProof<'a> {
     /// Create a new authentication proof.
     pub fn new(
-        user_id: UserId,
+        user_id: &'a UserId,
         verified_factors: Vec<VerifiedFactor>,
         authenticated_at: u64,
     ) -> Result<Self> {
@@ -43,7 +43,7 @@ impl AuthenticationProof {
     }
 
     pub fn user_id(&self) -> &UserId {
-        &self.user_id
+        self.user_id
     }
 
     pub fn verified_factors(&self) -> &[VerifiedFactor] {
@@ -64,18 +64,18 @@ impl AuthenticationProof {
 
 /// Builder for creating authentication proofs step by step.
 #[derive(Debug, Default)]
-pub struct AuthenticationProofBuilder {
-    user_id: Option<UserId>,
+pub struct AuthenticationProofBuilder<'a> {
+    user_id: Option<&'a UserId>,
     verified_factors: Vec<VerifiedFactor>,
     authenticated_at: Option<u64>,
 }
 
-impl AuthenticationProofBuilder {
+impl<'a> AuthenticationProofBuilder<'a> {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn user_id(mut self, user_id: UserId) -> Self {
+    pub fn user_id(mut self, user_id: &'a UserId) -> Self {
         self.user_id = Some(user_id);
         self
     }
@@ -90,7 +90,7 @@ impl AuthenticationProofBuilder {
         self
     }
 
-    pub fn build(self) -> Result<AuthenticationProof> {
+    pub fn build(self) -> Result<AuthenticationProof<'a>> {
         let user_id = self.user_id.ok_or(DomainError::ValidationFailed {
             field: "user_id".into(),
             message: "user_id is required".into(),

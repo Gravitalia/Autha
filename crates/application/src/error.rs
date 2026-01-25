@@ -9,4 +9,9 @@ pub type Result<T> = std::result::Result<T, ApplicationError>;
 pub enum ApplicationError {
     #[error(transparent)]
     Domain(#[from] DomainError),
+
+    #[error("email is invalid")]
+    UserNotFound,
+    #[error("user is deleted since {date}")]
+    AccountDeleted { date: u64 },
 }
