@@ -30,4 +30,9 @@ pub enum DomainError {
     InvalidTotpSecret,
     #[error("password must be at least {min_length} characters")]
     WeakPassword { min_length: usize },
+
+    #[error("sensitive operations must have a possession factor")]
+    InvariantViolation,
+    #[error("token expired")]
+    TokenExpired,
 }
