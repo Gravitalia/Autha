@@ -15,88 +15,48 @@ use crate::dto::{AuthRequestDto, AuthResponseDto};
 use crate::error::{ApplicationError, Result};
 use crate::ports::inbound::Authenticate;
 use crate::ports::outbound::{
-    AccountRepository, Clock, PasswordHasher, RefreshTokenManager,
-    RefreshTokenRepository, SymmetricEncryption, TelemetryPort, TokenSigner,
-    TotpGenerator,
+    AccountRepository, Clock, CryptoPort, RefreshTokenManager,
+    RefreshTokenRepository, TelemetryPort, TokenSigner,
 };
 
 const TOKEN_TYPE: &str = "Bearer";
 const EXPIRES_IN: u64 = 900; // 15 minutes.
 
 /// Authentication use case service.
-pub struct AuthenticateUseCase<R, RT, P, T, TE, C, S, TG>
-where
-    R: AccountRepository,
-    RT: RefreshTokenRepository,
-    P: PasswordHasher,
-    T: TokenSigner,
-    TE: TelemetryPort,
-    C: Clock,
-    S: SymmetricEncryption,
-    TG: TotpGenerator,
-{
-    account_repo: R,
-    refresh_token_repo: RT,
-    password_hasher: P,
-    token_signer: T,
+pub struct AuthenticateUseCase {
+    account_repo: Box<dyn AccountRepository>,
+    refresh_token_repo: Box<dyn RefreshTokenRepository>,
+    crypto: Box<dyn CryptoPort>,
+    token_signer: Box<dyn TokenSigner>,
     refresh_token_manager: Box<dyn RefreshTokenManager>,
-    telemetry: TE,
-    clock: C,
-    symmetric_encryption: S,
-    totp_generator: TG,
+    telemetry: Box<dyn TelemetryPort>,
+    clock: Box<dyn Clock>,
 }
 
-impl<R, RT, P, T, TE, C, S, TG> AuthenticateUseCase<R, RT, P, T, TE, C, S, TG>
-where
-    R: AccountRepository,
-    RT: RefreshTokenRepository,
-    P: PasswordHasher,
-    T: TokenSigner,
-    TE: TelemetryPort,
-    C: Clock,
-    S: SymmetricEncryption,
-    TG: TotpGenerator,
-{
-    // TODO: should be replaced with a Box later.
-    #[allow(clippy::too_many_arguments)]
+impl AuthenticateUseCase {
     pub fn new(
-        account_repo: R,
-        refresh_token_repo: RT,
-        password_hasher: P,
-        token_signer: T,
+        account_repo: Box<dyn AccountRepository>,
+        refresh_token_repo: Box<dyn RefreshTokenRepository>,
+        crypto: Box<dyn CryptoPort>,
+        token_signer: Box<dyn TokenSigner>,
         refresh_token_manager: Box<dyn RefreshTokenManager>,
-        telemetry: TE,
-        clock: C,
-        symmetric_encryption: S,
-        totp_generator: TG,
+        telemetry: Box<dyn TelemetryPort>,
+        clock: Box<dyn Clock>,
     ) -> Self {
         Self {
             account_repo,
             refresh_token_repo,
-            password_hasher,
+            crypto,
             token_signer,
             refresh_token_manager,
             telemetry,
             clock,
-            symmetric_encryption,
-            totp_generator,
         }
     }
 }
 
 #[async_trait]
-impl<R, RT, P, T, TE, C, S, TG> Authenticate
-    for AuthenticateUseCase<R, RT, P, T, TE, C, S, TG>
-where
-    R: AccountRepository,
-    RT: RefreshTokenRepository,
-    P: PasswordHasher,
-    T: TokenSigner,
-    TE: TelemetryPort,
-    C: Clock,
-    S: SymmetricEncryption,
-    TG: TotpGenerator,
-{
+impl Authenticate for AuthenticateUseCase {
     async fn execute(
         &self,
         request: AuthRequestDto,
@@ -136,7 +96,8 @@ where
             });
         }
 
-        self.password_hasher
+        self.crypto
+            .password_hasher()
             .verify(&password, &account.password_hash)?;
 
         let now = self.clock.now();
@@ -154,18 +115,21 @@ where
         if let (Some(encrypted_secret), Some(code)) =
             (&account.totp_secret, &request.totp_code)
         {
-            // Decrypt the TOTP secret.
             let secret_bytes = self
-                .symmetric_encryption
+                .crypto
+                .symmetric_encryption()
                 .decrypt_from_hex(encrypted_secret)?;
             let secret_str = String::from_utf8(secret_bytes)
                 .map_err(|_| DomainError::InvalidTotpSecret)?;
+
             let secret = TotpSecret::new(secret_str)?;
-
             let totp_code = TotpCode::six_digits(code)?;
-            let config = TotpConfig::default();
 
-            if !self.totp_generator.verify(&totp_code, &secret, &config)? {
+            if !self.crypto.totp_generator().verify(
+                &totp_code,
+                &secret,
+                &TotpConfig::default(),
+            )? {
                 self.telemetry.record_auth_failure("invalid_totp");
                 return Err(DomainError::InvalidTotpCode.into());
             }

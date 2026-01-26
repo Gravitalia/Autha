@@ -34,7 +34,6 @@ pub fn validate_sensitive_operation(
     current_time: u64,
     max_age_seconds: u64,
 ) -> Result<()> {
-    // Must be recently authenticated
     validate_auth_freshness(
         proof.authenticated_at(),
         current_time,
@@ -90,17 +89,13 @@ mod tests {
 
     #[test]
     fn test_validate_totp_requirement() {
-        // TOTP enabled, code provided.
         assert!(validate_totp_requirement(true, true).is_ok());
 
-        // TOTP enabled, code not provided.
         let err = validate_totp_requirement(true, false).unwrap_err();
         assert!(matches!(err, DomainError::TotpRequired));
 
-        // TOTP not enabled, code provided.
         assert!(validate_totp_requirement(false, true).is_ok());
 
-        // TOTP not enabled, code not provided.
         assert!(validate_totp_requirement(false, false).is_ok());
     }
 
@@ -108,7 +103,6 @@ mod tests {
     fn test_validate_auth_freshness() {
         assert!(validate_auth_freshness(1000, 1500, 600).is_ok());
 
-        // Expired auth.
         let err = validate_auth_freshness(1000, 2000, 600).unwrap_err();
         assert!(matches!(err, DomainError::TokenExpired));
 
