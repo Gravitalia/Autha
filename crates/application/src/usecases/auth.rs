@@ -65,15 +65,15 @@ impl Authenticate for AuthenticateUseCase {
 
         let account = match (&request.email, request.user_id) {
             (Some(email), _) => {
-                // For email-based login, we need to hash the email first.
-                // Not implemented for now.
+                let email_hash =
+                    self.crypto.hasher().hash(email.as_str().as_bytes());
                 self.account_repo
-                    .find_by_email_hash(EmailHash::new(email.as_str()))
+                    .find_by_email_hash(EmailHash::new(email_hash))
                     .await?
                     .ok_or(ApplicationError::UserNotFound)?
             },
             (_, Some(user_id)) => {
-                // In fact it will check on annuary such as LDAP.
+                // In fact it will check on directory such as LDAP.
                 self.account_repo
                     .find_by_id(UserId::parse(user_id)?)
                     .await?
@@ -141,10 +141,10 @@ impl Authenticate for AuthenticateUseCase {
             ));
         }
 
-        let proof = AuthenticationProofBuilder::new()
+        let proof = AuthenticationProofBuilder::default()
             .user_id(&account.id)
             .authenticated_at(now)
-            .add_factor(verified_factors.remove(0))
+            .add_factors(verified_factors)
             .build()?;
 
         let access_token = self.token_signer.create_access_token(&proof)?;
