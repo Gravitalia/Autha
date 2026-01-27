@@ -53,10 +53,10 @@ mod tests {
     use crate::auth::factor::{FactorMethod, VerifiedFactor};
     use crate::identity::id::UserId;
 
-    fn create_proof_with_password_only(
-        user_id: &UserId,
+    fn create_proof_with_password_only<'a>(
+        user_id: &'a UserId,
         timestamp: u64,
-    ) -> AuthenticationProof {
+    ) -> AuthenticationProof<'a> {
         let factor = VerifiedFactor::new(
             FactorType::Knowledge,
             FactorMethod::Password,
@@ -65,10 +65,10 @@ mod tests {
         AuthenticationProof::new(user_id, vec![factor], timestamp).unwrap()
     }
 
-    fn create_proof_with_mfa(
-        user_id: &UserId,
+    fn create_proof_with_mfa<'a>(
+        user_id: &'a UserId,
         timestamp: u64,
-    ) -> AuthenticationProof {
+    ) -> AuthenticationProof<'a> {
         let password_factor = VerifiedFactor::new(
             FactorType::Knowledge,
             FactorMethod::Password,
