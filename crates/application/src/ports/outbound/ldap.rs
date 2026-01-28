@@ -20,7 +20,7 @@ pub trait LdapPort: Send + Sync {
 }
 
 /// Attributes for LDAP user creation.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct LdapUserAttributes {
     pub username: String,
     pub email: Option<String>,

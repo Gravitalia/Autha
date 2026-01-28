@@ -5,7 +5,7 @@ use std::fmt;
 use crate::error::{DomainError, Result};
 
 /// Value object of a valid identifier.
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UserId(String);
 
 impl UserId {
@@ -29,7 +29,11 @@ impl UserId {
             return Err(DomainError::InvalidIdFormat);
         }
 
-        Ok(Self(trimmed.to_string()))
+        if trimmed.len() == id.len() {
+            Ok(Self(id))
+        } else {
+            Ok(Self(trimmed.to_owned()))
+        }
     }
 
     /// Returns the same string as a string slice `&str`.

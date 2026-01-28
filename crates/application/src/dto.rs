@@ -7,6 +7,7 @@ use domain::auth::email::EmailHash;
 use domain::auth::password::{Password, PasswordHash};
 use domain::identity::email::EmailAddress;
 use domain::identity::id::UserId;
+use domain::identity::ip::EncryptedIp;
 use domain::key::pem::PemFingerprint;
 
 /// Request DTO for authentication.
@@ -21,7 +22,7 @@ pub struct AuthRequestDto {
     /// TOTP code (optional).
     pub totp_code: Option<String>,
     /// Client IP address.
-    pub ip_address: Option<String>,
+    pub ip_address: Option<EncryptedIp>,
 }
 
 /// Response DTO for authentication.
@@ -58,7 +59,7 @@ pub struct RefreshTokenRequestDto {
     /// The refresh token.
     pub refresh_token: String,
     /// Client IP address.
-    pub ip_address: Option<String>,
+    pub ip_address: Option<EncryptedIp>,
 }
 
 /// DTO for account data (used between application and repository).
@@ -85,5 +86,6 @@ pub struct PublicKeyDto {
     pub id: PemFingerprint,
     pub owner: String,
     pub public_key_pem: String,
+    /// `yyyy-mm-dd` date.
     pub created_at: String,
 }

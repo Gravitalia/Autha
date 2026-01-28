@@ -5,6 +5,7 @@ use crate::auth::proof::AuthenticationProof;
 use crate::error::{DomainError, Result};
 
 /// Validates that TOTP is provided when the user has TOTP enabled.
+#[inline]
 pub fn validate_totp_requirement(
     has_totp_secret: bool,
     totp_code_provided: bool,
@@ -16,12 +17,16 @@ pub fn validate_totp_requirement(
 }
 
 /// Validates that an authentication is not too old.
+#[inline]
 pub fn validate_auth_freshness(
     authenticated_at: u64,
     current_time: u64,
     max_age_seconds: u64,
 ) -> Result<()> {
-    let age = current_time.saturating_sub(authenticated_at);
+    if authenticated_at > current_time {
+        return Err(DomainError::InvariantViolation);
+    }
+    let age = current_time - authenticated_at;
     if age > max_age_seconds {
         return Err(DomainError::TokenExpired);
     }
@@ -29,6 +34,7 @@ pub fn validate_auth_freshness(
 }
 
 /// Validates that sensitive operations require recent authentication.
+#[inline]
 pub fn validate_sensitive_operation(
     proof: &AuthenticationProof,
     current_time: u64,
@@ -105,6 +111,9 @@ mod tests {
 
         let err = validate_auth_freshness(1000, 2000, 600).unwrap_err();
         assert!(matches!(err, DomainError::TokenExpired));
+
+        let err = validate_auth_freshness(2000, 1000, 600).unwrap_err();
+        assert!(matches!(err, DomainError::InvariantViolation));
 
         // Edge case: exactly at limit.
         assert!(validate_auth_freshness(1000, 1600, 600).is_ok());

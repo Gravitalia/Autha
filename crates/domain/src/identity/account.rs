@@ -3,6 +3,7 @@
 use crate::auth::password::PasswordHash;
 use crate::identity::email::EmailAddress;
 use crate::identity::id::UserId;
+use crate::identity::ip::EncryptedIp;
 use crate::identity::user::User;
 
 const DEFAULT_LOCALE: &str = "en";
@@ -21,9 +22,9 @@ pub struct UserBuilder<Id, Email> {
     id: Id,
     username: String,
     email: Email,
-    password: PasswordHash,
+    password: Option<PasswordHash>,
     locale: String,
-    ip: Option<String>,
+    ip: Option<EncryptedIp>,
     invite: Option<String>,
 }
 
@@ -35,7 +36,7 @@ impl UserBuilder<Missing, Missing> {
             id: Missing,
             username: String::new(),
             email: Missing,
-            password: PasswordHash::new(""),
+            password: None,
             locale: DEFAULT_LOCALE.to_string(),
             ip: None,
             invite: None,
@@ -85,7 +86,7 @@ impl<Id> UserBuilder<Id, Missing> {
 impl<Id, Email> UserBuilder<Id, Email> {
     /// Sets the hashed password.
     pub fn password(mut self, password: PasswordHash) -> Self {
-        self.password = password;
+        self.password = Some(password);
         self
     }
 
@@ -103,7 +104,7 @@ impl<Id, Email> UserBuilder<Id, Email> {
     }
 
     /// Records the registration or last-access IP address.
-    pub fn ip(mut self, ip: Option<String>) -> Self {
+    pub fn ip(mut self, ip: Option<EncryptedIp>) -> Self {
         self.ip = ip;
         self
     }
@@ -120,9 +121,9 @@ fn construct_user(
     id: Option<UserId>,
     email: Option<EmailAddress>,
     username: String,
-    password: PasswordHash,
+    password: Option<PasswordHash>,
     locale: String,
-    ip: Option<String>,
+    ip: Option<EncryptedIp>,
     invite: Option<String>,
 ) -> User {
     User {

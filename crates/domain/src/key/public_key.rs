@@ -1,4 +1,4 @@
-//! Builder for public key.
+//! Public key entity.
 
 use chrono::{DateTime, Utc};
 

@@ -5,7 +5,7 @@ members = ["crates/*"]
 [workspace.package]
 version = "1.0.0-dev"
 edition = "2024"
-license = "MPL-2.0"
+license = "BSD-3-Clause"
 authors = ["Gravitalia Team"]
 repository = "https://github.com/Gravitalia/Autha"
 

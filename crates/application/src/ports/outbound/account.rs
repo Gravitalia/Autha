@@ -26,7 +26,7 @@ pub trait AccountRepository: Send + Sync {
     async fn update(&self, account: &AccountDto) -> Result<()>;
 
     /// Soft delete an account.
-    async fn delete(&self, id: UserId) -> Result<()>;
+    async fn delete(&self, id: &UserId) -> Result<()>;
 }
 
 /// Port for refresh token persistence.
@@ -37,11 +37,11 @@ pub trait RefreshTokenRepository: Send + Sync {
         &self,
         token: &str,
         user_id: &UserId,
-        ip_address: Option<&str>,
+        ip_address: Option<&String>,
     ) -> Result<()>;
 
     /// Find the user ID associated with a refresh token.
-    async fn find_user_id(&self, token: &str) -> Result<Option<AccountDto>>;
+    async fn find_user_id(&self, token: &str) -> Result<Option<UserId>>;
 
     /// Revoke a refresh token.
     async fn revoke(&self, token: &str) -> Result<()>;

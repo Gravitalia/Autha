@@ -1,6 +1,5 @@
 //! Email logic management.
 
-use std::fmt;
 use std::sync::LazyLock;
 
 use regex::Regex;
@@ -12,7 +11,7 @@ static EMAIL_RE: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 /// Value object of a valid email address.
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct EmailAddress(String);
 
 impl EmailAddress {
@@ -40,9 +39,11 @@ impl EmailAddress {
     }
 }
 
-impl fmt::Display for EmailAddress {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+impl std::fmt::Debug for EmailAddress {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EmailAddress")
+            .field("email", &"[REDACTED]")
+            .finish()
     }
 }
 

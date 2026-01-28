@@ -1,6 +1,17 @@
 //! Password logic.
 
+use std::sync::LazyLock;
+
+use regex::Regex;
+
 use crate::error::{DomainError, Result};
+
+static PASSWORD_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(
+        r"^\$([a-z0-9-]{1,32})(?:\$v=(\d+))?(?:\$([^$]+))?\$([^$]+)\$([^$]+)$",
+    )
+    .unwrap()
+});
 
 /// Value object of a password.
 #[derive(Clone)]
@@ -20,13 +31,17 @@ impl Password {
 
         if value.len() < Self::MIN_LENGTH {
             return Err(DomainError::WeakPassword {
-                min_length: Self::MAX_LENGTH,
+                min_length: Self::MIN_LENGTH,
             });
         }
 
         if value.len() > Self::MAX_LENGTH {
-            return Err(DomainError::WeakPassword {
-                min_length: Self::MAX_LENGTH,
+            return Err(DomainError::ValidationFailed {
+                field: "password".into(),
+                message: format!(
+                    "password must be at most {} characters",
+                    Self::MAX_LENGTH
+                ),
             });
         }
 
@@ -53,9 +68,18 @@ impl std::fmt::Debug for Password {
 pub struct PasswordHash(String);
 
 impl PasswordHash {
-    /// Create a new [`PasswordHash`].
-    pub fn new(phc_string: impl Into<String>) -> Self {
-        Self(phc_string.into())
+    /// Converts a [`String`] into a valid [`PasswordHash`].
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err` if the string is not in PHC format.
+    pub fn parse(phc_string: impl Into<String>) -> Result<Self> {
+        let pwd = phc_string.into();
+        if !PASSWORD_RE.is_match(&pwd) {
+            return Err(DomainError::InvalidCredentials);
+        }
+
+        Ok(Self(pwd))
     }
 
     /// Returns the same string as a string slice `&str`.

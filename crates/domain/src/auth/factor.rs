@@ -177,7 +177,7 @@ impl TotpSecret {
         let bytes = s.as_bytes();
         let len = bytes.len();
 
-        if len == 0 || !len.is_multiple_of(8) {
+        if len == 0 {
             return false;
         }
 
@@ -201,7 +201,14 @@ impl TotpSecret {
             }
         }
 
-        matches!(padding_count, 0 | 1 | 3 | 4 | 6)
+        if found_padding {
+            if !len.is_multiple_of(8) {
+                return false;
+            }
+            matches!(padding_count, 0 | 1 | 3 | 4 | 6)
+        } else {
+            !matches!(len % 8, 1 | 3 | 6)
+        }
     }
 
     /// Returns the same string as a string slice `&str`.

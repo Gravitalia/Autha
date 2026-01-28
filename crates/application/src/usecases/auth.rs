@@ -158,9 +158,12 @@ impl Authenticate for AuthenticateUseCase {
         let access_token = self.token_signer.create_access_token(&proof)?;
         let refresh_token = self.refresh_token_manager.generate();
 
-        // This API hash token on database.
         self.refresh_token_repo
-            .store(&refresh_token, &account.id, request.ip_address.as_deref())
+            .store(
+                &self.crypto.hasher().hash(refresh_token.as_bytes()),
+                &account.id,
+                request.ip_address.as_deref(),
+            )
             .await?;
 
         self.telemetry

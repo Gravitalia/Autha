@@ -114,7 +114,8 @@ impl<'a> AuthenticationProofBuilder<'a> {
     /// # Errors
     ///
     /// Returns [`DomainError::ValidationFailed`] if `user_id` or
-    /// `authenticated_at` are missing.
+    /// `authenticated_at` are missing, and [`DomainError::InvalidCredentials`]
+    /// if no verified factors were added.
     pub fn build(self) -> Result<AuthenticationProof<'a>> {
         let user_id = self.user_id.ok_or(DomainError::ValidationFailed {
             field: "user_id".into(),
