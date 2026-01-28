@@ -41,7 +41,7 @@ pub trait RefreshTokenRepository: Send + Sync {
     ) -> Result<()>;
 
     /// Find the user ID associated with a refresh token.
-    async fn find_user_id(&self, token: &str) -> Result<Option<String>>;
+    async fn find_user_id(&self, token: &str) -> Result<Option<AccountDto>>;
 
     /// Revoke a refresh token.
     async fn revoke(&self, token: &str) -> Result<()>;

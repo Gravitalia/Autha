@@ -4,9 +4,10 @@
 //! entities.
 
 use domain::auth::email::EmailHash;
-use domain::auth::password::PasswordHash;
+use domain::auth::password::{Password, PasswordHash};
 use domain::identity::email::EmailAddress;
 use domain::identity::id::UserId;
+use domain::key::pem::PemFingerprint;
 
 /// Request DTO for authentication.
 #[derive(Debug, Clone)]
@@ -42,28 +43,13 @@ pub struct CreateAccountRequestDto {
     /// User ID (vanity/username).
     pub user_id: String,
     /// Email address.
-    pub email: String,
+    pub email: EmailAddress,
     /// Password.
-    pub password: String,
-    /// Locale (e.g., "en", "fr").
+    pub password: Password,
+    /// ISO 3166-1 alpha-2.
     pub locale: Option<String>,
     /// Invite code (optional).
     pub invite_code: Option<String>,
-    /// Client IP address.
-    pub ip_address: Option<String>,
-}
-
-/// Response DTO for account creation.
-#[derive(Debug, Clone)]
-pub struct CreateAccountResponseDto {
-    /// Access token (JWT).
-    pub access_token: String,
-    /// Refresh token.
-    pub refresh_token: String,
-    /// Token type (e.g., "Bearer").
-    pub token_type: String,
-    /// Expiration time in seconds.
-    pub expires_in: u64,
 }
 
 /// Request DTO for token refresh.
@@ -73,19 +59,6 @@ pub struct RefreshTokenRequestDto {
     pub refresh_token: String,
     /// Client IP address.
     pub ip_address: Option<String>,
-}
-
-/// Response DTO for token refresh.
-#[derive(Debug, Clone)]
-pub struct RefreshTokenResponseDto {
-    /// New access token (JWT).
-    pub access_token: String,
-    /// New refresh token (rotated).
-    pub refresh_token: String,
-    /// Token type (e.g., "Bearer").
-    pub token_type: String,
-    /// Expiration time in seconds.
-    pub expires_in: u64,
 }
 
 /// DTO for account data (used between application and repository).
@@ -107,9 +80,9 @@ pub struct AccountDto {
 }
 
 /// DTO for public key data.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct PublicKeyDto {
-    pub id: String,
+    pub id: PemFingerprint,
     pub owner: String,
     pub public_key_pem: String,
     pub created_at: String,

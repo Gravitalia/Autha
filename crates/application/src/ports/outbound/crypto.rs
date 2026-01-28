@@ -56,10 +56,10 @@ pub trait Hasher: Send + Sync {
 /// Port for secure random generation.
 pub trait SecureRandom: Send + Sync {
     /// Generate random bytes.
-    fn random_bytes(&self, length: usize) -> Vec<u8>;
+    fn random_bytes(&self, length: usize) -> Result<Vec<u8>>;
 
     /// Generate a random alphanumeric string.
-    fn random_string(&self, length: usize) -> String;
+    fn random_string(&self, length: usize) -> Result<String>;
 }
 
 /// Aggregated crypto port combining all cryptographic operations.

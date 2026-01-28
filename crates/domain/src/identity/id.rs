@@ -14,7 +14,7 @@ impl UserId {
     /// # Errors
     ///
     /// Returns `Err` if the string length is greater than 64
-    /// characters or less than 2 characters.
+    /// characters or less than 3 characters.
     pub fn parse(id: String) -> Result<Self> {
         let trimmed = id.trim();
         let len = trimmed.len();

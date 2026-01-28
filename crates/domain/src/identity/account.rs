@@ -1,5 +1,6 @@
 //! Typed builder for `User`.
 
+use crate::auth::password::PasswordHash;
 use crate::identity::email::EmailAddress;
 use crate::identity::id::UserId;
 use crate::identity::user::User;
@@ -20,7 +21,7 @@ pub struct UserBuilder<Id, Email> {
     id: Id,
     username: String,
     email: Email,
-    password: String,
+    password: PasswordHash,
     locale: String,
     ip: Option<String>,
     invite: Option<String>,
@@ -34,7 +35,7 @@ impl UserBuilder<Missing, Missing> {
             id: Missing,
             username: String::new(),
             email: Missing,
-            password: String::new(),
+            password: PasswordHash::new(""),
             locale: DEFAULT_LOCALE.to_string(),
             ip: None,
             invite: None,
@@ -83,8 +84,8 @@ impl<Id> UserBuilder<Id, Missing> {
 
 impl<Id, Email> UserBuilder<Id, Email> {
     /// Sets the hashed password.
-    pub fn password(mut self, password: impl Into<String>) -> Self {
-        self.password = password.into();
+    pub fn password(mut self, password: PasswordHash) -> Self {
+        self.password = password;
         self
     }
 
@@ -116,10 +117,10 @@ impl<Id, Email> UserBuilder<Id, Email> {
 
 /// Helper to construct a `User` from moved parts.
 fn construct_user(
-    id: UserId,
-    email: EmailAddress,
+    id: Option<UserId>,
+    email: Option<EmailAddress>,
     username: String,
-    password: String,
+    password: PasswordHash,
     locale: String,
     ip: Option<String>,
     invite: Option<String>,
@@ -155,15 +156,7 @@ impl UserBuilder<Present<UserId>, Missing> {
             invite,
         } = self;
 
-        construct_user(
-            id,
-            EmailAddress::default(),
-            username,
-            password,
-            locale,
-            ip,
-            invite,
-        )
+        construct_user(Some(id), None, username, password, locale, ip, invite)
     }
 }
 
@@ -181,8 +174,8 @@ impl UserBuilder<Missing, Present<EmailAddress>> {
         } = self;
 
         construct_user(
-            UserId::default(),
-            email,
+            None,
+            Some(email),
             username,
             password,
             locale,
@@ -206,6 +199,14 @@ impl UserBuilder<Present<UserId>, Present<EmailAddress>> {
             invite,
         } = self;
 
-        construct_user(id, email, username, password, locale, ip, invite)
+        construct_user(
+            Some(id),
+            Some(email),
+            username,
+            password,
+            locale,
+            ip,
+            invite,
+        )
     }
 }

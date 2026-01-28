@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 
-use crate::dto::{RefreshTokenRequestDto, RefreshTokenResponseDto};
+use crate::dto::{AuthResponseDto, RefreshTokenRequestDto};
 use crate::error::Result;
 
 /// Inbound port for refreshing access tokens.
@@ -12,5 +12,5 @@ pub trait RefreshAccessToken: Send + Sync {
     async fn execute(
         &self,
         request: RefreshTokenRequestDto,
-    ) -> Result<RefreshTokenResponseDto>;
+    ) -> Result<AuthResponseDto>;
 }

@@ -1,4 +1,4 @@
-//! Authentification domain.
+//! Authentication domain.
 
 pub mod email;
 pub mod factor;

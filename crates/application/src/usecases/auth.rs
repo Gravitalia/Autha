@@ -64,7 +64,7 @@ impl Authenticate for AuthenticateUseCase {
         let password = Password::new(&request.password)?;
 
         let account = match (&request.email, request.user_id) {
-            (Some(email), _) => {
+            (Some(email), None) => {
                 let email_hash =
                     self.crypto.hasher().hash(email.as_str().as_bytes());
                 self.account_repo
@@ -72,12 +72,20 @@ impl Authenticate for AuthenticateUseCase {
                     .await?
                     .ok_or(ApplicationError::UserNotFound)?
             },
-            (_, Some(user_id)) => {
+            (None, Some(user_id)) => {
                 // In fact it will check on directory such as LDAP.
                 self.account_repo
                     .find_by_id(UserId::parse(user_id)?)
                     .await?
                     .ok_or(ApplicationError::UserNotFound)?
+            },
+            (Some(_), Some(_)) => {
+                self.telemetry.record_auth_failure("ambiguous_identifier");
+                return Err(DomainError::ValidationFailed {
+                    field: "identifier".into(),
+                    message: "email and user_id are mutually exclusive".into(),
+                }
+                .into());
             },
             _ => {
                 self.telemetry.record_auth_failure("missing_identifier");
@@ -150,6 +158,7 @@ impl Authenticate for AuthenticateUseCase {
         let access_token = self.token_signer.create_access_token(&proof)?;
         let refresh_token = self.refresh_token_manager.generate();
 
+        // This API hash token on database.
         self.refresh_token_repo
             .store(&refresh_token, &account.id, request.ip_address.as_deref())
             .await?;

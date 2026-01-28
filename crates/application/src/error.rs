@@ -10,7 +10,7 @@ pub enum ApplicationError {
     #[error(transparent)]
     Domain(#[from] DomainError),
 
-    #[error("email is invalid")]
+    #[error("user not found")]
     UserNotFound,
     #[error("user is deleted since {date}")]
     AccountDeleted { date: u64 },

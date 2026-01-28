@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 
-use crate::dto::{CreateAccountRequestDto, CreateAccountResponseDto};
+use crate::dto::{AuthResponseDto, CreateAccountRequestDto};
 use crate::error::Result;
 
 /// Inbound port for account creation.
@@ -12,5 +12,5 @@ pub trait CreateAccount: Send + Sync {
     async fn execute(
         &self,
         request: CreateAccountRequestDto,
-    ) -> Result<CreateAccountResponseDto>;
+    ) -> Result<AuthResponseDto>;
 }

@@ -2,6 +2,7 @@
 
 use async_trait::async_trait;
 use domain::identity::user::User;
+use domain::key::pem::PemFingerprint;
 use domain::key::public_key::Key;
 
 use crate::error::Result;
@@ -13,5 +14,5 @@ pub trait KeyRepository: Send + Sync {
     async fn create_and_link(&self, key: &Key, user: &User) -> Result<()>;
 
     /// Delete and unlink a key.
-    async fn delete(&self, id: &str) -> Result<()>;
+    async fn delete(&self, id: &PemFingerprint) -> Result<()>;
 }

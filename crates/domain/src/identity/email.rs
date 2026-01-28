@@ -27,7 +27,7 @@ impl EmailAddress {
         }
 
         if EMAIL_RE.is_match(email) {
-            Ok(Self(email.to_lowercase()))
+            Ok(Self(email.to_string()))
         } else {
             Err(DomainError::InvalidEmailFormat)
         }

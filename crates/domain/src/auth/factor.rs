@@ -174,14 +174,34 @@ impl TotpSecret {
 
     #[inline]
     fn is_valid_base32(s: &str) -> bool {
-        const BASE32_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        let bytes = s.as_bytes();
+        let len = bytes.len();
 
-        if s.is_empty() {
+        if len == 0 || !len.is_multiple_of(8) {
             return false;
         }
 
-        s.bytes()
-            .all(|b| BASE32_CHARS.contains(&b.to_ascii_uppercase()))
+        let mut padding_count = 0;
+        let mut found_padding = false;
+
+        for &b in bytes.iter() {
+            let c = b.to_ascii_uppercase();
+
+            if c == b'=' {
+                found_padding = true;
+                padding_count += 1;
+            } else {
+                if found_padding {
+                    return false;
+                }
+
+                if !matches!(c, b'A'..=b'Z' | b'2'..=b'7') {
+                    return false;
+                }
+            }
+        }
+
+        matches!(padding_count, 0 | 1 | 3 | 4 | 6)
     }
 
     /// Returns the same string as a string slice `&str`.
