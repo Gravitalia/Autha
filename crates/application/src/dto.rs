@@ -42,7 +42,7 @@ pub struct AuthResponseDto {
 #[derive(Debug, Clone)]
 pub struct CreateAccountRequestDto {
     /// User ID (vanity/username).
-    pub user_id: String,
+    pub user_id: UserId,
     /// Email address.
     pub email: EmailAddress,
     /// Password.

@@ -6,7 +6,7 @@ use crate::identity::id::UserId;
 use crate::identity::ip::EncryptedIp;
 use crate::identity::user::User;
 
-const DEFAULT_LOCALE: &str = "en";
+pub const DEFAULT_LOCALE: &str = "en";
 
 /// Marker type for missing value.
 #[derive(Debug)]

@@ -18,9 +18,7 @@ use crate::ports::outbound::{
     AccountRepository, Clock, CryptoPort, RefreshTokenManager,
     RefreshTokenRepository, TelemetryPort, TokenSigner,
 };
-
-const TOKEN_TYPE: &str = "Bearer";
-const EXPIRES_IN: u64 = 900; // 15 minutes.
+use crate::usecases::{EXPIRES_IN, TOKEN_TYPE};
 
 /// Authentication use case service.
 pub struct AuthenticateUseCase {

@@ -49,3 +49,9 @@ pub trait RefreshTokenManager: Send + Sync {
     /// Get the default expiration time in seconds.
     fn expiration_seconds(&self) -> u64;
 }
+
+/// Aggregated token port combining all tokens operations.
+pub trait Token: Send + Sync {
+    fn signer(&self) -> &dyn TokenSigner;
+    fn refresh_token(&self) -> &dyn RefreshTokenManager;
+}
