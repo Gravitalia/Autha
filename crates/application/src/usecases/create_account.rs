@@ -109,7 +109,11 @@ impl CreateAccount for CreateAccountUseCase {
         let refresh_token = self.token.refresh_token().generate();
 
         self.refresh_token_repo
-            .store(&refresh_token, &account.id, None)
+            .store(
+                &self.crypto.hasher().hash(refresh_token.as_bytes()),
+                &account.id,
+                request.ip_address.as_deref(),
+            )
             .await?;
 
         self.telemetry.record_account_created(account.id.as_str());

@@ -51,6 +51,8 @@ pub struct CreateAccountRequestDto {
     pub locale: Option<String>,
     /// Invite code (optional).
     pub invite_code: Option<String>,
+    /// Client IP address.
+    pub ip_address: Option<EncryptedIp>,
 }
 
 /// Request DTO for token refresh.

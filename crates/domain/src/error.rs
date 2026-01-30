@@ -35,4 +35,6 @@ pub enum DomainError {
     InvariantViolation,
     #[error("token expired")]
     TokenExpired,
+    #[error("token not found")]
+    TokenNotFound,
 }

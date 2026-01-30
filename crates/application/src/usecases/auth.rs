@@ -66,14 +66,14 @@ impl Authenticate for AuthenticateUseCase {
                 let email_hash =
                     self.crypto.hasher().hash(email.as_str().as_bytes());
                 self.account_repo
-                    .find_by_email_hash(EmailHash::new(email_hash))
+                    .find_by_email_hash(&EmailHash::new(email_hash))
                     .await?
                     .ok_or(ApplicationError::UserNotFound)?
             },
             (None, Some(user_id)) => {
                 // In fact it will check on directory such as LDAP.
                 self.account_repo
-                    .find_by_id(UserId::parse(user_id)?)
+                    .find_by_id(&UserId::parse(user_id)?)
                     .await?
                     .ok_or(ApplicationError::UserNotFound)?
             },

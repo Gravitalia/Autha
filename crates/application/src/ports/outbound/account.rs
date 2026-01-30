@@ -11,12 +11,12 @@ use crate::error::Result;
 #[async_trait]
 pub trait AccountRepository: Send + Sync {
     /// Find an account by user ID.
-    async fn find_by_id(&self, id: UserId) -> Result<Option<AccountDto>>;
+    async fn find_by_id(&self, id: &UserId) -> Result<Option<AccountDto>>;
 
     /// Find an account by email hash.
     async fn find_by_email_hash(
         &self,
-        email_hash: EmailHash,
+        email_hash: &EmailHash,
     ) -> Result<Option<AccountDto>>;
 
     /// Create a new account.
