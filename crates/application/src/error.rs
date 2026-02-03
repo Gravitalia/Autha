@@ -14,4 +14,7 @@ pub enum ApplicationError {
     UserNotFound,
     #[error("user is deleted since {date}")]
     AccountDeleted { date: u64 },
+
+    #[error("{cause}")]
+    Crypto { cause: String },
 }

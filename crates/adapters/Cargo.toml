@@ -4,3 +4,48 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+domain = { path = "../domain" }
+application = { path = "../application" }
+
+# Async runtime.
+tokio = { version = "1", features = ["full"] }
+async-trait = "0.1"
+
+# HTTP framework.
+axum = { version = "0.7", features = ["macros"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+
+# Serialization.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Database.
+sqlx = { version = "0.8", features = ["postgres", "runtime-tokio-rustls", "chrono", "json"] }
+
+# Cryptography.
+argon2 = { version = "0.5", features = ["std"] }
+aes-gcm = "0.10"
+hmac = "0.12"
+sha1 = "0.10"
+sha2 = "0.10"
+rand = "0.8"
+base32 = "0.5"
+hex = "0.4"
+zeroize = { version = "1", features = ["derive"] }
+
+jsonwebtoken = "9"
+passwords = "3"
+
+# Telemetry.
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Other
+validator = { version = "0.18", features = ["derive"] }
+ldap3 = { version = "0.11", default-features = false, features = ["tls-rustls"] }
+lapin = "2"
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "2"
+anyhow = "1"
+url = "2"

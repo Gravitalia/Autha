@@ -53,6 +53,11 @@ impl Password {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+
+    /// Returns a byte slice of this `String`'s contents.
+    pub fn as_bytes(&self) -> &[u8] {
+        self.0.as_bytes()
+    }
 }
 
 impl std::fmt::Debug for Password {
