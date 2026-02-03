@@ -6,6 +6,7 @@ use base32::decode;
 use domain::auth::factor::{TotpCode, TotpConfig, TotpSecret};
 use hmac::{Hmac, Mac};
 use sha1::Sha1;
+use zeroize::Zeroizing;
 
 /// HMAC-based TOTP generator.
 pub struct HmacTotpGenerator;
@@ -20,15 +21,19 @@ impl HmacTotpGenerator {
         timestamp / time_step
     }
 
-    /// Decode Base32 secret.
-    fn decode_secret(&self, secret: &TotpSecret) -> Result<Vec<u8>> {
-        decode(
+    fn decode_secret(
+        &self,
+        secret: &TotpSecret,
+    ) -> Result<Zeroizing<Vec<u8>>> {
+        let decoded = decode(
             base32::Alphabet::Rfc4648 { padding: false },
             secret.as_str(),
         )
         .ok_or_else(|| ApplicationError::Crypto {
             cause: "invalid base32 encoding".into(),
-        })
+        })?;
+
+        Ok(Zeroizing::new(decoded))
     }
 
     /// Generate TOTP code for a specific time counter.
@@ -62,12 +67,6 @@ impl HmacTotpGenerator {
         let code = format!("{:0>width$}", code_int, width = digits as usize);
 
         Ok(code)
-    }
-}
-
-impl Default for HmacTotpGenerator {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -127,7 +126,11 @@ impl TotpGenerator for HmacTotpGenerator {
         let current_counter = self.get_time_counter(now, config.time_step());
 
         for offset in -(window as i64)..=(window as i64) {
-            let counter = (current_counter as i64 + offset) as u64;
+            let counter = match (current_counter as i64).checked_add(offset) {
+                Some(c) if c >= 0 => c as u64,
+                _ => continue,
+            };
+
             let generated =
                 self.generate_code(&secret_bytes, counter, config.digits())?;
 
@@ -166,5 +169,20 @@ mod tests {
 
         let code = generator.generate(&secret, &config).unwrap();
         assert!(generator.verify(&code, &secret, &config).unwrap());
+    }
+
+    #[test]
+    fn test_totp_verification_with_window_at_epoch_start() {
+        let generator = HmacTotpGenerator::new();
+        let secret = TotpSecret::new("JBSWY3DPEHPK3PXP").unwrap();
+        let config = TotpConfig::default();
+
+        // Test near epoch start to verify no integer underflow.
+        let code = generator.generate_at(&secret, &config, 15).unwrap();
+        assert!(
+            generator
+                .verify_with_window(&code, &secret, &config, 2)
+                .is_ok()
+        );
     }
 }
