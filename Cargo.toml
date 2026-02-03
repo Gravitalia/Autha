@@ -32,7 +32,7 @@ tower = { version = "0.5.2", features = ["limit"] }
 tower-http = { version = "0.6.6", features = [
 "cors", "trace", "tracing", "request-id", "sensitive-headers", "tokio", "timeout",
 ] }
-jsonwebtoken = { version = "10.1", features = ["rust_crypto"] }
+jsonwebtoken = { version = "10.3", features = ["rust_crypto"] }
 url = "2.5"
 validator = { version = "0.20", features = ["derive"] }
 hex = "0.4"
