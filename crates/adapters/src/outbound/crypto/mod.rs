@@ -1,6 +1,7 @@
 //! Cryptographic adapters.
 
 mod argon2;
+mod totp;
 
 use application::error::Result;
 use application::ports::outbound::{
@@ -9,10 +10,12 @@ use application::ports::outbound::{
 };
 
 use crate::outbound::crypto::argon2::Argon2PasswordHasher;
+use crate::outbound::crypto::totp::HmacTotpGenerator;
 
 /// Aggregated crypto adapter implementing all crypto ports.
 pub struct CryptoAdapter {
     password_hasher: Argon2PasswordHasher,
+    totp_generator: HmacTotpGenerator,
 }
 
 impl CryptoAdapter {
@@ -30,6 +33,7 @@ impl CryptoAdapter {
                 argon_iterations,
                 argon_parallelism,
             )?,
+            totp_generator: HmacTotpGenerator::new(),
         })
     }
 }
@@ -40,7 +44,7 @@ impl CryptoPort for CryptoAdapter {
     }
 
     fn totp_generator(&self) -> &dyn TotpGenerator {
-        unimplemented!()
+        &self.totp_generator
     }
 
     fn symmetric_encryption(&self) -> &dyn SymmetricEncryption {

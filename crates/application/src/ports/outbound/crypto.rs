@@ -23,12 +23,29 @@ pub trait TotpGenerator: Send + Sync {
         config: &TotpConfig,
     ) -> Result<TotpCode>;
 
+    /// Generate a TOTP code for the given secret at custom time.
+    fn generate_at(
+        &self,
+        secret: &TotpSecret,
+        config: &TotpConfig,
+        timestamp: u64,
+    ) -> Result<TotpCode>;
+
     /// Verify a TOTP code against a secret.
     fn verify(
         &self,
         code: &TotpCode,
         secret: &TotpSecret,
         config: &TotpConfig,
+    ) -> Result<bool>;
+
+    /// Verify a TOTP code against a secret with window flexiblity.
+    fn verify_with_window(
+        &self,
+        code: &TotpCode,
+        secret: &TotpSecret,
+        config: &TotpConfig,
+        window: u8,
     ) -> Result<bool>;
 }
 

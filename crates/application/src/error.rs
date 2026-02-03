@@ -17,4 +17,7 @@ pub enum ApplicationError {
 
     #[error("{cause}")]
     Crypto { cause: String },
+
+    #[error("something went wrong")]
+    Unknown,
 }
