@@ -1,5 +1,6 @@
 //! Cryptographic adapters.
 
+mod aes;
 mod argon2;
 mod totp;
 
@@ -9,6 +10,7 @@ use application::ports::outbound::{
     TotpGenerator,
 };
 
+use crate::outbound::crypto::aes::AesGcmEncryption;
 use crate::outbound::crypto::argon2::Argon2PasswordHasher;
 use crate::outbound::crypto::totp::HmacTotpGenerator;
 
@@ -16,13 +18,14 @@ use crate::outbound::crypto::totp::HmacTotpGenerator;
 pub struct CryptoAdapter {
     password_hasher: Argon2PasswordHasher,
     totp_generator: HmacTotpGenerator,
+    symmetric_encryption: AesGcmEncryption,
 }
 
 impl CryptoAdapter {
     /// Create a new [`CryptoAdapter`].
     pub fn new(
-        _master_key: zeroize::Zeroizing<Vec<u8>>,
-        _salt: Vec<u8>,
+        master_key: zeroize::Zeroizing<Vec<u8>>,
+        salt: Vec<u8>,
         argon_memory_cost: u32,
         argon_iterations: u32,
         argon_parallelism: u32,
@@ -34,6 +37,7 @@ impl CryptoAdapter {
                 argon_parallelism,
             )?,
             totp_generator: HmacTotpGenerator::new(),
+            symmetric_encryption: AesGcmEncryption::new(master_key, salt)?,
         })
     }
 }
@@ -48,7 +52,7 @@ impl CryptoPort for CryptoAdapter {
     }
 
     fn symmetric_encryption(&self) -> &dyn SymmetricEncryption {
-        unimplemented!()
+        &self.symmetric_encryption
     }
 
     fn hasher(&self) -> &dyn Hasher {
