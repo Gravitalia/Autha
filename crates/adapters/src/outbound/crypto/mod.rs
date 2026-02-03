@@ -2,6 +2,7 @@
 
 mod aes;
 mod argon2;
+mod sha2;
 mod totp;
 
 use application::error::Result;
@@ -12,6 +13,7 @@ use application::ports::outbound::{
 
 use crate::outbound::crypto::aes::AesGcmEncryption;
 use crate::outbound::crypto::argon2::Argon2PasswordHasher;
+use crate::outbound::crypto::sha2::Sha256Hasher;
 use crate::outbound::crypto::totp::HmacTotpGenerator;
 
 /// Aggregated crypto adapter implementing all crypto ports.
@@ -19,6 +21,7 @@ pub struct CryptoAdapter {
     password_hasher: Argon2PasswordHasher,
     totp_generator: HmacTotpGenerator,
     symmetric_encryption: AesGcmEncryption,
+    hasher: Sha256Hasher,
 }
 
 impl CryptoAdapter {
@@ -37,7 +40,8 @@ impl CryptoAdapter {
                 argon_parallelism,
             )?,
             totp_generator: HmacTotpGenerator::new(),
-            symmetric_encryption: AesGcmEncryption::new(master_key, salt)?,
+            symmetric_encryption: AesGcmEncryption::new(master_key, &salt)?,
+            hasher: Sha256Hasher::new(salt),
         })
     }
 }
@@ -56,7 +60,7 @@ impl CryptoPort for CryptoAdapter {
     }
 
     fn hasher(&self) -> &dyn Hasher {
-        unimplemented!()
+        &self.hasher
     }
 
     fn secure_random(&self) -> &dyn SecureRandom {

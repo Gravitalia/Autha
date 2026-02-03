@@ -17,9 +17,9 @@ pub struct AesGcmEncryption(Zeroizing<[u8; KEY_LENGTH]>);
 impl AesGcmEncryption {
     /// Create a new [`AesGcmEncryption`].
     /// Derives a 256-bit key from password and salt using PBKDF2.
-    pub fn new(master_key: Zeroizing<Vec<u8>>, salt: Vec<u8>) -> Result<Self> {
+    pub fn new(master_key: Zeroizing<Vec<u8>>, salt: &[u8]) -> Result<Self> {
         let mut key = Zeroizing::new([0u8; KEY_LENGTH]);
-        Self::derive_key(&master_key, &salt, &mut *key)?;
+        Self::derive_key(&master_key, salt, &mut *key)?;
         Ok(Self(Zeroizing::new(*key)))
     }
 
