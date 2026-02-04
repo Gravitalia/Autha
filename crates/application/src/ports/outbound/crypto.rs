@@ -77,6 +77,9 @@ pub trait SecureRandom: Send + Sync {
 
     /// Generate a random alphanumeric string.
     fn random_string(&self, length: usize) -> Result<String>;
+
+    /// Generate a random hexadecimal string.
+    fn random_hex(&self, length: usize) -> Result<String>;
 }
 
 /// Aggregated crypto port combining all cryptographic operations.

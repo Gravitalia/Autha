@@ -2,6 +2,7 @@
 
 mod aes;
 mod argon2;
+mod random;
 mod sha2;
 mod totp;
 
@@ -13,6 +14,7 @@ use application::ports::outbound::{
 
 use crate::outbound::crypto::aes::AesGcmEncryption;
 use crate::outbound::crypto::argon2::Argon2PasswordHasher;
+use crate::outbound::crypto::random::OsRngRandom;
 use crate::outbound::crypto::sha2::Sha256Hasher;
 use crate::outbound::crypto::totp::HmacTotpGenerator;
 
@@ -22,6 +24,7 @@ pub struct CryptoAdapter {
     totp_generator: HmacTotpGenerator,
     symmetric_encryption: AesGcmEncryption,
     hasher: Sha256Hasher,
+    random: OsRngRandom,
 }
 
 impl CryptoAdapter {
@@ -42,6 +45,7 @@ impl CryptoAdapter {
             totp_generator: HmacTotpGenerator::new(),
             symmetric_encryption: AesGcmEncryption::new(master_key, &salt)?,
             hasher: Sha256Hasher::new(salt),
+            random: OsRngRandom::new(),
         })
     }
 }
@@ -64,6 +68,6 @@ impl CryptoPort for CryptoAdapter {
     }
 
     fn secure_random(&self) -> &dyn SecureRandom {
-        unimplemented!()
+        &self.random
     }
 }
