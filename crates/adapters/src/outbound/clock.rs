@@ -1,5 +1,5 @@
 //! Time adapters.
-//! 
+//!
 //! Code crash if there is a physical inconsistency (unrecoverable state).
 
 use application::ports::outbound::Clock;

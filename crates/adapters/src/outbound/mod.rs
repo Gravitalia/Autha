@@ -1,5 +1,6 @@
 //! Outbound adapters.
 
+pub mod clock;
 pub mod crypto;
 pub mod jwt;
-pub mod clock;
+pub mod telemetry;
