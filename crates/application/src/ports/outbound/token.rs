@@ -31,9 +31,6 @@ pub trait TokenSigner: Send + Sync {
         proof: &AuthenticationProof,
     ) -> Result<String>;
 
-    /// Create a signed access token with custom claims.
-    fn create_token(&self, claims: &TokenClaims) -> Result<String>;
-
     /// Decode and verify a token, returning its claims.
     fn verify_token(&self, token: &str) -> Result<TokenClaims>;
 

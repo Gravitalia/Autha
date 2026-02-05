@@ -2,7 +2,7 @@
 
 mod aes;
 mod argon2;
-mod random;
+pub(crate) mod random;
 mod sha2;
 mod totp;
 
