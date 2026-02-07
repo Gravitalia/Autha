@@ -3,7 +3,7 @@
 use std::str::FromStr;
 use std::sync::Arc;
 
-use application::error::{ApplicationError, Result};
+use application::error::{ApplicationError, Result, ToInternal};
 use application::ports::outbound::Mailer;
 use async_trait::async_trait;
 use chrono::Utc;
@@ -74,8 +74,7 @@ impl RabbitMqMailer {
         password: &str,
         queue_name: &str,
     ) -> Result<Self> {
-        let addr =
-            Url::parse(address).map_err(|_| ApplicationError::Unknown)?;
+        let addr = Url::parse(address).catch()?;
         let uri = AMQPUri {
             scheme: AMQPScheme::from_str(addr.scheme())
                 .map_err(|_| ApplicationError::Unknown)?,
@@ -99,9 +98,7 @@ impl RabbitMqMailer {
         let conn_config = ConnectionProperties::default()
             .with_connection_name("autha_maily_client".into())
             .with_experimental_recovery_config(recovery_config);
-        let conn = Connection::connect_uri(uri, conn_config)
-            .await
-            .map_err(|_| ApplicationError::Unknown)?;
+        let conn = Connection::connect_uri(uri, conn_config).await.catch()?;
 
         tracing::info!(%addr, "rabbitmq connected");
 
@@ -117,10 +114,7 @@ impl RabbitMqMailer {
         conn: Arc<Connection>,
         queue: &str,
     ) -> Result<Channel> {
-        let channel = conn
-            .create_channel()
-            .await
-            .map_err(|_| ApplicationError::Unknown)?;
+        let channel = conn.create_channel().await.catch()?;
         channel
             .queue_declare(
                 queue,
@@ -131,7 +125,7 @@ impl RabbitMqMailer {
                 FieldTable::default(),
             )
             .await
-            .map_err(|_| ApplicationError::Unknown)?;
+            .catch()?;
         Ok(channel)
     }
 
@@ -156,8 +150,7 @@ impl RabbitMqMailer {
             Self::create_channel(Arc::clone(conn), &self.queue_name).await?;
 
         let payload = Self::create_event(message);
-        let payload = serde_json::to_vec(&payload)
-            .map_err(|_| ApplicationError::Unknown)?;
+        let payload = serde_json::to_vec(&payload).catch()?;
 
         channel
             .basic_publish(
@@ -170,7 +163,7 @@ impl RabbitMqMailer {
                     .with_content_type(CONTENT_TYPE.into()),
             )
             .await
-            .map_err(|_| ApplicationError::Unknown)?;
+            .catch()?;
 
         Ok(())
     }

@@ -1,6 +1,6 @@
 //! Argon2id password hasher implementation.
 
-use application::error::{ApplicationError, Result};
+use application::error::{Result, ToInternal};
 use application::ports::outbound::PasswordHasher;
 use argon2::password_hash::{
     PasswordHash, PasswordHasher as Argon2PasswordHasherTrait,
@@ -31,9 +31,7 @@ impl Argon2PasswordHasher {
             parallelism,
             Some(OUTPUT_LENGTH),
         )
-        .map_err(|err| ApplicationError::Crypto {
-            cause: err.to_string(),
-        })?;
+        .catch()?;
 
         Ok(Self { params })
     }
@@ -49,11 +47,7 @@ impl PasswordHasher for Argon2PasswordHasher {
 
         let salt = SaltString::generate(&mut OsRng);
 
-        let hash = argon2.hash_password(password.as_bytes(), &salt).map_err(
-            |err| ApplicationError::Crypto {
-                cause: err.to_string(),
-            },
-        )?;
+        let hash = argon2.hash_password(password.as_bytes(), &salt).catch()?;
 
         Ok(DomainPasswordHash::parse(hash.to_string())?)
     }

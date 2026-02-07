@@ -3,7 +3,7 @@
 use aes_gcm::aead::generic_array::GenericArray;
 use aes_gcm::aead::{Aead, KeyInit};
 use aes_gcm::{Aes256Gcm, Key, Nonce};
-use application::error::{ApplicationError, Result};
+use application::error::{ApplicationError, Result, ToInternal};
 use application::ports::outbound::SymmetricEncryption;
 use rand::RngCore;
 use zeroize::Zeroizing;
@@ -37,11 +37,7 @@ impl AesGcmEncryption {
             params,
         );
 
-        argon2
-            .hash_password_into(password, salt, output)
-            .map_err(|err| ApplicationError::Crypto {
-                cause: err.to_string(),
-            })?;
+        argon2.hash_password_into(password, salt, output).catch()?;
 
         Ok(())
     }
@@ -56,11 +52,9 @@ impl SymmetricEncryption for AesGcmEncryption {
         rand::rngs::OsRng.fill_bytes(&mut nonce_bytes);
         let nonce = GenericArray::from_slice(&nonce_bytes);
 
-        let ciphertext = cipher.encrypt(nonce, plaintext).map_err(|err| {
-            ApplicationError::Crypto {
-                cause: err.to_string(),
-            }
-        })?;
+        let ciphertext = cipher
+            .encrypt(nonce, plaintext)
+            .map_err(|_| ApplicationError::Unknown)?;
 
         let mut result = Vec::with_capacity(NONCE_SIZE + ciphertext.len());
         result.extend_from_slice(&nonce_bytes);
@@ -71,8 +65,8 @@ impl SymmetricEncryption for AesGcmEncryption {
 
     fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>> {
         if ciphertext.len() < NONCE_SIZE {
-            return Err(ApplicationError::Crypto {
-                cause: "ciphertext too short".to_string(),
+            return Err(ApplicationError::TooSmall {
+                excepted: NONCE_SIZE,
             });
         }
 
@@ -82,11 +76,9 @@ impl SymmetricEncryption for AesGcmEncryption {
         let key = Key::<Aes256Gcm>::from_slice(self.0.as_slice());
         let cipher = Aes256Gcm::new(key);
 
-        cipher.decrypt(nonce, ciphertext).map_err(|err| {
-            ApplicationError::Crypto {
-                cause: err.to_string(),
-            }
-        })
+        cipher
+            .decrypt(nonce, ciphertext)
+            .map_err(|_| ApplicationError::Unknown)
     }
 
     fn encrypt_to_hex(&self, plaintext: &[u8]) -> Result<String> {
@@ -95,8 +87,7 @@ impl SymmetricEncryption for AesGcmEncryption {
     }
 
     fn decrypt_from_hex(&self, hex_ciphertext: &str) -> Result<Vec<u8>> {
-        let ciphertext = hex::decode(hex_ciphertext)
-            .map_err(|_| ApplicationError::Unknown)?;
+        let ciphertext = hex::decode(hex_ciphertext).catch()?;
         self.decrypt(&ciphertext)
     }
 }

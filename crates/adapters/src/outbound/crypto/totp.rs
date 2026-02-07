@@ -1,6 +1,6 @@
 //! TOTP generator using HMAC-SHA1.
 
-use application::error::{ApplicationError, Result};
+use application::error::{ApplicationError, Result, ToInternal};
 use application::ports::outbound::TotpGenerator;
 use base32::decode;
 use domain::auth::factor::{TotpCode, TotpConfig, TotpSecret};
@@ -29,9 +29,7 @@ impl HmacTotpGenerator {
             base32::Alphabet::Rfc4648 { padding: false },
             secret.as_str(),
         )
-        .ok_or_else(|| ApplicationError::Crypto {
-            cause: "invalid base32 encoding".into(),
-        })?;
+        .ok_or_else(|| ApplicationError::Unknown)?;
 
         Ok(Zeroizing::new(decoded))
     }
@@ -45,12 +43,7 @@ impl HmacTotpGenerator {
     ) -> Result<String> {
         let counter_bytes = time_counter.to_be_bytes();
 
-        let mut mac =
-            Hmac::<Sha1>::new_from_slice(secret_bytes).map_err(|err| {
-                ApplicationError::Crypto {
-                    cause: err.to_string(),
-                }
-            })?;
+        let mut mac = Hmac::<Sha1>::new_from_slice(secret_bytes).catch()?;
 
         mac.update(&counter_bytes);
         let result = mac.finalize().into_bytes();

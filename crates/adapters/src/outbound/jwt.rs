@@ -1,6 +1,6 @@
 //! JWT signing and verification using ES256 (ECDSA P-256).
 
-use application::error::{ApplicationError, Result};
+use application::error::{ApplicationError, Result, ToInternal};
 use application::ports::outbound::{
     SecureRandom, TokenClaims, TokenSigner as ImplTokenSigner,
 };
@@ -36,19 +36,11 @@ impl TokenSigner {
         public_key_pem: &str,
         private_key_pem: &str,
     ) -> Result<Self> {
-        let encoding_key = EncodingKey::from_ec_pem(
-            private_key_pem.as_bytes(),
-        )
-        .map_err(|err| ApplicationError::Crypto {
-            cause: err.to_string(),
-        })?;
+        let encoding_key =
+            EncodingKey::from_ec_pem(private_key_pem.as_bytes()).catch()?;
 
         let decoding_key = if !public_key_pem.is_empty() {
-            Some(DecodingKey::from_ec_pem(public_key_pem.as_bytes()).map_err(
-                |err| ApplicationError::Crypto {
-                    cause: err.to_string(),
-                },
-            )?)
+            Some(DecodingKey::from_ec_pem(public_key_pem.as_bytes()).catch()?)
         } else {
             None
         };
@@ -99,28 +91,21 @@ impl ImplTokenSigner for TokenSigner {
             scope: SCOPES.join(" "),
         };
 
-        encode(&header, &claims, &self.encoding_key).map_err(|err| {
-            ApplicationError::Crypto {
-                cause: err.to_string(),
-            }
-        })
+        encode(&header, &claims, &self.encoding_key).catch()
     }
 
     fn verify_token(&self, token: &str) -> Result<TokenClaims> {
-        let decoding_key = self.decoding_key.as_ref().ok_or_else(|| {
-            ApplicationError::Crypto {
-                cause: "no public_key".to_string(),
-            }
-        })?;
+        let decoding_key = self
+            .decoding_key
+            .as_ref()
+            .ok_or_else(|| ApplicationError::Unknown)?;
 
         let mut validation = Validation::new(self.algorithm);
         validation.set_audience(&[&self.audience]);
         validation.set_issuer(&[&self.issuer]);
 
-        let token_data = decode::<JwtClaims>(token, decoding_key, &validation)
-            .map_err(|err| ApplicationError::Crypto {
-                cause: err.to_string(),
-            })?;
+        let token_data =
+            decode::<JwtClaims>(token, decoding_key, &validation).catch()?;
 
         Ok(TokenClaims {
             sub: token_data.claims.sub,
