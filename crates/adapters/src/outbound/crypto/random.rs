@@ -1,6 +1,6 @@
 //! Secure random generation using OS RNG.
 
-use application::error::{ApplicationError, Result};
+use application::error::{Result, ToInternal};
 use application::ports::outbound::SecureRandom;
 use rand::distributions::Alphanumeric;
 use rand::rngs::OsRng;
@@ -18,9 +18,7 @@ impl OsRngRandom {
 impl SecureRandom for OsRngRandom {
     fn random_bytes(&self, length: usize) -> Result<Vec<u8>> {
         let mut bytes = vec![0u8; length];
-        OsRng
-            .try_fill_bytes(&mut bytes)
-            .map_err(|_| ApplicationError::Unknown)?;
+        OsRng.try_fill_bytes(&mut bytes).catch()?;
         Ok(bytes)
     }
 

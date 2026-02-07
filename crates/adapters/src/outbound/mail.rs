@@ -1,7 +1,6 @@
 //! SMTP mailer using RabbitMQ for async email sending.
 
 use std::str::FromStr;
-use std::sync::Arc;
 
 use application::error::{ApplicationError, Result, ToInternal};
 use application::ports::outbound::Mailer;
@@ -62,8 +61,8 @@ struct Content<'a> {
 
 /// RabbitMQ-based mailer adapter.
 pub struct RabbitMqMailer {
-    conn: Option<Arc<Connection>>,
     queue_name: String,
+    channel: Channel,
 }
 
 impl RabbitMqMailer {
@@ -104,20 +103,11 @@ impl RabbitMqMailer {
 
         tracing::debug!(queue = queue_name, "rabbitmq queue created");
 
-        Ok(Self {
-            queue_name: queue_name.to_string(),
-            conn: Some(Arc::new(conn)),
-        })
-    }
-
-    async fn create_channel(
-        conn: Arc<Connection>,
-        queue: &str,
-    ) -> Result<Channel> {
+        // TODO: create a channel pool.
         let channel = conn.create_channel().await.catch()?;
         channel
             .queue_declare(
-                queue,
+                queue_name,
                 QueueDeclareOptions {
                     durable: true,
                     ..Default::default()
@@ -126,7 +116,11 @@ impl RabbitMqMailer {
             )
             .await
             .catch()?;
-        Ok(channel)
+
+        Ok(Self {
+            channel,
+            queue_name: queue_name.to_string(),
+        })
     }
 
     fn create_event(data: Content) -> Cloudevent {
@@ -143,16 +137,10 @@ impl RabbitMqMailer {
     }
 
     async fn publish<'a>(&self, message: Content<'a>) -> Result<()> {
-        let Some(conn) = &self.conn else {
-            return Ok(());
-        };
-        let channel =
-            Self::create_channel(Arc::clone(conn), &self.queue_name).await?;
-
         let payload = Self::create_event(message);
         let payload = serde_json::to_vec(&payload).catch()?;
 
-        channel
+        self.channel
             .basic_publish(
                 "",
                 &self.queue_name,
