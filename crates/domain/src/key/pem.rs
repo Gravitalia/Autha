@@ -16,10 +16,21 @@ use crate::key::public_key::KeyError;
 pub struct PemFingerprint(String);
 
 impl PemFingerprint {
-    // Returns the same string as a string slice `&str`.
+    /// Create a new [`PemFingerprint`].
+    pub fn new(fingerprint: impl ToString) -> Self {
+        PemFingerprint(fingerprint.to_string())
+    }
+
+    /// Returns the same string as a string slice `&str`.
     #[inline]
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+}
+
+impl fmt::Display for PemFingerprint {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
