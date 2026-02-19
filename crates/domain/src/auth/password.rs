@@ -3,6 +3,7 @@
 use std::sync::LazyLock;
 
 use regex::Regex;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use crate::error::{DomainError, Result};
 
@@ -14,7 +15,7 @@ static PASSWORD_RE: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 /// Value object of a password.
-#[derive(Clone)]
+#[derive(Zeroize, ZeroizeOnDrop)]
 pub struct Password(String);
 
 impl Password {

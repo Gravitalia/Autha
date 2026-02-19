@@ -2,8 +2,10 @@
 
 use std::ops::Deref;
 
+use zeroize::{Zeroize, ZeroizeOnDrop};
+
 /// Value object of a valid identifier.
-#[derive(Default, Clone, PartialEq, Eq)]
+#[derive(Default, Clone, PartialEq, Eq, Zeroize, ZeroizeOnDrop)]
 pub struct EncryptedIp(String);
 
 impl EncryptedIp {

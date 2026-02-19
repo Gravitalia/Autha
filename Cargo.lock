@@ -914,6 +914,7 @@ dependencies = [
  "sha2",
  "spki",
  "thiserror 2.0.18",
+ "zeroize",
 ]
 
 [[package]]

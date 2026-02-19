@@ -4,6 +4,7 @@ use std::fmt::Display;
 use std::sync::LazyLock;
 
 use regex::Regex;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 use crate::error::{DomainError, Result};
 
@@ -12,7 +13,7 @@ static EMAIL_RE: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 /// Value object of a valid email address.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Zeroize, ZeroizeOnDrop)]
 pub struct EmailAddress(String);
 
 impl EmailAddress {

@@ -137,7 +137,7 @@ impl<'a> AuthenticationProofBuilder<'a> {
 }
 
 /// Represents the data provided during an authentication attempt.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AuthenticationAttempt {
     identifier: AuthIdentifier,
     password: Password,
