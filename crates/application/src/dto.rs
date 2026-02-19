@@ -39,7 +39,7 @@ pub struct AuthResponseDto {
 }
 
 /// Request DTO for account creation.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct CreateAccountRequestDto {
     /// User ID (vanity/username).
     pub user_id: UserId,
