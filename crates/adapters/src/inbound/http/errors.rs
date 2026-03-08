@@ -83,7 +83,7 @@ impl ProblemDetails {
                 StatusCode::UNAUTHORIZED,
                 Self::new(
                     StatusCode::UNAUTHORIZED,
-                    "Invalid Credentials",
+                    "Invalid credentials",
                     "The provided credentials are incorrect.",
                 ),
             ),
@@ -91,7 +91,7 @@ impl ProblemDetails {
                 StatusCode::BAD_REQUEST,
                 Self::new(
                     StatusCode::BAD_REQUEST,
-                    "TOTP Required",
+                    "TOTP required",
                     "A TOTP code is required for this account.",
                 )
                 .with_errors(vec![FieldError {
@@ -104,7 +104,7 @@ impl ProblemDetails {
                 StatusCode::UNAUTHORIZED,
                 Self::new(
                     StatusCode::UNAUTHORIZED,
-                    "Invalid TOTP Code",
+                    "Invalid TOTP code",
                     "The provided TOTP code is incorrect.",
                 )
                 .with_errors(vec![FieldError {
@@ -117,7 +117,7 @@ impl ProblemDetails {
                 StatusCode::BAD_REQUEST,
                 Self::new(
                     StatusCode::BAD_REQUEST,
-                    "Invalid TOTP Secret",
+                    "Invalid TOTP secret",
                     "The TOTP secret format is invalid.",
                 ),
             ),

@@ -42,7 +42,6 @@ pub fn validate_password_strength(
     let analysis = analyzer::analyze(password);
     let score = scorer::score(&analysis);
 
-    // Require score >= 80 (strong password)
     if score < 80.0 {
         return Err(ValidationError::new("weak_password").with_message(
             "Password is too weak. Use a mix of letters, numbers, and symbols.".into(),

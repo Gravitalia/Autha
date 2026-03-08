@@ -42,7 +42,7 @@ passwords = "3"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-# Other
+# Other.
 validator = { version = "0.18", features = ["derive"] }
 ldap3 = { version = "0.11", default-features = false, features = ["tls-rustls"] }
 lapin = { version = "3", features = ["unstable"] }
