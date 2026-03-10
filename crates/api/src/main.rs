@@ -210,32 +210,34 @@ async fn listen_unix_socket(
     use std::os::unix::fs::PermissionsExt;
 
     // Remove existing socket file if it exists.
-    if std::path::Path::new(&path).exists() {
-        fs::remove_file(path)?;
-    }
+    let _ = fs::remove_file(path);
 
     let listener = tokio::net::UnixListener::bind(path)?;
     fs::set_permissions(path, Permissions::from_mode(0o766))?;
     tracing::info!(?path, "listening on unix socket");
 
+    let builder = hyper_util::server::conn::auto::Builder::new(
+        hyper_util::rt::TokioExecutor::new(),
+    );
+
     loop {
-        let (stream, _) = listener.accept().await?;
+        let (stream, _) = match listener.accept().await {
+            Ok(conn) => conn,
+            Err(err) => {
+                tracing::error!(%err, "error accepting connection");
+                continue;
+            },
+        };
+
         let tower_service = app.clone();
+        let builder = builder.clone();
+
         tokio::spawn(async move {
             let socket = hyper_util::rt::TokioIo::new(stream);
-            let hyper_service = hyper::service::service_fn(
-                move |request: hyper::Request<hyper::body::Incoming>| {
-                    use tower::Service;
-                    let mut service = tower_service.clone();
-                    async move { service.call(request).await }
-                },
-            );
-            if let Err(err) = hyper_util::server::conn::auto::Builder::new(
-                hyper_util::rt::TokioExecutor::new(),
-            )
-            .serve_connection(socket, hyper_service)
-            .await
-            {
+            let service =
+                hyper_util::service::TowerToHyperService::new(tower_service);
+
+            if let Err(err) = builder.serve_connection(socket, service).await {
                 tracing::error!(%err, "error serving connection");
             }
         });
