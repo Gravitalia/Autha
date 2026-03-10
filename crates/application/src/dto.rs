@@ -26,7 +26,7 @@ pub struct AuthRequestDto {
 }
 
 /// Response DTO for authentication.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct AuthResponseDto {
     /// Access token (JWT).
     pub access_token: String,

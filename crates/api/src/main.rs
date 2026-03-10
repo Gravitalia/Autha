@@ -16,8 +16,10 @@ use adapters::inbound::{http, ldap};
 use adapters::outbound::mail::RabbitMqMailer;
 use adapters::outbound::persistence::postgres;
 use adapters::outbound::{crypto, token};
+use application::ports::inbound::{Authenticate, CreateAccount};
 use application::ports::outbound::Mailer;
 use axum::Router;
+use axum::extract::FromRef;
 use axum::routing::{get, post};
 use config::ServerConfig;
 use opentelemetry::trace::TracerProvider;
@@ -26,6 +28,25 @@ use tracing_subscriber::EnvFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::util::SubscriberInitExt;
+
+/// Shared state injected into all HTTP handlers via Axum.
+#[derive(Clone)]
+pub struct AppState {
+    pub create_account: Arc<dyn CreateAccount>,
+    pub authenticate: Arc<dyn Authenticate>,
+}
+
+impl FromRef<AppState> for Arc<dyn CreateAccount> {
+    fn from_ref(state: &AppState) -> Self {
+        Arc::clone(&state.create_account)
+    }
+}
+
+impl FromRef<AppState> for Arc<dyn Authenticate> {
+    fn from_ref(state: &AppState) -> Self {
+        Arc::clone(&state.authenticate)
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -78,11 +99,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     postgres::pool::migrate(db_pool.clone()).await?;
 
     let account_repo =
-        Box::new(postgres::account_repository::PgAccountRepository::new(
+        Arc::new(postgres::account_repository::PgAccountRepository::new(
             db_pool.clone(),
         ));
     let refresh_token_repo =
-        Box::new(postgres::token_repository::PgRefreshTokenRepository::new(
+        Arc::new(postgres::token_repository::PgRefreshTokenRepository::new(
             db_pool.clone(),
         ));
 
@@ -95,7 +116,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("SALT env var is required")
         .into_bytes();
 
-    let crypto = Box::new(crypto::CryptoAdapter::new(
+    let crypto = Arc::new(crypto::CryptoAdapter::new(
         master_key,
         salt,
         config.argon2.memory_cost,
@@ -103,7 +124,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         config.argon2.parallelism,
     )?);
     let mailer = if let Some(cfg) = &config.mail {
-        Some(Box::new(
+        Some(Arc::new(
             RabbitMqMailer::new(
                 &cfg.address,
                 &cfg.username,
@@ -111,7 +132,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &cfg.queue,
             )
             .await?,
-        ) as Box<dyn Mailer>)
+        ) as Arc<dyn Mailer>)
     } else {
         None
     };
@@ -123,7 +144,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     let refresh_manager = token::SecureRefreshTokenManager::new();
     let token =
-        Box::new(token::TokenAdapter::new(token_signer, refresh_manager));
+        Arc::new(token::TokenAdapter::new(token_signer, refresh_manager));
     let ldap_client = if let Some(cfg) = &config.ldap {
         let ldap_config =
             ldap::config::LdapConfig::new(&cfg.address, &cfg.base_dn);
@@ -132,31 +153,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         None
     };
     let telemetry_adapter =
-        Box::new(adapters::outbound::telemetry::TracingTelemetry);
-    let clock = Box::new(adapters::outbound::clock::SystemClock);
+        Arc::new(adapters::outbound::telemetry::TracingTelemetry);
+    let clock = Arc::new(adapters::outbound::clock::SystemClock);
 
     let create_account_uc = application::usecases::CreateAccountUseCase::new(
+        account_repo.clone(),
+        refresh_token_repo.clone(),
+        crypto.clone(),
+        mailer.clone(),
+        token.clone(),
+        telemetry_adapter.clone(),
+        clock.clone(),
+    );
+    let authenticate_uc = application::usecases::AuthenticateUseCase::new(
         account_repo,
         refresh_token_repo,
         crypto,
-        mailer,
         token,
         telemetry_adapter,
         clock,
     );
-    let shared_service = Arc::new(create_account_uc);
+    let state = AppState {
+        create_account: Arc::new(create_account_uc),
+        authenticate: Arc::new(authenticate_uc),
+    };
 
     let app = Router::new()
         .route("/metrics", get(move || ready(recorder_handle.render())))
-        .route(
-            "/create",
-            post(
-                http::create::create_account_handler::<
-                    Arc<application::usecases::CreateAccountUseCase>,
-                >,
-            ),
-        )
-        .with_state(shared_service)
+        .route("/create", post(http::create::create_account_handler))
+        .route("/login", post(http::login::login_handler))
+        .with_state(state)
         .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(5)));
 
     match env::var("UNIX_SOCKET") {

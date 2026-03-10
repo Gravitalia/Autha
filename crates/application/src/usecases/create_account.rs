@@ -1,5 +1,7 @@
 //! Account creation use case implementation.
 
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use domain::auth::email::EmailHash;
 use domain::auth::factor::{FactorMethod, FactorType, VerifiedFactor};
@@ -17,24 +19,24 @@ use crate::usecases::{EXPIRES_IN, TOKEN_TYPE};
 
 /// Account creation use case service.
 pub struct CreateAccountUseCase {
-    account_repo: Box<dyn AccountRepository>,
-    refresh_token_repo: Box<dyn RefreshTokenRepository>,
-    crypto: Box<dyn CryptoPort>,
-    mailer: Option<Box<dyn Mailer>>,
-    token: Box<dyn Token>,
-    telemetry: Box<dyn TelemetryPort>,
-    clock: Box<dyn Clock>,
+    account_repo: Arc<dyn AccountRepository>,
+    refresh_token_repo: Arc<dyn RefreshTokenRepository>,
+    crypto: Arc<dyn CryptoPort>,
+    mailer: Option<Arc<dyn Mailer>>,
+    token: Arc<dyn Token>,
+    telemetry: Arc<dyn TelemetryPort>,
+    clock: Arc<dyn Clock>,
 }
 
 impl CreateAccountUseCase {
     pub fn new(
-        account_repo: Box<dyn AccountRepository>,
-        refresh_token_repo: Box<dyn RefreshTokenRepository>,
-        crypto: Box<dyn CryptoPort>,
-        mailer: Option<Box<dyn Mailer>>,
-        token: Box<dyn Token>,
-        telemetry: Box<dyn TelemetryPort>,
-        clock: Box<dyn Clock>,
+        account_repo: Arc<dyn AccountRepository>,
+        refresh_token_repo: Arc<dyn RefreshTokenRepository>,
+        crypto: Arc<dyn CryptoPort>,
+        mailer: Option<Arc<dyn Mailer>>,
+        token: Arc<dyn Token>,
+        telemetry: Arc<dyn TelemetryPort>,
+        clock: Arc<dyn Clock>,
     ) -> Self {
         Self {
             account_repo,

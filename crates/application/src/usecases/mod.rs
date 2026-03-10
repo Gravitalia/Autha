@@ -1,6 +1,6 @@
 //! Application services implementing business logic.
 
-pub const TOKEN_TYPE: &str = "Brearer";
+pub const TOKEN_TYPE: &str = "Bearer";
 const EXPIRES_IN: u64 = 900; // 15 minutes.
 
 pub mod auth;

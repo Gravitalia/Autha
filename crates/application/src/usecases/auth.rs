@@ -1,5 +1,7 @@
 //! Authentication use case implementation.
 
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use domain::auth::email::EmailHash;
 use domain::auth::factor::{
@@ -15,38 +17,35 @@ use crate::dto::{AuthRequestDto, AuthResponseDto};
 use crate::error::{ApplicationError, Result};
 use crate::ports::inbound::Authenticate;
 use crate::ports::outbound::{
-    AccountRepository, Clock, CryptoPort, RefreshTokenManager,
-    RefreshTokenRepository, TelemetryPort, TokenSigner,
+    AccountRepository, Clock, CryptoPort, RefreshTokenRepository,
+    TelemetryPort, Token,
 };
 use crate::usecases::{EXPIRES_IN, TOKEN_TYPE};
 
 /// Authentication use case service.
 pub struct AuthenticateUseCase {
-    account_repo: Box<dyn AccountRepository>,
-    refresh_token_repo: Box<dyn RefreshTokenRepository>,
-    crypto: Box<dyn CryptoPort>,
-    token_signer: Box<dyn TokenSigner>,
-    refresh_token_manager: Box<dyn RefreshTokenManager>,
-    telemetry: Box<dyn TelemetryPort>,
-    clock: Box<dyn Clock>,
+    account_repo: Arc<dyn AccountRepository>,
+    refresh_token_repo: Arc<dyn RefreshTokenRepository>,
+    crypto: Arc<dyn CryptoPort>,
+    token: Arc<dyn Token>,
+    telemetry: Arc<dyn TelemetryPort>,
+    clock: Arc<dyn Clock>,
 }
 
 impl AuthenticateUseCase {
     pub fn new(
-        account_repo: Box<dyn AccountRepository>,
-        refresh_token_repo: Box<dyn RefreshTokenRepository>,
-        crypto: Box<dyn CryptoPort>,
-        token_signer: Box<dyn TokenSigner>,
-        refresh_token_manager: Box<dyn RefreshTokenManager>,
-        telemetry: Box<dyn TelemetryPort>,
-        clock: Box<dyn Clock>,
+        account_repo: Arc<dyn AccountRepository>,
+        refresh_token_repo: Arc<dyn RefreshTokenRepository>,
+        crypto: Arc<dyn CryptoPort>,
+        token: Arc<dyn Token>,
+        telemetry: Arc<dyn TelemetryPort>,
+        clock: Arc<dyn Clock>,
     ) -> Self {
         Self {
             account_repo,
             refresh_token_repo,
             crypto,
-            token_signer,
-            refresh_token_manager,
+            token,
             telemetry,
             clock,
         }
@@ -153,8 +152,8 @@ impl Authenticate for AuthenticateUseCase {
             .add_factors(verified_factors)
             .build()?;
 
-        let access_token = self.token_signer.create_access_token(&proof)?;
-        let refresh_token = self.refresh_token_manager.generate();
+        let access_token = self.token.signer().create_access_token(&proof)?;
+        let refresh_token = self.token.refresh_token().generate();
 
         self.refresh_token_repo
             .store(
