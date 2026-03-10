@@ -1,9 +1,9 @@
 //! Custom Axum extractors for validation and authentication.
 
+use axum::Json;
 use axum::extract::{FromRequest, Request};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::{Json, async_trait};
 use serde::de::DeserializeOwned;
 use validator::Validate;
 
@@ -12,7 +12,6 @@ use super::errors::{FieldError, ProblemDetails};
 /// Automatically validates request bodies using the `validator` crate.
 pub struct Valid<T>(pub T);
 
-#[async_trait]
 impl<T, S> FromRequest<S> for Valid<T>
 where
     T: DeserializeOwned + Validate,
@@ -77,7 +76,6 @@ impl IntoResponse for ValidationErrorResponse {
 /// Bearer token extractor.
 pub struct BearerToken(pub String);
 
-#[async_trait]
 impl<S> FromRequest<S> for BearerToken
 where
     S: Send + Sync,

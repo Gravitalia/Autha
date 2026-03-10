@@ -72,7 +72,53 @@ impl ProblemDetails {
             ApplicationError::Domain(domain_err) => {
                 Self::from_domain_error(domain_err)
             },
-            _ => unimplemented!(),
+            ApplicationError::UserNotFound => (
+                StatusCode::NOT_FOUND,
+                Self::new(
+                    StatusCode::NOT_FOUND,
+                    "User Not Found",
+                    "The requested user could not be found in our records.",
+                ),
+            ),
+            ApplicationError::AccountDeleted { date: _ } => (
+                StatusCode::GONE,
+                Self::new(
+                    StatusCode::GONE,
+                    "Account Deleted",
+                    "This account was deleted.",
+                ),
+            ),
+            ApplicationError::TooSmall { excepted } => (
+                StatusCode::BAD_REQUEST,
+                Self::new(
+                    StatusCode::BAD_REQUEST,
+                    "Validation Failed",
+                    format!(
+                        "The provided argument is too short. Minimum length required is {}.",
+                        excepted
+                    ),
+                ),
+            ),
+            ApplicationError::Internal(err) => {
+                tracing::error!(?err, "internal server error occurred");
+
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Self::new(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "Internal Server Error",
+                        "An unexpected internal error occurred.",
+                    ),
+                )
+            },
+            _ => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Self::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Internal Server Error",
+                    "An unexpected error occurred. Please try again later.",
+                ),
+            ),
         }
     }
 
@@ -113,14 +159,6 @@ impl ProblemDetails {
                     code: "invalid_totp".to_string(),
                 }]),
             ),
-            DomainError::InvalidTotpSecret => (
-                StatusCode::BAD_REQUEST,
-                Self::new(
-                    StatusCode::BAD_REQUEST,
-                    "Invalid TOTP Secret",
-                    "The TOTP secret format is invalid.",
-                ),
-            ),
             DomainError::TokenExpired => (
                 StatusCode::UNAUTHORIZED,
                 Self::new(
@@ -142,7 +180,14 @@ impl ProblemDetails {
                     code: "validation_failed".to_string(),
                 }]),
             ),
-            _ => unimplemented!(),
+            _ => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Self::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Internal Server Error",
+                    "An internal domain error occurred.",
+                ),
+            ),
         }
     }
 }

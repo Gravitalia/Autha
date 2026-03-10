@@ -20,7 +20,7 @@ pub struct CreateAccountUseCase {
     account_repo: Box<dyn AccountRepository>,
     refresh_token_repo: Box<dyn RefreshTokenRepository>,
     crypto: Box<dyn CryptoPort>,
-    mailer: Box<dyn Mailer>,
+    mailer: Option<Box<dyn Mailer>>,
     token: Box<dyn Token>,
     telemetry: Box<dyn TelemetryPort>,
     clock: Box<dyn Clock>,
@@ -31,7 +31,7 @@ impl CreateAccountUseCase {
         account_repo: Box<dyn AccountRepository>,
         refresh_token_repo: Box<dyn RefreshTokenRepository>,
         crypto: Box<dyn CryptoPort>,
-        mailer: Box<dyn Mailer>,
+        mailer: Option<Box<dyn Mailer>>,
         token: Box<dyn Token>,
         telemetry: Box<dyn TelemetryPort>,
         clock: Box<dyn Clock>,
@@ -87,11 +87,12 @@ impl CreateAccount for CreateAccountUseCase {
 
         self.account_repo.create(&account).await?;
 
-        // Later, we should handle error with retries and DLQ.
-        let _ = self
-            .mailer
-            .send_welcome(&request.email, &locale, &account.username)
-            .await;
+        if let Some(ref mailer) = self.mailer {
+            // Later, we should handle error with retries and DLQ.
+            let _ = mailer
+                .send_welcome(&request.email, &locale, &account.username)
+                .await;
+        }
 
         let verified_factor = VerifiedFactor::new(
             FactorType::Knowledge,
