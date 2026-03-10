@@ -54,7 +54,7 @@ jobs:
           fi
 
       - name: Run migrations
-        run: cargo sqlx migrate run
+        run: cargo sqlx migrate run --source ./crates/adapters/migrations
         env:
           DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
 
