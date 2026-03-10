@@ -12,7 +12,7 @@ tokio = { version = "1", features = ["full"] }
 async-trait = "0.1"
 
 # HTTP framework.
-axum = { version = "0.7", features = ["macros"] }
+axum = { version = "0.8", features = ["macros"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 
@@ -35,7 +35,7 @@ hex = "0.4"
 zeroize = { version = "1", features = ["derive"] }
 constant_time_eq = "0.4"
 
-jsonwebtoken = "9"
+jsonwebtoken = { version = "10", features = ["aws_lc_rs"] }
 passwords = "3"
 
 # Telemetry.
@@ -43,8 +43,8 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Other
-validator = { version = "0.18", features = ["derive"] }
-ldap3 = { version = "0.11", default-features = false, features = ["tls-rustls"] }
+validator = { version = "0.20", features = ["derive"] }
+ldap3 = { version = "0.12", default-features = false, features = ["tls-rustls-aws-lc-rs"] }
 lapin = { version = "3", features = ["unstable"] }
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2"
