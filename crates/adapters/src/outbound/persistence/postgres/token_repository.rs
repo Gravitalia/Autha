@@ -42,7 +42,7 @@ impl RefreshTokenRepository for PgRefreshTokenRepository {
 
         sqlx::query(
             r#"
-            INSERT INTO refresh_tokens (token, user_id, ip, created_at, expires_at)
+            INSERT INTO tokens (token, user_id, ip, created_at, expires_at)
             VALUES ($1, $2, $3, $4, $5)
             "#,
         )
@@ -62,7 +62,7 @@ impl RefreshTokenRepository for PgRefreshTokenRepository {
         let record = sqlx::query_as::<_, (String,)>(
             r#"
             SELECT user_id
-            FROM refresh_tokens
+            FROM tokens
             WHERE token = $1
               AND expires_at > NOW()
             "#,
@@ -81,7 +81,7 @@ impl RefreshTokenRepository for PgRefreshTokenRepository {
     async fn revoke(&self, token: &str) -> Result<()> {
         let result = sqlx::query(
             r#"
-            UPDATE refresh_tokens
+            UPDATE tokens
             SET expires_at = $1
             WHERE token = $2
             "#,
@@ -102,7 +102,7 @@ impl RefreshTokenRepository for PgRefreshTokenRepository {
     async fn revoke_all_for_user(&self, user_id: &UserId) -> Result<()> {
         sqlx::query(
             r#"
-            UPDATE refresh_tokens
+            UPDATE tokens
             SET expires_at = $1
             WHERE user_id = $2 AND expires_at > NOW()
             "#,

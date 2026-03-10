@@ -6,6 +6,7 @@ use application::ports::outbound::AccountRepository;
 use async_trait::async_trait;
 use chrono::Utc;
 use domain::auth::email::EmailHash;
+use domain::error::DomainError;
 use domain::identity::id::UserId;
 use sqlx::PgPool;
 use sqlx::postgres::PgQueryResult;
@@ -29,12 +30,35 @@ impl AccountRepository for PgAccountRepository {
     async fn find_by_id(&self, id: &UserId) -> Result<Option<AccountDto>> {
         let record = sqlx::query_as::<_, UserRecord>(
             r#"
-            SELECT 
-                id, username, email_hash, email_cipher, totp_secret,
-                locale, summary, avatar, flags, password,
-                created_at, deleted_at, public_keys
-            FROM users
-            WHERE id = $1 AND deleted_at IS NULL
+            SELECT
+                u.id,
+                u.username,
+                u.email_hash,
+                u.email_cipher,
+                u.totp_secret,
+                u.locale,
+                u.summary,
+                u.avatar,
+                u.flags,
+                u.password,
+                u.created_at,
+                u.deleted_at,
+                COALESCE(
+                    jsonb_agg(
+                        jsonb_build_object(
+                            'id', k.id::text,
+                            'owner', k.user_id,
+                            'public_key_pem', k.pem,
+                            'created_at', k.created_at
+                        )
+                    ) FILTER (WHERE k.id IS NOT NULL),
+                    '[]'::jsonb
+                ) AS public_keys
+            FROM users u
+            LEFT JOIN keys k ON k.user_id = u.id
+            WHERE u.id = $1
+              AND u.deleted_at IS NULL
+            GROUP BY u.id
             "#,
         )
         .bind(id.as_str())
@@ -54,12 +78,35 @@ impl AccountRepository for PgAccountRepository {
     ) -> Result<Option<AccountDto>> {
         let record = sqlx::query_as::<_, UserRecord>(
             r#"
-            SELECT 
-                id, username, email_hash, email_cipher, totp_secret,
-                locale, summary, avatar, flags, password,
-                created_at, deleted_at, public_keys
-            FROM users
-            WHERE email_hash = $1 AND deleted_at IS NULL
+            SELECT
+                u.id,
+                u.username,
+                u.email_hash,
+                u.email_cipher,
+                u.totp_secret,
+                u.locale,
+                u.summary,
+                u.avatar,
+                u.flags,
+                u.password,
+                u.created_at,
+                u.deleted_at,
+                COALESCE(
+                    jsonb_agg(
+                        jsonb_build_object(
+                            'id', k.id::text,
+                            'owner', k.user_id,
+                            'public_key_pem', k.pem,
+                            'created_at', k.created_at
+                        )
+                    ) FILTER (WHERE k.id IS NOT NULL),
+                    '[]'::jsonb
+                ) AS public_keys
+            FROM users u
+            LEFT JOIN keys k ON k.user_id = u.id
+            WHERE u.email_hash = $1
+              AND u.deleted_at IS NULL
+            GROUP BY u.id
             "#,
         )
         .bind(email_hash.as_str())
@@ -76,14 +123,14 @@ impl AccountRepository for PgAccountRepository {
     async fn create(&self, account: &AccountDto) -> Result<()> {
         let record = UserRecord::from(account);
 
-        sqlx::query(
+        let result = sqlx::query(
             r#"
             INSERT INTO users (
                 id, username, email_hash, email_cipher, totp_secret,
                 locale, summary, avatar, flags, password,
-                created_at, public_keys
+                created_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             "#,
         )
         .bind(&record.id)
@@ -97,12 +144,37 @@ impl AccountRepository for PgAccountRepository {
         .bind(record.flags)
         .bind(&record.password)
         .bind(record.created_at)
-        .bind(sqlx::types::Json(&record.public_keys))
         .execute(&self.pool)
-        .await
-        .catch()?;
+        .await;
 
-        Ok(())
+        match result {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                if let Some(db_err) = e.as_database_error() &&
+                    db_err.code() == Some("23505".into())
+                {
+                    let constraint = db_err.constraint().unwrap_or("");
+
+                    if constraint.contains("pkey") || constraint.contains("id")
+                    {
+                        return Err(DomainError::ValidationFailed {
+                            field: "id".to_string(),
+                            message: "ID is already in use.".to_string(),
+                        }
+                        .into());
+                    }
+
+                    if constraint.contains("email") {
+                        return Err(DomainError::ValidationFailed {
+                            field: "email".to_string(),
+                            message: "Email is already in use.".to_string(),
+                        }
+                        .into());
+                    }
+                }
+                Err(ApplicationError::Internal(e.into()))
+            },
+        }
     }
 
     async fn update(&self, account: &AccountDto) -> Result<()> {
@@ -111,7 +183,7 @@ impl AccountRepository for PgAccountRepository {
         let result: PgQueryResult = sqlx::query(
             r#"
             UPDATE users
-            SET 
+            SET
                 username = $2,
                 email_hash = $3,
                 email_cipher = $4,
@@ -120,8 +192,7 @@ impl AccountRepository for PgAccountRepository {
                 summary = $7,
                 avatar = $8,
                 flags = $9,
-                password = $10,
-                public_keys = $11
+                password = $10
             WHERE id = $1 AND deleted_at IS NULL
             "#,
         )
@@ -135,7 +206,6 @@ impl AccountRepository for PgAccountRepository {
         .bind(&record.avatar)
         .bind(record.flags)
         .bind(&record.password)
-        .bind(sqlx::types::Json(&record.public_keys))
         .execute(&self.pool)
         .await
         .catch()?;
