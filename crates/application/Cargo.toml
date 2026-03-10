@@ -7,3 +7,4 @@ edition = "2024"
 domain = { path = "../domain" }
 async-trait = "0.1"
 thiserror = "2"
+serde = { workspace = true }

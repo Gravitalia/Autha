@@ -11,6 +11,7 @@ repository = "https://github.com/Gravitalia/Autha"
 
 [workspace.dependencies]
 serde = "1"
+zeroize = { version = "1", features = ["derive"] }
 chrono = "0.4"
 thiserror = "2.0"
 p256 = { version = "0.13.2", default-features = false }
