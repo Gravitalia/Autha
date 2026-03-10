@@ -95,7 +95,7 @@ where
                     StatusCode::UNAUTHORIZED,
                     Json(ProblemDetails::new(
                         StatusCode::UNAUTHORIZED,
-                        "Missing Authorization Header",
+                        "Missing 'Authorization' header",
                         "Authorization header is required.",
                     )),
                 )
@@ -109,7 +109,7 @@ where
                     StatusCode::UNAUTHORIZED,
                     Json(ProblemDetails::new(
                         StatusCode::UNAUTHORIZED,
-                        "Invalid Authorization Header",
+                        "Invalid 'Authorization' header",
                         "Authorization header must be in the format: Bearer <token>",
                     )),
                 )
