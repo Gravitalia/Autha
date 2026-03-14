@@ -11,13 +11,12 @@ use domain::auth::invariants::validate_totp_requirement;
 use domain::auth::password::Password;
 use domain::auth::proof::AuthenticationProofBuilder;
 use domain::error::DomainError;
-use domain::identity::id::UserId;
 
 use crate::dto::{AuthRequestDto, AuthResponseDto};
 use crate::error::{ApplicationError, Result};
 use crate::ports::inbound::Authenticate;
 use crate::ports::outbound::{
-    AccountRepository, Clock, CryptoPort, RefreshTokenRepository,
+    AccountRepository, Clock, CryptoPort, LdapPort, RefreshTokenRepository,
     TelemetryPort, Token,
 };
 use crate::usecases::{EXPIRES_IN, TOKEN_TYPE};
@@ -26,6 +25,7 @@ use crate::usecases::{EXPIRES_IN, TOKEN_TYPE};
 pub struct AuthenticateUseCase {
     account_repo: Arc<dyn AccountRepository>,
     refresh_token_repo: Arc<dyn RefreshTokenRepository>,
+    ldap: Option<Arc<dyn LdapPort>>,
     crypto: Arc<dyn CryptoPort>,
     token: Arc<dyn Token>,
     telemetry: Arc<dyn TelemetryPort>,
@@ -36,6 +36,7 @@ impl AuthenticateUseCase {
     pub fn new(
         account_repo: Arc<dyn AccountRepository>,
         refresh_token_repo: Arc<dyn RefreshTokenRepository>,
+        ldap: Option<Arc<dyn LdapPort>>,
         crypto: Arc<dyn CryptoPort>,
         token: Arc<dyn Token>,
         telemetry: Arc<dyn TelemetryPort>,
@@ -44,6 +45,7 @@ impl AuthenticateUseCase {
         Self {
             account_repo,
             refresh_token_repo,
+            ldap,
             crypto,
             token,
             telemetry,
@@ -70,11 +72,15 @@ impl Authenticate for AuthenticateUseCase {
                     .ok_or(ApplicationError::UserNotFound)?
             },
             (None, Some(user_id)) => {
-                // In fact it will check on directory such as LDAP.
-                self.account_repo
-                    .find_by_id(&UserId::parse(user_id)?)
-                    .await?
-                    .ok_or(ApplicationError::UserNotFound)?
+                if let Some(ldap) = &self.ldap {
+                    ldap.authenticate(&user_id, &request.password)
+                        .await
+                        .map_err(|_| ApplicationError::UserNotFound)?;
+                    // self.account_repo.create().await?;
+                    return Err(ApplicationError::UserNotFound);
+                } else {
+                    return Err(ApplicationError::UserNotFound);
+                }
             },
             (Some(_), Some(_)) => {
                 self.telemetry.record_auth_failure("ambiguous_identifier");
@@ -87,18 +93,16 @@ impl Authenticate for AuthenticateUseCase {
             _ => {
                 self.telemetry.record_auth_failure("missing_identifier");
                 return Err(DomainError::ValidationFailed {
-                    field: "identifier".into(),
-                    message: "email or user_id is required".into(),
+                    field: "email".into(),
+                    message: "email is required".into(),
                 }
                 .into());
             },
         };
 
-        if account.deleted_at.is_some() {
+        if let Some(date) = account.deleted_at {
             self.telemetry.record_auth_failure("account_deleted");
-            return Err(ApplicationError::AccountDeleted {
-                date: account.deleted_at.unwrap_or_default(),
-            });
+            return Err(ApplicationError::AccountDeleted { date });
         }
 
         self.crypto

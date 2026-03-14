@@ -17,7 +17,7 @@ use adapters::outbound::mail::RabbitMqMailer;
 use adapters::outbound::persistence::postgres;
 use adapters::outbound::{crypto, token};
 use application::ports::inbound::{Authenticate, CreateAccount};
-use application::ports::outbound::Mailer;
+use application::ports::outbound::{LdapPort, Mailer};
 use axum::Router;
 use axum::extract::FromRef;
 use axum::routing::{get, post};
@@ -29,7 +29,7 @@ use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::util::SubscriberInitExt;
 
-/// Shared state injected into all HTTP handlers via Axum.
+/// Shared state.
 #[derive(Clone)]
 pub struct AppState {
     pub create_account: Arc<dyn CreateAccount>,
@@ -148,7 +148,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let ldap_client = if let Some(cfg) = &config.ldap {
         let ldap_config =
             ldap::config::LdapConfig::new(&cfg.address, &cfg.base_dn);
-        Some(ldap::client::LdapClient::new(ldap_config)?)
+        Some(Arc::new(ldap::client::LdapClient::new(ldap_config)?)
+            as Arc<dyn LdapPort>)
     } else {
         None
     };
@@ -168,6 +169,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let authenticate_uc = application::usecases::AuthenticateUseCase::new(
         account_repo,
         refresh_token_repo,
+        ldap_client,
         crypto,
         token,
         telemetry_adapter,
