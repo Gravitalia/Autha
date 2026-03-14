@@ -3,7 +3,9 @@
 pub mod auth;
 pub mod create_account;
 pub mod refresh_token;
+pub mod status;
 
 pub use auth::*;
 pub use create_account::*;
 pub use refresh_token::*;
+pub use status::*;

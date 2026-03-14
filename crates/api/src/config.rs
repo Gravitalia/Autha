@@ -5,6 +5,7 @@
 use std::fs::File;
 use std::path::Path;
 
+use application::dto::StatusDto;
 use serde::Deserialize;
 
 /// Top-level configuration matching `config.yaml`.
@@ -12,6 +13,7 @@ use serde::Deserialize;
 pub struct ServerConfig {
     pub name: String,
     pub url: String,
+    pub support: Option<String>,
     pub favicon: Option<String>,
     pub terms_of_service: Option<String>,
     pub privacy_policy: Option<String>,
@@ -24,6 +26,22 @@ pub struct ServerConfig {
     pub token: TokenConfig,
     pub ldap: Option<LdapConfig>,
     pub mail: Option<MailConfig>,
+}
+
+impl From<ServerConfig> for StatusDto {
+    fn from(config: ServerConfig) -> Self {
+        StatusDto {
+            name: config.name,
+            url: config.url,
+            support: config.support,
+            favicon: config.favicon,
+            background: None,
+            terms_of_service: config.terms_of_service,
+            privacy_policy: config.privacy_policy,
+            invite_only: config.invite_only,
+            version: env!("CARGO_PKG_VERSION").to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]

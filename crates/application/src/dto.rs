@@ -9,6 +9,7 @@ use domain::identity::email::EmailAddress;
 use domain::identity::id::UserId;
 use domain::identity::ip::EncryptedIp;
 use domain::key::pem::PemFingerprint;
+use serde::Serialize;
 
 /// Request DTO for authentication.
 #[derive(Debug, Clone)]
@@ -26,7 +27,7 @@ pub struct AuthRequestDto {
 }
 
 /// Response DTO for authentication.
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct AuthResponseDto {
     /// Access token (JWT).
     pub access_token: String,
@@ -90,4 +91,17 @@ pub struct PublicKeyDto {
     pub public_key_pem: String,
     /// `yyyy-mm-dd` date.
     pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct StatusDto {
+    pub name: String,
+    pub url: String,
+    pub support: Option<String>,
+    pub favicon: Option<String>,
+    pub background: Option<String>,
+    pub terms_of_service: Option<String>,
+    pub privacy_policy: Option<String>,
+    pub invite_only: bool,
+    pub version: String,
 }

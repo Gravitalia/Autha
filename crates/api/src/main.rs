@@ -16,7 +16,7 @@ use adapters::inbound::{http, ldap};
 use adapters::outbound::mail::RabbitMqMailer;
 use adapters::outbound::persistence::postgres;
 use adapters::outbound::{crypto, token};
-use application::ports::inbound::{Authenticate, CreateAccount};
+use application::ports::inbound::{Authenticate, CreateAccount, Status};
 use application::ports::outbound::{LdapPort, Mailer};
 use axum::Router;
 use axum::extract::FromRef;
@@ -32,8 +32,15 @@ use tracing_subscriber::util::SubscriberInitExt;
 /// Shared state.
 #[derive(Clone)]
 pub struct AppState {
+    pub status: Arc<dyn Status>,
     pub create_account: Arc<dyn CreateAccount>,
     pub authenticate: Arc<dyn Authenticate>,
+}
+
+impl FromRef<AppState> for Arc<dyn Status> {
+    fn from_ref(state: &AppState) -> Self {
+        Arc::clone(&state.status)
+    }
 }
 
 impl FromRef<AppState> for Arc<dyn CreateAccount> {
@@ -157,6 +164,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Arc::new(adapters::outbound::telemetry::TracingTelemetry);
     let clock = Arc::new(adapters::outbound::clock::SystemClock);
 
+    let status_uc = application::usecases::StatusUseCase::new(config.into());
     let create_account_uc = application::usecases::CreateAccountUseCase::new(
         account_repo.clone(),
         refresh_token_repo.clone(),
@@ -176,12 +184,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         clock,
     );
     let state = AppState {
+        status: Arc::new(status_uc),
         create_account: Arc::new(create_account_uc),
         authenticate: Arc::new(authenticate_uc),
     };
 
     let app = Router::new()
         .route("/metrics", get(move || ready(recorder_handle.render())))
+        .route("/status.json", get(http::status::status_handler))
         .route("/create", post(http::create::create_account_handler))
         .route("/login", post(http::login::login_handler))
         .with_state(state)
