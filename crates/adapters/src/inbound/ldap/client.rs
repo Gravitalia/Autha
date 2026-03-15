@@ -132,7 +132,7 @@ impl LdapPort for LdapClient {
         let escaped_user_id = escape_ldap_value(user_id);
         let dn = self.config.build_user_dn(&escaped_user_id);
 
-        let mut attrs = vec![
+       let mut attrs = vec![
             (
                 "objectClass",
                 HashSet::from([
@@ -140,12 +140,11 @@ impl LdapPort for LdapClient {
                     "person",
                     "organizationalPerson",
                     "inetOrgPerson",
-                    "posixAccount",
-                    "shadowAccount",
                 ]),
             ),
             ("uid", HashSet::from([escaped_user_id.as_str()])),
             ("cn", HashSet::from([attributes.username.as_str()])),
+            ("sn", HashSet::from([attributes.username.as_str()])),
         ];
 
         if let Some(email) = &attributes.email {
