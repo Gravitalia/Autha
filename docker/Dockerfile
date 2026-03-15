@@ -42,4 +42,6 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /autha/api /api
 COPY --from=builder /autha/crates/adapters/migrations /migrations
 
+USER 65532:65532
+
 ENTRYPOINT ["/api"]

@@ -16,7 +16,7 @@ pub struct AesGcmEncryption(Zeroizing<[u8; KEY_LENGTH]>);
 
 impl AesGcmEncryption {
     /// Create a new [`AesGcmEncryption`].
-    /// Derives a 256-bit key from password and salt using PBKDF2.
+    /// Derives a 256-bit key from password and salt using Argon2id.
     pub fn new(master_key: Zeroizing<Vec<u8>>, salt: &[u8]) -> Result<Self> {
         let mut key = Zeroizing::new([0u8; KEY_LENGTH]);
         Self::derive_key(&master_key, salt, &mut *key)?;
@@ -66,7 +66,7 @@ impl SymmetricEncryption for AesGcmEncryption {
     fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>> {
         if ciphertext.len() < NONCE_SIZE {
             return Err(ApplicationError::TooSmall {
-                excepted: NONCE_SIZE,
+                expected: NONCE_SIZE,
             });
         }
 

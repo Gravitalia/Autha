@@ -121,6 +121,13 @@ impl TotpCode {
             });
         }
 
+        if !(4..=8).contains(&expected_digits) {
+            return Err(DomainError::ValidationFailed {
+                field: "digits".into(),
+                message: "digits must be between 4 and 8".into(),
+            });
+        }
+
         if !value.chars().all(|c| c.is_ascii_digit()) {
             return Err(DomainError::ValidationFailed {
                 field: "totp_code".into(),

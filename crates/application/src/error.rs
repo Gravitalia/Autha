@@ -15,8 +15,8 @@ pub enum ApplicationError {
     #[error("user is deleted since {date}")]
     AccountDeleted { date: u64 },
 
-    #[error("argument requires {excepted} minimum length")]
-    TooSmall { excepted: usize },
+    #[error("argument requires {expected} minimum length")]
+    TooSmall { expected: usize },
     #[error("something went wrong")]
     Unknown,
 

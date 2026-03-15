@@ -88,14 +88,14 @@ impl ProblemDetails {
                     "This account was deleted.",
                 ),
             ),
-            ApplicationError::TooSmall { excepted } => (
+            ApplicationError::TooSmall { expected } => (
                 StatusCode::BAD_REQUEST,
                 Self::new(
                     StatusCode::BAD_REQUEST,
                     "Validation Failed",
                     format!(
                         "The provided argument is too short. Minimum length required is {}.",
-                        excepted
+                        expected
                     ),
                 ),
             ),

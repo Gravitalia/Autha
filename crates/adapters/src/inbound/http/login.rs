@@ -3,6 +3,7 @@
 use std::sync::Arc;
 
 use application::dto::{AuthRequestDto, AuthResponseDto};
+use application::error::ApplicationError;
 use application::ports::inbound::Authenticate;
 use axum::Json;
 use axum::extract::State;
@@ -39,7 +40,8 @@ pub async fn login_handler(
         .email
         .as_deref()
         .map(EmailAddress::parse)
-        .map(|e| e.unwrap());
+        .transpose()
+        .map_err(|_| HttpError::from(ApplicationError::UserNotFound))?;
     let dto = AuthRequestDto {
         email,
         user_id: request.id,

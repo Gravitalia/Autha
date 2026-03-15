@@ -1,20 +1,15 @@
 //! Custom validation functions for request fields.
 
+use domain::identity::id::UserId;
 use validator::ValidationError;
 
 /// Validate user ID format (2-15 alphanumeric characters).
 pub fn validate_user_id(id: &str) -> Result<(), ValidationError> {
-    if id.len() < 2 || id.len() > 15 {
-        return Err(ValidationError::new("invalid_length")
-            .with_message("User ID must be 2-15 characters".into()));
-    }
-
-    if !id.chars().all(|c| c.is_alphanumeric()) {
-        return Err(ValidationError::new("invalid_format")
-            .with_message("User ID must be alphanumeric".into()));
-    }
-
-    Ok(())
+    UserId::parse(id.to_owned()).map(|_| ()).map_err(|_| {
+        ValidationError::new("invalid_format").with_message(
+            "User ID must be 3-64 ASCII letters/digits or '_'".into(),
+        )
+    })
 }
 
 /// Validate locale format (ISO 639-1).

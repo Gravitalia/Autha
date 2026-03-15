@@ -102,9 +102,12 @@ where
                     .into_response()
             })?;
 
-        let token = auth_header
-            .strip_prefix("Bearer ")
-            .ok_or_else(|| {
+        let token = if auth_header.len() > 7 &&
+            auth_header[..7].eq_ignore_ascii_case("Bearer ")
+        {
+            auth_header[7..].trim().to_string()
+        } else {
+            return Err(
                 (
                     StatusCode::UNAUTHORIZED,
                     Json(ProblemDetails::new(
@@ -114,8 +117,8 @@ where
                     )),
                 )
                     .into_response()
-            })?
-            .to_string();
+            );
+        };
 
         Ok(BearerToken(token))
     }

@@ -9,7 +9,7 @@ use crate::identity::ip::EncryptedIp;
 use crate::key::public_key::Key;
 
 /// Represents a registered user within the system domain.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct User {
     pub id: Option<UserId>,
     pub username: String,

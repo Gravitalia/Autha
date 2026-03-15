@@ -9,10 +9,6 @@ use crate::key::pem::{PemFingerprint, PemPublicKey};
 /// Logical errors related to public keys.
 #[derive(Debug, thiserror::Error)]
 pub enum KeyError {
-    #[error("key id cannot be empty")]
-    EmptyId,
-    #[error("pem format is invalid")]
-    InvalidPem,
     #[error("pem is not pkcs1 nor pkcs8")]
     InvalidFormat,
 }
