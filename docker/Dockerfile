@@ -19,8 +19,7 @@ RUN case "${TARGETPLATFORM}" in \
 esac
 
 COPY Cargo.toml Cargo.lock ./
-COPY src ./src
-COPY migrations ./migrations
+COPY crates ./crates
 COPY .sqlx ./.sqlx
 
 ENV RUSTFLAGS="-C target-feature=+crt-static"
@@ -31,8 +30,8 @@ RUN case "${TARGETPLATFORM}" in \
 esac
 
 RUN case "${TARGETPLATFORM}" in \
-    "linux/arm64") cp target/aarch64-unknown-linux-gnu/release/autha /autha/autha ;; \
-    "linux/amd64") cp target/x86_64-unknown-linux-gnu/release/autha /autha/autha ;; \
+    "linux/arm64") cp target/aarch64-unknown-linux-gnu/release/api /autha/api ;; \
+    "linux/amd64") cp target/x86_64-unknown-linux-gnu/release/api /autha/api ;; \
 esac
 
 
@@ -40,7 +39,7 @@ FROM scratch
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-COPY --from=builder /autha/autha /autha
-COPY --from=builder /autha/migrations /migrations
+COPY --from=builder /autha/api /api
+COPY --from=builder /autha/crates/adapters/migrations /migrations
 
-ENTRYPOINT ["/autha"]
+ENTRYPOINT ["/api"]

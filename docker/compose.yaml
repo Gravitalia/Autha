@@ -32,22 +32,6 @@ services:
     networks:
       - authentification
 
-  openldap:
-    image: bitnami/openldap:latest
-    container_name: openldap
-    ports:
-      - 389:389
-    environment:
-      - LDAP_ROOT=dc=domain,dc=local
-      - LDAP_ADMIN_USERNAME=admin
-      - LDAP_ADMIN_PASSWORD=admin
-      - LDAP_EXTRA_SCHEMAS=argon2
-    volumes:
-      - openldap-data:/bitnami/openldap
-      - ./argon2.ldif:/opt/bitnami/openldap/etc/schema/argon2.ldif
-    networks:
-      - authentification
-
   grafana:
     image: grafana/grafana
     container_name: grafana
