@@ -38,6 +38,8 @@ enum Template {
     Welcome,
     /// Alert user of a personal data update.
     DataUpdate,
+    /// Alert user of new login.
+    Login,
 }
 
 #[derive(Debug, Serialize)]
@@ -151,6 +153,8 @@ impl RabbitMqMailer {
                     .with_content_type(CONTENT_TYPE.into()),
             )
             .await
+            .catch()?
+            .await
             .catch()?;
 
         Ok(())
@@ -182,7 +186,7 @@ impl Mailer for RabbitMqMailer {
         username: &str,
     ) -> Result<()> {
         let message = Content {
-            template: Template::DataUpdate,
+            template: Template::Login,
             locale: Some(locale),
             to: email.as_str(),
             username,
