@@ -41,7 +41,7 @@ pub trait TokenSigner: Send + Sync {
 /// Port for refresh token management.
 pub trait RefreshTokenManager: Send + Sync {
     /// Generate a new refresh token.
-    fn generate(&self) -> String;
+    fn generate(&self) -> Result<String>;
 
     /// Get the default expiration time in seconds.
     fn expiration_seconds(&self) -> u64;

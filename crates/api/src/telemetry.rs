@@ -107,6 +107,9 @@ pub fn setup_logging(
 /// Track every metrics into one function.
 pub async fn track(req: Request, next: Next) -> impl IntoResponse {
     let start = tokio::time::Instant::now();
+    let tracer = opentelemetry::global::tracer("tracing-http");
+    let mut otel_span = tracer.start("http-request");
+
     let path = req
         .extensions()
         .get::<MatchedPath>()
@@ -127,8 +130,6 @@ pub async fn track(req: Request, next: Next) -> impl IntoResponse {
     let latency = start.elapsed().as_secs_f64();
     let status = response.status().as_u16();
 
-    let tracer = opentelemetry::global::tracer("tracing-http");
-    let mut otel_span = tracer.start("http-request");
     otel_span.set_attribute(KeyValue::new("version", version));
     otel_span.set_attribute(KeyValue::new("path", path.clone()));
     otel_span.set_attribute(KeyValue::new("method", method.to_string()));

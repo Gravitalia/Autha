@@ -1,5 +1,7 @@
 //! Token refresh use case implementation.
 
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use domain::auth::factor::{FactorMethod, FactorType, VerifiedFactor};
 use domain::auth::proof::AuthenticationProofBuilder;
@@ -16,22 +18,22 @@ use crate::usecases::{EXPIRES_IN, TOKEN_TYPE};
 
 /// Token refresh use case service.
 pub struct RefreshTokenUseCase {
-    account_repo: Box<dyn AccountRepository>,
-    refresh_token_repo: Box<dyn RefreshTokenRepository>,
-    crypto: Box<dyn CryptoPort>,
-    token_signer: Box<dyn TokenSigner>,
-    refresh_token_manager: Box<dyn RefreshTokenManager>,
-    clock: Box<dyn Clock>,
+    account_repo: Arc<dyn AccountRepository>,
+    refresh_token_repo: Arc<dyn RefreshTokenRepository>,
+    crypto: Arc<dyn CryptoPort>,
+    token_signer: Arc<dyn TokenSigner>,
+    refresh_token_manager: Arc<dyn RefreshTokenManager>,
+    clock: Arc<dyn Clock>,
 }
 
 impl RefreshTokenUseCase {
     pub fn new(
-        account_repo: Box<dyn AccountRepository>,
-        refresh_token_repo: Box<dyn RefreshTokenRepository>,
-        crypto: Box<dyn CryptoPort>,
-        token_signer: Box<dyn TokenSigner>,
-        refresh_token_manager: Box<dyn RefreshTokenManager>,
-        clock: Box<dyn Clock>,
+        account_repo: Arc<dyn AccountRepository>,
+        refresh_token_repo: Arc<dyn RefreshTokenRepository>,
+        crypto: Arc<dyn CryptoPort>,
+        token_signer: Arc<dyn TokenSigner>,
+        refresh_token_manager: Arc<dyn RefreshTokenManager>,
+        clock: Arc<dyn Clock>,
     ) -> Self {
         Self {
             account_repo,
@@ -65,17 +67,15 @@ impl RefreshAccessToken for RefreshTokenUseCase {
             .await?
             .ok_or(ApplicationError::UserNotFound)?;
 
-        if account.deleted_at.is_some() {
-            return Err(ApplicationError::AccountDeleted {
-                date: account.deleted_at.unwrap_or_default(),
-            });
+        if let Some(date) = account.deleted_at {
+            return Err(ApplicationError::AccountDeleted { date });
         }
 
         self.refresh_token_repo.revoke(&refresh_token).await?;
 
         let now = self.clock.now();
         let verified_factor = VerifiedFactor::new(
-            FactorType::Knowledge,
+            FactorType::Possession,
             FactorMethod::Password,
             now,
         );
@@ -87,7 +87,7 @@ impl RefreshAccessToken for RefreshTokenUseCase {
             .build()?;
 
         let access_token = self.token_signer.create_access_token(&proof)?;
-        let new_refresh_token = self.refresh_token_manager.generate();
+        let new_refresh_token = self.refresh_token_manager.generate()?;
 
         self.refresh_token_repo
             .store(

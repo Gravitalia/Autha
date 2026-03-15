@@ -1,5 +1,6 @@
 //! Secure refresh token generator.
 
+use application::error::Result;
 use application::ports::outbound::RefreshTokenManager;
 use rand::distributions::{Alphanumeric, DistString};
 use rand::rngs::OsRng;
@@ -34,8 +35,8 @@ impl Default for SecureRefreshTokenManager {
 }
 
 impl RefreshTokenManager for SecureRefreshTokenManager {
-    fn generate(&self) -> String {
-        Alphanumeric.sample_string(&mut OsRng, self.token_length)
+    fn generate(&self) -> Result<String> {
+        Ok(Alphanumeric.sample_string(&mut OsRng, self.token_length))
     }
 
     fn expiration_seconds(&self) -> u64 {

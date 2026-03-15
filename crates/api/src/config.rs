@@ -9,7 +9,7 @@ use application::dto::StatusDto;
 use serde::Deserialize;
 
 /// Top-level configuration matching `config.yaml`.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct ServerConfig {
     pub name: String,
     pub url: String,
@@ -44,7 +44,7 @@ impl From<ServerConfig> for StatusDto {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct PostgresConfig {
     pub address: String,
     pub database: String,
@@ -60,7 +60,7 @@ fn default_pool_size() -> u32 {
     25
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct Argon2Config {
     pub memory_cost: u32,
     pub iterations: u32,
@@ -69,7 +69,7 @@ pub struct Argon2Config {
     pub zxcvbn: Option<u8>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct TotpConfig {
     pub issuer: String,
     pub algorithm: String,
@@ -77,14 +77,14 @@ pub struct TotpConfig {
     pub period: u64,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct TokenConfig {
     pub key_id: String,
     pub private_key_pem: String,
     pub public_key_pem: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct LdapConfig {
     pub address: String,
     pub base_dn: String,
@@ -96,7 +96,7 @@ pub struct LdapConfig {
     pub certificate: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct MailConfig {
     pub address: String,
     pub vhost: Option<String>,

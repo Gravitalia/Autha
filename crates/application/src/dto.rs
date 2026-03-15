@@ -12,7 +12,6 @@ use domain::key::pem::PemFingerprint;
 use serde::Serialize;
 
 /// Request DTO for authentication.
-#[derive(Debug, Clone)]
 pub struct AuthRequestDto {
     /// Email address (optional, mutually exclusive with user_id).
     pub email: Option<EmailAddress>,
@@ -27,7 +26,7 @@ pub struct AuthRequestDto {
 }
 
 /// Response DTO for authentication.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Serialize)]
 pub struct AuthResponseDto {
     /// Access token (JWT).
     pub access_token: String,
@@ -48,7 +47,7 @@ pub struct CreateAccountRequestDto {
     pub email: EmailAddress,
     /// Password.
     pub password: Password,
-    /// ISO 3166-1 alpha-2.
+    /// ISO 639-1.
     pub locale: Option<String>,
     /// Invite code (optional).
     pub invite_code: Option<String>,
@@ -57,7 +56,6 @@ pub struct CreateAccountRequestDto {
 }
 
 /// Request DTO for token refresh.
-#[derive(Debug, Clone)]
 pub struct RefreshTokenRequestDto {
     /// The refresh token.
     pub refresh_token: String,
@@ -66,7 +64,6 @@ pub struct RefreshTokenRequestDto {
 }
 
 /// DTO for account data (used between application and repository).
-#[derive(Debug, Clone)]
 pub struct AccountDto {
     pub id: UserId,
     pub username: String,

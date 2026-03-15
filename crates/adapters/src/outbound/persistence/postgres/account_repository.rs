@@ -13,6 +13,36 @@ use sqlx::postgres::PgQueryResult;
 
 use super::models::UserRecord;
 
+/// Base SQL for selecting a user and aggregating their public keys.
+const USER_SELECT_BASE: &str = r#"
+    SELECT
+        u.id,
+        u.username,
+        u.email_hash,
+        u.email_cipher,
+        u.totp_secret,
+        u.locale,
+        u.summary,
+        u.avatar,
+        u.flags,
+        u.password,
+        u.created_at,
+        u.deleted_at,
+        COALESCE(
+            jsonb_agg(
+                jsonb_build_object(
+                    'id', k.id::text,
+                    'owner', k.user_id,
+                    'public_key_pem', k.pem,
+                    'created_at', k.created_at
+                )
+            ) FILTER (WHERE k.id IS NOT NULL),
+            '[]'::jsonb
+        ) AS public_keys
+    FROM users u
+    LEFT JOIN keys k ON k.user_id = u.id
+"#;
+
 /// PostgreSQL account repository.
 pub struct PgAccountRepository {
     pool: PgPool,
@@ -23,101 +53,43 @@ impl PgAccountRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
+
+    /// Helper to execute the user query with a custom filter.
+    async fn find_one_by_filter(
+        &self,
+        filter_sql: &str,
+        bind_val: &str,
+    ) -> Result<Option<AccountDto>> {
+        let query_sql = format!(
+            "{} WHERE {} AND u.deleted_at IS NULL GROUP BY u.id",
+            USER_SELECT_BASE, filter_sql
+        );
+
+        let record = sqlx::query_as::<_, UserRecord>(&query_sql)
+            .bind(bind_val)
+            .fetch_optional(&self.pool)
+            .await
+            .catch()?;
+
+        match record {
+            Some(record) => Ok(Some(record.try_into_dto().catch()?)),
+            None => Ok(None),
+        }
+    }
 }
 
 #[async_trait]
 impl AccountRepository for PgAccountRepository {
     async fn find_by_id(&self, id: &UserId) -> Result<Option<AccountDto>> {
-        let record = sqlx::query_as::<_, UserRecord>(
-            r#"
-            SELECT
-                u.id,
-                u.username,
-                u.email_hash,
-                u.email_cipher,
-                u.totp_secret,
-                u.locale,
-                u.summary,
-                u.avatar,
-                u.flags,
-                u.password,
-                u.created_at,
-                u.deleted_at,
-                COALESCE(
-                    jsonb_agg(
-                        jsonb_build_object(
-                            'id', k.id::text,
-                            'owner', k.user_id,
-                            'public_key_pem', k.pem,
-                            'created_at', k.created_at
-                        )
-                    ) FILTER (WHERE k.id IS NOT NULL),
-                    '[]'::jsonb
-                ) AS public_keys
-            FROM users u
-            LEFT JOIN keys k ON k.user_id = u.id
-            WHERE u.id = $1
-              AND u.deleted_at IS NULL
-            GROUP BY u.id
-            "#,
-        )
-        .bind(id.as_str())
-        .fetch_optional(&self.pool)
-        .await
-        .catch()?;
-
-        match record {
-            Some(record) => Ok(Some(record.try_into_dto().catch()?)),
-            _ => Ok(None),
-        }
+        self.find_one_by_filter("u.id = $1", id.as_str()).await
     }
 
     async fn find_by_email_hash(
         &self,
         email_hash: &EmailHash,
     ) -> Result<Option<AccountDto>> {
-        let record = sqlx::query_as::<_, UserRecord>(
-            r#"
-            SELECT
-                u.id,
-                u.username,
-                u.email_hash,
-                u.email_cipher,
-                u.totp_secret,
-                u.locale,
-                u.summary,
-                u.avatar,
-                u.flags,
-                u.password,
-                u.created_at,
-                u.deleted_at,
-                COALESCE(
-                    jsonb_agg(
-                        jsonb_build_object(
-                            'id', k.id::text,
-                            'owner', k.user_id,
-                            'public_key_pem', k.pem,
-                            'created_at', k.created_at
-                        )
-                    ) FILTER (WHERE k.id IS NOT NULL),
-                    '[]'::jsonb
-                ) AS public_keys
-            FROM users u
-            LEFT JOIN keys k ON k.user_id = u.id
-            WHERE u.email_hash = $1
-              AND u.deleted_at IS NULL
-            GROUP BY u.id
-            "#,
-        )
-        .bind(email_hash.as_str())
-        .fetch_optional(&self.pool)
-        .await
-        .catch()?;
-
-        match record {
-            Some(record) => Ok(Some(record.try_into_dto().catch()?)),
-            _ => Ok(None),
-        }
+        self.find_one_by_filter("u.email_hash = $1", email_hash.as_str())
+            .await
     }
 
     async fn create(&self, account: &AccountDto) -> Result<()> {
@@ -218,8 +190,7 @@ impl AccountRepository for PgAccountRepository {
     }
 
     async fn delete(&self, id: &UserId) -> Result<()> {
-        let deletion_date =
-            Utc::now().date_naive() + chrono::Duration::days(30);
+        let deletion_date = Utc::now() + chrono::Duration::days(30);
 
         let result: PgQueryResult = sqlx::query(
             r#"

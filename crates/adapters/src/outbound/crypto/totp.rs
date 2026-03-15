@@ -1,7 +1,9 @@
 //! TOTP generator using HMAC-SHA1.
 
+use std::sync::Arc;
+
 use application::error::{ApplicationError, Result, ToInternal};
-use application::ports::outbound::TotpGenerator;
+use application::ports::outbound::{Clock, TotpGenerator};
 use base32::decode;
 use domain::auth::factor::{TotpCode, TotpConfig, TotpSecret};
 use hmac::{Hmac, Mac};
@@ -9,11 +11,13 @@ use sha1::Sha1;
 use zeroize::Zeroizing;
 
 /// HMAC-based TOTP generator.
-pub struct HmacTotpGenerator;
+pub struct HmacTotpGenerator {
+    clock: Arc<dyn Clock>,
+}
 
 impl HmacTotpGenerator {
-    pub fn new() -> Self {
-        Self
+    pub fn new(clock: Arc<dyn Clock>) -> Self {
+        Self { clock }
     }
 
     /// Get current time counter based on Unix epoch.
@@ -69,11 +73,7 @@ impl TotpGenerator for HmacTotpGenerator {
         secret: &TotpSecret,
         config: &TotpConfig,
     ) -> Result<TotpCode> {
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|_| ApplicationError::Unknown)?
-            .as_secs();
-
+        let now = self.clock.now();
         self.generate_at(secret, config, now)
     }
 
@@ -110,10 +110,7 @@ impl TotpGenerator for HmacTotpGenerator {
         config: &TotpConfig,
         window: u8,
     ) -> Result<bool> {
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|_| ApplicationError::Unknown)?
-            .as_secs();
+        let now = self.clock.now();
 
         let secret_bytes = self.decode_secret(secret)?;
         let current_counter = self.get_time_counter(now, config.time_step());
@@ -145,7 +142,8 @@ mod tests {
 
     #[test]
     fn test_totp_generation() {
-        let generator = HmacTotpGenerator::new();
+        let clock = Arc::new(crate::outbound::clock::SystemClock);
+        let generator = HmacTotpGenerator::new(clock);
         let secret = TotpSecret::new("JBSWY3DPEHPK3PXP").unwrap();
         let config = TotpConfig::default();
 
@@ -156,7 +154,8 @@ mod tests {
 
     #[test]
     fn test_totp_verification() {
-        let generator = HmacTotpGenerator::new();
+        let clock = Arc::new(crate::outbound::clock::SystemClock);
+        let generator = HmacTotpGenerator::new(clock);
         let secret = TotpSecret::new("JBSWY3DPEHPK3PXP").unwrap();
         let config = TotpConfig::default();
 
@@ -166,7 +165,8 @@ mod tests {
 
     #[test]
     fn test_totp_verification_with_window_at_epoch_start() {
-        let generator = HmacTotpGenerator::new();
+        let clock = Arc::new(crate::outbound::clock::SystemClock);
+        let generator = HmacTotpGenerator::new(clock);
         let secret = TotpSecret::new("JBSWY3DPEHPK3PXP").unwrap();
         let config = TotpConfig::default();
 

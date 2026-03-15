@@ -6,10 +6,12 @@ pub(crate) mod random;
 mod sha2;
 mod totp;
 
+use std::sync::Arc;
+
 use application::error::Result;
 use application::ports::outbound::{
-    CryptoPort, Hasher, PasswordHasher, SecureRandom, SymmetricEncryption,
-    TotpGenerator,
+    Clock, CryptoPort, Hasher, PasswordHasher, SecureRandom,
+    SymmetricEncryption, TotpGenerator,
 };
 
 use crate::outbound::crypto::aes::AesGcmEncryption;
@@ -30,6 +32,7 @@ pub struct CryptoAdapter {
 impl CryptoAdapter {
     /// Create a new [`CryptoAdapter`].
     pub fn new(
+        clock: Arc<dyn Clock>,
         master_key: zeroize::Zeroizing<Vec<u8>>,
         salt: Vec<u8>,
         argon_memory_cost: u32,
@@ -42,7 +45,7 @@ impl CryptoAdapter {
                 argon_iterations,
                 argon_parallelism,
             )?,
-            totp_generator: HmacTotpGenerator::new(),
+            totp_generator: HmacTotpGenerator::new(clock),
             symmetric_encryption: AesGcmEncryption::new(master_key, &salt)?,
             hasher: Sha256Hasher::new(salt),
             random: OsRngRandom::new(),

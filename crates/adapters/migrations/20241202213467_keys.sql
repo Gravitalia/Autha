@@ -8,4 +8,4 @@ CREATE TABLE IF NOT EXISTS keys (
   created_at    DATE    NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_keys_user_id ON keys(user_id) IF NOT EXISTS;
+CREATE INDEX IF NOT EXISTS idx_keys_user_id ON keys(user_id);

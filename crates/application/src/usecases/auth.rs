@@ -157,7 +157,7 @@ impl Authenticate for AuthenticateUseCase {
             .build()?;
 
         let access_token = self.token.signer().create_access_token(&proof)?;
-        let refresh_token = self.token.refresh_token().generate();
+        let refresh_token = self.token.refresh_token().generate()?;
 
         self.refresh_token_repo
             .store(

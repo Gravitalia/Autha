@@ -21,7 +21,7 @@ pub async fn create_pool(
     Ok(pool)
 }
 
-pub async fn migrate(db_pool: PgPool) -> Result<(), sqlx::Error> {
-    sqlx::migrate!().run(&db_pool).await?;
+pub async fn migrate(db_pool: &PgPool) -> Result<(), sqlx::Error> {
+    sqlx::migrate!().run(db_pool).await?;
     Ok(())
 }

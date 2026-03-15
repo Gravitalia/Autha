@@ -188,6 +188,25 @@ impl ProblemDetails {
                     code: "validation_failed".to_string(),
                 }]),
             ),
+            DomainError::WeakPassword { min_length } => (
+                StatusCode::BAD_REQUEST,
+                Self::new(
+                    StatusCode::BAD_REQUEST,
+                    "Weak Password",
+                    format!(
+                        "Password must be at least {} characters.",
+                        min_length
+                    ),
+                )
+                .with_errors(vec![FieldError {
+                    field: "password".to_string(),
+                    message: format!(
+                        "must be at least {} characters",
+                        min_length
+                    ),
+                    code: "weak_password".to_string(),
+                }]),
+            ),
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Self::new(

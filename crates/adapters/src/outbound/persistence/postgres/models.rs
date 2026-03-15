@@ -75,8 +75,10 @@ impl UserRecord {
             summary: self.summary,
             avatar: self.avatar,
             flags: self.flags,
-            created_at: self.created_at.timestamp() as u64,
-            deleted_at: self.deleted_at.map(|d| d.timestamp() as u64),
+            created_at: self.created_at.timestamp().try_into().unwrap_or(0),
+            deleted_at: self
+                .deleted_at
+                .and_then(|d| d.timestamp().try_into().ok()),
             public_keys: self
                 .public_keys
                 .iter()

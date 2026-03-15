@@ -20,11 +20,6 @@ pub fn validate_locale(locale: &str) -> Result<(), ValidationError> {
         ));
     }
 
-    if !locale.chars().all(|c| c.is_ascii_lowercase()) {
-        return Err(ValidationError::new("invalid_locale")
-            .with_message("Locale must be lowercase".into()));
-    }
-
     Ok(())
 }
 

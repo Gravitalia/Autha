@@ -267,14 +267,17 @@ impl VerifiedFactor {
         }
     }
 
+    /// Returns the category of this factor.
     pub fn factor_type(&self) -> FactorType {
         self.factor_type
     }
 
+    /// Returns the specific method used.
     pub fn method(&self) -> &FactorMethod {
         &self.method
     }
 
+    /// Returns the Unix timestamp of when this factor was verified.
     pub fn verified_at(&self) -> u64 {
         self.verified_at
     }

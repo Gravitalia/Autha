@@ -11,6 +11,7 @@ pub struct Sha256Hasher {
 
 impl Sha256Hasher {
     pub fn new(pepper: Vec<u8>) -> Self {
+        assert!(!pepper.is_empty(), "pepper must not be empty");
         Self {
             pepper: Zeroizing::new(pepper),
         }

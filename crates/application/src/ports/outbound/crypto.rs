@@ -39,7 +39,7 @@ pub trait TotpGenerator: Send + Sync {
         config: &TotpConfig,
     ) -> Result<bool>;
 
-    /// Verify a TOTP code against a secret with window flexiblity.
+    /// Verify a TOTP code against a secret with window flexibility.
     fn verify_with_window(
         &self,
         code: &TotpCode,

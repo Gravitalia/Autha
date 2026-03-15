@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    postgres::pool::migrate(db_pool.clone()).await?;
+    postgres::pool::migrate(&db_pool).await?;
 
     let account_repo =
         Arc::new(postgres::account_repository::PgAccountRepository::new(
@@ -86,6 +86,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Arc::new(postgres::token_repository::PgRefreshTokenRepository::new(
             db_pool.clone(),
         ));
+
+    let clock = Arc::new(adapters::outbound::clock::SystemClock);
 
     let master_key = zeroize::Zeroizing::new(
         env::var("MASTER_KEY")
@@ -97,6 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .into_bytes();
 
     let crypto = Arc::new(crypto::CryptoAdapter::new(
+        clock.clone(),
         master_key,
         salt,
         config.argon2.memory_cost,
@@ -135,7 +138,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let telemetry_adapter =
         Arc::new(adapters::outbound::telemetry::TracingTelemetry);
-    let clock = Arc::new(adapters::outbound::clock::SystemClock);
 
     let status_uc = application::usecases::StatusUseCase::new(config.into());
     let create_account_uc = application::usecases::CreateAccountUseCase::new(

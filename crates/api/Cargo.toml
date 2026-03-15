@@ -15,7 +15,8 @@ hyper-util = "0.1"
 tower = { version = "0.5" }
 tower-http = { version = "0.6", features = ["timeout"] }
 
-zeroize = "1.8"
+zeroize = { workspace = true }
+urlencoding = "2.1"
 
 serde = { workspace = true, features = ["derive"] }
 serde_yaml = "0.9"
