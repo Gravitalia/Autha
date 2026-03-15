@@ -18,8 +18,8 @@ use adapters::outbound::mail::RabbitMqMailer;
 use adapters::outbound::persistence::postgres;
 use adapters::outbound::{crypto, token};
 use application::ports::outbound::{LdapPort, Mailer};
-use axum::Router;
 use axum::routing::{get, post};
+use axum::{Router, middleware};
 use config::ServerConfig;
 use opentelemetry::trace::TracerProvider;
 use tower_http::timeout::RequestBodyTimeoutLayer;
@@ -168,6 +168,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/create", post(http::create::create_account_handler))
         .route("/login", post(http::login::login_handler))
         .with_state(state)
+        .route_layer(middleware::from_fn(telemetry::track))
         .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(5)));
 
     match env::var("UNIX_SOCKET") {
