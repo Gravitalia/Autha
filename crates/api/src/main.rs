@@ -5,6 +5,7 @@
 static ALLOC: dhat::Alloc = dhat::Alloc;
 
 mod config;
+mod state;
 mod telemetry;
 
 use std::env;
@@ -16,10 +17,8 @@ use adapters::inbound::{http, ldap};
 use adapters::outbound::mail::RabbitMqMailer;
 use adapters::outbound::persistence::postgres;
 use adapters::outbound::{crypto, token};
-use application::ports::inbound::{Authenticate, CreateAccount, Status};
 use application::ports::outbound::{LdapPort, Mailer};
 use axum::Router;
-use axum::extract::FromRef;
 use axum::routing::{get, post};
 use config::ServerConfig;
 use opentelemetry::trace::TracerProvider;
@@ -28,32 +27,6 @@ use tracing_subscriber::EnvFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::util::SubscriberInitExt;
-
-/// Shared state.
-#[derive(Clone)]
-pub struct AppState {
-    pub status: Arc<dyn Status>,
-    pub create_account: Arc<dyn CreateAccount>,
-    pub authenticate: Arc<dyn Authenticate>,
-}
-
-impl FromRef<AppState> for Arc<dyn Status> {
-    fn from_ref(state: &AppState) -> Self {
-        Arc::clone(&state.status)
-    }
-}
-
-impl FromRef<AppState> for Arc<dyn CreateAccount> {
-    fn from_ref(state: &AppState) -> Self {
-        Arc::clone(&state.create_account)
-    }
-}
-
-impl FromRef<AppState> for Arc<dyn Authenticate> {
-    fn from_ref(state: &AppState) -> Self {
-        Arc::clone(&state.authenticate)
-    }
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -183,7 +156,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         telemetry_adapter,
         clock,
     );
-    let state = AppState {
+    let state = state::AppState {
         status: Arc::new(status_uc),
         create_account: Arc::new(create_account_uc),
         authenticate: Arc::new(authenticate_uc),
