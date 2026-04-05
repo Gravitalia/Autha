@@ -139,7 +139,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let telemetry_adapter =
         Arc::new(adapters::outbound::telemetry::TracingTelemetry);
 
-    let status_uc = application::usecases::StatusUseCase::new(config.into());
+    let status_uc =
+        application::usecases::StatusUseCase::new(config.clone().into());
     let create_account_uc = application::usecases::CreateAccountUseCase::new(
         account_repo.clone(),
         refresh_token_repo.clone(),
@@ -158,8 +159,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         telemetry_adapter,
         clock,
     );
-    let get_user_uc =
-        application::usecases::GetUserUseCase::new(account_repo, token);
+    let get_user_uc = application::usecases::GetUserUseCase::new(
+        account_repo,
+        token,
+        config.into(),
+    );
     let state = state::AppState {
         status: Arc::new(status_uc),
         create_account: Arc::new(create_account_uc),

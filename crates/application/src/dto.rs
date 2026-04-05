@@ -118,16 +118,22 @@ pub struct StatusDto {
     pub version: String,
 }
 
-// Add this below your existing DTOs
-
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserResponseDto {
+    #[serde(rename = "@context")]
+    pub context: Vec<String>,
+    pub r#type: String,
     pub id: String,
-    pub username: String,
-    pub avatar: Option<String>,
+    pub preferred_username: String,
+    pub name: Option<String>,
+    pub icon: Vec<String>,
     pub summary: Option<String>,
     pub flags: i32,
     pub public_keys: Vec<PublicKeyDto>,
-    pub created_at: u64,
+    pub published: String,
+    pub inbox: String,
+    pub outbox: String,
+    pub followers: String,
+    pub following: String,
 }

@@ -218,10 +218,12 @@ name = "application"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "chrono",
  "domain",
  "serde",
  "serde_json",
  "thiserror",
+ "url",
 ]
 
 [[package]]
