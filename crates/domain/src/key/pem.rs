@@ -3,10 +3,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use der::Encode;
 use sha2::{Digest, Sha256};
 use spki::SubjectPublicKeyInfoOwned;
-use spki::der::DecodePem;
+use spki::der::{DecodePem, Encode};
 
 use crate::error::{DomainError, Result};
 use crate::key::public_key::KeyError;
