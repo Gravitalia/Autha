@@ -54,10 +54,10 @@ impl HmacTotpGenerator {
 
         // Dynamic truncation (RFC 6238).
         let offset = (result[19] & 0x0f) as usize;
-        let binary_code = ((result[offset] as u32 & 0x7f) << 24) |
-            ((result[offset + 1] as u32) << 16) |
-            ((result[offset + 2] as u32) << 8) |
-            (result[offset + 3] as u32);
+        let binary_code = ((result[offset] as u32 & 0x7f) << 24)
+            | ((result[offset + 1] as u32) << 16)
+            | ((result[offset + 2] as u32) << 8)
+            | (result[offset + 3] as u32);
 
         let mod_value = 10u32.pow(digits as u32);
         let code_int = binary_code % mod_value;

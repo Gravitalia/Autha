@@ -150,18 +150,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         clock.clone(),
     );
     let authenticate_uc = application::usecases::AuthenticateUseCase::new(
-        account_repo,
+        account_repo.clone(),
         refresh_token_repo,
         ldap_client,
         crypto,
-        token,
+        token.clone(),
         telemetry_adapter,
         clock,
     );
+    let get_user_uc =
+        application::usecases::GetUserUseCase::new(account_repo, token);
     let state = state::AppState {
         status: Arc::new(status_uc),
         create_account: Arc::new(create_account_uc),
         authenticate: Arc::new(authenticate_uc),
+        get_user: Arc::new(get_user_uc),
     };
 
     let app = Router::new()
@@ -169,6 +172,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/status.json", get(http::status::status_handler))
         .route("/create", post(http::create::create_account_handler))
         .route("/login", post(http::login::login_handler))
+        .route("/users/:id", get(http::get_user::get_user_handler))
         .with_state(state)
         .route_layer(middleware::from_fn(telemetry::track))
         .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(5)));

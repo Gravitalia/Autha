@@ -122,8 +122,8 @@ impl AccountRepository for PgAccountRepository {
         match result {
             Ok(_) => Ok(()),
             Err(e) => {
-                if let Some(db_err) = e.as_database_error() &&
-                    db_err.code() == Some("23505".into())
+                if let Some(db_err) = e.as_database_error()
+                    && db_err.code() == Some("23505".into())
                 {
                     let constraint = db_err.constraint().unwrap_or("");
 

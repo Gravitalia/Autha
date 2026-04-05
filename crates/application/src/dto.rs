@@ -10,6 +10,7 @@ use domain::identity::id::UserId;
 use domain::identity::ip::EncryptedIp;
 use domain::key::pem::PemFingerprint;
 use serde::Serialize;
+use serde::ser::SerializeStruct;
 
 /// Request DTO for authentication.
 pub struct AuthRequestDto {
@@ -90,6 +91,20 @@ pub struct PublicKeyDto {
     pub created_at: String,
 }
 
+impl Serialize for PublicKeyDto {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut s = serializer.serialize_struct("PublicKey", 4)?;
+        s.serialize_field("id", &self.id.as_str())?;
+        s.serialize_field("owner", &self.owner)?;
+        s.serialize_field("public_key_pem", &self.public_key_pem)?;
+        s.serialize_field("created_at", &self.created_at)?;
+        s.end()
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct StatusDto {
     pub name: String,
@@ -101,4 +116,18 @@ pub struct StatusDto {
     pub privacy_policy: Option<String>,
     pub invite_only: bool,
     pub version: String,
+}
+
+// Add this below your existing DTOs
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserResponseDto {
+    pub id: String,
+    pub username: String,
+    pub avatar: Option<String>,
+    pub summary: Option<String>,
+    pub flags: i32,
+    pub public_keys: Vec<PublicKeyDto>,
+    pub created_at: u64,
 }
