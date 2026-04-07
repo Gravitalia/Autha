@@ -20,7 +20,7 @@ esac
 
 COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
-COPY .sqlx ./.sqlx
+# COPY .sqlx ./.sqlx
 
 ENV RUSTFLAGS="-C target-feature=+crt-static"
 RUN case "${TARGETPLATFORM}" in \
