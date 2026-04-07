@@ -8,7 +8,7 @@ chrono = { workspace = true }
 thiserror = { workspace = true }
 spki = { version = "0.7.3", features = ["pem"] }
 der = "0.8"
-sha2 = "0.10"
+sha2 = "0.11"
 hex = "0.4"
 regex = "1"
 zeroize = { workspace = true, features = ["derive"] }
