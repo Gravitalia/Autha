@@ -16,6 +16,8 @@ chrono = "0.4"
 thiserror = "2.0"
 p256 = { version = "0.13.2", default-features = false }
 rsa = { version = "0.9.10", default-features = false }
+vstd = "0.0.0"
+kani = "0.67"
 
 [profile.release]
 opt-level = 3

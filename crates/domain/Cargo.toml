@@ -12,3 +12,6 @@ sha2 = "0.11"
 hex = "0.4"
 regex = "1"
 zeroize = { workspace = true, features = ["derive"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
