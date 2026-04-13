@@ -5,7 +5,7 @@ use validator::ValidationError;
 
 /// Validate user ID format (2-15 alphanumeric characters).
 pub fn validate_user_id(id: &str) -> Result<(), ValidationError> {
-    UserId::parse(id.to_owned()).map(|_| ()).map_err(|_| {
+    UserId::parse(id).map(|_| ()).map_err(|_| {
         ValidationError::new("invalid_format").with_message(
             "User ID must be 3-64 ASCII letters/digits or '_'".into(),
         )

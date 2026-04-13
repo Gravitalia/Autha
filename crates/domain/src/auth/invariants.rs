@@ -121,7 +121,7 @@ mod tests {
 
     #[test]
     fn test_sensitive_operation_requires_mfa() {
-        let user_id = UserId::parse("user".into()).unwrap();
+        let user_id = UserId::parse("user").unwrap();
 
         let password_only = create_proof_with_password_only(&user_id, 1000);
         let result = validate_sensitive_operation(&password_only, 1100, 600);
@@ -134,7 +134,7 @@ mod tests {
 
     #[test]
     fn test_sensitive_operation_requires_freshness() {
-        let user_id = UserId::parse("user".into()).unwrap();
+        let user_id = UserId::parse("user").unwrap();
         let mfa = create_proof_with_mfa(&user_id, 1000);
 
         assert!(validate_sensitive_operation(&mfa, 1100, 600).is_ok());

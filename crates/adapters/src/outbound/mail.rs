@@ -172,7 +172,7 @@ impl Mailer for RabbitMqMailer {
         let message = Content {
             template: Template::Welcome,
             locale: Some(locale),
-            to: email.as_str(),
+            to: email.as_str()?,
             username,
         };
 
@@ -188,7 +188,7 @@ impl Mailer for RabbitMqMailer {
         let message = Content {
             template: Template::Login,
             locale: Some(locale),
-            to: email.as_str(),
+            to: email.as_str()?,
             username,
         };
 

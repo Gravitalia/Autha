@@ -59,7 +59,7 @@ impl CreateAccount for CreateAccountUseCase {
         let password_hash =
             self.crypto.password_hasher().hash(&request.password)?;
 
-        let email_bytes = request.email.as_ref().as_bytes();
+        let email_bytes = request.email.as_bytes();
         let email_hash =
             EmailHash::new(self.crypto.hasher().hash(email_bytes));
         let email_cipher = self

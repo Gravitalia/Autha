@@ -1,0 +1,22 @@
+name: kani
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-kani:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Set up cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: kani-cache
+
+      - name: Run Kani
+        uses: model-checking/kani-github-action@v1.1

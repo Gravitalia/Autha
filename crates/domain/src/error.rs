@@ -1,6 +1,6 @@
 //! Custom error handler for domain (core).
 
-use crate::key::public_key::KeyError;
+use crate::{identity::email::EmailError, key::public_key::KeyError};
 
 pub type Result<T> = std::result::Result<T, DomainError>;
 
@@ -11,7 +11,7 @@ pub enum DomainError {
     ValidationFailed { field: String, message: String },
 
     #[error("invalid email formatting")]
-    InvalidEmailFormat,
+    InvalidEmailFormat(#[from] EmailError),
     #[error("id must be between 2 and 22 characters length")]
     InvalidIdFormat,
 

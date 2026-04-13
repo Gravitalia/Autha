@@ -64,8 +64,7 @@ impl Authenticate for AuthenticateUseCase {
 
         let account = match (&request.email, request.user_id) {
             (Some(email), None) => {
-                let email_hash =
-                    self.crypto.hasher().hash(email.as_str().as_bytes());
+                let email_hash = self.crypto.hasher().hash(email.as_bytes());
                 self.account_repo
                     .find_by_email_hash(&EmailHash::new(email_hash))
                     .await?

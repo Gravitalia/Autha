@@ -104,3 +104,41 @@ impl TryFrom<String> for PemPublicKey {
         Self::parse(value)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const TEST_RSA_PUB_KEY: &str = "-----BEGIN PUBLIC KEY-----
+MIGeMA0GCSqGSIb3DQEBAQUAA4GMADCBiAKBgHgX8gieCwHlUYtM3gcq9h/sDaqg
+Uhj88N4b2UJdV3CRZVD3jjL2waNIAuat7VMM/daNN0x34ixsQ8GxaBcMooG6nOAq
+rfVXEFg2JmRE/rNm2RfhVp+fMjeHQNq6vLrEVg4r84vzUevkSVMvcZ0LxYtGMzVe
+1ayeq+eHEjsXkdKBAgMBAAE=
+-----END PUBLIC KEY-----";
+
+    #[test]
+    fn test_parse_valid_pem() {
+        let result = PemPublicKey::parse(TEST_RSA_PUB_KEY.to_string());
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_parse_invalid_pem() {
+        let result = PemPublicKey::parse(
+            "-----BEGIN PUBLIC KEY-----\ninvalid\n-----END PUBLIC KEY-----"
+                .to_string(),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_fingerprint_consistency() {
+        let key = PemPublicKey::parse(TEST_RSA_PUB_KEY.to_string()).unwrap();
+        let fp1 = key.fingerprint().unwrap();
+        let fp2 = key.fingerprint().unwrap();
+
+        assert_eq!(fp1, fp2);
+        assert_eq!(fp1.as_str().len(), 40);
+        assert!(fp1.as_str().chars().all(|c| c.is_ascii_hexdigit()));
+    }
+}
