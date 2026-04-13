@@ -184,3 +184,99 @@ impl AuthenticationAttempt {
         self.ip.as_deref()
     }
 }
+
+#[cfg(kani)]
+mod proof {
+    use super::*;
+    use crate::auth::factor::FactorMethod;
+
+    fn dummy_user_id() -> UserId {
+        UserId::dummy_for_kani()
+    }
+
+    fn dummy_factor() -> VerifiedFactor {
+        VerifiedFactor::new(FactorType::Inherence, FactorMethod::Password, 0)
+    }
+
+    #[kani::proof]
+    #[kani::unwind(4)]
+    fn prove_auth_proof_new_requires_factor() {
+        let user_id = dummy_user_id();
+        let auth_at: u64 = kani::any();
+
+        let num_factors: usize = kani::any_where(|&n| n <= 3);
+        let factors = match num_factors {
+            0 => vec![],
+            1 => vec![dummy_factor()],
+            2 => vec![dummy_factor(), dummy_factor()],
+            3 => vec![dummy_factor(), dummy_factor(), dummy_factor()],
+            _ => unreachable!(),
+        };
+
+        let result = AuthenticationProof::new(&user_id, factors, auth_at);
+
+        match result {
+            Ok(proof) => {
+                assert!(num_factors > 0);
+                assert_eq!(proof.verified_factors().len(), num_factors);
+            },
+            Err(e) => {
+                if let DomainError::InvalidCredentials = e {
+                    assert_eq!(num_factors, 0);
+                }
+            },
+        }
+    }
+
+    #[kani::proof]
+    #[kani::unwind(4)]
+    fn prove_auth_proof_builder_requires_factor() {
+        let user_id = dummy_user_id();
+        let auth_at: u64 = kani::any();
+
+        let num_factors: usize = kani::any_where(|&n| n <= 3);
+        let factors = match num_factors {
+            0 => vec![],
+            1 => vec![dummy_factor()],
+            2 => vec![dummy_factor(), dummy_factor()],
+            3 => vec![dummy_factor(), dummy_factor(), dummy_factor()],
+            _ => unreachable!(),
+        };
+
+        let builder = AuthenticationProofBuilder::default()
+            .user_id(&user_id)
+            .add_factors(factors)
+            .authenticated_at(auth_at);
+
+        match builder.build() {
+            Ok(_) => {
+                assert!(num_factors > 0);
+            },
+            Err(e) => {
+                if let DomainError::InvalidCredentials = e {
+                    assert_eq!(num_factors, 0);
+                }
+            },
+        }
+    }
+
+    #[kani::proof]
+    #[kani::unwind(2)]
+    fn prove_auth_proof_builder_requires_mandatory_fields() {
+        let user_id = dummy_user_id();
+        let auth_at: u64 = kani::any();
+        let factors = vec![dummy_factor()];
+
+        let builder_no_user = AuthenticationProofBuilder::default()
+            .add_factors(factors.clone())
+            .authenticated_at(auth_at);
+
+        assert!(builder_no_user.build().is_err());
+
+        let builder_no_time = AuthenticationProofBuilder::default()
+            .user_id(&user_id)
+            .add_factors(factors);
+
+        assert!(builder_no_time.build().is_err());
+    }
+}

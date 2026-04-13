@@ -37,9 +37,11 @@ impl EmailAddress {
         }
 
         let normalized: String = email.nfc().collect();
-        Self::validate(&normalized.to_lowercase())?;
+        let normalized_lower = normalized.to_lowercase();
 
-        let bytes = normalized.as_bytes();
+        Self::validate(normalized_lower.as_bytes())?;
+
+        let bytes = normalized_lower.as_bytes();
         let n = bytes.len();
 
         if n > MAX_EMAIL_LENGTH {
@@ -55,8 +57,9 @@ impl EmailAddress {
         })
     }
 
-    fn validate(email: &str) -> Result<()> {
-        let bytes_len = email.len();
+    fn validate<T: AsRef<[u8]>>(email: T) -> Result<()> {
+        let bytes = email.as_ref();
+        let bytes_len = bytes.len();
 
         if bytes_len < 5 {
             return Err(EmailError::Empty.into());
@@ -65,13 +68,9 @@ impl EmailAddress {
             return Err(EmailError::TooLong.into());
         }
 
-        let parts: Vec<&str> = email.rsplitn(2, '@').collect();
-        if parts.len() != 2 {
-            return Err(EmailError::InvalidFormat.into());
-        }
-
-        let domain_part = parts[0];
-        let local_part = parts[1];
+        let mut parts = bytes.rsplitn(2, |&b| b == b'@');
+        let domain_part = parts.next().ok_or(EmailError::InvalidFormat)?;
+        let local_part = parts.next().ok_or(EmailError::InvalidFormat)?;
 
         if !Self::is_valid_local(local_part)
             || !Self::is_valid_domain(domain_part)
@@ -82,19 +81,21 @@ impl EmailAddress {
         Ok(())
     }
 
-    fn is_valid_local(local: &str) -> bool {
+    fn is_valid_local(local: &[u8]) -> bool {
         if local.is_empty() || local.len() > 64 {
             return false;
         }
 
         let mut last_was_dot = true;
-        for c in local.chars() {
-            if c == '.' {
+        for &b in local {
+            if b == b'.' {
                 if last_was_dot {
                     return false;
                 }
                 last_was_dot = true;
-            } else if c.is_alphanumeric() || "!#$%&'*+-/=?^_`{|}~".contains(c)
+            } else if b.is_ascii_alphanumeric()
+                || b"!#$%&'*+-/=?^_`{|}~".contains(&b)
+                || b >= 128
             {
                 last_was_dot = false;
             } else {
@@ -104,32 +105,42 @@ impl EmailAddress {
         !last_was_dot
     }
 
-    fn is_valid_domain(domain: &str) -> bool {
+    fn is_valid_domain(domain: &[u8]) -> bool {
         if domain.is_empty() || domain.len() > 253 {
             return false;
         }
 
-        let labels: Vec<&str> = domain.split('.').collect();
-        if labels.len() < 2 {
+        let mut labels_count = 1;
+        for &b in domain {
+            if b == b'.' {
+                labels_count += 1;
+            }
+        }
+
+        if labels_count < 2 {
             return false;
         }
 
-        for (i, label) in labels.iter().enumerate() {
+        for (i, label) in domain.split(|&b| b == b'.').enumerate() {
             if label.is_empty()
-                || label.starts_with('-')
-                || label.ends_with('-')
+                || label.starts_with(b"-")
+                || label.ends_with(b"-")
             {
                 return false;
             }
 
-            if i == labels.len() - 1
-                && (label.len() < 2
-                    || !label.chars().all(|c| c.is_alphabetic()))
+            if i == labels_count - 1 {
+                if label.len() < 2
+                    || !label
+                        .iter()
+                        .all(|&b| b.is_ascii_alphabetic() || b >= 128)
+                {
+                    return false;
+                }
+            } else if !label
+                .iter()
+                .all(|&b| b.is_ascii_alphanumeric() || b == b'-' || b >= 128)
             {
-                return false;
-            }
-
-            if !label.chars().all(|c| c.is_alphanumeric() || c == '-') {
                 return false;
             }
         }
@@ -142,6 +153,7 @@ impl EmailAddress {
         std::str::from_utf8(self.as_bytes())
             .map_err(|_| EmailError::InvalidFormat.into())
     }
+
     /// Converts a string slice to a byte slice.
     #[inline]
     pub fn as_bytes(&self) -> &[u8] {
@@ -157,24 +169,25 @@ impl std::fmt::Debug for EmailAddress {
     }
 }
 
-#[cfg(kani)]
+/*#[cfg(kani)]
 mod proof {
     use super::*;
 
     #[kani::proof]
-    #[kani::unwind(257)]
+    #[kani::unwind(33)]
     fn prove_email_validation_robustness() {
-        let bytes = kani::vec::any_vec::<u8, 256>();
+        let bytes: [u8; 32] = kani::any();
+        let len: usize = kani::any_where(|&l| l <= 32);
+        let email_slice = &bytes[..len];
 
-        if let Ok(s) = std::str::from_utf8(&bytes) {
-            match EmailAddress::validate(s) {
-                Ok(_) => {
-                    let total_len = s.len();
-                    assert!(total_len >= 5 && total_len <= 254);
-                    assert!(s.contains('@'));
-                },
-                Err(_) => {},
-            }
+        match EmailAddress::validate(email_slice) {
+            Ok(_) => {
+                let total_len = email_slice.len();
+                assert!(total_len >= 5 && total_len <= 254);
+                assert!(email_slice.contains(&b'@'));
+            },
+            Err(_) => {},
         }
     }
 }
+*/

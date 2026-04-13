@@ -114,6 +114,15 @@ impl TotpCode {
     pub fn new(code: impl Into<String>, expected_digits: u8) -> Result<Self> {
         let value = code.into();
 
+        Self::validate(&value, expected_digits)?;
+
+        Ok(Self {
+            value,
+            digits: expected_digits,
+        })
+    }
+
+    fn validate(value: &str, expected_digits: u8) -> Result<()> {
         if value.len() != expected_digits as usize {
             return Err(DomainError::ValidationFailed {
                 field: "totp_code".into(),
@@ -128,17 +137,14 @@ impl TotpCode {
             });
         }
 
-        if !value.chars().all(|c| c.is_ascii_digit()) {
+        if !value.as_bytes().iter().all(|c| c.is_ascii_digit()) {
             return Err(DomainError::ValidationFailed {
                 field: "totp_code".into(),
                 message: "TOTP code must contain only digits".into(),
             });
         }
 
-        Ok(Self {
-            value,
-            digits: expected_digits,
-        })
+        Ok(())
     }
 
     /// Create with default 6 digits.
@@ -291,3 +297,69 @@ pub enum FactorMethod {
     WebAuthn { credential_id: String },
     RecoveryCode,
 }
+
+/*#[cfg(kani)]
+mod proof {
+    use super::*;
+
+    #[kani::proof]
+    #[kani::unwind(17)]
+    fn prove_base32_validation_robustness() {
+        let bytes: [u8; 16] = kani::any();
+        let len: usize = kani::any_where(|&l| l <= 16);
+
+        if let Ok(s) = std::str::from_utf8(&bytes[..len]) {
+            let is_valid = TotpSecret::is_valid_base32(s);
+
+            if is_valid {
+                assert!(!s.is_empty());
+
+                if s.contains('=') {
+                    assert!(s.len() % 8 == 0);
+                }
+            }
+        }
+    }
+
+    #[kani::proof]
+    #[kani::unwind(11)]
+    fn prove_totp_code_invariants() {
+        let bytes: [u8; 10] = kani::any();
+        let len: usize = kani::any_where(|&l| l <= 10);
+
+        if let Ok(s) = std::str::from_utf8(&bytes[..len]) {
+            let expected_digits: u8 = kani::any();
+
+            match TotpCode::validate(s, expected_digits) {
+                Ok(_) => {
+                    assert!((4..=8).contains(&expected_digits));
+                    assert_eq!(s.len(), expected_digits as usize);
+                    assert!(s.as_bytes().iter().all(|c| c.is_ascii_digit()));
+                },
+                Err(_) => {},
+            }
+        }
+    }
+
+    #[kani::proof]
+    fn prove_totp_config_validation() {
+        let time_step: u64 = kani::any();
+        let digits: u8 = kani::any();
+        let algo = TotpAlgorithm::Sha1;
+
+        match TotpConfig::new(time_step, digits, algo) {
+            Ok(config) => {
+                assert!(config.time_step() > 0);
+                assert!((4..=8).contains(&config.digits()));
+            },
+            Err(DomainError::ValidationFailed { field, .. }) => {
+                let is_invalid_time = time_step == 0 && field == "time_step";
+                let is_invalid_digits =
+                    !(4..=8).contains(&digits) && field == "digits";
+                assert!(is_invalid_time || is_invalid_digits);
+            },
+            _ => unreachable!(),
+        }
+    }
+}
+*/

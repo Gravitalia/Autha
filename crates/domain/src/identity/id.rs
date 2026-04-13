@@ -75,6 +75,13 @@ impl AsRef<str> for UserId {
 }
 
 #[cfg(kani)]
+impl UserId {
+    pub fn dummy_for_kani() -> Self {
+        Self(String::new())
+    }
+}
+
+#[cfg(kani)]
 mod proof {
     use super::*;
 
