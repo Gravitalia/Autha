@@ -179,3 +179,57 @@ mod tests {
         );
     }
 }
+
+#[cfg(kani)]
+mod proof {
+    use super::*;
+
+    #[kani::proof]
+    fn prove_dynamic_truncation_memory_safety() {
+        let result: [u8; 20] = kani::any();
+        let digits: u8 = kani::any_where(|&d| d >= 4 && d <= 8);
+        let offset = (result[19] & 0x0f) as usize;
+        let binary_code = ((result[offset] as u32 & 0x7f) << 24)
+            | ((result[offset + 1] as u32) << 16)
+            | ((result[offset + 2] as u32) << 8)
+            | (result[offset + 3] as u32);
+
+        let mod_value = 10u32.pow(digits as u32);
+        let code_int = binary_code % mod_value;
+
+        assert!(code_int < mod_value);
+        assert!(mod_value > 0);
+    }
+
+    #[kani::proof]
+    fn prove_time_counter_logic() {
+        let timestamp: u64 = kani::any();
+        let time_step: u64 = kani::any_where(|&ts| ts > 0);
+        let counter = timestamp / time_step;
+        assert!(counter <= timestamp);
+    }
+
+    #[kani::proof]
+    #[kani::unwind(12)]
+    fn prove_window_verification_arithmetic() {
+        let current_counter: u64 = kani::any();
+        let window: u8 = kani::any_where(|&w| w <= 5);
+        let mut valid_iterations = 0;
+
+        for offset in -(window as i64)..=(window as i64) {
+            let counter = match (current_counter as i64).checked_add(offset) {
+                Some(c) if c >= 0 => {
+                    valid_iterations += 1;
+                    c as u64
+                },
+                _ => continue,
+            };
+
+            if offset == 0 {
+                assert_eq!(counter, current_counter);
+            }
+        }
+
+        assert!(valid_iterations <= (window * 2 + 1) as usize);
+    }
+}

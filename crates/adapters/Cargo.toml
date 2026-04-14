@@ -42,3 +42,6 @@ lapin = { version = "3", features = ["unstable"] }
 chrono = { workspace = true, features = ["serde"] }
 thiserror = { workspace = true }
 url = "2"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
