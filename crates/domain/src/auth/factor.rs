@@ -124,9 +124,17 @@ impl TotpCode {
 
     fn validate(value: &str, expected_digits: u8) -> Result<()> {
         if value.len() != expected_digits as usize {
+            // On masque le format! à Kani pour éviter la boucle infinie memcmp
+            #[cfg(not(kani))]
+            let message =
+                format!("TOTP code must be {expected_digits} digits");
+
+            #[cfg(kani)]
+            let message = String::from("invalid length");
+
             return Err(DomainError::ValidationFailed {
                 field: "totp_code".into(),
-                message: format!("TOTP code must be {expected_digits} digits"),
+                message,
             });
         }
 
@@ -298,22 +306,41 @@ pub enum FactorMethod {
     RecoveryCode,
 }
 
-/*#[cfg(kani)]
+#[cfg(kani)]
 mod proof {
     use super::*;
 
     #[kani::proof]
-    #[kani::unwind(17)]
+    #[kani::unwind(18)]
     fn prove_base32_validation_robustness() {
         let bytes: [u8; 16] = kani::any();
         let len: usize = kani::any_where(|&l| l <= 16);
+        let slice = match len {
+            0 => &bytes[..0],
+            1 => &bytes[..1],
+            2 => &bytes[..2],
+            3 => &bytes[..3],
+            4 => &bytes[..4],
+            5 => &bytes[..5],
+            6 => &bytes[..6],
+            7 => &bytes[..7],
+            8 => &bytes[..8],
+            9 => &bytes[..9],
+            10 => &bytes[..10],
+            11 => &bytes[..11],
+            12 => &bytes[..12],
+            13 => &bytes[..13],
+            14 => &bytes[..14],
+            15 => &bytes[..15],
+            16 => &bytes[..16],
+            _ => unreachable!(),
+        };
 
-        if let Ok(s) = std::str::from_utf8(&bytes[..len]) {
+        if let Ok(s) = std::str::from_utf8(slice) {
             let is_valid = TotpSecret::is_valid_base32(s);
 
             if is_valid {
                 assert!(!s.is_empty());
-
                 if s.contains('=') {
                     assert!(s.len() % 8 == 0);
                 }
@@ -322,12 +349,28 @@ mod proof {
     }
 
     #[kani::proof]
-    #[kani::unwind(11)]
+    #[kani::unwind(12)]
     fn prove_totp_code_invariants() {
         let bytes: [u8; 10] = kani::any();
         let len: usize = kani::any_where(|&l| l <= 10);
 
-        if let Ok(s) = std::str::from_utf8(&bytes[..len]) {
+        // Même technique ici
+        let slice = match len {
+            0 => &bytes[..0],
+            1 => &bytes[..1],
+            2 => &bytes[..2],
+            3 => &bytes[..3],
+            4 => &bytes[..4],
+            5 => &bytes[..5],
+            6 => &bytes[..6],
+            7 => &bytes[..7],
+            8 => &bytes[..8],
+            9 => &bytes[..9],
+            10 => &bytes[..10],
+            _ => unreachable!(),
+        };
+
+        if let Ok(s) = std::str::from_utf8(slice) {
             let expected_digits: u8 = kani::any();
 
             match TotpCode::validate(s, expected_digits) {
@@ -342,6 +385,7 @@ mod proof {
     }
 
     #[kani::proof]
+    #[kani::unwind(12)]
     fn prove_totp_config_validation() {
         let time_step: u64 = kani::any();
         let digits: u8 = kani::any();
@@ -353,13 +397,14 @@ mod proof {
                 assert!((4..=8).contains(&config.digits()));
             },
             Err(DomainError::ValidationFailed { field, .. }) => {
-                let is_invalid_time = time_step == 0 && field == "time_step";
+                let is_invalid_time =
+                    time_step == 0 && field.as_str() == "time_step";
                 let is_invalid_digits =
-                    !(4..=8).contains(&digits) && field == "digits";
+                    !(4..=8).contains(&digits) && field.as_str() == "digits";
+
                 assert!(is_invalid_time || is_invalid_digits);
             },
             _ => unreachable!(),
         }
     }
 }
-*/

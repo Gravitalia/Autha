@@ -102,8 +102,8 @@ where
                     .into_response()
             })?;
 
-        let token = if auth_header.len() > 7
-            && auth_header[..7].eq_ignore_ascii_case("Bearer ")
+        let token = if auth_header.len() > 7 &&
+            auth_header[..7].eq_ignore_ascii_case("Bearer ")
         {
             auth_header[7..].trim().to_string()
         } else {

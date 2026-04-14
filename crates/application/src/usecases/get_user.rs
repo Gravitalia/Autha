@@ -43,10 +43,8 @@ impl GetUser for GetUserUseCase {
             .await?
             .ok_or(ApplicationError::UserNotFound)?;
 
-        if account.deleted_at.is_some() {
-            return Err(ApplicationError::AccountDeleted {
-                date: account.deleted_at.unwrap(),
-            });
+        if let Some(date) = account.deleted_at {
+            return Err(ApplicationError::AccountDeleted { date });
         }
 
         let published_date =

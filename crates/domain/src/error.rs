@@ -1,6 +1,7 @@
 //! Custom error handler for domain (core).
 
-use crate::{identity::email::EmailError, key::public_key::KeyError};
+use crate::identity::email::EmailError;
+use crate::key::public_key::KeyError;
 
 pub type Result<T> = std::result::Result<T, DomainError>;
 

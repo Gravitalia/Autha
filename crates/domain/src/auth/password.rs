@@ -166,31 +166,31 @@ impl std::fmt::Debug for PasswordHash {
 mod proof {
     use super::*;
 
-    /*#[kani::proof]
-    #[kani::unwind(261)]
-    fn prove_password_security_rules() {
-        let len: usize = kani::any_where(|&l| {
-            (l <= 10) || (l >= 250 && l <= 260)
-        });
-        let bytes = [b'A'; 260];
-        let slice = &bytes[..len];
-
-        if let Ok(s) = std::str::from_utf8(slice) {
-            match Password::new(s) {
-                Ok(pwd) => {
-                    assert!(pwd.as_str().len() >= Password::MIN_LENGTH);
-                    assert!(pwd.as_str().len() <= Password::MAX_LENGTH);
-                },
-                Err(DomainError::WeakPassword { .. }) => {
-                    assert!(len < Password::MIN_LENGTH);
-                },
-                Err(DomainError::ValidationFailed { .. }) => {
-                    assert!(len > Password::MAX_LENGTH);
-                },
-                _ => unreachable!(),
-            }
-        }
-    }*/
+    // #[kani::proof]
+    // #[kani::unwind(261)]
+    // fn prove_password_security_rules() {
+    // let len: usize = kani::any_where(|&l| {
+    // (l <= 10) || (l >= 250 && l <= 260)
+    // });
+    // let bytes = [b'A'; 260];
+    // let slice = &bytes[..len];
+    //
+    // if let Ok(s) = std::str::from_utf8(slice) {
+    // match Password::new(s) {
+    // Ok(pwd) => {
+    // assert!(pwd.as_str().len() >= Password::MIN_LENGTH);
+    // assert!(pwd.as_str().len() <= Password::MAX_LENGTH);
+    // },
+    // Err(DomainError::WeakPassword { .. }) => {
+    // assert!(len < Password::MIN_LENGTH);
+    // },
+    // Err(DomainError::ValidationFailed { .. }) => {
+    // assert!(len > Password::MAX_LENGTH);
+    // },
+    // _ => unreachable!(),
+    // }
+    // }
+    // }
 
     #[kani::proof]
     #[kani::unwind(17)]
