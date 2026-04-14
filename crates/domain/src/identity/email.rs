@@ -172,12 +172,15 @@ impl std::fmt::Debug for EmailAddress {
 /*#[cfg(kani)]
 mod proof {
     use super::*;
+    use crate::error::DomainError;
 
     #[kani::proof]
-    #[kani::unwind(33)]
+    #[kani::unwind(257)]
     fn prove_email_validation_robustness() {
-        let bytes: [u8; 32] = kani::any();
-        let len: usize = kani::any_where(|&l| l <= 32);
+        let bytes: [u8; 256] = kani::any();
+        let len: usize =
+            kani::any_where(|&l| (l <= 8) || (l >= 253 && l <= 256));
+
         let email_slice = &bytes[..len];
 
         match EmailAddress::validate(email_slice) {
@@ -186,7 +189,22 @@ mod proof {
                 assert!(total_len >= 5 && total_len <= 254);
                 assert!(email_slice.contains(&b'@'));
             },
-            Err(_) => {},
+            Err(e) => {
+                if len < 5 {
+                    assert!(matches!(
+                        e,
+                        DomainError::InvalidEmailFormat(EmailError::Empty)
+                            | DomainError::InvalidEmailFormat(
+                                EmailError::InvalidFormat
+                            )
+                    ));
+                } else if len > 254 {
+                    assert!(matches!(
+                        e,
+                        DomainError::InvalidEmailFormat(EmailError::TooLong)
+                    ));
+                }
+            },
         }
     }
 }

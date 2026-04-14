@@ -86,11 +86,14 @@ mod proof {
     use super::*;
 
     #[kani::proof]
-    #[kani::unwind(66)]
+    #[kani::unwind(70)]
     fn prove_user_id_validation_logic() {
-        let bytes = kani::vec::any_vec::<u8, 65>();
+        let bytes: [u8; 68] = kani::any();
+        let len: usize =
+            kani::any_where(|&l| (l >= 1 && l <= 8) || (l >= 62 && l <= 68));
+        let slice = &bytes[..len];
 
-        match UserId::validate(&bytes) {
+        match UserId::validate(slice) {
             Ok(trimmed) => {
                 let l = trimmed.len();
                 assert!(l >= 3 && l <= 64);
