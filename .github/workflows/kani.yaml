@@ -2,6 +2,9 @@ name: kani
 
 on:
   workflow_dispatch:
+  push:
+    paths-ignore:
+      - 'docs/**'
 
 permissions:
   contents: read
