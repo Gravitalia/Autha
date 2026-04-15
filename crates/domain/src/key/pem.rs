@@ -25,6 +25,12 @@ impl PemFingerprint {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+
+    /// Returns the string PEM as an `i32`.
+    #[inline]
+    pub fn as_i32(&self) -> i32 {
+        self.0.parse().unwrap_or(-1)
+    }
 }
 
 impl fmt::Display for PemFingerprint {

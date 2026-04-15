@@ -5,6 +5,7 @@
 static ALLOC: dhat::Alloc = dhat::Alloc;
 
 mod config;
+mod middleware;
 mod state;
 mod telemetry;
 
@@ -18,8 +19,8 @@ use adapters::outbound::mail::RabbitMqMailer;
 use adapters::outbound::persistence::postgres;
 use adapters::outbound::{crypto, token};
 use application::ports::outbound::{LdapPort, Mailer};
-use axum::routing::{get, post};
-use axum::{Router, middleware};
+use axum::routing::{get, patch, post};
+use axum::{Router, middleware as axum_middleware};
 use config::ServerConfig;
 use opentelemetry::trace::TracerProvider;
 use tower_http::timeout::RequestBodyTimeoutLayer;
@@ -27,6 +28,8 @@ use tracing_subscriber::EnvFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::util::SubscriberInitExt;
+
+use crate::middleware::auth_middleware;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -154,21 +157,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         account_repo.clone(),
         refresh_token_repo,
         ldap_client,
-        crypto,
+        crypto.clone(),
         token.clone(),
         telemetry_adapter,
         clock,
     );
     let get_user_uc = application::usecases::GetUserUseCase::new(
-        account_repo,
-        token,
+        account_repo.clone(),
+        token.clone(),
         config.into(),
+    );
+    let update_user_uc = application::usecases::UpdateUserUseCase::new(
+        account_repo,
+        crypto,
+        mailer,
     );
     let state = state::AppState {
         status: Arc::new(status_uc),
         create_account: Arc::new(create_account_uc),
         authenticate: Arc::new(authenticate_uc),
         get_user: Arc::new(get_user_uc),
+        update_user: Arc::new(update_user_uc),
+        token,
     };
 
     let app = Router::new()
@@ -177,8 +187,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/create", post(http::create::create_account_handler))
         .route("/login", post(http::login::login_handler))
         .route("/users/:id", get(http::get_user::get_user_handler))
+        .route(
+            "/users/@me",
+            patch(http::update_user::handler).route_layer(
+                axum_middleware::from_fn_with_state(
+                    state.clone(),
+                    auth_middleware,
+                ),
+            ),
+        )
         .with_state(state)
-        .route_layer(middleware::from_fn(telemetry::track))
+        .route_layer(axum_middleware::from_fn(telemetry::track))
         .layer(RequestBodyTimeoutLayer::new(Duration::from_secs(5)));
 
     match env::var("UNIX_SOCKET") {

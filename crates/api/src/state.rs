@@ -3,8 +3,9 @@
 use std::sync::Arc;
 
 use application::ports::inbound::{
-    Authenticate, CreateAccount, GetUser, Status,
+    Authenticate, CreateAccount, GetUser, Status, UpdateUser,
 };
+use application::ports::outbound::Token;
 use axum::extract::FromRef;
 
 /// Shared state.
@@ -14,6 +15,8 @@ pub struct AppState {
     pub create_account: Arc<dyn CreateAccount>,
     pub authenticate: Arc<dyn Authenticate>,
     pub get_user: Arc<dyn GetUser>,
+    pub update_user: Arc<dyn UpdateUser>,
+    pub token: Arc<dyn Token>,
 }
 
 impl FromRef<AppState> for Arc<dyn Status> {
@@ -37,5 +40,11 @@ impl FromRef<AppState> for Arc<dyn Authenticate> {
 impl FromRef<AppState> for Arc<dyn GetUser> {
     fn from_ref(state: &AppState) -> Self {
         Arc::clone(&state.get_user)
+    }
+}
+
+impl FromRef<AppState> for Arc<dyn UpdateUser> {
+    fn from_ref(state: &AppState) -> Self {
+        Arc::clone(&state.update_user)
     }
 }

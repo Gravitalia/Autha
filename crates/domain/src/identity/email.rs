@@ -72,8 +72,8 @@ impl EmailAddress {
         let domain_part = parts.next().ok_or(EmailError::InvalidFormat)?;
         let local_part = parts.next().ok_or(EmailError::InvalidFormat)?;
 
-        if !Self::is_valid_local(local_part)
-            || !Self::is_valid_domain(domain_part)
+        if !Self::is_valid_local(local_part) ||
+            !Self::is_valid_domain(domain_part)
         {
             return Err(EmailError::InvalidFormat.into());
         }
@@ -93,9 +93,9 @@ impl EmailAddress {
                     return false;
                 }
                 last_was_dot = true;
-            } else if b.is_ascii_alphanumeric()
-                || b"!#$%&'*+-/=?^_`{|}~".contains(&b)
-                || b >= 128
+            } else if b.is_ascii_alphanumeric() ||
+                b"!#$%&'*+-/=?^_`{|}~".contains(&b) ||
+                b >= 128
             {
                 last_was_dot = false;
             } else {
@@ -122,16 +122,16 @@ impl EmailAddress {
         }
 
         for (i, label) in domain.split(|&b| b == b'.').enumerate() {
-            if label.is_empty()
-                || label.starts_with(b"-")
-                || label.ends_with(b"-")
+            if label.is_empty() ||
+                label.starts_with(b"-") ||
+                label.ends_with(b"-")
             {
                 return false;
             }
 
             if i == labels_count - 1 {
-                if label.len() < 2
-                    || !label
+                if label.len() < 2 ||
+                    !label
                         .iter()
                         .all(|&b| b.is_ascii_alphabetic() || b >= 128)
                 {
@@ -169,43 +169,42 @@ impl std::fmt::Debug for EmailAddress {
     }
 }
 
-/*#[cfg(kani)]
-mod proof {
-    use super::*;
-    use crate::error::DomainError;
-
-    #[kani::proof]
-    #[kani::unwind(257)]
-    fn prove_email_validation_robustness() {
-        let bytes: [u8; 256] = kani::any();
-        let len: usize =
-            kani::any_where(|&l| (l <= 8) || (l >= 253 && l <= 256));
-
-        let email_slice = &bytes[..len];
-
-        match EmailAddress::validate(email_slice) {
-            Ok(_) => {
-                let total_len = email_slice.len();
-                assert!(total_len >= 5 && total_len <= 254);
-                assert!(email_slice.contains(&b'@'));
-            },
-            Err(e) => {
-                if len < 5 {
-                    assert!(matches!(
-                        e,
-                        DomainError::InvalidEmailFormat(EmailError::Empty)
-                            | DomainError::InvalidEmailFormat(
-                                EmailError::InvalidFormat
-                            )
-                    ));
-                } else if len > 254 {
-                    assert!(matches!(
-                        e,
-                        DomainError::InvalidEmailFormat(EmailError::TooLong)
-                    ));
-                }
-            },
-        }
-    }
-}
-*/
+// #[cfg(kani)]
+// mod proof {
+// use super::*;
+// use crate::error::DomainError;
+//
+// #[kani::proof]
+// #[kani::unwind(257)]
+// fn prove_email_validation_robustness() {
+// let bytes: [u8; 256] = kani::any();
+// let len: usize =
+// kani::any_where(|&l| (l <= 8) || (l >= 253 && l <= 256));
+//
+// let email_slice = &bytes[..len];
+//
+// match EmailAddress::validate(email_slice) {
+// Ok(_) => {
+// let total_len = email_slice.len();
+// assert!(total_len >= 5 && total_len <= 254);
+// assert!(email_slice.contains(&b'@'));
+// },
+// Err(e) => {
+// if len < 5 {
+// assert!(matches!(
+// e,
+// DomainError::InvalidEmailFormat(EmailError::Empty)
+// | DomainError::InvalidEmailFormat(
+// EmailError::InvalidFormat
+// )
+// ));
+// } else if len > 254 {
+// assert!(matches!(
+// e,
+// DomainError::InvalidEmailFormat(EmailError::TooLong)
+// ));
+// }
+// },
+// }
+// }
+// }

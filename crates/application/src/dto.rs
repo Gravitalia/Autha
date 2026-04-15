@@ -9,8 +9,8 @@ use domain::identity::email::EmailAddress;
 use domain::identity::id::UserId;
 use domain::identity::ip::EncryptedIp;
 use domain::key::pem::PemFingerprint;
-use serde::Serialize;
 use serde::ser::SerializeStruct;
+use serde::{Deserialize, Serialize};
 
 /// Request DTO for authentication.
 pub struct AuthRequestDto {
@@ -136,4 +136,26 @@ pub struct UserResponseDto {
     pub outbox: String,
     pub followers: String,
     pub following: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum TypedKeyDto {
+    One(String),
+    Multiple(Vec<String>),
+    Remove(i32),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateUserDto {
+    #[serde(alias = "preferredUsername", alias = "username")]
+    pub username: Option<String>,
+    pub summary: Option<String>,
+    pub totp_secret: Option<String>,
+    pub totp_code: Option<String>,
+    pub public_keys: Option<TypedKeyDto>,
+    pub email: Option<String>,
+    pub password: Option<String>,
+    pub new_password: Option<String>,
 }

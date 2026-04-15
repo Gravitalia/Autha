@@ -6,4 +6,5 @@ pub mod extractor;
 pub mod get_user;
 pub mod login;
 pub mod status;
+pub mod update_user;
 pub mod validation;
