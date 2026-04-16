@@ -194,4 +194,20 @@ impl Mailer for RabbitMqMailer {
 
         self.publish(message).await
     }
+
+    async fn send_update_notification(
+        &self,
+        email: &EmailAddress,
+        locale: &str,
+        username: &str,
+    ) -> Result<()> {
+        let message = Content {
+            template: Template::DataUpdate,
+            locale: Some(locale),
+            to: email.as_str()?,
+            username,
+        };
+
+        self.publish(message).await
+    }
 }

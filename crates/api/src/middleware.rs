@@ -26,7 +26,10 @@ pub async fn auth_middleware(
             header.replace(BEARER, "")
         },
         _ => {
-            return Err((StatusCode::UNAUTHORIZED, "Missing or invalid token")
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                "Missing or invalid token",
+            )
                 .into_response());
         },
     };

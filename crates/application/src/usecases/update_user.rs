@@ -6,6 +6,7 @@ use async_trait::async_trait;
 use domain::auth::factor::{TotpCode, TotpConfig, TotpSecret};
 use domain::auth::password::Password;
 use domain::error::DomainError;
+use domain::identity::email::EmailAddress;
 use domain::identity::id::UserId;
 use domain::key::pem::PemPublicKey;
 
@@ -99,14 +100,25 @@ impl UpdateUser for UpdateUserUseCase {
                 .password_hasher()
                 .verify(&pwd, &user.password_hash)?;
 
-            let email_hash = self.crypto.hasher().hash(new_email.as_bytes());
+            let email = EmailAddress::parse(new_email)?;
+            let email_hash = self.crypto.hasher().hash(email.as_bytes());
             let email_cipher = self
                 .crypto
                 .symmetric_encryption()
-                .encrypt_to_hex(new_email.as_bytes())?;
+                .encrypt_to_hex(email.as_bytes())?;
 
             user.email_hash = domain::auth::email::EmailHash::new(email_hash);
             user.email_cipher = email_cipher;
+
+            if let Some(mailer) = &self.mailer {
+                mailer
+                    .send_update_notification(
+                        &email,
+                        &user.locale,
+                        &user.username,
+                    )
+                    .await?;
+            }
         }
 
         if let (Some(new_password_str), Some(current_password_str)) =
@@ -123,14 +135,22 @@ impl UpdateUser for UpdateUserUseCase {
 
             user.password_hash = new_password_hash;
 
-            if let Some(_mailer) = &self.mailer {
+            if let Some(mailer) = &self.mailer {
                 let decrypted_email_bytes = self
                     .crypto
                     .symmetric_encryption()
                     .decrypt_from_hex(&user.email_cipher)?;
-                let _decrypted_email =
-                    String::from_utf8(decrypted_email_bytes)
-                        .map_err(|_| DomainError::InvariantViolation)?;
+                let decrypted_email = String::from_utf8(decrypted_email_bytes)
+                    .map_err(|_| DomainError::InvariantViolation)?;
+                let email = EmailAddress::parse(&decrypted_email)?;
+
+                mailer
+                    .send_update_notification(
+                        &email,
+                        &user.locale,
+                        &user.username,
+                    )
+                    .await?;
             }
         }
 

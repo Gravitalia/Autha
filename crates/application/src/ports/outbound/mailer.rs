@@ -23,4 +23,12 @@ pub trait Mailer: Send + Sync {
         locale: &str,
         username: &str,
     ) -> Result<()>;
+
+    /// Send a user update notification email.
+    async fn send_update_notification(
+        &self,
+        email: &EmailAddress,
+        locale: &str,
+        username: &str,
+    ) -> Result<()>;
 }
