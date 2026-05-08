@@ -19,7 +19,7 @@ zeroize = { workspace = true }
 urlencoding = "2.1"
 
 serde = { workspace = true, features = ["derive"] }
-serde_yaml = "0.9"
+config = { version = "0.15", features = ["toml", "yaml"] }
 
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

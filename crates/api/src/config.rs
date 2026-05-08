@@ -2,7 +2,6 @@
 //!
 //! Reads `config.yaml` and maps it to the adapter/application types.
 
-use std::fs::File;
 use std::path::Path;
 
 use application::dto::StatusDto;
@@ -109,16 +108,16 @@ pub struct MailConfig {
 
 impl ServerConfig {
     /// Load configuration from a YAML file.
-    pub fn load(
-        path: impl AsRef<Path>,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
-        let file = File::open(path)?;
-        let config: Self = serde_yaml::from_reader(file)?;
-        Ok(config)
+    pub fn load(path: impl AsRef<Path>) -> Result<Self, config::ConfigError> {
+        let path = path.as_ref().to_str().expect("path is empty");
+        let config = config::Config::builder()
+            .add_source(config::File::with_name(path))
+            .build()?;
+        config.try_deserialize()
     }
 
     /// Load with default path fallback.
-    pub fn load_default() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn load_default() -> Result<Self, config::ConfigError> {
         let path = std::env::var("CONFIG_PATH")
             .unwrap_or_else(|_| "config.yaml".to_string());
         Self::load(&path)
