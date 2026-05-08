@@ -8,7 +8,7 @@ domain = { path = "../domain" }
 application = { path = "../application" }
 adapters = { path = "../adapters" }
 
-tokio = { version = "1.51", features = ["rt-multi-thread", "net", "signal", "macros"] }
+tokio = { version = "1.52", features = ["rt-multi-thread", "net", "signal", "macros"] }
 axum = { version = "0.8" }
 hyper = "1.9"
 hyper-util = "0.1"
